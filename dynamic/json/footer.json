@@ -1,0 +1,84 @@
+{
+  "about": {
+    "title": "about kzoomakers",
+    "description": "We are a nonprofit, community-driven workshop that provides access to tools and equipment. We run entirely on volunteer effort, relying on member participation and donations to sustain operations. Our mission is to empower anyone to create, learn, and innovate in an inclusive, hands-on environment."
+  },
+  "columns": [
+    {
+      "id": "services",
+      "title": "Our Services",
+      "links": [
+        {
+          "label": "Ui/Ux Design",
+          "href": "service.html"
+        },
+        {
+          "label": "Graphic Design",
+          "href": "service.html"
+        },
+        {
+          "label": "Web Design",
+          "href": "service.html"
+        },
+        {
+          "label": "Web Development",
+          "href": "service.html"
+        }
+      ]
+    },
+    {
+      "id": "quicklinks",
+      "title": "Quick Links",
+      "links": [
+        {
+          "label": "About",
+          "href": "about.html"
+        },
+        {
+          "label": "Services",
+          "href": "service.html"
+        },
+        {
+          "label": "Blogs",
+          "href": "blog.html"
+        },
+        {
+          "label": "404",
+          "href": "404.html"
+        }
+      ]
+    },
+    {
+      "id": "social",
+      "title": "Connect with us Socially",
+      "links": [
+        {
+          "label": "Facebook",
+          "href": "https://www.facebook.com/themefisher/"
+        },
+        {
+          "label": "Twitter",
+          "href": "https://www.twitter.com/themefisher/"
+        },
+        {
+          "label": "Youtube",
+          "href": "https://www.youtube.com/channel/UCx9qVW8VF0LmTi4OF2F8YdA"
+        },
+        {
+          "label": "Github",
+          "href": "https://www.github.com/themefisher/"
+        }
+      ]
+    }
+  ],
+  "copyright": {
+    "text": "&copy; Copyright 2025, KzooMakers, All rights reserved.</br>Straight outta Kalamazoo, Michigan</br>Let's build a silicon valley in the midwest, together.",
+    "credit": {
+      "text": "Design and Developed by",
+      "link": {
+        "label": "Jonathan Kelley @ WebAssociated",
+        "href": "https://webassociated.com/"
+      }
+    }
+  }
+}
