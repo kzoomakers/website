@@ -39,33 +39,6 @@
   <!-- Main Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
 
-  <!-- Custom Contact Page Styles -->
-  <style>
-    .contact-us {
-      background-color: #f8f9fa;
-      padding: 60px 0;
-    }
-    
-    .contact-card {
-      border-radius: 8px;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .contact-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
-    }
-    
-    .map-section {
-      background-color: #ffffff;
-    }
-    
-    .google-map iframe {
-      border-radius: 8px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-  </style>
-
 </head>
 <body id="body">
 
@@ -111,44 +84,86 @@ End Fixed Navigation
 </section>
 
  <!--Start Contact Us
- =========================================== -->
+	=========================================== -->
  <section class="contact-us" id="contact">
  	<div class="container">
+ 		<div class="row justify-content-center">
+			 <!-- section title -->
+ 			<div class="col-xl-6 col-lg-8">
+				<div class="title text-center">
+					<h2>Get In Touch</h2>
+					<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Voluptate facilis eveniet maiores ab maxime nam
+						ut numquam molestiae quaerat incidunt?</p>
+					<div class="border"></div>
+				</div>
+			</div>
+			<!-- /section title -->
+		</div>
  		<div class="row">
- 			<!-- Our Address Card -->
- 			<div class="col-lg-4 col-md-6 mb-4">
- 				<div class="contact-card text-center p-5 bg-white shadow-sm h-100">
- 					<div class="contact-icon mb-4">
- 						<i class="tf-ion-ios-location" style="font-size: 60px; color: #f9b234; border: 2px dashed #f9b234; border-radius: 50%; padding: 20px; width: 100px; height: 100px; display: inline-flex; align-items: center; justify-content: center;"></i>
- 					</div>
- 					<h3 class="mb-3" style="color: #6c757d; font-weight: 600;">Our Address</h3>
- 					<p class="mb-2" style="color: #333;">1102 E. Michigan Ave, Kalamazoo, MI 49048, USA</p>
- 					<p style="color: #666;">Days open : Mon, Tue, Thur, Sat</p>
+ 			<!-- Contact Details -->
+ 			<div class="contact-details col-md-6 ">
+ 				<h3 class="mb-3">Contact Details</h3>
+ 				<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ipsam, vero, provident, eum eligendi blanditiis ex
+ 					explicabo vitae nostrum facilis asperiores dolorem illo officiis ratione vel fugiat dicta laboriosam labore
+ 					adipisci.</p>
+ 				<ul class="contact-short-info mt-4">
+ 					<li class="mb-3">
+ 						<i class="tf-ion-ios-home"></i>
+ 						<span>Khaja Road, Bayzid, Chittagong, Bangladesh</span>
+ 					</li>
+ 					<li class="mb-3">
+ 						<i class="tf-ion-android-phone-portrait"></i>
+ 						<span>Phone: +880-31-000-000</span>
+ 					</li>
+ 					<li class="mb-3">
+ 						<i class="tf-ion-android-globe"></i>
+ 						<span>Fax: +880-31-000-000</span>
+ 					</li>
+ 					<li>
+ 						<i class="tf-ion-android-mail"></i>
+ 						<span>Email: hello@meghna.com</span>
+ 					</li>
+ 				</ul>
+ 				<!-- Footer Social Links -->
+ 				<div class="social-icon">
+ 					<ul>
+ 						<li><a href="https://themefisher.com/"><i class="tf-ion-social-facebook"></i></a></li>
+ 						<li><a href="https://themefisher.com/"><i class="tf-ion-social-twitter"></i></a></li>
+ 						<li><a href="https://themefisher.com/"><i class="tf-ion-social-dribbble-outline"></i></a></li>
+ 						<li><a href="https://themefisher.com/"><i class="tf-ion-social-linkedin-outline"></i></a></li>
+ 					</ul>
  				</div>
+ 				<!--/. End Footer Social Links -->
  			</div>
+ 			<!-- / End Contact Details -->
 
- 			<!-- Email Us Card -->
- 			<div class="col-lg-4 col-md-6 mb-4">
- 				<div class="contact-card text-center p-5 bg-white shadow-sm h-100">
- 					<div class="contact-icon mb-4">
- 						<i class="tf-ion-ios-email" style="font-size: 60px; color: #f9b234; border: 2px dashed #f9b234; border-radius: 50%; padding: 20px; width: 100px; height: 100px; display: inline-flex; align-items: center; justify-content: center;"></i>
+ 			<!-- Contact Form -->
+ 			<div class="contact-form col-md-6 ">
+ 				<form id="contact-form" method="post" role="form">
+ 					<div class="form-group mb-4">
+ 						<input type="text" placeholder="Your Name" class="form-control" name="name" id="name" required>
  					</div>
- 					<h3 class="mb-3" style="color: #6c757d; font-weight: 600;">Email Us</h3>
- 					<p style="color: #333;">contact@kzoomakers.org</p>
- 				</div>
- 			</div>
 
- 			<!-- Call Us Card -->
- 			<div class="col-lg-4 col-md-6 mb-4">
- 				<div class="contact-card text-center p-5 bg-white shadow-sm h-100">
- 					<div class="contact-icon mb-4">
- 						<i class="tf-ion-ios-telephone" style="font-size: 60px; color: #f9b234; border: 2px dashed #f9b234; border-radius: 50%; padding: 20px; width: 100px; height: 100px; display: inline-flex; align-items: center; justify-content: center;"></i>
+ 					<div class="form-group mb-4">
+ 						<input type="email" placeholder="Your Email" class="form-control" name="email" id="email" required>
  					</div>
- 					<h3 class="mb-3" style="color: #6c757d; font-weight: 600;">Call Us</h3>
- 					<p style="color: #333;">(269) 270-3141</p>
- 				</div>
+
+ 					<div class="form-group mb-4">
+ 						<input type="text" placeholder="Subject" class="form-control" name="subject" id="subject" required>
+ 					</div>
+
+ 					<div class="form-group mb-4">
+ 						<textarea rows="6" placeholder="Message" class="form-control" name="message" id="message" required></textarea>
+ 					</div>
+ 					<div id="cf-submit">
+ 						<input type="submit" id="contact-submit" class="btn btn-transparent" value="Submit">
+ 					</div>
+
+ 				</form>
  			</div>
- 		</div>
+ 			<!-- ./End Contact Form -->
+
+ 		</div> <!-- end row -->
  	</div> <!-- end container -->
  </section> <!-- end section -->
 
@@ -156,7 +171,7 @@ End Fixed Navigation
 =            Google Map            =
 =================================-->
 <div class="google-map">
- <div id="map_canvas" class="map_canvas" data-latitude="42.2955873" data-longitude="-85.566348" data-marker="images/marker.png" data-marker-name="Kzoo Makers"></div>
+	<div id="map_canvas" class="map_canvas" data-latitude="40.712776" data-longitude="-74.005974" data-marker="images/marker.png" data-marker-name="Bingo"></div>
 </div>
  <!--====  End of Google Map  ====-->
 
@@ -187,7 +202,7 @@ End Fixed Navigation
 <!-- Smooth Scroll js -->
 <script src="plugins/smooth-scroll/smooth-scroll.min.js"></script>
 <!-- Google Map -->
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAFTMjTVHV-iR7S3706NQfwzuJj7pZWwNM"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCcABaamniA6OL5YvYSpB3pFMNrXwXnLwU"></script>
 <script src="plugins/google-map/gmap.js"></script>
 
 <!-- Dynamic Navigation -->
