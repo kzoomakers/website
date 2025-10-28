@@ -1,6 +1,7 @@
 /**
  * Dynamic Navigation Generator
  * Loads navigation structure from JSON and generates HTML
+ * Uses dynamic/json/navbar.json for content
  * Jon Kelley wuz here 2025!!
  */
 

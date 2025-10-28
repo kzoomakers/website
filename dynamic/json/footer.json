@@ -43,8 +43,8 @@
           "href": "blog.html"
         },
         {
-          "label": "404",
-          "href": "404.html"
+          "label": "CauseIQ Information",
+          "href": "https://www.causeiq.com/organizations/kalamazoo-innovation-initiative,472775084/"
         }
       ]
     },
@@ -72,7 +72,7 @@
     }
   ],
   "copyright": {
-    "text": "&copy; Copyright 2025, KzooMakers, All rights reserved.</br>Straight outta Kalamazoo, Michigan</br>Let's build a silicon valley in the midwest, together.",
+    "text": "&copy; Copyright 2025, KzooMakers, All rights reserved.</br>Straight outta Kalamazoo, Michigan</br></br><big><big><big>501(c)(3) Non-Profit Public Charity</big></big></big></br><big><big><big>EIN 47-2775084 - LARA # 800946618</br>Kalamazoo Innovation Inititive, INC</big></big></big></br>",
     "credit": {
       "text": "Design and Developed by",
       "link": {

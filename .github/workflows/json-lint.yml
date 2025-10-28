@@ -1,0 +1,73 @@
+name: JSON Lint Check
+
+on:
+  pull_request:
+    branches:
+      - main
+      - '**''
+  push:
+    branches:
+      - main
+      - master
+      - develop
+
+jobs:
+  json-lint:
+    name: Lint JSON Files
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install jsonlint
+        run: npm install -g jsonlint
+      
+      - name: Find and lint all JSON files
+        run: |
+          echo "🔍 Finding all JSON files recursively..."
+          json_files=$(find . -type f -name "*.json" ! -path "*/node_modules/*" ! -path "*/.git/*")
+          
+          if [ -z "$json_files" ]; then
+            echo "⚠️  No JSON files found"
+            exit 0
+          fi
+          
+          echo "📝 Found JSON files:"
+          echo "$json_files"
+          echo ""
+          
+          failed=0
+          total=0
+          
+          while IFS= read -r file; do
+            total=$((total + 1))
+            echo "Linting: $file"
+            if jsonlint -q "$file"; then
+              echo "✅ $file - Valid"
+            else
+              echo "❌ $file - Invalid JSON"
+              failed=$((failed + 1))
+            fi
+            echo ""
+          done <<< "$json_files"
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📊 Summary:"
+          echo "   Total files checked: $total"
+          echo "   Passed: $((total - failed))"
+          echo "   Failed: $failed"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          if [ $failed -gt 0 ]; then
+            echo "❌ JSON linting failed for $failed file(s)"
+            exit 1
+          else
+            echo "✅ All JSON files are valid!"
+            exit 0
+          fi
