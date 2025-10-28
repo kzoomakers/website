@@ -54,19 +54,15 @@
       "links": [
         {
           "label": "Facebook",
-          "href": "https://www.facebook.com/themefisher/"
-        },
-        {
-          "label": "Twitter",
-          "href": "https://www.twitter.com/themefisher/"
+          "href": "https://www.facebook.com/KzooMakers/"
         },
         {
           "label": "Youtube",
-          "href": "https://www.youtube.com/channel/UCx9qVW8VF0LmTi4OF2F8YdA"
+          "href": "https://www.youtube.com/channel/UCwxgobUUknjQlTQwELi1lNQ"
         },
         {
           "label": "Github",
-          "href": "https://www.github.com/themefisher/"
+          "href": "https://github.com/kzoomakers"
         }
       ]
     }
