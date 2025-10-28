@@ -1,0 +1,118 @@
+{
+  "logo": {
+    "default": "images/logo.png",
+    "white": "images/logo-white.png",
+    "alt": "logo",
+    "href": "index.html"
+  },
+  "menuItems": [
+    {
+      "id": "homepage",
+      "label": "Homepage",
+      "type": "dropdown",
+      "icon": "tf-ion-chevron-down",
+      "items": [
+        {
+          "label": "Homepage",
+          "href": "index.html"
+        },
+        {
+          "label": "Onepage",
+          "href": "onepage-slider.html"
+        },
+        {
+          "label": "Onepage 2",
+          "href": "onepage-text.html"
+        },
+        {
+          "label": "Sub Menu",
+          "type": "submenu",
+          "icon": "tf-ion-chevron-down",
+          "direction": "dropright",
+          "items": [
+            {
+              "label": "Submenu 01",
+              "href": "index.html"
+            },
+            {
+              "label": "Submenu 02",
+              "href": "index.html"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "about",
+      "label": "About Us",
+      "type": "link",
+      "href": "about.html"
+    },
+    {
+      "id": "service",
+      "label": "Services",
+      "type": "link",
+      "href": "service.html"
+    },
+    {
+      "id": "portfolio",
+      "label": "Portfolio",
+      "type": "link",
+      "href": "portfolio.html"
+    },
+    {
+      "id": "team",
+      "label": "Team",
+      "type": "link",
+      "href": "team.html"
+    },
+    {
+      "id": "pricing",
+      "label": "Pricing",
+      "type": "link",
+      "href": "pricing.html"
+    },
+    {
+      "id": "contact",
+      "label": "Contact",
+      "type": "link",
+      "href": "contact.html"
+    },
+    {
+      "id": "pages",
+      "label": "Pages",
+      "type": "dropdown",
+      "icon": "tf-ion-chevron-down",
+      "items": [
+        {
+          "label": "404 Page",
+          "href": "404.html"
+        },
+        {
+          "label": "Blog Page",
+          "href": "blog.html"
+        },
+        {
+          "label": "Blog Single Page",
+          "href": "single-post.html"
+        },
+        {
+          "label": "Sub Menu",
+          "type": "submenu",
+          "icon": "tf-ion-chevron-down",
+          "direction": "dropleft",
+          "items": [
+            {
+              "label": "Submenu 01",
+              "href": "index.html"
+            },
+            {
+              "label": "Submenu 02",
+              "href": "index.html"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
