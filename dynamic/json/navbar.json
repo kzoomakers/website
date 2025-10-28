@@ -9,44 +9,20 @@
     {
       "id": "homepage",
       "label": "Homepage",
-      "type": "dropdown",
-      "icon": "tf-ion-chevron-down",
-      "items": [
-        {
-          "label": "Homepage",
-          "href": "index.html"
-        },
-        {
-          "label": "Onepage",
-          "href": "onepage-slider.html"
-        },
-        {
-          "label": "Onepage 2",
-          "href": "onepage-text.html"
-        },
-        {
-          "label": "Sub Menu",
-          "type": "submenu",
-          "icon": "tf-ion-chevron-down",
-          "direction": "dropright",
-          "items": [
-            {
-              "label": "Submenu 01",
-              "href": "index.html"
-            },
-            {
-              "label": "Submenu 02",
-              "href": "index.html"
-            }
-          ]
-        }
-      ]
+      "type": "link",
+      "href": "index.html"
     },
     {
       "id": "about",
       "label": "About Us",
       "type": "link",
       "href": "about.html"
+    },
+    {
+      "id": "pricing",
+      "label": "Pricing",
+      "type": "link",
+      "href": "pricing.html"
     },
     {
       "id": "service",
@@ -65,12 +41,6 @@
       "label": "Team",
       "type": "link",
       "href": "team.html"
-    },
-    {
-      "id": "pricing",
-      "label": "Pricing",
-      "type": "link",
-      "href": "pricing.html"
     },
     {
       "id": "contact",

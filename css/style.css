@@ -835,6 +835,34 @@ a:focus, a:hover {
 }
 
 /*=================================================================
+Wanna tour? 1
+==================================================================*/
+.wanna-tour {
+  position: relative;
+  padding: 100px 0;
+  background: url("../images/stock/wanna-tour.jpg") center/cover no-repeat;
+  color: #fff;
+}
+
+.wanna-tour::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7); /* adjust opacity */
+  z-index: 0;
+}
+
+.wanna-tour h2 {
+  line-height: 1.5;
+}
+.wanna-tour p {
+  color: #fff;
+}
+.wanna-tour .btn-main {
+  margin-top: 20px;
+}
+
+/*=================================================================
  Call To Action 1
 ==================================================================*/
 .call-to-action {
