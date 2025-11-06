@@ -5,24 +5,24 @@
   },
   "columns": [
     {
-      "id": "services",
-      "title": "Our Services",
+      "id": "offering",
+      "title": "What we offer",
       "links": [
         {
-          "label": "Ui/Ux Design",
-          "href": "service.html"
+          "label": "Woodshop",
+          "href": "wood-shop.html"
         },
         {
-          "label": "Graphic Design",
-          "href": "service.html"
+          "label": "Metalshop",
+          "href": "metal-shop.html"
         },
         {
-          "label": "Web Design",
-          "href": "service.html"
+          "label": "Laser Tools",
+          "href": "laser-shop.html"
         },
         {
-          "label": "Web Development",
-          "href": "service.html"
+          "label": "Meeting Space",
+          "href": "meeting-space.html"
         }
       ]
     },
@@ -35,16 +35,16 @@
           "href": "about.html"
         },
         {
-          "label": "Services",
-          "href": "service.html"
+          "label": "Pricing",
+          "href": "pricing.html"
         },
         {
-          "label": "Blogs",
-          "href": "blog.html"
+          "label": "Team",
+          "href": "team.html"
         },
         {
-          "label": "CauseIQ Information",
-          "href": "https://www.causeiq.com/organizations/kalamazoo-innovation-initiative,472775084/"
+          "label": "Contact",
+          "href": "contact.html"
         }
       ]
     },

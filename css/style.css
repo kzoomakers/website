@@ -867,9 +867,22 @@ Wanna tour? 1
 ==================================================================*/
 .call-to-action {
   padding: 100px 0;
-  background: url("../images/call-to-action/call-to-action-bg-2.jpg");
+  background: url("../images/call-to-action/call-to-action-bg-9.png");
   background-size: cover;
+  background-position: center center;
   color: #fff;
+  position: relative;
+}
+.call-to-action::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 0;
+}
+.call-to-action .container {
+  position: relative;
+  z-index: 1;
 }
 .call-to-action h2 {
   line-height: 1.5;

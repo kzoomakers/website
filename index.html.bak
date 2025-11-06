@@ -397,13 +397,13 @@ Start Counter Section
 		</div>       <!-- End container -->
 	</section>    <!-- End Section -->
 
-<!-- COMMENTED OUT: Latest News Section
+<!--
 Start Blog Section
-===========================================
+=========================================== -->
 <section class="blog" id="blog">
 	<div class="container">
 		<div class="row justify-content-center">
-			section title
+			<!-- section title -->
 			<div class="col-xl-6 col-lg-8">
 				<div class="title text-center ">
 					<h2> Latest <span class="color">News</span></h2>
@@ -411,11 +411,11 @@ Start Blog Section
 					<p>Heading for newsletter</p>
 				</div>
 			</div>
-			/section title
+			<!-- /section title -->
 		</div>
 
 		<div class="row">
-			single blog post
+			<!-- single blog post -->
 			<article class="col-lg-4 col-md-6">
 				<div class="post-item">
 					<div class="media-wrapper">
@@ -430,9 +430,9 @@ Start Blog Section
 					</div>
 				</div>
 			</article>
-			/single blog post
+			<!-- /single blog post -->
 
-			single blog post
+			<!-- single blog post -->
 			<article class="col-lg-4 col-md-6">
 				<div class="post-item">
 					<div class="media-wrapper">
@@ -447,9 +447,9 @@ Start Blog Section
 					</div>
 				</div>
 			</article>
-			end single blog post
+			<!-- end single blog post -->
 
-			single blog post
+			<!-- single blog post -->
 			<article class="col-lg-4 col-md-6">
 				<div class="post-item">
 					<div class="media-wrapper">
@@ -464,11 +464,10 @@ Start Blog Section
 					</div>
 				</div>
 			</article>
-			end single blog post
-		</div> end row
-	</div> end container
-</section> end section
-END COMMENTED OUT SECTION -->
+			<!-- end single blog post -->
+		</div> <!-- end row -->
+	</div> <!-- end container -->
+</section> <!-- end section -->
 
 <footer id="footer" class="bg-one">
   <!-- Footer will be dynamically loaded by footer.js -->
