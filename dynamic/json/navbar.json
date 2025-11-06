@@ -25,6 +25,30 @@
       "href": "pricing.html"
     },
     {
+      "id": "offerings",
+      "label": "What we offer",
+      "type": "dropdown",
+      "icon": "tf-ion-chevron-down",
+      "items": [
+        {
+          "label": "Woodshop",
+          "href": "wood-shop.html"
+        },
+        {
+          "label": "Metal Shop",
+          "href": "metal-shop.html"
+        },
+        {
+          "label": "Laser Shop",
+          "href": "laser-shop.html"
+        },
+        {
+          "label": "Meeting Space",
+          "href": "meeting-space.html"
+        }
+      ]
+    },
+    {
       "id": "service",
       "label": "Services",
       "type": "link",
