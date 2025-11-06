@@ -49,18 +49,6 @@
       ]
     },
     {
-      "id": "service",
-      "label": "Services",
-      "type": "link",
-      "href": "service.html"
-    },
-    {
-      "id": "portfolio",
-      "label": "Portfolio",
-      "type": "link",
-      "href": "portfolio.html"
-    },
-    {
       "id": "team",
       "label": "Team",
       "type": "link",
