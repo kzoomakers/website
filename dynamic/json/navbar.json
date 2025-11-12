@@ -65,6 +65,12 @@
       "label": "Contact",
       "type": "link",
       "href": "contact.html"
+    },
+    {
+      "id": "discord",
+      "label": "Discord",
+      "type": "link",
+      "href": "https://discord.gg/mT86YZXm33"
     }
   ]
 }
