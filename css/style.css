@@ -378,7 +378,7 @@ a:focus, a:hover {
 }
 
 .single-page-header {
-  background-image: url("../images/about/about-header.jpg");
+  background-image: url("../images/headers/bowtie.jpg");
   background-size: cover;
   padding: 140px 0 70px;
   text-align: center;
@@ -1047,7 +1047,7 @@ Wanna tour? 1
 .pricing-table {
   padding: 100px 0;
   padding-bottom: 70px;
-  background: url("../images/pricing-bg.jpg");
+  background: url("../images/headers/diamondplate.jpg");
   background-size: cover;
   background-position: center;
   position: relative;
@@ -1056,7 +1056,7 @@ Wanna tour? 1
   color: #fff;
 }
 .pricing-table:before {
-  background: rgba(0, 0, 0, 0.62);
+  background: rgba(0, 0, 0, 0.6);
   position: absolute;
   z-index: 999;
   content: "";

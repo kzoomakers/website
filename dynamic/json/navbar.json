@@ -13,20 +13,34 @@
       "href": "index.html"
     },
     {
-      "id": "about",
-      "label": "About Us",
-      "type": "link",
-      "href": "about.html"
-    },
-    {
       "id": "calendar",
       "label": "Calendar",
       "type": "link",
       "href": "calendar.html"
     },
     {
+      "id": "learnmore",
+      "label": "Learn More",
+      "type": "dropdown",
+      "icon": "tf-ion-chevron-down",
+      "items": [
+        {
+          "label": "About Us",
+          "href": "about.html"
+        },
+        {
+          "label": "Pricing",
+          "href": "pricing.html"
+        },
+        {
+          "label": "The Team",
+          "href": "team.html"
+        }
+      ]
+    },
+    {
       "id": "offerings",
-      "label": "What we offer",
+      "label": "Explore Us",
       "type": "dropdown",
       "icon": "tf-ion-chevron-down",
       "items": [
@@ -49,28 +63,25 @@
       ]
     },
     {
-      "id": "pricing",
-      "label": "Pricing",
-      "type": "link",
-      "href": "pricing.html"
-    },
-    {
-      "id": "team",
-      "label": "Team",
-      "type": "link",
-      "href": "team.html"
-    },
-    {
-      "id": "contact",
-      "label": "Contact",
-      "type": "link",
-      "href": "contact.html"
-    },
-    {
-      "id": "discord",
-      "label": "Discord",
-      "type": "link",
-      "href": "https://discord.gg/e5zhJqeD"
+      "id": "reachout",
+      "label": "Reach Out",
+      "type": "dropdown",
+      "icon": "tf-ion-chevron-down",
+      "items": [
+        {
+          "label": "Contact Us",
+          "href": "contact.html"
+        },
+        {
+          "label": "Discord Chat",
+          "href": "https://discord.gg/e5zhJqeD"
+        },
+        {
+          "label": "Schedule Tour",
+          "href": "https://docs.google.com/forms/d/e/1FAIpQLSekvaWfF6zHaQ50nkNLbj131irosv6RQnRCT0qzNWXDnn2y3Q/viewform"
+        }
+      ]
     }
   ]
 }
+
