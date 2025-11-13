@@ -762,8 +762,9 @@ a:focus, a:hover {
 }
 .nextArrow::before {
   border-right: 2px solid #fff;
-  border-bottom: 2px solid #fff;
+  border-top: 2px solid #fff;
   left: 35px;
+  transform: translateY(-50%) rotate(45deg);
 }
 .nextArrow::after {
   left: 20px;
@@ -1445,8 +1446,49 @@ Wanna tour? 1
   display: inline-block;
   border-radius: 100%;
   width: 120px;
-  height: auto;
+  height: 120px;
+  object-fit: cover;
   margin-bottom: 20px;
+}
+
+.testimonial-slider-wrapper {
+  position: relative;
+}
+
+.testimonial-slider-wrapper .slick-prev,
+.testimonial-slider-wrapper .slick-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 9;
+  height: 50px;
+  width: 50px;
+  background: rgba(40, 171, 227, 0.5);
+  color: #fff;
+  border: 0;
+  line-height: 50px;
+  font-size: 25px;
+  transition: 0.2s ease;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.testimonial-slider-wrapper .slick-prev {
+  left: 20px;
+}
+
+.testimonial-slider-wrapper .slick-next {
+  right: 20px;
+}
+
+.testimonial-slider-wrapper .slick-prev:hover,
+.testimonial-slider-wrapper .slick-next:hover {
+  background: #28ABE3;
+}
+
+.testimonial-slider-wrapper .slick-prev i,
+.testimonial-slider-wrapper .slick-next i {
+  line-height: 50px;
 }
 
 /*=================================================================

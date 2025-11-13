@@ -59,9 +59,12 @@
   //Init the slider
   $('.testimonial-slider').slick({
     infinite: true,
-    arrows: false,
+    arrows: true,
     autoplay: true,
-    autoplaySpeed: 2000
+    autoplaySpeed: 2000,
+    appendArrows: $('.testimonial-slider-wrapper'),
+    prevArrow: '<button type="button" class="slick-prev"><i class="tf-ion-chevron-left"></i></button>',
+    nextArrow: '<button type="button" class="slick-next"><i class="tf-ion-chevron-right"></i></button>'
   });
 
 
