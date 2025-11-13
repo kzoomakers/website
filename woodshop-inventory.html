@@ -119,8 +119,9 @@ End Fixed Navigation
             <h3 class="type-counts-title" style="margin: 0;">MAJOR TOOL TYPES</h3>
             <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
               <div class="cutoff-control">
-                <label for="min-count-input">Min Count:</label>
-                <input type="number" id="min-count-input" value="10" min="1" max="100" />
+                <label for="min-count-slider">Min Count:</label>
+                <input type="range" id="min-count-slider" value="10" min="1" max="100" step="1" />
+                <span id="min-count-value" class="slider-value">10</span>
               </div>
               <button id="toggle-type-counts" class="toggle-btn">▼ Hide Major Tool Types</button>
             </div>
@@ -221,18 +222,15 @@ End Fixed Navigation
       });
     }
     
-    // Setup min count input
-    const minCountInput = document.getElementById('min-count-input');
-    if (minCountInput) {
-      minCountInput.addEventListener('change', function() {
+    // Setup min count slider
+    const minCountSlider = document.getElementById('min-count-slider');
+    const minCountValue = document.getElementById('min-count-value');
+    
+    if (minCountSlider && minCountValue) {
+      // Update display and filter on slider input
+      minCountSlider.addEventListener('input', function() {
+        minCountValue.textContent = this.value;
         inventory.updateMinCount(this.value);
-      });
-      
-      // Also update on Enter key
-      minCountInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-          inventory.updateMinCount(this.value);
-        }
       });
     }
   });

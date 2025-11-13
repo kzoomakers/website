@@ -50,6 +50,12 @@ class InventoryTable {
       this.attachEventListeners();
       this.calculateStats();
       
+      // Show or hide the entire type counts section based on enabled setting
+      const section = document.querySelector('.type-counts-section');
+      if (section) {
+        section.style.display = this.config.typeCountsConfig.enabled ? 'block' : 'none';
+      }
+      
       if (this.config.onLoad && typeof this.config.onLoad === 'function') {
         this.config.onLoad(this.data);
       }
