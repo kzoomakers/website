@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+
+<!--
+ // FACEBOOK: https://www.facebook.com/KzooMakers/
+ // GITHUB: https://github.com/kzoomakers/website
+-->
+
+<html lang="en">
+<head>
+
+  <!-- Basic Page Needs
+  ================================================== -->
+  <meta charset="utf-8">
+  <title>Woodshop Inventory - Complete Equipment List | Kalamazoo Makerspace</title>
+
+  <!-- Mobile Specific Metas
+  ================================================== -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="Complete inventory list of all woodworking equipment and tools available at Kalamazoo Makerspace wood shop.">
+  <meta name="keywords" content="woodshop inventory, woodworking tools, equipment list, Kalamazoo, makerspace, CNC, lathe, bandsaw, planer">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="author" content="Kzoo Makers">
+  <meta name="generator" content="KzooMakers Community Website">
+  <meta name="robots" content="index, follow">
+
+  <!-- Favicon -->
+  <link rel="shortcut icon" type="image/x-icon" href="images/favicon.png" />
+  <link rel="canonical" href="https://kzoomakers.org/woodshop-inventory.html">
+
+  <!-- CSS
+  ================================================== -->
+  <!-- Themefisher Icon font -->
+  <link rel="stylesheet" href="plugins/themefisher-font/style.css">
+  <!-- bootstrap.min css -->
+  <link rel="stylesheet" href="plugins/bootstrap/bootstrap.min.css">
+  <!-- animation css -->
+  <link rel="stylesheet" href="plugins/animate/animate.css">
+  <!-- Slick Carousel -->
+  <link rel="stylesheet" href="plugins/slick/slick.css">
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Custom Styles -->
+  <style>
+    .inventory-section {
+      padding: 80px 0;
+    }
+    .inventory-table-wrapper {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .inventory-table {
+      width: 100%;
+      margin: 0;
+    }
+    .inventory-table table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0;
+    }
+    .inventory-table th {
+      background: #47424C;
+      color: white;
+      padding: 15px;
+      text-align: left;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 3px solid #28ABE3;
+    }
+    .inventory-table td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #e0e0e0;
+      vertical-align: middle;
+    }
+    .inventory-table tbody tr:hover {
+      background-color: #f5f5f5;
+      transition: background-color 0.2s ease;
+    }
+    .inventory-table tbody tr:nth-child(even) {
+      background-color: #fafafa;
+    }
+    .inventory-table tbody tr:nth-child(even):hover {
+      background-color: #f0f0f0;
+    }
+    .quantity-col {
+      text-align: center;
+      font-weight: 600;
+      color: #28ABE3;
+      font-size: 16px;
+    }
+    .search-box {
+      margin-bottom: 30px;
+      padding: 12px 20px;
+      width: 100%;
+      max-width: 500px;
+      border: 2px solid #e0e0e0;
+      border-radius: 50px;
+      font-size: 16px;
+      transition: border-color 0.3s ease;
+    }
+    .search-box:focus {
+      outline: none;
+      border-color: #28ABE3;
+    }
+    .inventory-stats {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .stat-card {
+      background: linear-gradient(135deg, #47424C 0%, #5a5560 100%);
+      color: white;
+      padding: 30px;
+      border-radius: 10px;
+      flex: 1;
+      min-width: 200px;
+      max-width: 300px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-5px);
+    }
+    .stat-number {
+      font-size: 48px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #28ABE3;
+    }
+    .stat-label {
+      font-size: 16px;
+      opacity: 0.9;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .table-container {
+      overflow-x: auto;
+      max-height: 800px;
+      overflow-y: auto;
+    }
+    @media (max-width: 768px) {
+      .inventory-table th,
+      .inventory-table td {
+        padding: 10px;
+        font-size: 14px;
+      }
+      .stat-card {
+        min-width: 150px;
+      }
+      .stat-number {
+        font-size: 36px;
+      }
+    }
+  </style>
+</head>
+<body id="body">
+
+  <!--
+  Start Preloader
+  ==================================== -->
+  <div id="preloader">
+    <div class='preloader'>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </div>
+  <!--
+  End Preloader
+  ==================================== -->
+
+<!--
+Fixed Navigation
+==================================== -->
+<header class="navigation fixed-top">
+  <!-- Navigation will be dynamically loaded by navbar.js -->
+</header>
+<!--
+End Fixed Navigation
+==================================== -->
+
+<section class="single-page-header">
+	<div class="container">
+		<div class="row">
+			<div class="col-md-12">
+				<h1>Woodshop Inventory</h1>
+				<ol class="breadcrumb header-bradcrumb justify-content-center">
+					<li class="breadcrumb-item"><a href="index.html" class="text-white">Home</a></li>
+					<li class="breadcrumb-item"><a href="wood-shop.html" class="text-white">Wood Shop</a></li>
+					<li class="breadcrumb-item active" aria-current="page">Inventory</li>
+				</ol>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- Start Inventory Section
+=========================================== -->
+<section class="inventory-section">
+  <div class="container">
+    <div class="row justify-content-center mb-5">
+      <div class="col-lg-8">
+        <div class="title text-center">
+          <h2>Complete Equipment Inventory</h2>
+          <p>Browse our comprehensive list of woodworking tools and equipment. Use the search box to quickly find specific items.</p>
+          <div class="border"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-12">
+        <div class="inventory-stats">
+          <div class="stat-card">
+            <div class="stat-number" id="total-items">0</div>
+            <div class="stat-label">Total Items</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="total-quantity">0</div>
+            <div class="stat-label">Total Quantity</div>
+          </div>
+        </div>
+        
+        <div class="text-center mb-4">
+          <input type="text" id="searchInput" class="search-box" placeholder="🔍 Search inventory...">
+        </div>
+        
+        <div class="inventory-table-wrapper">
+          <div class="table-container">
+            <div class="inventory-table">
+          <table id="inventoryTable">
+            <thead>
+              <tr>
+                <th>Location</th>
+                <th style="text-align: center;">Quantity</th>
+                <th>Item Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>14.5 in. Deluxe Clamping Miter Box with 14 in. Saw Stanley</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>AcuRite Large 18" Digital LED Oversized Wall Clock</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>porter cable scroll saw</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>dust collector - delta</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>dust collector - central machinery</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>belt sander (used)</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>miter saw - dewalt</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>belt sander (used)</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>dust collector - central machinery</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>kobalt steel support stand</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>shop vac</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>bench grinder - masterforce</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>48" level (used}</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Swanson Tool Company 9-in Magnetic Torpedo Level</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>square (used)</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Stanley 020331 FatMax Mini Flush Cut Pull Saw</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Werner stepper stool (used}</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>IRWIN Clamp, Parallel Jaw Box, 48-lnch 4pcs</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>IRWIN Clamp, Parallel Jaw Box, 36inch 4pcs</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>IRWIN Clamp, Parallel Jaw Box, 24inch 4pcs</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>IRWIN Clamp, Parallel Jaw Box, 12inch 4pcs</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Jorgensen Clamp 12inch 4pcs</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Kreg Clamp 90 Degree 2 pcs</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Kreg Angle Clamp 2 pcs</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>craftsman tool box (used)</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Husky screw driver set 10pcs</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Husky SAE/Metric Ball End Hex Key Set (26-Piece)</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>HuskyRatcheting SAE Combination Wrench Set (11-Piece)</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Husky1 in. 12-Point SAE Ratcheting Combination Wrench</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>HuskyRatcheting Metric Combination Wrench Set (11-Piece)</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Husky 16mm 12-Point SAE Ratcheting Combination Wrench</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Husky 20mm 12-Point SAE Ratcheting Combination Wrench</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Stanley 12pcs punch set</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Husky High Performance Blow Gun with Ultimate Flow Tip</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Husky1/4 in. Drive Ratchet SAE/Metric Standard Socket Set (24-Piece)</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Husky1/4 in. Drive Deep SAE/MM Socket Set (20-Piece)</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>1/4 socket holders SAE</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>1/4 socket holders Metric</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Husky3/8 in. Drive Ratchet SAE/Metric Standard Socket Set (24-Piece)</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Husky3/8 in. Drive Deep SAE/MM Socket Set (20-Piece)</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>3/8 socket holders SAE</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>3/8 socket holders Metric</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Husky Drive Wobble Extension Set (9-Pieces)</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Husky8 in. Standard Slip Joint Pliers</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Husky12 in. Groove Joint Pliers</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>WissStraight-CutAviation Snip (3-Pack)</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Metal detector wand (used}</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Mortice and Marking Gauge</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>9 Inch Sliding T-Bevel</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Milescraft 5343 8pc. Drill Center for Dowel and Tenon</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Eagle America 400-2048 Marking Center Finder</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Hyde Tools 43510 Painters Pyramid (10 Pack</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>GRR-RIPPER 3D Pushblock for Table Saws</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Heavy Duty Waxed Canvas Work Apron 3pcs</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Heavy Duty Waxed Canvas Work Apron 1pcs</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>50" Anodized Aluminum Straight Edge</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Narex Pair Right & Left Hand Marking Striking Notching Violin Knives</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Wheel Woodworking Precision Marking Cutting Gauge</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Powermatic PM-TJ Tenoning Jig</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Bench Dog 10-035 Bench Cookie Work Grippers, 4-Pack</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>GemRed 82412 Mini Digital Level Angle</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Bahco 665 Premium Ergonomic Carbide Scraper, 2-1/2</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Magswitch - 8110015 Table Featherboard Universal Model, Yellow</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>NEIKO 01408A 8" Electronic Digital Caliper Extra Large Display</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Rockier Universal Fence Clamps with Clamp-It Square</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Rockier 45 Degree Miter Sled</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Thin Rip Tablesaw Jig rockier</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>ROCKLER TAPER JIG</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>MLCS Can-Do Clamp</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>MLCS Can-Do Clamp</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Amenitee Angle Layout Measuring Ruler- Ultimate Irregular Shape</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>30 In. Pedestal High Velocity Shop Fan</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Hand Shear</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Chisels NOS</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Dewalt dw511 Drill</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Hand Tool Lot</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Cratsman Hand router</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Construction Stappler</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Hand Saws</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Porter cable Reciprocating saw</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">2</td>
+                <td>Quick grip clamps</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">2</td>
+                <td>Bubble Level Beam</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">6</td>
+                <td>spring clamps</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Black and Decker 17 1/2 saw</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Jig saw js350</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Hand plane</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Skill Worm Gear Dril Circular Saw</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Small Hand Tools (files, etc)</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Husky air tool - high speed sander</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Husky air tool - 3/8 impact drive</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Husky air tool - ratcheting wrench air</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Husky air tool - die grinder</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Federal Mogul air tool - die grinder with 5pc burr</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Bubble Level Beam</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Sears Craftsman Planer-Molder</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>12in Delta Planer 22-540</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Shop Smith Mark Multi Unit</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Delta X5 Vertical Bandsaw</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Drawer: Small Wood Lather Accessories: 2x Chucks, 1x Faceplate and Adapter</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Drawer: 1 Spigot Jaw Chuck Kit, 1 4 Jaw Chuck, 1 Faceplate</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Drawer: ~3 Drill Chucks, ~2 Live Centers, Some Small Additional Lathe Accessories</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Drawer: Replacement Parts for Small Wood Lathe, 2x Bearings, Belts and Misc</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Small Carba-Tec Wood Lathe on Cabinet</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Drawer: Craftsman Wrenches ~3 Sets</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Drawer: Various Small Screwdrivers, 2 Impact Drivers, 1 Soft pack Screwdriver Kit</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Drawer: Screwdrivers</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Drawer: Small Plyers and Cutters</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Drawer Of Various Hand Wood Planes ~7 And 2 Shavers</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Drawer 4x Hand Planes</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Box With Single Hand Plane</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Shop Smith Bandsaw Attachment Accessory</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Router Table / Cabinet</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>3hp Heavy Duty Router Re-600</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>8" Grinder Model No 144290</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">4</td>
+                <td>Wood Clamps</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">6</td>
+                <td>Wood Clamps</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Crown Tool, 8pcs Hand Lathe Tools</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Hand Lathe Tools, 2 Sets 5pcs Sets, "Crown Tool"</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Box Of Hand Lathe Tools, Est 35</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">20</td>
+                <td>Wood Clamps</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Aluminum Beam Straight Edge</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Dust Collector</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Worm Drive SkillSaw</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>PorterCable Angle Grinder</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Genesis Electric Tin Snips</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>MasterForce Vibrating Sander</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Dewalt Cut-out tool</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Skil 3 x 18 belt sander</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Ryobi Jigsaw</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Black&Decker Jigsaw with case</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Dewalt Drill Corded</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Skil Drill Corded</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Craftsman 2.5 HP 7.25 Blade Circular Saw</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Black&Decker 2.25 HP 7.25 Black Circular Saw</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Rockwell 3 x 24 Belt Sander</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Performax Multi-Cut Saw</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Chicago Electric 1.5 HP Plunge Router</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Husky 3/8" Ratchet Wrench</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Husky Die Grinder</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Husky High Speed Sander</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Husky 1/2" Impact Wrench</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Rigid Impact Driver</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Rigid Drill</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Stanley #78 Shoulder Plane</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Bargent Plane</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Lee Nelson Toolworks Scraper Plane (Brass)</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Stanley #609 Shooting Plane</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Stanley #5 Plane</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Stanley Block Plane</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Stanley Block Plane</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>AMT Plane</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Hand Plane (no Brand visible)</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Stanley Block Plane</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Sears Hand Plane</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Bailey #5 Plane</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>23 gauge pin nailer by Freeman</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>SawStop Professional 3HP</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Homemade Panel Saw (Makita Saw)</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Dust Collector</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Grisly Spindle Sander</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Wilton Belt & Disk Sander</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Supermax Dust Collector</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Dewalt Compounding Miter Saw (12 in)</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Midwest Sandright</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Shop Smith</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Router Table (Ryobi Plunge Router)</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Carb-Tech Router Blade Set with Case</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Warrior 15 pc router kit with case</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Dadostack table saw (porter cable)</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Carba-Tec Lathe</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Drawer Set (under Carba-Tec Lathe)</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Flush Trim Saw</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Razor Dovetail Saw</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Shark Saw</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Ryoba Pull Saw</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Multi-Max Scroll Saw</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>PorterCable Scroll Saw</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Toolshop Drill Press 13 inch</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Powermatic Drill Press</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Delta Bandsaw 14 inch</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Jet Bandsaw 14 inch</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Clamp Rack with Clamps</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Atlas Co. Air compressor</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Powermatic Bandsaw 20 inch</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Jet Planer</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Felder Jointer</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Powermatic Double Dust Collector</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Powermatic Double Drum Sander</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Dewalt Planer & Stand</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Jet Wood Lathe</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Performax Tool Chest</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Kreg Router Table</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Cabinet Saw</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Delta Jointer</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Beem Toolbox</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Door Sander (Wide Belt Sander)</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Grisly Sander</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Mini Lathe</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Rolling Toolchest (US general)</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Legacy CNC Router (3x5 table)</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Delta Dust Collector</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Jet Dust Collector</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>4 x 8 table CNC Router</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Planer Molder Craftsman</td>
+              </tr>
+              <tr>
+                <td>Woodshop</td>
+                <td class="quantity-col">1</td>
+                <td>Black & Decker Grinder</td>
+              </tr>
+            </tbody>
+          </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-center mt-5">
+          <a href="wood-shop.html" class="btn btn-main">← Back to Wood Shop</a>
+          <a href="pricing.html" class="btn btn-main ml-2">View Membership Options</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer id="footer" class="bg-one">
+  <!-- Footer will be dynamically loaded by footer.js -->
+</footer>
+
+<!-- end Footer Area
+========================================== -->
+<!--
+    Essential Scripts
+    =====================================-->
+<!-- Main jQuery -->
+<script src="plugins/jquery/jquery.min.js"></script>
+
+<!-- Bootstrap4 -->
+<script src="plugins/bootstrap/bootstrap.min.js"></script>
+<!-- Parallax -->
+<script src="plugins/parallax/jquery.parallax-1.1.3.js"></script>
+<!-- Owl Carousel -->
+<script src="plugins/slick/slick.min.js"></script>
+<!-- Smooth Scroll js -->
+<script src="plugins/smooth-scroll/smooth-scroll.min.js"></script>
+
+<!-- Dynamic Navigation -->
+<script src="dynamic/js/navbar.js"></script>
+
+<!-- Dynamic Footer -->
+<script src="dynamic/js/footer.js"></script>
+
+<!-- Custom js -->
+<script src="js/script.js"></script>
+
+<script>
+  // Calculate statistics
+  function calculateStats() {
+    const rows = document.querySelectorAll('#inventoryTable tbody tr');
+    let totalItems = rows.length;
+    let totalQuantity = 0;
+    
+    rows.forEach(row => {
+      const qtyCell = row.querySelector('.quantity-col');
+      if (qtyCell && qtyCell.textContent.trim()) {
+        totalQuantity += parseInt(qtyCell.textContent) || 0;
+      }
+    });
+    
+    document.getElementById('total-items').textContent = totalItems;
+    document.getElementById('total-quantity').textContent = totalQuantity;
+  }
+  
+  // Search functionality
+  document.getElementById('searchInput').addEventListener('keyup', function() {
+    const searchTerm = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#inventoryTable tbody tr');
+    
+    rows.forEach(row => {
+      const text = row.textContent.toLowerCase();
+      if (text.includes(searchTerm)) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  });
+  
+  // Calculate stats on page load
+  calculateStats();
+</script>
+
+</body>
+</html>
