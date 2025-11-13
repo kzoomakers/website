@@ -27,6 +27,10 @@ class InventoryTable {
         description: 'Item Description',
         type: 'Type of Tool'
       },
+      typeCountsConfig: config.typeCountsConfig || {
+        enabled: true,
+        minCount: 10
+      },
       onLoad: config.onLoad || null
     };
     
@@ -34,6 +38,7 @@ class InventoryTable {
     this.filteredData = [];
     this.sortColumn = null;
     this.sortDirection = 'asc';
+    this.typeCountsVisible = true;
     
     this.init();
   }
@@ -268,6 +273,8 @@ class InventoryTable {
   }
   
   calculateTypeCounts() {
+    if (!this.config.typeCountsConfig.enabled) return;
+    
     // Count items by type
     const typeCounts = {};
     
@@ -279,16 +286,17 @@ class InventoryTable {
       typeCounts[type] += parseInt(item.quantity) || 0;
     });
     
-    // Filter types with more than 10 items
+    // Filter types based on configurable minCount
+    const minCount = this.config.typeCountsConfig.minCount || 10;
     const filteredTypes = Object.entries(typeCounts)
-      .filter(([type, count]) => count > 10)
+      .filter(([type, count]) => count > minCount)
       .sort((a, b) => b[1] - a[1]); // Sort by count descending
     
     // Update DOM
     const container = document.getElementById(this.config.statsConfig.typeCounts);
     if (container) {
       if (filteredTypes.length === 0) {
-        container.innerHTML = '<p style="text-align: center; opacity: 0.7;">No tool types with more than 10 items</p>';
+        container.innerHTML = `<p style="text-align: center; opacity: 0.7; color: white;">No tool types with more than ${minCount} items</p>`;
       } else {
         container.innerHTML = filteredTypes.map(([type, count]) => `
           <div class="type-count-item">
@@ -300,6 +308,28 @@ class InventoryTable {
     }
     
     return filteredTypes;
+  }
+  
+  toggleTypeCounts() {
+    this.typeCountsVisible = !this.typeCountsVisible;
+    const section = document.querySelector('.type-counts-section');
+    const container = document.getElementById(this.config.statsConfig.typeCounts);
+    const toggleBtn = document.getElementById('toggle-type-counts');
+    
+    if (section && container) {
+      if (this.typeCountsVisible) {
+        container.style.display = 'grid';
+        if (toggleBtn) toggleBtn.textContent = '▼ Hide Major Tool Types';
+      } else {
+        container.style.display = 'none';
+        if (toggleBtn) toggleBtn.textContent = '▶ Show Major Tool Types';
+      }
+    }
+  }
+  
+  updateMinCount(newMinCount) {
+    this.config.typeCountsConfig.minCount = parseInt(newMinCount) || 10;
+    this.calculateTypeCounts();
   }
   
   showError(message) {
