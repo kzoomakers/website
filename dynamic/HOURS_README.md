@@ -12,10 +12,11 @@ This is the **single source of truth** for all hours information. Update this fi
 ```json
 {
   "schedule": {
-    "openDays": ["Monday", "Tuesday", "Thursday", "Friday", "Saturday"],
-    "openDaysShort": ["Mon", "Tue", "Thu", "Fri", "Sat"],
-    "closedDays": ["Wednesday", "Sunday"],
-    "closedDaysShort": ["Wed", "Sun"],
+    "openDays": ["Monday", "Tuesday", "Thursday", "Saturday"],
+    "openDaysShort": ["Mon", "Tue", "Thu", "Sat"],
+    "closedDays": ["Wednesday", "Friday", "Sunday"],
+    "closedDaysShort": ["Wed", "Fri", "Sun"],
+    "closedMessage": "Scheduled Events Only",
     "openTime": "10:00 AM",
     "closeTime": "12:00 AM",
     "closeTimeDisplay": "12:00 AM (Midnight)"
@@ -64,11 +65,14 @@ Edit `dynamic/json/hours.json` and modify the schedule section:
   "openDaysShort": ["Mon", "Tue", "Wed"],
   "closedDays": ["Thursday", "Friday", "Saturday", "Sunday"],
   "closedDaysShort": ["Thu", "Fri", "Sat", "Sun"],
+  "closedMessage": "Closed",
   "openTime": "9:00 AM",
   "closeTime": "5:00 PM",
   "closeTimeDisplay": "5:00 PM"
 }
 ```
+
+**Note:** The `closedMessage` field allows you to customize what displays for closed days (e.g., "Closed", "Scheduled Events Only", "By Appointment Only").
 
 The changes will automatically appear on all pages that include the hours.js script.
 
@@ -128,7 +132,10 @@ console.log(hoursData);
 
 ## Styling
 
-The hours display uses inline styles and Bootstrap classes to match the existing website design. The primary accent color is `#f9b234` (yellow/gold).
+The hours display uses inline styles and Bootstrap classes to match the existing website design:
+- **Open hours accent color:** `#f9b234` (yellow/gold)
+- **Closed days color:** `#dc3545` (red) - Makes closed days stand out clearly
+- Closed days are displayed in bold red text to ensure visibility
 
 ## Troubleshooting
 
