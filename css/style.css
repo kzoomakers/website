@@ -1889,6 +1889,37 @@ Wanna tour? 1
 }
 
 /*=================================================================
+  Flyers Image Section
+==================================================================*/
+.flyers {
+  position: relative;
+  padding: 0;
+  background: url("../images/headers/flyers.jpg") center no-repeat;
+  background-size: contain;
+  background-position: center;
+  width: 100%;
+  padding-top: 129.4%; /* Aspect ratio for standard flyer (11x8.5 = 129.4%) */
+}
+
+@media (max-width: 1200px) {
+  .flyers {
+    padding-top: 129.4%;
+  }
+}
+
+@media (max-width: 768px) {
+  .flyers {
+    padding-top: 141.4%; /* Slightly taller ratio for mobile */
+  }
+}
+
+@media (max-width: 480px) {
+  .flyers {
+    padding-top: 150%;
+  }
+}
+
+/*=================================================================
   Footer section
 ==================================================================*/
 .top-footer {
