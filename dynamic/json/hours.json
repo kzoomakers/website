@@ -1,0 +1,21 @@
+{
+  "schedule": {
+    "openDays": ["Monday", "Tuesday", "Thursday", "Friday", "Saturday"],
+    "openDaysShort": ["Mon", "Tue", "Thu", "Fri", "Sat"],
+    "closedDays": ["Wednesday", "Sunday"],
+    "closedDaysShort": ["Wed", "Sun"],
+    "openTime": "10:00 AM",
+    "closeTime": "12:00 AM",
+    "closeTimeDisplay": "12:00 AM (Midnight)"
+  },
+  "display": {
+    "title": "Hours of Operation",
+    "subtitle": "We're Open!",
+    "timezone": "EST"
+  },
+  "contact": {
+    "address": "1102 E. Michigan Ave, Kalamazoo, MI 49048",
+    "phone": "(269) 270-3141",
+    "email": "contact@kzoomakers.org"
+  }
+}
