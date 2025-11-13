@@ -1,9 +1,11 @@
 {
   "schedule": {
-    "openDays": ["Monday", "Tuesday", "Thursday", "Friday", "Saturday"],
-    "openDaysShort": ["Mon", "Tue", "Thu", "Fri", "Sat"],
-    "closedDays": ["Wednesday", "Sunday"],
-    "closedDaysShort": ["Wed", "Sun"],
+    "openDays": ["Monday", "Tuesday", "Thursday", "Saturday"],
+    "openDaysShort": ["Mon", "Tue", "Thu", "Sat"],
+    "closedDays": ["Wednesday", "Friday", "Sunday"],
+    "closedDaysShort": ["Wed", "Fri", "Sun"],
+    "closedMessage": "Scheduled events only",
+    "closedMessageToday": "Scheduled events only today",
     "openTime": "10:00 AM",
     "closeTime": "12:00 AM",
     "closeTimeDisplay": "12:00 AM (Midnight)"
