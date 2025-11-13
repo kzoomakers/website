@@ -81,6 +81,18 @@
           "href": "https://docs.google.com/forms/d/e/1FAIpQLSekvaWfF6zHaQ50nkNLbj131irosv6RQnRCT0qzNWXDnn2y3Q/viewform"
         }
       ]
+    },
+    {
+      "id": "community",
+      "label": "Community",
+      "type": "dropdown",
+      "icon": "tf-ion-chevron-down",
+      "items": [
+        {
+          "label": "Share a Flyer",
+          "href": "posters.html"
+        }
+      ]
     }
   ]
 }
