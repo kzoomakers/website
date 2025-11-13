@@ -27,15 +27,72 @@
   }
 
   /**
+   * Check if current time is outside operating hours (Eastern Time)
+   */
+  function isOutsideOperatingHours(schedule) {
+    // Get current time in Eastern timezone
+    const now = new Date();
+    const easternTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+    
+    // Parse opening and closing times
+    const openTime = parseTime(schedule.openTime);
+    const closeTime = parseTime(schedule.closeTime);
+    
+    const currentHour = easternTime.getHours();
+    const currentMinute = easternTime.getMinutes();
+    const currentTimeInMinutes = currentHour * 60 + currentMinute;
+    
+    // Handle midnight (12:00 AM) as end of day
+    const closeTimeInMinutes = closeTime.hour === 0 ? 24 * 60 : closeTime.hour * 60 + closeTime.minute;
+    const openTimeInMinutes = openTime.hour * 60 + openTime.minute;
+    
+    // Check if current time is outside operating hours
+    if (closeTimeInMinutes < openTimeInMinutes) {
+      // Spans midnight (e.g., 10 AM to 12 AM)
+      return currentTimeInMinutes < openTimeInMinutes && currentTimeInMinutes >= closeTimeInMinutes;
+    } else {
+      // Normal hours (e.g., 9 AM to 5 PM)
+      return currentTimeInMinutes < openTimeInMinutes || currentTimeInMinutes >= closeTimeInMinutes;
+    }
+  }
+
+  /**
+   * Parse time string (e.g., "10:00 AM") to hour and minute
+   */
+  function parseTime(timeStr) {
+    const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (!match) return { hour: 0, minute: 0 };
+    
+    let hour = parseInt(match[1]);
+    const minute = parseInt(match[2]);
+    const period = match[3].toUpperCase();
+    
+    if (period === 'PM' && hour !== 12) {
+      hour += 12;
+    } else if (period === 'AM' && hour === 12) {
+      hour = 0;
+    }
+    
+    return { hour, minute };
+  }
+
+  /**
+   * Check if the makerspace is currently closed
+   */
+  function isClosed(schedule) {
+    return isClosedToday(schedule) || isOutsideOperatingHours(schedule);
+  }
+
+  /**
    * Generate hours display for contact page card
    */
   function generateContactCardHours(data) {
     const schedule = data.schedule;
     const closedMessage = schedule.closedMessage || 'Closed';
     const closedMessageToday = schedule.closedMessageToday || closedMessage;
-    const isClosed = isClosedToday(schedule);
+    const isCurrentlyClosed = isClosed(schedule);
     
-    if (isClosed) {
+    if (isCurrentlyClosed) {
       return `
         <p style="color: #dc3545; margin-bottom: 10px; font-weight: bold; font-size: 1.1em;">We are Closed</p>
         <p style="color: #dc3545; margin: 0; font-size: 0.95em;">${closedMessageToday}</p>
@@ -60,16 +117,15 @@
     const schedule = data.schedule;
     const closedMessage = schedule.closedMessage || 'Closed';
     const closedMessageToday = schedule.closedMessageToday || closedMessage;
-    const isClosed = isClosedToday(schedule);
+    const isCurrentlyClosed = isClosed(schedule);
     
-    if (isClosed) {
+    if (isCurrentlyClosed) {
       return `
         <div class="card shadow-sm" style="border: none; border-radius: 10px; border: 2px solid #dc3545;">
           <div class="card-body text-center p-5">
             <div class="mb-4">
-              <i class="tf-ion-ios-close-outline" style="font-size: 60px; color: #dc3545;"></i>
+              <img src="images/closed.png" alt="Closed" style="max-width: 300px; width: 100%; height: auto;">
             </div>
-            <h3 class="mb-3" style="color: #dc3545; font-weight: bold;">We are Closed</h3>
             <p style="color: #dc3545; font-size: 1.1em; margin-bottom: 30px;">${closedMessageToday}</p>
             <div class="hours-list" style="font-size: 1em; line-height: 1.8; padding-top: 20px; border-top: 2px solid #dc3545;">
               <p style="margin: 0; color: #666; font-size: 0.95em;"><strong>Regular Hours:</strong></p>
