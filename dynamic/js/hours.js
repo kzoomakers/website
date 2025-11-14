@@ -84,18 +84,55 @@
   }
 
   /**
+   * Get contextual closed message based on current time and day
+   */
+  function getClosedMessage(schedule) {
+    const closedDay = isClosedToday(schedule);
+    const outsideHours = isOutsideOperatingHours(schedule);
+    
+    // If it's a closed day, use the special events message
+    if (closedDay) {
+      return schedule.closedMessageToday || schedule.closedMessage || 'Closed';
+    }
+    
+    // If it's an open day but outside hours, determine if before or after
+    if (outsideHours) {
+      const now = new Date();
+      const easternTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+      const openTime = parseTime(schedule.openTime);
+      const closeTime = parseTime(schedule.closeTime);
+      
+      const currentHour = easternTime.getHours();
+      const currentMinute = easternTime.getMinutes();
+      const currentTimeInMinutes = currentHour * 60 + currentMinute;
+      const openTimeInMinutes = openTime.hour * 60 + openTime.minute;
+      
+      // Before opening time
+      if (currentTimeInMinutes < openTimeInMinutes) {
+        return 'Opening later today';
+      }
+      
+      // After closing time
+      return 'Closed for now';
+    }
+    
+    // Default fallback (shouldn't reach here if isClosed is true)
+    return schedule.closedMessage || 'Closed';
+  }
+
+  /**
    * Generate hours display for contact page card
    */
   function generateContactCardHours(data) {
     const schedule = data.schedule;
     const closedMessage = schedule.closedMessage || 'Closed';
-    const closedMessageToday = schedule.closedMessageToday || closedMessage;
     const isCurrentlyClosed = isClosed(schedule);
     
     if (isCurrentlyClosed) {
+      const contextualMessage = getClosedMessage(schedule);
       return `
         <p style="color: #dc3545; margin-bottom: 10px; font-weight: bold; font-size: 1.1em;">We are Closed</p>
-        <p style="color: #dc3545; margin: 0; font-size: 0.95em;">${closedMessageToday}</p>
+        <p style="color: #dc3545; margin: 0; font-size: 0.95em;">${contextualMessage}</p>
         <p style="color: #666; margin-top: 15px; font-size: 0.9em;"><strong>Regular Hours:</strong></p>
         <p style="color: #666; margin: 0; font-size: 0.9em;">${schedule.openDaysShort.join(', ')}</p>
         <p style="color: #666; margin: 0; font-size: 0.9em;">${schedule.openTime} - ${schedule.closeTime}</p>
@@ -116,17 +153,17 @@
   function generateHomepageSection(data) {
     const schedule = data.schedule;
     const closedMessage = schedule.closedMessage || 'Closed';
-    const closedMessageToday = schedule.closedMessageToday || closedMessage;
     const isCurrentlyClosed = isClosed(schedule);
     
     if (isCurrentlyClosed) {
+      const contextualMessage = getClosedMessage(schedule);
       return `
         <div class="card shadow-sm" style="border: none; border-radius: 10px; border: 2px solid #dc3545;">
           <div class="card-body text-center p-5">
             <div class="mb-4">
               <img src="images/closed.png" alt="Closed" style="max-width: 300px; width: 100%; height: auto;">
             </div>
-            <p style="color: #dc3545; font-size: 1.1em; margin-bottom: 30px;">${closedMessageToday}</p>
+            <p style="color: #dc3545; font-size: 1.1em; margin-bottom: 30px;">${contextualMessage}</p>
             <div class="hours-list" style="font-size: 1em; line-height: 1.8; padding-top: 20px; border-top: 2px solid #dc3545;">
               <p style="margin: 0; color: #666; font-size: 0.95em;"><strong>Regular Hours:</strong></p>
               <p style="margin: 5px 0; color: #555;">${schedule.openDays.join(', ')}</p>
