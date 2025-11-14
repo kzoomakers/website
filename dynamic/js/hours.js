@@ -184,7 +184,7 @@
       <div class="card shadow-sm" style="border: none; border-radius: 10px;">
         <div class="card-body text-center p-5">
           <div class="mb-4">
-            <i class="tf-ion-ios-clock-outline" style="font-size: 60px; color: #f9b234;"></i>
+            <img src="images/open.gif" alt="Open" style="max-width: 300px; width: 100%; height: auto;">
           </div>
           <h3 class="mb-4" style="color: #333;">${data.display.subtitle}</h3>
           <div class="hours-list" style="font-size: 1.1em; line-height: 2;">
