@@ -93,7 +93,7 @@
         },
         {
           "label": "Discord Chat",
-          "href": "https://discord.gg/4jmJ32QyuF"
+          "href": "https://discord.gg/e5zhJqeD"
         },
         {
           "label": "Schedule Tour",
@@ -102,6 +102,34 @@
         {
           "label": "Share a Flyer",
           "href": "posters.html"
+        }
+      ]
+    },
+    {
+      "id": "resources",
+      "label": "Resources",
+      "type": "dropdown",
+      "icon": "tf-ion-chevron-down",
+      "items": [
+        {
+          "label": "How To",
+          "type": "submenu",
+          "icon": "tf-ion-chevron-right",
+          "direction": "dropright",
+          "items": [
+            {
+              "label": "How to use a bridgeport mill",
+              "href": "how-to-use-a-bridgeport-mill.html"
+            },
+            {
+              "label": "How to use a metal lathe",
+              "href": "how-to-use-a-metal-lathe.html"
+            },
+            {
+              "label": "How to use a laser cutter",
+              "href": "how-to-use-a-laser-cutter.html"
+            }
+          ]
         }
       ]
     }
