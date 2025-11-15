@@ -2018,6 +2018,34 @@ Wanna tour? 1
   font-size: 200px;
 }
 
+/*=================================================================
+  Global scroll progress bar (all pages except 404)
+  =================================================================*/
+
+/* Progress bar fixed to bottom of viewport */
+.scroll-progress {
+  inline-size: 100%;
+  block-size: 0.75rem;
+  position: fixed;
+  inset-block-end: 0;
+  inset-inline: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* Scroll progress bar (JS-driven via CSS variable) */
+.scroll-progress::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  inline-size: 100%;
+  transform-origin: left center;
+  transform: scaleX(var(--scroll-progress, 0));
+  background-color: #00AEEF; /* scroll bar blue */
+}
+
 /*============================================================
 	For Small Desktop
 ==============================================================*/
