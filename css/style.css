@@ -2025,7 +2025,7 @@ Wanna tour? 1
 /* Progress bar fixed to bottom of viewport */
 .scroll-progress {
   inline-size: 100%;
-  block-size: 0.75rem;
+  block-size: 0.1875rem; /* 1/4 of previous height (0.75rem / 4) */
   position: fixed;
   inset-block-end: 0;
   inset-inline: 0;
