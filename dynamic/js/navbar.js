@@ -44,7 +44,7 @@
   }
 
   /**
-   * Generate submenu HTML
+   * Generate submenu HTML (supports nested submenus)
    */
   function generateSubmenu(item, parentId) {
     const submenuId = `dropdown${parentId}${Math.random().toString(36).substr(2, 4)}`;
@@ -52,14 +52,19 @@
     
     let html = `
       <li class="dropdown dropdown-submenu ${direction}">
-        <a class="dropdown-item dropdown-toggle" href="#!" id="${submenuId}" role="button" 
+        <a class="dropdown-item dropdown-toggle" href="#!" id="${submenuId}" role="button"
            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
           ${item.label} <i class="${item.icon}"></i>
         </a>
         <ul class="dropdown-menu" aria-labelledby="${submenuId}">`;
     
     item.items.forEach(subItem => {
-      html += `<li><a class="dropdown-item" href="${subItem.href}">${subItem.label}</a></li>`;
+      // Check if this item is itself a submenu (recursive support)
+      if (subItem.type === 'submenu') {
+        html += generateSubmenu(subItem, submenuId);
+      } else {
+        html += `<li><a class="dropdown-item" href="${subItem.href}">${subItem.label}</a></li>`;
+      }
     });
     
     html += `
@@ -166,6 +171,74 @@
   }
 
   /**
+   * Adjust submenu positioning to prevent off-screen overflow
+   */
+  function adjustSubmenuPositions() {
+    const submenus = document.querySelectorAll('.dropdown-submenu');
+    
+    submenus.forEach(submenu => {
+      const menu = submenu.querySelector('.dropdown-menu');
+      if (!menu) return;
+      
+      submenu.addEventListener('mouseenter', function() {
+        // Reset classes
+        this.classList.remove('dropleft');
+        this.classList.add('dropright');
+        
+        // Wait for next frame to get accurate positioning
+        requestAnimationFrame(() => {
+          const rect = menu.getBoundingClientRect();
+          const viewportWidth = window.innerWidth;
+          
+          // Check if menu goes off-screen to the right
+          if (rect.right > viewportWidth) {
+            this.classList.remove('dropright');
+            this.classList.add('dropleft');
+          }
+        });
+      });
+    });
+  }
+
+  /**
+   * Initialize mobile dropdown behavior
+   */
+  function initializeMobileDropdowns() {
+    // Handle main dropdown clicks on mobile
+    const dropdownToggles = document.querySelectorAll('.navbar-nav .dropdown-toggle');
+    
+    dropdownToggles.forEach(toggle => {
+      toggle.addEventListener('click', function(e) {
+        // On mobile (when navbar-toggler is visible), handle dropdown clicks
+        const navbarToggler = document.querySelector('.navbar-toggler');
+        const isCollapsed = navbarToggler && window.getComputedStyle(navbarToggler).display !== 'none';
+        
+        if (isCollapsed) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          const parentLi = this.closest('.dropdown, .dropdown-submenu');
+          const dropdownMenu = parentLi.querySelector('.dropdown-menu');
+          
+          // Close other dropdowns at the same level
+          const siblings = Array.from(parentLi.parentElement.children).filter(el => el !== parentLi);
+          siblings.forEach(sibling => {
+            const siblingMenu = sibling.querySelector('.dropdown-menu');
+            if (siblingMenu) {
+              siblingMenu.classList.remove('show');
+            }
+          });
+          
+          // Toggle current dropdown
+          if (dropdownMenu) {
+            dropdownMenu.classList.toggle('show');
+          }
+        }
+      });
+    });
+  }
+
+  /**
    * Load navigation data and inject into page
    */
   function loadNavigation() {
@@ -180,6 +253,10 @@
         const header = document.querySelector('header.navigation');
         if (header) {
           header.innerHTML = generateHeader(data);
+          // Adjust submenu positions after DOM is ready
+          setTimeout(adjustSubmenuPositions, 100);
+          // Initialize mobile dropdown behavior
+          setTimeout(initializeMobileDropdowns, 100);
         } else {
           console.error('Navigation header element not found');
         }
