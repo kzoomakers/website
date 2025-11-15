@@ -263,13 +263,26 @@
   }
 
   /**
-   * Render hours in footer
+   * Render hours in footer with retry to avoid race with footer.js
    */
-  function renderFooterSection(data) {
-    const element = document.getElementById(CONFIG.footerSectionId);
-    if (element) {
-      element.innerHTML = generateFooterHours(data);
+  function renderFooterSection(data, retries = 20, delay = 200) {
+    function tryRender() {
+      const element = document.getElementById(CONFIG.footerSectionId);
+      if (element) {
+        element.innerHTML = generateFooterHours(data);
+        return;
+      }
+
+      if (retries > 0) {
+        setTimeout(() => {
+          renderFooterSection(data, retries - 1, delay);
+        }, delay);
+      } else {
+        console.warn('KzooHours: footer section not found after retries');
+      }
     }
+
+    tryRender();
   }
 
   /**
