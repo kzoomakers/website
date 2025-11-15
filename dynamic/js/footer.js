@@ -21,6 +21,10 @@
       <div class="col-lg-4 col-md-6 mb-5 mb-lg-0">
         <h3>${aboutData.title}</h3>
         <p>${aboutData.description}</p>
+        <div id="hours-footer-section">
+          <!-- Hours will be dynamically loaded by hours.js -->
+          <p>Loading hours...</p>
+        </div>
       </div>`;
   }
 
@@ -28,31 +32,19 @@
    * Generate a footer column with links
    */
   function generateColumn(column) {
-    // Special handling for hours column - will be populated by hours.js
-    if (column.id === 'hours') {
-      return `
-      <div class="col-lg-3 col-md-6 mb-5 mb-lg-0" id="hours-footer-section">
-        <!-- Hours will be dynamically loaded by hours.js -->
-        <ul>
-          <li>
-            <h3>${column.title}</h3>
-          </li>
-          <li>Loading hours...</li>
-        </ul>
-      </div>`;
-    }
-    
     let html = `
       <div class="col-lg-${column.id === 'services' ? '3' : column.id === 'quicklinks' ? '2' : '3'} col-md-6 mb-5 ${column.id === 'quicklinks' ? 'mb-md-0' : 'mb-lg-0'}">
         <ul>
           <li>
             <h3>${column.title}</h3>
           </li>`;
-    
-    column.links.forEach(link => {
-      html += `
+
+    if (Array.isArray(column.links)) {
+      column.links.forEach(link => {
+        html += `
           <li><a href="${link.href}">${link.label}</a></li>`;
-    });
+      });
+    }
     
     html += `
         </ul>
