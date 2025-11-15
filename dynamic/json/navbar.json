@@ -112,6 +112,10 @@
       "icon": "tf-ion-chevron-down",
       "items": [
         {
+          "label": "Other Makerspaces",
+          "href": "other-makerspaces.html"
+        },
+        {
           "label": "How To",
           "type": "submenu",
           "icon": "tf-ion-chevron-right",
