@@ -171,11 +171,26 @@
       });
     }
   }
+
+  // -----------------------------
+  //  Scroll progress bar
+  // -----------------------------
+  function updateScrollProgress() {
+    var $scrollProgress = $('.scroll-progress');
+    if (!$scrollProgress.length) return;
+    var scrollTop = $(window).scrollTop();
+    var docHeight = $(document).height() - $(window).height();
+    var progress = docHeight > 0 ? scrollTop / docHeight : 0;
+    progress = Math.min(Math.max(progress, 0), 1);
+    $scrollProgress.css('--scroll-progress', progress);
+  }
+
   // -----------------------------
   //  On Scroll
   // -----------------------------
   $(window).scroll(function () {
     counter();
+    updateScrollProgress();
 
     var scroll = $(window).scrollTop();
     if (scroll > 50) {
@@ -184,5 +199,25 @@
       $('.navigation').removeClass('sticky-header');
     }
   });
+
+  // Initialize scroll progress on load
+  updateScrollProgress();
+
+  // -----------------------------
+  //  Ensure scroll progress bar exists
+  // -----------------------------
+  function ensureScrollProgressBar() {
+    // Skip 404 page
+    if (document.querySelector('.page-404')) return;
+
+    // If a scroll bar already exists on the page, do nothing
+    if (document.querySelector('.scroll-progress')) return;
+
+    var bar = document.createElement('div');
+    bar.className = 'scroll-progress';
+    document.body.appendChild(bar);
+  }
+
+  ensureScrollProgressBar();
 
 })(jQuery);
