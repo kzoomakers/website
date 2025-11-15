@@ -40,8 +40,132 @@
   <!-- Main Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
 
+  <style>
+    :root {
+       --r: 5rem;
+       --t-width: 2rem;
+       --deg: 0;
+       --tooth-color: hsl(210, 50%, 40%);
+       --barrel-outer-color: hsl(210, 50%, 40%);
+       --barrel-inner-color: hsl(210, 50%, 30%);
+       --a-time: 50s;
+    }
+
+    .body-404 {
+       background-color: black;
+       color: white;
+       font-family: sans-serif;
+    }
+
+    .page-404-custom {
+        min-height: 80vh; /* Adjust height to fit within the layout */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .wrapper {
+       display: flex;
+       gap: 2rem;
+       align-items: center;
+       justify-content: center;
+    }
+
+    .digit {
+       font-size: 10rem;
+       font-weight: 700;
+    }
+
+    .cog {
+       width: calc(var(--r) * 2);
+       height: calc(var(--r) * 2);
+       border-radius: 50%;
+       animation: spin var(--a-time) ease-in forwards;
+    }
+
+    .cog:hover {
+       animation-play-state: paused;
+    }
+
+    @keyframes spin {
+       to { rotate: 100turn; }
+    }
+
+    .barrel {
+       width: 100%;
+       height: 100%;
+       border-radius: 50%;
+       box-shadow: inset 0 0 0 calc(var(--t-width) / 2) var(--barrel-outer-color),
+                   inset 0 0 0 calc(var(--t-width) / 1.95) black,
+                   inset 0 0 0 var(--t-width) var(--barrel-inner-color);
+       position: relative;
+       animation: heat-up var(--a-time) ease-in-out forwards;
+    }
+
+    @keyframes heat-up {
+       to {
+           box-shadow: inset 0 0 0 calc(var(--t-width) / 2) hsl(57, 100%, 60%),
+                       inset 0 0 0 calc(var(--t-width) / 1.95) black,
+                       inset 0 0 0 var(--t-width) hsl(0, 50%, 60%);
+       }
+    }
+
+    .tooth {
+       position: absolute;
+       top: 0;
+       left: 0;
+       border-left: calc(var(--t-width) / 2) solid var(--tooth-color);
+       border-right: calc(var(--t-width) / 2) solid transparent;
+       border-bottom: calc(var(--t-width) / 2) solid transparent;
+       transform-origin: 0 0;
+       rotate: calc(1deg * var(--deg));
+       translate: calc(var(--r) + (var(--r) * cos(var(--deg) * pi / 180)))
+                 calc(var(--r) + (var(--r) * sin(var(--deg) * pi / 180)));
+       animation: expand-hot var(--a-time) ease-in-out forwards;
+    }
+
+    @keyframes expand-hot {
+       to {
+           border-left: 5rem solid hsl(210, 50%, 100%);
+       }
+    }
+
+    /* tooth positions */
+    .tooth:nth-child(1) { --deg: 10; }
+    .tooth:nth-child(2) { --deg: 30; }
+    .tooth:nth-child(3) { --deg: 50; }
+    .tooth:nth-child(4) { --deg: 70; }
+    .tooth:nth-child(5) { --deg: 90; }
+    .tooth:nth-child(6) { --deg: 110; }
+    .tooth:nth-child(7) { --deg: 130; }
+    .tooth:nth-child(8) { --deg: 150; }
+    .tooth:nth-child(9) { --deg: 170; }
+    .tooth:nth-child(10) { --deg: 190; }
+    .tooth:nth-child(11) { --deg: 210; }
+    .tooth:nth-child(12) { --deg: 230; }
+    .tooth:nth-child(13) { --deg: 250; }
+    .tooth:nth-child(14) { --deg: 270; }
+    .tooth:nth-child(15) { --deg: 290; }
+    .tooth:nth-child(16) { --deg: 310; }
+    .tooth:nth-child(17) { --deg: 330; }
+    .tooth:nth-child(18) { --deg: 350; }
+
+    .msg {
+       text-align: center;
+       margin-top: 20px;
+    }
+
+    .msg p {
+        font-family: "Courier New", Courier, monospace;
+        font-size: 1.25rem;
+        color: #FFFFFF;
+        opacity: 1;
+    }
+  </style>
+
 </head>
-<body id="body">
+<body id="body" class="body-404">
 
   <!--
   Start Preloader
@@ -60,19 +184,61 @@
   End Preloader
   ==================================== -->
 
-<section class="page-404 section text-center">
-	<div class="container">
-		<div class="row">
-			<div class="col-md-12">
-				<img src="images/404_image.webp" alt="404 Error" class="img-fluid mb-4" style="max-width: 400px;">
-				<h2>Page Not Found</h2>
-				<p>Sorry, but the page you were trying to view does not exist.</p>
-				<a href="index.html" class="btn btn-main mt-20">Go Home</a>
-			</div>
-		</div>
-	</div>
+<!--
+Fixed Navigation
+==================================== -->
+<header class="navigation fixed-top">
+  <!-- Navigation will be dynamically loaded by navbar.js -->
+</header>
+<!--
+End Fixed Navigation
+==================================== -->
+
+<section class="page-404-custom section text-center">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="wrapper">
+                    <div class="digit">4</div>
+
+                    <div class="cog">
+                        <div class="barrel">
+                            <i class="tooth"></i>
+                            <i class="tooth"></i>
+                            <i class="tooth"></i>
+                            <i class="tooth"></i>
+                            <i class="tooth"></i>
+                            <i class="tooth"></i>
+                            <i class="tooth"></i>
+                            <i class="tooth"></i>
+                            <i class="tooth"></i>
+                            <i class="tooth"></i>
+                            <i class="tooth"></i>
+                            <i class="tooth"></i>
+                            <i class="tooth"></i>
+                            <i class="tooth"></i>
+                            <i class="tooth"></i>
+                            <i class="tooth"></i>
+                            <i class="tooth"></i>
+                            <i class="tooth"></i>
+                        </div>
+                    </div>
+
+                    <div class="digit">4</div>
+                </div>
+
+                <div class="msg">
+                    <p>The page you're looking for has slipped through the gears.</p>
+                    <a href="index.html" class="btn btn-main mt-20">Go to Homepage</a>
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
 
+<footer id="footer" class="bg-one">
+  <!-- Footer will be dynamically loaded by footer.js -->
+</footer> <!-- end footer -->
 
 <!-- 
     Essential Scripts
@@ -92,9 +258,12 @@
 <script src="plugins/filterizr/jquery.filterizr.min.js"></script>
 <!-- Smooth Scroll js -->
 <script src="plugins/smooth-scroll/smooth-scroll.min.js"></script>
-<!-- Google Map -->
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCcABaamniA6OL5YvYSpB3pFMNrXwXnLwU"></script>
-<script src="plugins/google-map/gmap.js"></script>
+
+<!-- Dynamic Navigation -->
+<script src="dynamic/js/navbar.js"></script>
+
+<!-- Dynamic Footer -->
+<script src="dynamic/js/footer.js"></script>
 
 <!-- Custom js -->
 <script src="js/script.js"></script>
