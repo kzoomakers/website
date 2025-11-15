@@ -13,10 +13,29 @@
       "href": "index.html"
     },
     {
-      "id": "calendar",
-      "label": "Calendar",
-      "type": "link",
-      "href": "calendar.html"
+      "id": "events",
+      "label": "Events",
+      "type": "dropdown",
+      "icon": "tf-ion-chevron-down",
+      "items": [
+
+        {
+          "label": "Calandar",
+          "href": "calendar.html"
+        },
+        {
+          "label": "Meetups",
+          "type": "submenu",
+          "icon": "tf-ion-chevron-right",
+          "direction": "dropright",
+          "items": [
+            {
+              "label": "Fiber Arts Meetup",
+              "href": "meetup-fiber-arts.html"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "learnmore",
@@ -79,18 +98,6 @@
         {
           "label": "Schedule Tour",
           "href": "https://docs.google.com/forms/d/e/1FAIpQLSekvaWfF6zHaQ50nkNLbj131irosv6RQnRCT0qzNWXDnn2y3Q/viewform"
-        }
-      ]
-    },
-    {
-      "id": "community",
-      "label": "Community",
-      "type": "dropdown",
-      "icon": "tf-ion-chevron-down",
-      "items": [
-        {
-          "label": "Fiber Arts Meetup",
-          "href": "meetup-fiber-arts.html"
         },
         {
           "label": "Share a Flyer",
