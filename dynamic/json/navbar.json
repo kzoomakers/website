@@ -89,6 +89,10 @@
       "icon": "tf-ion-chevron-down",
       "items": [
         {
+          "label": "Fiber Arts Meetup",
+          "href": "meetup-fiber-arts.html"
+        },
+        {
           "label": "Share a Flyer",
           "href": "posters.html"
         }
