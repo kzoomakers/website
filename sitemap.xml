@@ -127,4 +127,40 @@
     <priority>0.3</priority>
   </url>
 
+  <url>
+    <loc>https://kzoomakers.org/s-3d-printing-service-kalamazoo.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://kzoomakers.org/s-wood-shop-kalamazoo-makerspace.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://kzoomakers.org/s-metal-shop-kalamazoo-makerspace.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://kzoomakers.org/s-welding-shop-kalamazoo.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://kzoomakers.org/s-industrial-laser-cutter-kalamazoo.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://kzoomakers.org/s-tool-rental-kalamazoo.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
 </urlset>
