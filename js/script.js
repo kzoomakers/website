@@ -1,12 +1,31 @@
 /**
- * WEBSITE: https://themefisher.com
- * TWITTER: https://twitter.com/themefisher
- * FACEBOOK: https://www.facebook.com/themefisher
- * GITHUB: https://github.com/themefisher/
+ * JonK was here
  */
 
 (function ($) {
   'use strict';
+
+  // Google Analytics (gtag.js) - injected on all pages
+  (function loadGoogleAnalytics() {
+    var GA_MEASUREMENT_ID = 'G-K9PW1WKYKW';
+
+    // If gtag is already defined or the script tag exists, don't load it again
+    if (window.gtag || document.querySelector('script[src*="www.googletagmanager.com/gtag/js?id=' + GA_MEASUREMENT_ID + '"]')) {
+      return;
+    }
+
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ window.dataLayer.push(arguments); }
+    window.gtag = window.gtag || gtag;
+
+    gtag('js', new Date());
+    gtag('config', GA_MEASUREMENT_ID);
+
+    var gaScript = document.createElement('script');
+    gaScript.async = true;
+    gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_MEASUREMENT_ID;
+    document.head.appendChild(gaScript);
+  })();
 
   /* ========================================================================= */
   /*	Page Preloader
