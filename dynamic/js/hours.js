@@ -161,7 +161,7 @@
         <div class="card shadow-sm" style="border: none; border-radius: 10px; border: 2px solid #dc3545;">
           <div class="card-body text-center p-5">
             <div class="mb-4">
-              <img src="images/closed.png" alt="Closed" style="max-width: 300px; width: 100%; height: auto;">
+              <img src="images/closed.webp" alt="Closed" style="max-width: 300px; width: 100%; height: auto;">
             </div>
             <p style="color: #dc3545; font-size: 1.1em; margin-bottom: 30px;">${contextualMessage}</p>
             <div class="hours-list" style="font-size: 1em; line-height: 1.8; padding-top: 20px; border-top: 2px solid #dc3545;">
