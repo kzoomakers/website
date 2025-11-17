@@ -45,6 +45,10 @@
         {
           "label": "Contact",
           "href": "contact.html"
+        },
+        {
+          "label": "Sitemap",
+          "href": "sitemap.html"
         }
       ]
     },

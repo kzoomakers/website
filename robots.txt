@@ -1,0 +1,12 @@
+# robots.txt for KzooMakers
+
+User-agent: *
+Disallow:
+# Explicitly allow everything (same as empty Disallow)
+Allow: /
+
+# HTML sitemap (for humans & crawlers)
+Sitemap: https://kzoomakers.org/sitemap.html
+
+# Placeholder for future XML sitemap
+Sitemap: https://kzoomakers.org/sitemap.xml
