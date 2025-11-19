@@ -1109,7 +1109,7 @@ Wanna tour? 1
   margin-right: 6px;
 }
 .pricing-table .price-title {
-  padding: 30px 0 20px;
+  padding: 50px 0 24px; /* extra top/bottom padding so \"Was\" badge has breathing room */
 }
 .pricing-table .price-title > h3 {
   font-weight: 700;
@@ -1142,6 +1142,12 @@ Wanna tour? 1
   color: #ffffff;
   background-color: #28a745;
   border-radius: 999px;
+
+  /* Animate.css heartBeat animation, looping continuously */
+  animation-name: heartBeat;
+  animation-duration: 1.3s;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
 }
 
 /* Allow "Normally $X/m" badge positioning inside any pricing card */
@@ -1152,19 +1158,26 @@ Wanna tour? 1
 /* "Normally $X/m" label in top-right with red strike-through */
 .normal-price-label {
   position: absolute;
-  top: 16px;
+  top: 14px;
   right: 18px;
   transform: none;
-  font-size: 1.5rem;
+  font-size: 1.9rem;        /* bigger \"Was\" price text */
   font-weight: 800;
   color: #c00000;
-  padding: 6px 14px;
+  padding: 8px 18px;        /* more padding inside the badge */
   border-radius: 4px;
   white-space: nowrap;
   text-align: center;
   pointer-events: none;
   z-index: 5;
   background-color: transparent;
+
+  /* Animate.css hinge effect on old price */
+  animation-name: fadeIn;
+  animation-duration: 5s;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+  transform-origin: top left;
 }
 
 /* Crisp diagonal red slash over the old price */
