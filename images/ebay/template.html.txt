@@ -17,9 +17,9 @@
     </div>
 
     <!-- Main Title -->
-    <h1 style="text-align:center; color:#0057A8; margin-top:0; margin-bottom:20px;">
-        You are currently looking at this item
-    </h1>
+    <h2 style="text-align:center; color:#0057A8; margin-top:0; margin-bottom:20px;">
+        All items are tested before shipping.
+    </h2>
 
     <hr/>
 
@@ -31,18 +31,52 @@
     <h3 style="color:#0057A8;">Condition</h3>
     <p>{{ITEM_CONDITION}}</p>
 
+    <!-- Terms -->
+    <h3 style="color:#0057A8;">Terms of Sale</h3>
+    <p>Ships within the United States. We accept PayPal and major credit cards. All items are sold individually. For customer service, contact us through eBay’s Message/Contact Seller system.</p>
+
     <!-- Shipping -->
     <h3 style="color:#0057A8;">Shipping & Returns</h3>
-    <p>{{SHIPPING_INFO}}</p>
-
+    <p>
+        Items that require freight shipping due to size or weight will incur an additional freight charge. 
+        If freight service is needed, we will contact the buyer with details before the item ships.
+    </p>
+    
+    <p>
+        Flat-rate shipping applies only to items that can be sent via USPS Priority Mail, UPS Ground, 
+        or FedEx Ground. The carrier will be chosen at our discretion unless you contact us in advance 
+        to request a specific service.
+    </p>
+    
+    <p>
+        Expedited shipping options such as Next Day or Second Day Air may be available for an additional fee. 
+        All expedited and international shipments will be charged at the appropriate rate.
+    </p>
+    
+    <p>
+        We ship within the United States (excluding Alaska) from Kalamazoo, Michigan. Packages may be sent via 
+        USPS, UPS, FedEx, DHL, or truck freight when required. If you prefer a specific carrier, 
+        please reach out to us before purchase.
+    </p>
+    
+    <p>
+        All items ship individually unless otherwise stated.
+    </p>
     <hr/>
+
+    <!-- Small-Print Disclaimer -->
+    <p style="font-size:11px; color:#333; line-height:1.4; margin-top:10px; margin-bottom:20px;">
+        <strong>Disclaimer:</strong> Kzoo Makers is not an authorized dealer or service center for any brand of power tools, hand tools, or equipment sold. Our items are donated, surplus, or previously owned and may show signs of use, age, or previous configuration. Manufacturer warranties do not apply. We do not guarantee the availability of replacement parts, accessories, or manufacturer support. Battery-powered or electronic tools may contain prior settings or configurations. Buyers are responsible for proper installation, safe operation, and compliance with all safety guidelines and manuals for the product they purchase.
+    </p>
+
     <!-- What This Listing Supports -->
     <h3 style="color:#0057A8;">What Your Purchase Supports</h3>
     <p>
-        Every purchase you make helps fund Kzoo Makers, a Michigan-based 501(c)(3)
+        Every purchase you make helps fund a Michigan-based 501(c)(3)
         nonprofit that provides tools, materials, and hands-on learning opportunities
         for local makers, artists and community members.
         Your order contributes directly to workshops, equipment upkeep,
         and the creative resources we offer to the public. THANK YOU!
     </p>
+
 </div>
