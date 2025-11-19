@@ -71,6 +71,16 @@ a:focus, a:hover {
   text-transform: uppercase;
   border-radius: 40px;
 }
+
+/* Special animated pricing buttons on the main page */
+.btn-main.pricing-cta {
+  /* Animate.css tada effect, looping continuously */
+  animation-name: tada;
+  animation-duration: 1.5s;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+}
+
 .btn-main:hover {
   color: #fff;
 }
