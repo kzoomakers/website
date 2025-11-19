@@ -1,0 +1,48 @@
+<div style="font-family: Arial, sans-serif; max-width: 800px; margin: auto; background-color:#70d9ef; padding:20px;">
+
+    <!-- Top Logos Row With Center Text -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+
+        <img src="https://kzoomakers.org/images/ebay/ebay-logo.png" 
+             alt="Kzoo Makers Logo" 
+             style="width:128px; height:128px;" />
+
+        <div style="text-align:center; flex-grow:1; font-size:32px; font-weight:bold; color:#0057A8;">
+            Thanks for looking!
+        </div>
+
+        <img src="https://kzoomakers.org/images/ebay/certified-501c3.gif" 
+             alt="503(c)(3) Seal" 
+             style="width:128px; height:128px;" />
+    </div>
+
+    <!-- Main Title -->
+    <h1 style="text-align:center; color:#0057A8; margin-top:0; margin-bottom:20px;">
+        You are currently looking at this item
+    </h1>
+
+    <hr/>
+
+    <!-- Item Details -->
+    <h3 style="color:#0057A8;">Item Details</h3>
+    <p>{{ITEM_DESCRIPTION}}</p>
+
+    <!-- Condition -->
+    <h3 style="color:#0057A8;">Condition</h3>
+    <p>{{ITEM_CONDITION}}</p>
+
+    <!-- Shipping -->
+    <h3 style="color:#0057A8;">Shipping & Returns</h3>
+    <p>{{SHIPPING_INFO}}</p>
+
+    <hr/>
+    <!-- What This Listing Supports -->
+    <h3 style="color:#0057A8;">What Your Purchase Supports</h3>
+    <p>
+        Every purchase you make helps fund Kzoo Makers, a Michigan-based 501(c)(3)
+        nonprofit that provides tools, materials, and hands-on learning opportunities
+        for local makers, artists and community members.
+        Your order contributes directly to workshops, equipment upkeep,
+        and the creative resources we offer to the public. THANK YOU!
+    </p>
+</div>
