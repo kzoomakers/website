@@ -1129,6 +1129,21 @@ Wanna tour? 1
   padding: 10px 0;
 }
 
+/* Green badge that sits above the current price */
+.offer-badge {
+  display: inline-block;
+  margin-top: 4px;
+  margin-bottom: 4px;
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+  background-color: #28a745;
+  border-radius: 999px;
+}
+
 /* Allow "Normally $X/m" badge positioning inside any pricing card */
 .pricing-item {
   position: relative;
