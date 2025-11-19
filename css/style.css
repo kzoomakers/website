@@ -1065,7 +1065,7 @@ Wanna tour? 1
 
 /*=================================================================
   Pricing section
-==================================================================*/
+ ==================================================================*/
 .pricing-table {
   padding: 100px 0;
   padding-bottom: 70px;
@@ -1127,6 +1127,57 @@ Wanna tour? 1
   color: #28ABE3;
   font-size: 50px;
   padding: 10px 0;
+}
+
+/* Green badge that sits above the current price */
+.offer-badge {
+  display: inline-block;
+  margin-top: 4px;
+  margin-bottom: 4px;
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+  background-color: #28a745;
+  border-radius: 999px;
+}
+
+/* Allow "Normally $X/m" badge positioning inside any pricing card */
+.pricing-item {
+  position: relative;
+}
+
+/* "Normally $X/m" label in top-right with red strike-through */
+.normal-price-label {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  transform: none;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #c00000;
+  padding: 6px 14px;
+  border-radius: 4px;
+  white-space: nowrap;
+  text-align: center;
+  pointer-events: none;
+  z-index: 5;
+  background-color: transparent;
+}
+
+/* Crisp diagonal red slash over the old price */
+.normal-price-label::after {
+  content: "";
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  top: 50%;
+  height: 3px;
+  background-color: #ff0000;
+  transform: rotate(-18deg);
+  transform-origin: center;
 }
 
 /*=================================================================
