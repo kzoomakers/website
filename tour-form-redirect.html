@@ -3,12 +3,33 @@
 <head>
   <meta charset="utf-8">
   <title>Redirecting to Tour Signup Form…</title>
-  <meta http-equiv="refresh" content="0; url=https://docs.google.com/forms/d/e/1FAIpQLSekvaWfF6zHaQ50nkNLbj131irosv6RQnRCT0qzNWXDnn2y3Q/viewform">
+  <meta http-equiv="refresh" content="3; url=https://docs.google.com/forms/d/e/1FAIpQLSekvaWfF6zHaQ50nkNLbj131irosv6RQnRCT0qzNWXDnn2y3Q/viewform">
   <link rel="canonical" href="https://docs.google.com/forms/d/e/1FAIpQLSekvaWfF6zHaQ50nkNLbj131irosv6RQnRCT0qzNWXDnn2y3Q/viewform">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script>
-    window.location.replace("https://docs.google.com/forms/d/e/1FAIpQLSekvaWfF6zHaQ50nkNLbj131irosv6RQnRCT0qzNWXDnn2y3Q/viewform");
+    document.addEventListener('DOMContentLoaded', function () {
+      var redirectUrl = "https://docs.google.com/forms/d/e/1FAIpQLSekvaWfF6zHaQ50nkNLbj131irosv6RQnRCT0qzNWXDnn2y3Q/viewform";
+      var seconds = 3;
+      var countdownEl = document.getElementById('countdown');
+      if (countdownEl) {
+        countdownEl.textContent = seconds;
+        var intervalId = setInterval(function () {
+          seconds--;
+          if (seconds <= 0) {
+            clearInterval(intervalId);
+            window.location.href = redirectUrl;
+          } else {
+            countdownEl.textContent = seconds;
+          }
+        }, 1000);
+      } else {
+        // Fallback: if countdown element is missing, still redirect after 2 seconds
+        setTimeout(function () {
+          window.location.href = redirectUrl;
+        }, 3000);
+      }
+    });
   </script>
   <style>
     body {
@@ -31,6 +52,7 @@
 <body>
   <div>
     <h1>Redirecting to Tour Signup Form…</h1>
+    <p>Redirecting in <span id="countdown">3</span> seconds…</p>
     <p>If you are not redirected automatically, <a href="https://docs.google.com/forms/d/e/1FAIpQLSekvaWfF6zHaQ50nkNLbj131irosv6RQnRCT0qzNWXDnn2y3Q/viewform">click here to open the form.</a></p>
   </div>
   <script src="js/script.js"></script>
