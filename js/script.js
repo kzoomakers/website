@@ -27,6 +27,47 @@
     document.head.appendChild(gaScript);
   })();
 
+  // Track clicks to the tour signup redirect page across the site
+  function setupTourSignupClickTracking() {
+    // Guard in case gtag is not available for some reason
+    if (typeof window.gtag !== 'function') {
+      return;
+    }
+
+    $(document).on('click', 'a[href$="tour-form-redirect.html"], a[href*="/tour-form-redirect.html"]', function () {
+      try {
+        var $link = $(this);
+        var sourcePage = window.location.pathname || '';
+        var linkText = $.trim($link.text()) || '(no text)';
+        var linkUrl = this.href || '';
+
+        // Try to infer membership plan from nearby pricing card title, if present
+        var membershipPlan = '';
+        var $pricingTitle = $link.closest('.pricing-item').find('.price-title h3').first();
+        if ($pricingTitle.length) {
+          membershipPlan = $.trim($pricingTitle.text());
+        }
+
+        window.gtag('event', 'tour_signup_click', {
+          source_page: sourcePage,
+          link_text: linkText,
+          link_url: linkUrl,
+          membership_plan: membershipPlan || undefined
+        });
+      } catch (e) {
+        // Swallow errors to avoid breaking navigation
+        if (window.console && console.warn) {
+          console.warn('Error tracking tour signup click', e);
+        }
+      }
+    });
+  }
+
+  // Initialize analytics-related behaviors
+  $(function () {
+    setupTourSignupClickTracking();
+  });
+
   /* ========================================================================= */
   /*	Page Preloader
   /* ========================================================================= */
