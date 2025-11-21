@@ -1343,6 +1343,12 @@ Wanna tour? 1
   width: 55px;
   transition: all 0.3s ease 0s;
 }
+.service-2 .service-item img {
+  width: 100%;
+  height: 360px;      /* slightly taller viewport height for all "What We Offer" images */
+  object-fit: cover;  /* intelligent cropping to fill the box */
+  display: block;
+}
 
 /*=================================================================
   Our skills
