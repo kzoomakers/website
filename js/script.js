@@ -5,63 +5,133 @@
 (function ($) {
   'use strict';
 
-  // Google Analytics (gtag.js) - injected on all pages
-  (function loadGoogleAnalytics() {
-    var GA_MEASUREMENT_ID = 'G-K9PW1WKYKW';
-
-    // If gtag is already defined or the script tag exists, don't load it again
-    if (window.gtag || document.querySelector('script[src*="www.googletagmanager.com/gtag/js?id=' + GA_MEASUREMENT_ID + '"]')) {
-      return;
-    }
-
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){ window.dataLayer.push(arguments); }
-    window.gtag = window.gtag || gtag;
-
-    gtag('js', new Date());
-    gtag('config', GA_MEASUREMENT_ID);
-
-    var gaScript = document.createElement('script');
-    gaScript.async = true;
-    gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_MEASUREMENT_ID;
-    document.head.appendChild(gaScript);
-  })();
-
-  // Track clicks to the tour signup redirect page across the site
-  function setupTourSignupClickTracking() {
-    // Guard in case gtag is not available for some reason
-    if (typeof window.gtag !== 'function') {
-      return;
-    }
-
-    $(document).on('click', 'a[href$="tour-form-redirect.html"], a[href*="/tour-form-redirect.html"]', function () {
-      try {
-        var $link = $(this);
-        var sourcePage = window.location.pathname || '';
-        var linkText = $.trim($link.text()) || '(no text)';
-        var linkUrl = this.href || '';
-
-        // Try to infer membership plan from nearby pricing card title, if present
-        var membershipPlan = '';
-        var $pricingTitle = $link.closest('.pricing-item').find('.price-title h3').first();
-        if ($pricingTitle.length) {
-          membershipPlan = $.trim($pricingTitle.text());
-        }
-
-        window.gtag('event', 'tour_signup_click', {
-          source_page: sourcePage,
-          link_text: linkText,
-          link_url: linkUrl,
-          membership_plan: membershipPlan || undefined
-        });
-      } catch (e) {
-        // Swallow errors to avoid breaking navigation
-        if (window.console && console.warn) {
-          console.warn('Error tracking tour signup click', e);
-        }
+    // Google Analytics (gtag.js) - injected on all pages
+    (function loadGoogleAnalytics() {
+      var GA_MEASUREMENT_ID = 'G-K9PW1WKYKW';
+  
+      // If gtag is already defined or the script tag exists, don't load it again
+      if (window.gtag || document.querySelector('script[src*="www.googletagmanager.com/gtag/js?id=' + GA_MEASUREMENT_ID + '"]')) {
+        return;
       }
-    });
-  }
+  
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ window.dataLayer.push(arguments); }
+      window.gtag = window.gtag || gtag;
+  
+      gtag('js', new Date());
+      gtag('config', GA_MEASUREMENT_ID);
+  
+      var gaScript = document.createElement('script');
+      gaScript.async = true;
+      gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_MEASUREMENT_ID;
+      document.head.appendChild(gaScript);
+    })();
+  
+    // Heap Analytics - injected on all pages
+    (function loadHeapAnalytics() {
+      window.heapReadyCb = window.heapReadyCb || [];
+      window.heap = window.heap || [];
+      heap.load = function (envId, clientConfig) {
+        window.heap.envId = envId;
+        window.heap.clientConfig = clientConfig = clientConfig || {};
+        window.heap.clientConfig.shouldFetchServerConfig = !1;
+  
+        var script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.async = true;
+        script.src = 'https://cdn.us.heap-api.com/config/' + envId + '/heap_config.js';
+  
+        var firstScript = document.getElementsByTagName('script')[0];
+        firstScript.parentNode.insertBefore(script, firstScript);
+  
+        var apiMethods = [
+          'init',
+          'startTracking',
+          'stopTracking',
+          'track',
+          'resetIdentity',
+          'identify',
+          'getSessionId',
+          'getUserId',
+          'getIdentity',
+          'addUserProperties',
+          'addEventProperties',
+          'removeEventProperty',
+          'clearEventProperties',
+          'addAccountProperties',
+          'addAdapter',
+          'addTransformer',
+          'addTransformerFn',
+          'onReady',
+          'addPageviewProperties',
+          'removePageviewProperty',
+          'clearPageviewProperties',
+          'trackPageview'
+        ];
+  
+        var makeStub = function (methodName) {
+          return function () {
+            var args = Array.prototype.slice.call(arguments, 0);
+            window.heapReadyCb.push({
+              name: methodName,
+              fn: function () {
+                if (heap[methodName]) {
+                  heap[methodName].apply(heap, args);
+                }
+              }
+            });
+          };
+        };
+  
+        for (var i = 0; i < apiMethods.length; i++) {
+          heap[apiMethods[i]] = makeStub(apiMethods[i]);
+        }
+      };
+  
+      // Your Heap environment ID
+      heap.load('1960308387');
+    })();
+  
+    // Track clicks to the tour signup redirect page across the site
+    function setupTourSignupClickTracking() {
+      $(document).on('click', 'a[href$="tour-form-redirect.html"], a[href*="/tour-form-redirect.html"]', function () {
+        try {
+          var $link = $(this);
+          var sourcePage = window.location.pathname || '';
+          var linkText = $.trim($link.text()) || '(no text)';
+          var linkUrl = this.href || '';
+  
+          // Try to infer membership plan from nearby pricing card title, if present
+          var membershipPlan = '';
+          var $pricingTitle = $link.closest('.pricing-item').find('.price-title h3').first();
+          if ($pricingTitle.length) {
+            membershipPlan = $.trim($pricingTitle.text());
+          }
+  
+          var eventProps = {
+            source_page: sourcePage,
+            link_text: linkText,
+            link_url: linkUrl,
+            membership_plan: membershipPlan || undefined
+          };
+  
+          // GA4 event
+          if (typeof window.gtag === 'function') {
+            window.gtag('event', 'tour_signup_click', eventProps);
+          }
+  
+          // Heap event
+          if (window.heap && typeof window.heap.track === 'function') {
+            window.heap.track('tour_signup_click', eventProps);
+          }
+        } catch (e) {
+          // Swallow errors to avoid breaking navigation
+          if (window.console && console.warn) {
+            console.warn('Error tracking tour signup click', e);
+          }
+        }
+      });
+    }
 
   // Initialize analytics-related behaviors
   $(function () {
