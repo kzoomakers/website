@@ -159,6 +159,11 @@
             aria-controls="${CONFIG.navContainerId}" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>
+          
+          <!-- Animated menu button -->
+          <div id="menu-btn" class="close">
+            <span class="text">MENU</span>
+          </div>
 
           <div class="collapse navbar-collapse" id="${CONFIG.navContainerId}">
             <ul class="navbar-nav ml-auto text-center">
@@ -239,6 +244,48 @@
   }
 
   /**
+   * Initialize animated menu button
+   */
+  function initializeMenuButton() {
+    const menuBtn = document.getElementById('menu-btn');
+    const navCollapse = document.getElementById(CONFIG.navContainerId);
+    
+    if (menuBtn && navCollapse) {
+      menuBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Toggle classes
+        if (menuBtn.classList.contains('open')) {
+          menuBtn.classList.remove('open');
+          menuBtn.classList.add('close');
+          // Collapse the menu
+          $(navCollapse).collapse('hide');
+        } else {
+          menuBtn.classList.remove('close');
+          menuBtn.classList.add('open');
+          // Expand the menu
+          $(navCollapse).collapse('show');
+        }
+      });
+      
+      // Listen for Bootstrap collapse events to sync button state
+      $(navCollapse).on('hidden.bs.collapse', function() {
+        if (menuBtn.classList.contains('open')) {
+          menuBtn.classList.remove('open');
+          menuBtn.classList.add('close');
+        }
+      });
+      
+      $(navCollapse).on('shown.bs.collapse', function() {
+        if (menuBtn.classList.contains('close')) {
+          menuBtn.classList.remove('close');
+          menuBtn.classList.add('open');
+        }
+      });
+    }
+  }
+
+  /**
    * Load navigation data and inject into page
    */
   function loadNavigation() {
@@ -257,6 +304,8 @@
           setTimeout(adjustSubmenuPositions, 100);
           // Initialize mobile dropdown behavior
           setTimeout(initializeMobileDropdowns, 100);
+          // Initialize animated menu button
+          setTimeout(initializeMenuButton, 100);
         } else {
           console.error('Navigation header element not found');
         }
