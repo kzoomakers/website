@@ -209,37 +209,38 @@
    * Initialize mobile dropdown behavior
    */
   function initializeMobileDropdowns() {
-    // Handle main dropdown clicks on mobile
-    const dropdownToggles = document.querySelectorAll('.navbar-nav .dropdown-toggle');
+    // Check if on mobile
+    function isMobileMode() {
+      const navbarToggler = document.querySelector('.navbar-toggler');
+      return navbarToggler && window.getComputedStyle(navbarToggler).display !== 'none';
+    }
     
-    dropdownToggles.forEach(toggle => {
-      toggle.addEventListener('click', function(e) {
-        // On mobile (when navbar-toggler is visible), handle dropdown clicks
-        const navbarToggler = document.querySelector('.navbar-toggler');
-        const isCollapsed = navbarToggler && window.getComputedStyle(navbarToggler).display !== 'none';
-        
-        if (isCollapsed) {
-          e.preventDefault();
-          e.stopPropagation();
-          
-          const parentLi = this.closest('.dropdown, .dropdown-submenu');
-          const dropdownMenu = parentLi.querySelector('.dropdown-menu');
-          
-          // Close other dropdowns at the same level
-          const siblings = Array.from(parentLi.parentElement.children).filter(el => el !== parentLi);
-          siblings.forEach(sibling => {
-            const siblingMenu = sibling.querySelector('.dropdown-menu');
-            if (siblingMenu) {
-              siblingMenu.classList.remove('show');
-            }
-          });
-          
-          // Toggle current dropdown
-          if (dropdownMenu) {
-            dropdownMenu.classList.toggle('show');
+    // Handle main dropdown toggles
+    $('.navbar-nav > li.dropdown > .dropdown-toggle').unbind('click').click(function(e) {
+      if (!isMobileMode()) {
+        return;
+      }
+      
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const $parentLi = $(this).closest('.dropdown');
+      const $dropdownMenu = $parentLi.children('.dropdown-menu');
+      
+      if ($dropdownMenu.length === 0) return;
+      
+      // Close other main dropdowns
+      const $navbarNav = $parentLi.closest('.navbar-nav');
+      if ($navbarNav.length > 0) {
+        $navbarNav.find('> li.dropdown').each(function() {
+          if (this !== $parentLi[0]) {
+            $(this).children('.dropdown-menu').removeClass('show');
           }
-        }
-      });
+        });
+      }
+      
+      // Toggle current dropdown
+      $dropdownMenu.toggleClass('show');
     });
   }
 

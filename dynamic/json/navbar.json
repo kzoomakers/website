@@ -25,15 +25,7 @@
         },
         {
           "label": "Meetups",
-          "type": "submenu",
-          "icon": "tf-ion-chevron-right",
-          "direction": "dropright",
-          "items": [
-            {
-              "label": "Fiber Arts Meetup",
-              "href": "meetup-fiber-arts.html"
-            }
-          ]
+          "href": "meetups.html"
         }
       ]
     },
@@ -125,23 +117,7 @@
         },
         {
           "label": "How To",
-          "type": "submenu",
-          "icon": "tf-ion-chevron-right",
-          "direction": "dropright",
-          "items": [
-            {
-              "label": "How to use a bridgeport mill",
-              "href": "how-to-use-a-bridgeport-mill.html"
-            },
-            {
-              "label": "How to use a metal lathe",
-              "href": "how-to-use-a-metal-lathe.html"
-            },
-            {
-              "label": "How to use a laser cutter",
-              "href": "how-to-use-a-laser-cutter.html"
-            }
-          ]
+          "href": "how-to.html"
         }
       ]
     }
