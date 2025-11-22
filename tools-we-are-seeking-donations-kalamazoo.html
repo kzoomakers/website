@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+
+<!--
+ // FACEBOOK: https://www.facebook.com/KzooMakers/
+ // GITHUB: https://github.com/kzoomakers/website
+-->
+
+<html lang="en">
+<head>
+
+  <!-- Basic Page Needs
+  ================================================== -->
+  <meta charset="utf-8">
+  <title>Tools We're Looking For - Donate to Kalamazoo Makerspace Nonprofit</title>
+
+  <!-- Mobile Specific Metas
+  ================================================== -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="Donate tools and equipment to Kalamazoo Makerspace, a nonprofit organization. We accept hand tools, power tools, electronics, and more. Tax-deductible donations support our community makerspace.">
+  <meta name="keywords" content="donate tools Kalamazoo, nonprofit donations, tax deductible donations, makerspace donations, hand tools, power tools, electronics, Kalamazoo nonprofit, community makerspace">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="author" content="Kzoo Makers">
+  <meta name="generator" content="Kzoo Makers Community Website">
+  <meta name="robots" content="index, follow">
+
+  <!-- Favicon -->
+  <link rel="shortcut icon" type="image/x-icon" href="images/favicon.png" />
+  <link rel="canonical" href="https://kzoomakers.org/tools-we-need.html">
+
+  <!-- CSS
+  ================================================== -->
+  <!-- Themefisher Icon font -->
+  <link rel="stylesheet" href="plugins/themefisher-font/style.css">
+  <!-- bootstrap.min css -->
+  <link rel="stylesheet" href="plugins/bootstrap/bootstrap.min.css">
+  <!-- animation css -->
+  <link rel="stylesheet" href="plugins/animate/animate.css">
+  <!-- Slick Carousel -->
+  <link rel="stylesheet" href="plugins/slick/slick.css">
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Inventory Page Stylesheet -->
+  <link rel="stylesheet" href="css/inventory.css">
+</head>
+<body id="body">
+
+  <!--
+  Start Preloader
+  ==================================== -->
+  <div id="preloader">
+    <div class='preloader'>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </div>
+  <!--
+  End Preloader
+  ==================================== -->
+
+<!--
+Fixed Navigation
+==================================== -->
+<header class="navigation fixed-top">
+  <!-- Navigation will be dynamically loaded by navbar.js -->
+</header>
+<!--
+End Fixed Navigation
+==================================== -->
+
+<section class="single-page-header">
+	<div class="container">
+		<div class="row">
+			<div class="col-md-12">
+				<h1>Tools We're Looking For</h1>
+				<ol class="breadcrumb header-bradcrumb justify-content-center">
+					<li class="breadcrumb-item"><a href="index.html" class="text-white">Home</a></li>
+					<li class="breadcrumb-item"><a href="index.html" class="text-white">Support Us</a></li>
+					<li class="breadcrumb-item active" aria-current="page">Donate Tools</li>
+				</ol>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- Start Inventory Section
+=========================================== -->
+<section class="inventory-section">
+  <div class="container">
+    <div class="row justify-content-center mb-5">
+      <div class="col-lg-8">
+        <div class="title text-center">
+          <h2>Tools We're Looking For</h2>
+          <p>Help support Kalamazoo Makerspace by donating tools and equipment! We're always looking for hand tools, power tools, electronics, and supplies to expand our community makerspace. All donations are tax-deductible to the highest extent allowed by tax code and law. Search below to see what tools we need most.</p>
+          <div class="border"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-12">
+        <div class="inventory-stats">
+          <div class="stat-card">
+            <div class="stat-number" id="total-quantity">0</div>
+            <div class="stat-label">Different Items Needed</div>
+          </div>
+        </div>
+        
+        <!-- Category Filter Section with Stats -->
+        <div class="category-filter-section">
+          <div class="filter-header-wrapper">
+            <div class="filter-content">
+              <h3>Filter by Tool Category</h3>
+              <div id="type-counts-container" class="category-filter-controls">
+                <!-- Category filters will be dynamically populated -->
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="text-center mb-4 search-and-reset-container">
+          <input type="text" id="searchInput" class="search-box" placeholder="🔍 Search for tools to donate...">
+          <button id="resetFiltersBtn" class="btn btn-secondary ml-2">Reset Filters</button>
+        </div>
+        
+        <div class="inventory-table-wrapper">
+          <div class="table-container">
+            <div class="inventory-table">
+          <table id="inventoryTable">
+            <!-- Table will be dynamically populated by inventory.js -->
+          </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-center mt-5">
+          <a href="index.html" class="btn btn-main">← Back to Home</a>
+          <a href="contact.html" class="btn btn-main ml-2">Contact Us About Donations</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer id="footer" class="bg-one">
+  <!-- Footer will be dynamically loaded by footer.js -->
+</footer>
+
+<!-- end Footer Area
+========================================== -->
+<!--
+    Essential Scripts
+    =====================================-->
+<!-- Main jQuery -->
+<script src="plugins/jquery/jquery.min.js"></script>
+
+<!-- Bootstrap4 -->
+<script src="plugins/bootstrap/bootstrap.min.js"></script>
+<!-- Parallax -->
+<script src="plugins/parallax/jquery.parallax-1.1.3.js"></script>
+<!-- Owl Carousel -->
+<script src="plugins/slick/slick.min.js"></script>
+<!-- Smooth Scroll js -->
+<script src="plugins/smooth-scroll/smooth-scroll.min.js"></script>
+
+<!-- Dynamic Navigation -->
+<script src="dynamic/js/navbar.js"></script>
+
+<!-- Dynamic Footer -->
+<script src="dynamic/js/footer.js"></script>
+
+<!-- Custom js -->
+<script src="js/script.js"></script>
+
+<!-- Dynamic Donation Inventory Library -->
+<script src="dynamic/js/inventory-donations.js"></script>
+
+<script>
+  // Initialize the donation inventory table with tool data
+  document.addEventListener('DOMContentLoaded', function() {
+    const inventory = new DonationInventoryTable({
+      jsonPath: 'dynamic/json/inventory-misc-tools.json',
+      tableId: 'inventoryTable',
+      searchInputId: 'searchInput',
+      statsConfig: {
+        totalItems: 'total-items',
+        totalQuantity: 'total-quantity',
+        typeCounts: 'type-counts-container'
+      },
+      columns: ['description', 'type'],
+      columnHeaders: {
+        description: 'Item We Need',
+        type: 'Category'
+      },
+      onLoad: function(data) {
+        console.log('Tools we need loaded:', data.length, 'items');
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
