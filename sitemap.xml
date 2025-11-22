@@ -1,240 +1,290 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+                            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 
+  <!-- Homepage - Highest Priority -->
   <url>
     <loc>https://kzoomakers.org/</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
+  <!-- Core Pages - High Priority -->
   <url>
     <loc>https://kzoomakers.org/about.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
   </url>
 
   <url>
     <loc>https://kzoomakers.org/pricing.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://kzoomakers.org/team.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.9</priority>
   </url>
 
   <url>
     <loc>https://kzoomakers.org/contact.html</loc>
+    <lastmod>2025-01-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://kzoomakers.org/calendar.html</loc>
+    <lastmod>2025-01-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Workshop & Equipment Pages - High Priority -->
+  <url>
+    <loc>https://kzoomakers.org/wood-shop.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://kzoomakers.org/calendar.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://kzoomakers.org/wood-shop.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
     <loc>https://kzoomakers.org/metal-shop.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://kzoomakers.org/laser-shop.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://kzoomakers.org/3d-printing.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Community & Events -->
+  <url>
+    <loc>https://kzoomakers.org/meetup-fiber-arts.html</loc>
+    <lastmod>2025-01-22</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
     <loc>https://kzoomakers.org/meeting-space.html</loc>
+    <lastmod>2025-01-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Educational Resources -->
+  <url>
+    <loc>https://kzoomakers.org/how-to-use-a-bridgeport-mill.html</loc>
+    <lastmod>2025-01-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://kzoomakers.org/how-to-use-a-metal-lathe.html</loc>
+    <lastmod>2025-01-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://kzoomakers.org/how-to-use-a-laser-cutter.html</loc>
+    <lastmod>2025-01-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Additional Pages -->
+  <url>
+    <loc>https://kzoomakers.org/team.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
     <loc>https://kzoomakers.org/woodshop-inventory.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-
-  <url>
-    <loc>https://kzoomakers.org/meetup-fiber-arts.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-
-  <url>
-    <loc>https://kzoomakers.org/how-to-use-a-bridgeport-mill.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://kzoomakers.org/how-to-use-a-metal-lathe.html</loc>
+    <loc>https://kzoomakers.org/service.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://kzoomakers.org/how-to-use-a-laser-cutter.html</loc>
+    <loc>https://kzoomakers.org/portfolio.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
     <loc>https://kzoomakers.org/other-makerspaces.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
-  </url>
-
-  <url>
-    <loc>https://kzoomakers.org/posters.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
-  </url>
-
-  <url>
-    <loc>https://kzoomakers.org/service.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
 
   <url>
-    <loc>https://kzoomakers.org/portfolio.html</loc>
+    <loc>https://kzoomakers.org/posters.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
 
   <url>
     <loc>https://kzoomakers.org/sitemap.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
+    <priority>0.4</priority>
   </url>
 
+  <!-- Kalamazoo Area SEO Landing Pages -->
   <url>
     <loc>https://kzoomakers.org/s-3d-printing-service-kalamazoo.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
  
   <url>
     <loc>https://kzoomakers.org/s-wood-shop-kalamazoo-makerspace.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
  
   <url>
     <loc>https://kzoomakers.org/s-metal-shop-kalamazoo-makerspace.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
  
   <url>
     <loc>https://kzoomakers.org/s-welding-shop-kalamazoo.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
  
   <url>
     <loc>https://kzoomakers.org/s-industrial-laser-cutter-kalamazoo.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
  
   <url>
     <loc>https://kzoomakers.org/s-tool-rental-kalamazoo.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
 
-  <!-- Battle Creek area search landings -->
+  <!-- Battle Creek Area SEO Landing Pages -->
   <url>
     <loc>https://kzoomakers.org/s-3d-printing-service-battle-creek.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
 
   <url>
     <loc>https://kzoomakers.org/s-wood-shop-battle-creek-makerspace.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
 
   <url>
     <loc>https://kzoomakers.org/s-metal-shop-battle-creek-makerspace.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
 
   <url>
     <loc>https://kzoomakers.org/s-welding-shop-battle-creek.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
 
   <url>
     <loc>https://kzoomakers.org/s-industrial-laser-cutter-battle-creek.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
 
   <url>
     <loc>https://kzoomakers.org/s-tool-rental-battle-creek.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
 
-  <!-- Portage area search landings -->
+  <!-- Portage Area SEO Landing Pages -->
   <url>
     <loc>https://kzoomakers.org/s-3d-printing-service-portage.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
 
   <url>
     <loc>https://kzoomakers.org/s-wood-shop-portage-makerspace.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
 
   <url>
     <loc>https://kzoomakers.org/s-metal-shop-portage-makerspace.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
 
   <url>
     <loc>https://kzoomakers.org/s-welding-shop-portage.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
 
   <url>
     <loc>https://kzoomakers.org/s-industrial-laser-cutter-portage.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
 
   <url>
     <loc>https://kzoomakers.org/s-tool-rental-portage.html</loc>
+    <lastmod>2025-01-22</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
  
 </urlset>

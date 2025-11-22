@@ -1,0 +1,2172 @@
+{
+  "items": [
+    {
+      "description": "Abrasive Belt Set",
+      "type": "Sanding & Abrasives"
+    },
+    {
+      "description": "Adjustable Wrench",
+      "type": "Hand Tools \u2014 Gripping & Holding"
+    },
+    {
+      "description": "Airbrush Kit",
+      "type": "Painting & Surface Coating"
+    },
+    {
+      "description": "Angle Grinder",
+      "type": "Metalworking"
+    },
+    {
+      "description": "Arduino Uno",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "Ball Peen Hammer",
+      "type": "Hand Tools \u2014 Striking & Shaping"
+    },
+    {
+      "description": "Band Saw",
+      "type": "Power Tools \u2014 Stationary"
+    },
+    {
+      "description": "Bar Clamp",
+      "type": "Clamps, Vises & Workholding"
+    },
+    {
+      "description": "Bench Grinder",
+      "type": "Metalworking"
+    },
+    {
+      "description": "Bench Vise",
+      "type": "Clamps, Vises & Workholding"
+    },
+    {
+      "description": "Calipers",
+      "type": "Hand Measuring Tools"
+    },
+    {
+      "description": "Center Punch",
+      "type": "Alignment, Layout & Marking"
+    },
+    {
+      "description": "Chalk Line",
+      "type": "Alignment, Layout & Marking"
+    },
+    {
+      "description": "Chisel Set",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Clamp Meter",
+      "type": "Power Measuring & Diagnostics"
+    },
+    {
+      "description": "C-Clamp Set",
+      "type": "Clamps, Vises & Workholding"
+    },
+    {
+      "description": "CNC Router",
+      "type": "Digital Fabrication \u2014 Cutting"
+    },
+    {
+      "description": "Claw Hammer",
+      "type": "Hand Tools \u2014 Striking & Shaping"
+    },
+    {
+      "description": "Shop Rags",
+      "type": "Chemicals & Consumables"
+    },
+    {
+      "description": "Cordless Drill",
+      "type": "Power Tools \u2014 Portable"
+    },
+    {
+      "description": "Coping Saw",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Cutting Mat",
+      "type": "Textiles & Sewing"
+    },
+    {
+      "description": "Cutoff Saw",
+      "type": "Metalworking"
+    },
+    {
+      "description": "Deburring Tool",
+      "type": "Cleaning, Deburring & Polishing"
+    },
+    {
+      "description": "Dial Indicator",
+      "type": "Metrology & Calibration"
+    },
+    {
+      "description": "Drill Jig",
+      "type": "Jigs, Fixtures & Specialty Rigs"
+    },
+    {
+      "description": "Drill Press",
+      "type": "Power Tools \u2014 Stationary"
+    },
+    {
+      "description": "Epoxy Adhesive",
+      "type": "Adhesives, Fasteners & Assembly Tools"
+    },
+    {
+      "description": "ESP32 Module",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "FDM 3D Printer",
+      "type": "Digital Fabrication \u2014 Additive"
+    },
+    {
+      "description": "Featherboard",
+      "type": "Jigs, Fixtures & Specialty Rigs"
+    },
+    {
+      "description": "Filament Dryer",
+      "type": "Digital Fabrication \u2014 Additive"
+    },
+    {
+      "description": "Function Generator",
+      "type": "Electronics Tools & Bench Equipment"
+    },
+    {
+      "description": "Fusion 360 License",
+      "type": "CAD/CAM/EDA Software"
+    },
+    {
+      "description": "Gauge Blocks",
+      "type": "Metrology & Calibration"
+    },
+    {
+      "description": "Hand Plane",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Hacksaw",
+      "type": "Hand Tools \u2014 Cutting"
+    },
+    {
+      "description": "Heat Gun",
+      "type": "Plastics, Composites & Thermoforming"
+    },
+    {
+      "description": "Hot Air Station",
+      "type": "Soldering & Rework"
+    },
+    {
+      "description": "HVLP Spray Gun",
+      "type": "Painting & Surface Coating"
+    },
+    {
+      "description": "IMU Sensor",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "Impact Driver",
+      "type": "Power Tools \u2014 Portable"
+    },
+    {
+      "description": "Industrial Sewing Machine",
+      "type": "Textiles & Sewing"
+    },
+    {
+      "description": "Isopropyl Alcohol",
+      "type": "Chemicals & Consumables"
+    },
+    {
+      "description": "KiCad Suite",
+      "type": "CAD/CAM/EDA Software"
+    },
+    {
+      "description": "Laser Cutter",
+      "type": "Digital Fabrication \u2014 Cutting"
+    },
+    {
+      "description": "Locking Pliers",
+      "type": "Hand Tools \u2014 Gripping & Holding"
+    },
+    {
+      "description": "Lubricant Spray",
+      "type": "Chemicals & Consumables"
+    },
+    {
+      "description": "Marking Gauge",
+      "type": "Alignment, Layout & Marking"
+    },
+    {
+      "description": "Metal File Set",
+      "type": "Metalworking"
+    },
+    {
+      "description": "Mill Drill",
+      "type": "Machining"
+    },
+    {
+      "description": "Mini Lathe",
+      "type": "Machining"
+    },
+    {
+      "description": "Multimeter",
+      "type": "Electronics Tools & Bench Equipment"
+    },
+    {
+      "description": "N95 Masks",
+      "type": "Safety & PPE"
+    },
+    {
+      "description": "Needle Nose Pliers",
+      "type": "Hand Tools \u2014 Gripping & Holding"
+    },
+    {
+      "description": "Orbital Sander",
+      "type": "Sanding & Abrasives"
+    },
+    {
+      "description": "Oscilloscope",
+      "type": "Electronics Tools & Bench Equipment"
+    },
+    {
+      "description": "Paint Brushes",
+      "type": "Painting & Surface Coating"
+    },
+    {
+      "description": "Parts Organizer",
+      "type": "Storage, Handling & Organization"
+    },
+    {
+      "description": "Planer",
+      "type": "Power Tools \u2014 Stationary"
+    },
+    {
+      "description": "Plastic Bender",
+      "type": "Plastics, Composites & Thermoforming"
+    },
+    {
+      "description": "Polishing Wheel",
+      "type": "Cleaning, Deburring & Polishing"
+    },
+    {
+      "description": "Portable Jigsaw",
+      "type": "Power Tools \u2014 Portable"
+    },
+    {
+      "description": "Power Analyzer",
+      "type": "Power Measuring & Diagnostics"
+    },
+    {
+      "description": "Precision Weights",
+      "type": "Metrology & Calibration"
+    },
+    {
+      "description": "Resin 3D Printer",
+      "type": "Digital Fabrication \u2014 Additive"
+    },
+    {
+      "description": "Resin Casting Set",
+      "type": "Casting & Molding"
+    },
+    {
+      "description": "Rivet Gun",
+      "type": "Adhesives, Fasteners & Assembly Tools"
+    },
+    {
+      "description": "Router",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Router Guide",
+      "type": "Jigs, Fixtures & Specialty Rigs"
+    },
+    {
+      "description": "Rubber Mallet",
+      "type": "Hand Tools \u2014 Striking & Shaping"
+    },
+    {
+      "description": "Sanding Block",
+      "type": "Sanding & Abrasives"
+    },
+    {
+      "description": "Safety Glasses",
+      "type": "Safety & PPE"
+    },
+    {
+      "description": "Serger",
+      "type": "Textiles & Sewing"
+    },
+    {
+      "description": "Shop Vac",
+      "type": "Cleaning, Deburring & Polishing"
+    },
+    {
+      "description": "Silicone Mold Kit",
+      "type": "Casting & Molding"
+    },
+    {
+      "description": "SolidWorks Seat",
+      "type": "CAD/CAM/EDA Software"
+    },
+    {
+      "description": "Soldering Iron",
+      "type": "Soldering & Rework"
+    },
+    {
+      "description": "Steel Ruler",
+      "type": "Hand Measuring Tools"
+    },
+    {
+      "description": "Storage Bins",
+      "type": "Storage, Handling & Organization"
+    },
+    {
+      "description": "Surface Plate",
+      "type": "Machining"
+    },
+    {
+      "description": "Table Saw",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Tape Measure",
+      "type": "Hand Measuring Tools"
+    },
+    {
+      "description": "Tin Snips",
+      "type": "Hand Tools \u2014 Cutting"
+    },
+    {
+      "description": "Tool Chest",
+      "type": "Storage, Handling & Organization"
+    },
+    {
+      "description": "Utility Knife",
+      "type": "Hand Tools \u2014 Cutting"
+    },
+    {
+      "description": "Vacuum Chamber",
+      "type": "Casting & Molding"
+    },
+    {
+      "description": "Vacuum Former",
+      "type": "Plastics, Composites & Thermoforming"
+    },
+    {
+      "description": "Vinyl Cutter",
+      "type": "Digital Fabrication \u2014 Cutting"
+    },
+    {
+      "description": "Watt Meter",
+      "type": "Power Measuring & Diagnostics"
+    },
+    {
+      "description": "Welding Helmet",
+      "type": "Safety & PPE"
+    },
+    {
+      "description": "Wood Screws Assortment",
+      "type": "Adhesives, Fasteners & Assembly Tools"
+    },
+    {
+      "description": "Angle Finder",
+      "type": "Hand Measuring Tools"
+    },
+    {
+      "description": "Micrometer Set",
+      "type": "Hand Measuring Tools"
+    },
+    {
+      "description": "Digital Caliper",
+      "type": "Hand Measuring Tools"
+    },
+    {
+      "description": "Laser Distance Meter",
+      "type": "Hand Measuring Tools"
+    },
+    {
+      "description": "Combination Square",
+      "type": "Hand Measuring Tools"
+    },
+    {
+      "description": "Protractor",
+      "type": "Hand Measuring Tools"
+    },
+    {
+      "description": "Feeler Gauge Set",
+      "type": "Hand Measuring Tools"
+    },
+    {
+      "description": "Thread Pitch Gauge",
+      "type": "Hand Measuring Tools"
+    },
+    {
+      "description": "Radius Gauge",
+      "type": "Hand Measuring Tools"
+    },
+    {
+      "description": "Telescoping Gauge",
+      "type": "Hand Measuring Tools"
+    },
+    {
+      "description": "Bore Gauge",
+      "type": "Hand Measuring Tools"
+    },
+    {
+      "description": "Depth Gauge",
+      "type": "Hand Measuring Tools"
+    },
+    {
+      "description": "Circular Saw",
+      "type": "Power Tools — Portable"
+    },
+    {
+      "description": "Reciprocating Saw",
+      "type": "Power Tools — Portable"
+    },
+    {
+      "description": "Angle Grinder (Cordless)",
+      "type": "Power Tools — Portable"
+    },
+    {
+      "description": "Rotary Tool (Dremel)",
+      "type": "Power Tools — Portable"
+    },
+    {
+      "description": "Belt Sander",
+      "type": "Power Tools — Portable"
+    },
+    {
+      "description": "Detail Sander",
+      "type": "Power Tools — Portable"
+    },
+    {
+      "description": "Biscuit Joiner",
+      "type": "Power Tools — Portable"
+    },
+    {
+      "description": "Plate Joiner",
+      "type": "Power Tools — Portable"
+    },
+    {
+      "description": "Nail Gun (Pneumatic)",
+      "type": "Power Tools — Portable"
+    },
+    {
+      "description": "Brad Nailer",
+      "type": "Power Tools — Portable"
+    },
+    {
+      "description": "Staple Gun (Electric)",
+      "type": "Power Tools — Portable"
+    },
+    {
+      "description": "Heat Gun (Industrial)",
+      "type": "Power Tools — Portable"
+    },
+    {
+      "description": "Miter Saw",
+      "type": "Power Tools — Stationary"
+    },
+    {
+      "description": "Chop Saw",
+      "type": "Power Tools — Stationary"
+    },
+    {
+      "description": "Scroll Saw",
+      "type": "Power Tools — Stationary"
+    },
+    {
+      "description": "Jointer",
+      "type": "Power Tools — Stationary"
+    },
+    {
+      "description": "Thickness Planer",
+      "type": "Power Tools — Stationary"
+    },
+    {
+      "description": "Drum Sander",
+      "type": "Power Tools — Stationary"
+    },
+    {
+      "description": "Spindle Sander",
+      "type": "Power Tools — Stationary"
+    },
+    {
+      "description": "Mortiser",
+      "type": "Power Tools — Stationary"
+    },
+    {
+      "description": "Wood Lathe",
+      "type": "Power Tools — Stationary"
+    },
+    {
+      "description": "Metal Lathe",
+      "type": "Machining"
+    },
+    {
+      "description": "Bridgeport Mill",
+      "type": "Machining"
+    },
+    {
+      "description": "CNC Mill",
+      "type": "Machining"
+    },
+    {
+      "description": "CNC Lathe",
+      "type": "Machining"
+    },
+    {
+      "description": "Surface Grinder",
+      "type": "Machining"
+    },
+    {
+      "description": "Tool & Cutter Grinder",
+      "type": "Machining"
+    },
+    {
+      "description": "Horizontal Band Saw",
+      "type": "Machining"
+    },
+    {
+      "description": "Vertical Band Saw",
+      "type": "Machining"
+    },
+    {
+      "description": "Collet Set",
+      "type": "Machining"
+    },
+    {
+      "description": "End Mill Set",
+      "type": "Machining"
+    },
+    {
+      "description": "Tap & Die Set",
+      "type": "Machining"
+    },
+    {
+      "description": "Boring Bar Set",
+      "type": "Machining"
+    },
+    {
+      "description": "Lathe Tool Set",
+      "type": "Machining"
+    },
+    {
+      "description": "Indexable Insert Set",
+      "type": "Machining"
+    },
+    {
+      "description": "MIG Welder",
+      "type": "Welding & Fabrication"
+    },
+    {
+      "description": "TIG Welder",
+      "type": "Welding & Fabrication"
+    },
+    {
+      "description": "Stick Welder",
+      "type": "Welding & Fabrication"
+    },
+    {
+      "description": "Plasma Cutter",
+      "type": "Welding & Fabrication"
+    },
+    {
+      "description": "Oxy-Acetylene Torch",
+      "type": "Welding & Fabrication"
+    },
+    {
+      "description": "Welding Table",
+      "type": "Welding & Fabrication"
+    },
+    {
+      "description": "Welding Clamps",
+      "type": "Welding & Fabrication"
+    },
+    {
+      "description": "Welding Magnets",
+      "type": "Welding & Fabrication"
+    },
+    {
+      "description": "Chipping Hammer",
+      "type": "Welding & Fabrication"
+    },
+    {
+      "description": "Wire Brush (Welding)",
+      "type": "Welding & Fabrication"
+    },
+    {
+      "description": "Sheet Metal Brake",
+      "type": "Metalworking"
+    },
+    {
+      "description": "Sheet Metal Shear",
+      "type": "Metalworking"
+    },
+    {
+      "description": "English Wheel",
+      "type": "Metalworking"
+    },
+    {
+      "description": "Bead Roller",
+      "type": "Metalworking"
+    },
+    {
+      "description": "Metal Punch Set",
+      "type": "Metalworking"
+    },
+    {
+      "description": "Flaring Tool",
+      "type": "Metalworking"
+    },
+    {
+      "description": "Pipe Bender",
+      "type": "Metalworking"
+    },
+    {
+      "description": "Tube Notcher",
+      "type": "Metalworking"
+    },
+    {
+      "description": "Hydraulic Press",
+      "type": "Metalworking"
+    },
+    {
+      "description": "Arbor Press",
+      "type": "Metalworking"
+    },
+    {
+      "description": "Wire Wheel",
+      "type": "Metalworking"
+    },
+    {
+      "description": "Countersink Set",
+      "type": "Metalworking"
+    },
+    {
+      "description": "Reamer Set",
+      "type": "Metalworking"
+    },
+    {
+      "description": "Scribe",
+      "type": "Alignment, Layout & Marking"
+    },
+    {
+      "description": "Dividers",
+      "type": "Alignment, Layout & Marking"
+    },
+    {
+      "description": "Trammel Points",
+      "type": "Alignment, Layout & Marking"
+    },
+    {
+      "description": "Carpenter's Pencil",
+      "type": "Alignment, Layout & Marking"
+    },
+    {
+      "description": "Soapstone Markers",
+      "type": "Alignment, Layout & Marking"
+    },
+    {
+      "description": "Layout Dye",
+      "type": "Alignment, Layout & Marking"
+    },
+    {
+      "description": "Laser Level",
+      "type": "Alignment, Layout & Marking"
+    },
+    {
+      "description": "Spirit Level",
+      "type": "Alignment, Layout & Marking"
+    },
+    {
+      "description": "Plumb Bob",
+      "type": "Alignment, Layout & Marking"
+    },
+    {
+      "description": "Framing Square",
+      "type": "Alignment, Layout & Marking"
+    },
+    {
+      "description": "Speed Square",
+      "type": "Alignment, Layout & Marking"
+    },
+    {
+      "description": "T-Square",
+      "type": "Alignment, Layout & Marking"
+    },
+    {
+      "description": "Stud Finder",
+      "type": "Alignment, Layout & Marking"
+    },
+    {
+      "description": "Mortise Gauge",
+      "type": "Alignment, Layout & Marking"
+    },
+    {
+      "description": "Dovetail Jig",
+      "type": "Jigs, Fixtures & Specialty Rigs"
+    },
+    {
+      "description": "Doweling Jig",
+      "type": "Jigs, Fixtures & Specialty Rigs"
+    },
+    {
+      "description": "Pocket Hole Jig",
+      "type": "Jigs, Fixtures & Specialty Rigs"
+    },
+    {
+      "description": "Miter Gauge",
+      "type": "Jigs, Fixtures & Specialty Rigs"
+    },
+    {
+      "description": "Push Stick",
+      "type": "Jigs, Fixtures & Specialty Rigs"
+    },
+    {
+      "description": "Push Block",
+      "type": "Jigs, Fixtures & Specialty Rigs"
+    },
+    {
+      "description": "Taper Jig",
+      "type": "Jigs, Fixtures & Specialty Rigs"
+    },
+    {
+      "description": "Crosscut Sled",
+      "type": "Jigs, Fixtures & Specialty Rigs"
+    },
+    {
+      "description": "Bench Dog Set",
+      "type": "Jigs, Fixtures & Specialty Rigs"
+    },
+    {
+      "description": "Spring Clamp Set",
+      "type": "Clamps, Vises & Workholding"
+    },
+    {
+      "description": "Pipe Clamp",
+      "type": "Clamps, Vises & Workholding"
+    },
+    {
+      "description": "Quick-Grip Clamp",
+      "type": "Clamps, Vises & Workholding"
+    },
+    {
+      "description": "Corner Clamp",
+      "type": "Clamps, Vises & Workholding"
+    },
+    {
+      "description": "Band Clamp",
+      "type": "Clamps, Vises & Workholding"
+    },
+    {
+      "description": "Parallel Clamp",
+      "type": "Clamps, Vises & Workholding"
+    },
+    {
+      "description": "Machinist Vise",
+      "type": "Clamps, Vises & Workholding"
+    },
+    {
+      "description": "Woodworking Vise",
+      "type": "Clamps, Vises & Workholding"
+    },
+    {
+      "description": "Drill Press Vise",
+      "type": "Clamps, Vises & Workholding"
+    },
+    {
+      "description": "Rotary Table",
+      "type": "Clamps, Vises & Workholding"
+    },
+    {
+      "description": "Magnetic Base",
+      "type": "Clamps, Vises & Workholding"
+    },
+    {
+      "description": "V-Block Set",
+      "type": "Clamps, Vises & Workholding"
+    },
+    {
+      "description": "Clamping Kit",
+      "type": "Clamps, Vises & Workholding"
+    },
+    {
+      "description": "Spokeshave",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Draw Knife",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Card Scraper",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Cabinet Scraper",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Rasp Set",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Wood File Set",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Japanese Saw",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Dovetail Saw",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Tenon Saw",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Bow Saw",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Fret Saw",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Block Plane",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Jack Plane",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Smoothing Plane",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Shoulder Plane",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Router Bit Set",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Forstner Bit Set",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Spade Bit Set",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Auger Bit Set",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Hole Saw Set",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Countersink Bit Set",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Plug Cutter Set",
+      "type": "Woodworking"
+    },
+    {
+      "description": "Wood Glue",
+      "type": "Adhesives, Fasteners & Assembly Tools"
+    },
+    {
+      "description": "CA Glue (Cyanoacrylate)",
+      "type": "Adhesives, Fasteners & Assembly Tools"
+    },
+    {
+      "description": "Polyurethane Glue",
+      "type": "Adhesives, Fasteners & Assembly Tools"
+    },
+    {
+      "description": "Contact Cement",
+      "type": "Adhesives, Fasteners & Assembly Tools"
+    },
+    {
+      "description": "Hot Glue Gun",
+      "type": "Adhesives, Fasteners & Assembly Tools"
+    },
+    {
+      "description": "Glue Spreader",
+      "type": "Adhesives, Fasteners & Assembly Tools"
+    },
+    {
+      "description": "Nail Set",
+      "type": "Adhesives, Fasteners & Assembly Tools"
+    },
+    {
+      "description": "Screw Assortment",
+      "type": "Adhesives, Fasteners & Assembly Tools"
+    },
+    {
+      "description": "Bolt Assortment",
+      "type": "Adhesives, Fasteners & Assembly Tools"
+    },
+    {
+      "description": "Washer Assortment",
+      "type": "Adhesives, Fasteners & Assembly Tools"
+    },
+    {
+      "description": "Nut Assortment",
+      "type": "Adhesives, Fasteners & Assembly Tools"
+    },
+    {
+      "description": "Anchor Assortment",
+      "type": "Adhesives, Fasteners & Assembly Tools"
+    },
+    {
+      "description": "Pop Rivet Assortment",
+      "type": "Adhesives, Fasteners & Assembly Tools"
+    },
+    {
+      "description": "Thread Locker",
+      "type": "Adhesives, Fasteners & Assembly Tools"
+    },
+    {
+      "description": "Socket Set (Metric)",
+      "type": "Hand Tools — Gripping & Holding"
+    },
+    {
+      "description": "Socket Set (SAE)",
+      "type": "Hand Tools — Gripping & Holding"
+    },
+    {
+      "description": "Ratchet Set",
+      "type": "Hand Tools — Gripping & Holding"
+    },
+    {
+      "description": "Torque Wrench",
+      "type": "Hand Tools — Gripping & Holding"
+    },
+    {
+      "description": "Combination Wrench Set",
+      "type": "Hand Tools — Gripping & Holding"
+    },
+    {
+      "description": "Allen Key Set (Metric)",
+      "type": "Hand Tools — Gripping & Holding"
+    },
+    {
+      "description": "Allen Key Set (SAE)",
+      "type": "Hand Tools — Gripping & Holding"
+    },
+    {
+      "description": "Torx Key Set",
+      "type": "Hand Tools — Gripping & Holding"
+    },
+    {
+      "description": "Pipe Wrench",
+      "type": "Hand Tools — Gripping & Holding"
+    },
+    {
+      "description": "Basin Wrench",
+      "type": "Hand Tools — Gripping & Holding"
+    },
+    {
+      "description": "Strap Wrench",
+      "type": "Hand Tools — Gripping & Holding"
+    },
+    {
+      "description": "Chain Wrench",
+      "type": "Hand Tools — Gripping & Holding"
+    },
+    {
+      "description": "Spanner Wrench",
+      "type": "Hand Tools — Gripping & Holding"
+    },
+    {
+      "description": "Crowfoot Wrench Set",
+      "type": "Hand Tools — Gripping & Holding"
+    },
+    {
+      "description": "Pliers Set",
+      "type": "Hand Tools — Gripping & Holding"
+    },
+    {
+      "description": "Slip Joint Pliers",
+      "type": "Hand Tools — Gripping & Holding"
+    },
+    {
+      "description": "Tongue & Groove Pliers",
+      "type": "Hand Tools — Gripping & Holding"
+    },
+    {
+      "description": "Wire Strippers",
+      "type": "Hand Tools — Gripping & Holding"
+    },
+    {
+      "description": "Crimping Tool",
+      "type": "Hand Tools — Gripping & Holding"
+    },
+    {
+      "description": "Cable Cutters",
+      "type": "Hand Tools — Cutting"
+    },
+    {
+      "description": "Bolt Cutters",
+      "type": "Hand Tools — Cutting"
+    },
+    {
+      "description": "PVC Cutter",
+      "type": "Hand Tools — Cutting"
+    },
+    {
+      "description": "Tubing Cutter",
+      "type": "Hand Tools — Cutting"
+    },
+    {
+      "description": "Glass Cutter",
+      "type": "Hand Tools — Cutting"
+    },
+    {
+      "description": "Tile Cutter",
+      "type": "Hand Tools — Cutting"
+    },
+    {
+      "description": "Scissors (Heavy Duty)",
+      "type": "Hand Tools — Cutting"
+    },
+    {
+      "description": "Shears (Metal)",
+      "type": "Hand Tools — Cutting"
+    },
+    {
+      "description": "Pruning Shears",
+      "type": "Hand Tools — Cutting"
+    },
+    {
+      "description": "Box Cutter",
+      "type": "Hand Tools — Cutting"
+    },
+    {
+      "description": "Sledge Hammer",
+      "type": "Hand Tools — Striking & Shaping"
+    },
+    {
+      "description": "Dead Blow Hammer",
+      "type": "Hand Tools — Striking & Shaping"
+    },
+    {
+      "description": "Cross Peen Hammer",
+      "type": "Hand Tools — Striking & Shaping"
+    },
+    {
+      "description": "Tack Hammer",
+      "type": "Hand Tools — Striking & Shaping"
+    },
+    {
+      "description": "Framing Hammer",
+      "type": "Hand Tools — Striking & Shaping"
+    },
+    {
+      "description": "Mallet Set",
+      "type": "Hand Tools — Striking & Shaping"
+    },
+    {
+      "description": "Pry Bar",
+      "type": "Hand Tools — Striking & Shaping"
+    },
+    {
+      "description": "Wrecking Bar",
+      "type": "Hand Tools — Striking & Shaping"
+    },
+    {
+      "description": "Nail Puller",
+      "type": "Hand Tools — Striking & Shaping"
+    },
+    {
+      "description": "Punch Set",
+      "type": "Hand Tools — Striking & Shaping"
+    },
+    {
+      "description": "Pin Punch Set",
+      "type": "Hand Tools — Striking & Shaping"
+    },
+    {
+      "description": "Drift Punch",
+      "type": "Hand Tools — Striking & Shaping"
+    },
+    {
+      "description": "Sandpaper Assortment",
+      "type": "Sanding & Abrasives"
+    },
+    {
+      "description": "Sanding Sponge Set",
+      "type": "Sanding & Abrasives"
+    },
+    {
+      "description": "Flap Disc Set",
+      "type": "Sanding & Abrasives"
+    },
+    {
+      "description": "Wire Brush Set",
+      "type": "Sanding & Abrasives"
+    },
+    {
+      "description": "Scotch-Brite Pads",
+      "type": "Sanding & Abrasives"
+    },
+    {
+      "description": "Steel Wool",
+      "type": "Sanding & Abrasives"
+    },
+    {
+      "description": "Grinding Wheel Set",
+      "type": "Sanding & Abrasives"
+    },
+    {
+      "description": "Cut-Off Wheel Set",
+      "type": "Sanding & Abrasives"
+    },
+    {
+      "description": "Buffing Compound",
+      "type": "Cleaning, Deburring & Polishing"
+    },
+    {
+      "description": "Polishing Compound",
+      "type": "Cleaning, Deburring & Polishing"
+    },
+    {
+      "description": "Buffing Wheel Set",
+      "type": "Cleaning, Deburring & Polishing"
+    },
+    {
+      "description": "Tumbler (Rock/Metal)",
+      "type": "Cleaning, Deburring & Polishing"
+    },
+    {
+      "description": "Ultrasonic Cleaner",
+      "type": "Cleaning, Deburring & Polishing"
+    },
+    {
+      "description": "Parts Washer",
+      "type": "Cleaning, Deburring & Polishing"
+    },
+    {
+      "description": "Compressed Air Nozzle",
+      "type": "Cleaning, Deburring & Polishing"
+    },
+    {
+      "description": "Chip Brush Set",
+      "type": "Cleaning, Deburring & Polishing"
+    },
+    {
+      "description": "Spray Paint",
+      "type": "Painting & Surface Coating"
+    },
+    {
+      "description": "Paint Roller Set",
+      "type": "Painting & Surface Coating"
+    },
+    {
+      "description": "Paint Tray",
+      "type": "Painting & Surface Coating"
+    },
+    {
+      "description": "Painter's Tape",
+      "type": "Painting & Surface Coating"
+    },
+    {
+      "description": "Drop Cloth",
+      "type": "Painting & Surface Coating"
+    },
+    {
+      "description": "Powder Coating Gun",
+      "type": "Painting & Surface Coating"
+    },
+    {
+      "description": "Powder Coating Oven",
+      "type": "Painting & Surface Coating"
+    },
+    {
+      "description": "Stain Applicator",
+      "type": "Painting & Surface Coating"
+    },
+    {
+      "description": "Varnish Brush",
+      "type": "Painting & Surface Coating"
+    },
+    {
+      "description": "Foam Brush Set",
+      "type": "Painting & Surface Coating"
+    },
+    {
+      "description": "Sewing Needles Assortment",
+      "type": "Textiles & Sewing"
+    },
+    {
+      "description": "Thread Assortment",
+      "type": "Textiles & Sewing"
+    },
+    {
+      "description": "Fabric Scissors",
+      "type": "Textiles & Sewing"
+    },
+    {
+      "description": "Pinking Shears",
+      "type": "Textiles & Sewing"
+    },
+    {
+      "description": "Rotary Cutter",
+      "type": "Textiles & Sewing"
+    },
+    {
+      "description": "Seam Ripper",
+      "type": "Textiles & Sewing"
+    },
+    {
+      "description": "Tailor's Chalk",
+      "type": "Textiles & Sewing"
+    },
+    {
+      "description": "Fabric Marker",
+      "type": "Textiles & Sewing"
+    },
+    {
+      "description": "Pin Cushion",
+      "type": "Textiles & Sewing"
+    },
+    {
+      "description": "Sewing Pins",
+      "type": "Textiles & Sewing"
+    },
+    {
+      "description": "Safety Pins",
+      "type": "Textiles & Sewing"
+    },
+    {
+      "description": "Thimble Set",
+      "type": "Textiles & Sewing"
+    },
+    {
+      "description": "Embroidery Hoop",
+      "type": "Textiles & Sewing"
+    },
+    {
+      "description": "Embroidery Floss",
+      "type": "Textiles & Sewing"
+    },
+    {
+      "description": "Knitting Needles",
+      "type": "Textiles & Sewing"
+    },
+    {
+      "description": "Crochet Hooks",
+      "type": "Textiles & Sewing"
+    },
+    {
+      "description": "Yarn Winder",
+      "type": "Textiles & Sewing"
+    },
+    {
+      "description": "Dress Form",
+      "type": "Textiles & Sewing"
+    },
+    {
+      "description": "Iron & Ironing Board",
+      "type": "Textiles & Sewing"
+    },
+    {
+      "description": "Fabric Steamer",
+      "type": "Textiles & Sewing"
+    },
+    {
+      "description": "Breadboard",
+      "type": "Electronics Tools & Bench Equipment"
+    },
+    {
+      "description": "Power Supply (Bench)",
+      "type": "Electronics Tools & Bench Equipment"
+    },
+    {
+      "description": "Signal Generator",
+      "type": "Electronics Tools & Bench Equipment"
+    },
+    {
+      "description": "Logic Analyzer",
+      "type": "Electronics Tools & Bench Equipment"
+    },
+    {
+      "description": "LCR Meter",
+      "type": "Electronics Tools & Bench Equipment"
+    },
+    {
+      "description": "Component Tester",
+      "type": "Electronics Tools & Bench Equipment"
+    },
+    {
+      "description": "Helping Hands",
+      "type": "Electronics Tools & Bench Equipment"
+    },
+    {
+      "description": "PCB Holder",
+      "type": "Electronics Tools & Bench Equipment"
+    },
+    {
+      "description": "Magnifying Lamp",
+      "type": "Electronics Tools & Bench Equipment"
+    },
+    {
+      "description": "ESD Mat",
+      "type": "Electronics Tools & Bench Equipment"
+    },
+    {
+      "description": "Anti-Static Wrist Strap",
+      "type": "Electronics Tools & Bench Equipment"
+    },
+    {
+      "description": "Wire Assortment",
+      "type": "Electronics Tools & Bench Equipment"
+    },
+    {
+      "description": "Jumper Wire Kit",
+      "type": "Electronics Tools & Bench Equipment"
+    },
+    {
+      "description": "Heat Shrink Tubing",
+      "type": "Electronics Tools & Bench Equipment"
+    },
+    {
+      "description": "Solder Wire",
+      "type": "Soldering & Rework"
+    },
+    {
+      "description": "Solder Paste",
+      "type": "Soldering & Rework"
+    },
+    {
+      "description": "Flux Pen",
+      "type": "Soldering & Rework"
+    },
+    {
+      "description": "Desoldering Pump",
+      "type": "Soldering & Rework"
+    },
+    {
+      "description": "Solder Wick",
+      "type": "Soldering & Rework"
+    },
+    {
+      "description": "Soldering Station",
+      "type": "Soldering & Rework"
+    },
+    {
+      "description": "Reflow Oven",
+      "type": "Soldering & Rework"
+    },
+    {
+      "description": "Hot Plate (Soldering)",
+      "type": "Soldering & Rework"
+    },
+    {
+      "description": "Solder Tip Cleaner",
+      "type": "Soldering & Rework"
+    },
+    {
+      "description": "Tip Tinner",
+      "type": "Soldering & Rework"
+    },
+    {
+      "description": "Raspberry Pi",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "BeagleBone",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "STM32 Board",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "Teensy Board",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "Temperature Sensor",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "Humidity Sensor",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "Pressure Sensor",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "Ultrasonic Sensor",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "PIR Motion Sensor",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "Hall Effect Sensor",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "Load Cell",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "Accelerometer",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "Gyroscope",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "GPS Module",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "Bluetooth Module",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "WiFi Module",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "RFID Reader",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "NFC Module",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "LCD Display",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "OLED Display",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "LED Strip",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "Servo Motor",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "Stepper Motor",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "DC Motor",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "Motor Driver",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "Relay Module",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "Resistor Kit",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "Capacitor Kit",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "Transistor Kit",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "Diode Kit",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "LED Kit",
+      "type": "Microcontrollers, Sensors & Prototyping Modules"
+    },
+    {
+      "description": "Silicone Mold Making Kit",
+      "type": "Casting & Molding"
+    },
+    {
+      "description": "Alginate Powder",
+      "type": "Casting & Molding"
+    },
+    {
+      "description": "Plaster of Paris",
+      "type": "Casting & Molding"
+    },
+    {
+      "description": "Casting Resin",
+      "type": "Casting & Molding"
+    },
+    {
+      "description": "Epoxy Resin",
+      "type": "Casting & Molding"
+    },
+    {
+      "description": "Polyurethane Resin",
+      "type": "Casting & Molding"
+    },
+    {
+      "description": "Release Agent",
+      "type": "Casting & Molding"
+    },
+    {
+      "description": "Pressure Pot",
+      "type": "Casting & Molding"
+    },
+    {
+      "description": "Degassing Chamber",
+      "type": "Casting & Molding"
+    },
+    {
+      "description": "Mixing Cups",
+      "type": "Casting & Molding"
+    },
+    {
+      "description": "Stir Sticks",
+      "type": "Casting & Molding"
+    },
+    {
+      "description": "Mold Release Spray",
+      "type": "Casting & Molding"
+    },
+    {
+      "description": "Acrylic Sheet",
+      "type": "Plastics, Composites & Thermoforming"
+    },
+    {
+      "description": "Polycarbonate Sheet",
+      "type": "Plastics, Composites & Thermoforming"
+    },
+    {
+      "description": "PVC Sheet",
+      "type": "Plastics, Composites & Thermoforming"
+    },
+    {
+      "description": "ABS Sheet",
+      "type": "Plastics, Composites & Thermoforming"
+    },
+    {
+      "description": "PETG Sheet",
+      "type": "Plastics, Composites & Thermoforming"
+    },
+    {
+      "description": "Fiberglass Cloth",
+      "type": "Plastics, Composites & Thermoforming"
+    },
+    {
+      "description": "Carbon Fiber Cloth",
+      "type": "Plastics, Composites & Thermoforming"
+    },
+    {
+      "description": "Fiberglass Resin",
+      "type": "Plastics, Composites & Thermoforming"
+    },
+    {
+      "description": "Gel Coat",
+      "type": "Plastics, Composites & Thermoforming"
+    },
+    {
+      "description": "Plastic Welding Kit",
+      "type": "Plastics, Composites & Thermoforming"
+    },
+    {
+      "description": "Strip Heater",
+      "type": "Plastics, Composites & Thermoforming"
+    },
+    {
+      "description": "Thermoforming Machine",
+      "type": "Plastics, Composites & Thermoforming"
+    },
+    {
+      "description": "Filament (PLA)",
+      "type": "Digital Fabrication — Additive"
+    },
+    {
+      "description": "Filament (ABS)",
+      "type": "Digital Fabrication — Additive"
+    },
+    {
+      "description": "Filament (PETG)",
+      "type": "Digital Fabrication — Additive"
+    },
+    {
+      "description": "Filament (TPU)",
+      "type": "Digital Fabrication — Additive"
+    },
+    {
+      "description": "Filament (Nylon)",
+      "type": "Digital Fabrication — Additive"
+    },
+    {
+      "description": "Filament (Wood Fill)",
+      "type": "Digital Fabrication — Additive"
+    },
+    {
+      "description": "Filament (Metal Fill)",
+      "type": "Digital Fabrication — Additive"
+    },
+    {
+      "description": "Resin (Standard)",
+      "type": "Digital Fabrication — Additive"
+    },
+    {
+      "description": "Resin (Tough)",
+      "type": "Digital Fabrication — Additive"
+    },
+    {
+      "description": "Resin (Flexible)",
+      "type": "Digital Fabrication — Additive"
+    },
+    {
+      "description": "Resin (Castable)",
+      "type": "Digital Fabrication — Additive"
+    },
+    {
+      "description": "Build Plate Adhesive",
+      "type": "Digital Fabrication — Additive"
+    },
+    {
+      "description": "Nozzle Set",
+      "type": "Digital Fabrication — Additive"
+    },
+    {
+      "description": "Print Removal Tool",
+      "type": "Digital Fabrication — Additive"
+    },
+    {
+      "description": "Curing Station (UV)",
+      "type": "Digital Fabrication — Additive"
+    },
+    {
+      "description": "Wash Station",
+      "type": "Digital Fabrication — Additive"
+    },
+    {
+      "description": "Waterjet Cutter",
+      "type": "Digital Fabrication — Cutting"
+    },
+    {
+      "description": "Plasma Table",
+      "type": "Digital Fabrication — Cutting"
+    },
+    {
+      "description": "Cricut Machine",
+      "type": "Digital Fabrication — Cutting"
+    },
+    {
+      "description": "Silhouette Cutter",
+      "type": "Digital Fabrication — Cutting"
+    },
+    {
+      "description": "Drag Knife",
+      "type": "Digital Fabrication — Cutting"
+    },
+    {
+      "description": "Engraving Bit Set",
+      "type": "Digital Fabrication — Cutting"
+    },
+    {
+      "description": "AutoCAD License",
+      "type": "CAD/CAM/EDA Software"
+    },
+    {
+      "description": "Inventor License",
+      "type": "CAD/CAM/EDA Software"
+    },
+    {
+      "description": "Rhino License",
+      "type": "CAD/CAM/EDA Software"
+    },
+    {
+      "description": "Blender (Free)",
+      "type": "CAD/CAM/EDA Software"
+    },
+    {
+      "description": "FreeCAD (Free)",
+      "type": "CAD/CAM/EDA Software"
+    },
+    {
+      "description": "OnShape (Free)",
+      "type": "CAD/CAM/EDA Software"
+    },
+    {
+      "description": "Tinkercad (Free)",
+      "type": "CAD/CAM/EDA Software"
+    },
+    {
+      "description": "Eagle PCB",
+      "type": "CAD/CAM/EDA Software"
+    },
+    {
+      "description": "Altium Designer",
+      "type": "CAD/CAM/EDA Software"
+    },
+    {
+      "description": "Mastercam",
+      "type": "CAD/CAM/EDA Software"
+    },
+    {
+      "description": "Mach3 CNC Software",
+      "type": "CAD/CAM/EDA Software"
+    },
+    {
+      "description": "LinuxCNC",
+      "type": "CAD/CAM/EDA Software"
+    },
+    {
+      "description": "LightBurn (Laser)",
+      "type": "CAD/CAM/EDA Software"
+    },
+    {
+      "description": "RDWorks (Laser)",
+      "type": "CAD/CAM/EDA Software"
+    },
+    {
+      "description": "Cura Slicer",
+      "type": "CAD/CAM/EDA Software"
+    },
+    {
+      "description": "PrusaSlicer",
+      "type": "CAD/CAM/EDA Software"
+    },
+    {
+      "description": "Simplify3D",
+      "type": "CAD/CAM/EDA Software"
+    },
+    {
+      "description": "CMM (Coordinate Measuring Machine)",
+      "type": "Metrology & Calibration"
+    },
+    {
+      "description": "Optical Comparator",
+      "type": "Metrology & Calibration"
+    },
+    {
+      "description": "Height Gauge",
+      "type": "Metrology & Calibration"
+    },
+    {
+      "description": "Granite Surface Plate",
+      "type": "Metrology & Calibration"
+    },
+    {
+      "description": "Pin Gauge Set",
+      "type": "Metrology & Calibration"
+    },
+    {
+      "description": "Thread Gauge Set",
+      "type": "Metrology & Calibration"
+    },
+    {
+      "description": "Angle Plate",
+      "type": "Metrology & Calibration"
+    },
+    {
+      "description": "Sine Bar",
+      "type": "Metrology & Calibration"
+    },
+    {
+      "description": "Calibration Certificate",
+      "type": "Metrology & Calibration"
+    },
+    {
+      "description": "Ear Protection",
+      "type": "Safety & PPE"
+    },
+    {
+      "description": "Hearing Protection",
+      "type": "Safety & PPE"
+    },
+    {
+      "description": "Face Shield",
+      "type": "Safety & PPE"
+    },
+    {
+      "description": "Respirator",
+      "type": "Safety & PPE"
+    },
+    {
+      "description": "Dust Mask",
+      "type": "Safety & PPE"
+    },
+    {
+      "description": "Work Gloves",
+      "type": "Safety & PPE"
+    },
+    {
+      "description": "Cut-Resistant Gloves",
+      "type": "Safety & PPE"
+    },
+    {
+      "description": "Welding Gloves",
+      "type": "Safety & PPE"
+    },
+    {
+      "description": "Heat-Resistant Gloves",
+      "type": "Safety & PPE"
+    },
+    {
+      "description": "Chemical-Resistant Gloves",
+      "type": "Safety & PPE"
+    },
+    {
+      "description": "Safety Apron",
+      "type": "Safety & PPE"
+    },
+    {
+      "description": "Welding Jacket",
+      "type": "Safety & PPE"
+    },
+    {
+      "description": "Steel Toe Boots",
+      "type": "Safety & PPE"
+    },
+    {
+      "description": "First Aid Kit",
+      "type": "Safety & PPE"
+    },
+    {
+      "description": "Fire Extinguisher",
+      "type": "Safety & PPE"
+    },
+    {
+      "description": "Eyewash Station",
+      "type": "Safety & PPE"
+    },
+    {
+      "description": "Safety Shower",
+      "type": "Safety & PPE"
+    },
+    {
+      "description": "Lockout/Tagout Kit",
+      "type": "Safety & PPE"
+    },
+    {
+      "description": "Degreaser",
+      "type": "Chemicals & Consumables"
+    },
+    {
+      "description": "Acetone",
+      "type": "Chemicals & Consumables"
+    },
+    {
+      "description": "Mineral Spirits",
+      "type": "Chemicals & Consumables"
+    },
+    {
+      "description": "Cutting Fluid",
+      "type": "Chemicals & Consumables"
+    },
+    {
+      "description": "Tapping Fluid",
+      "type": "Chemicals & Consumables"
+    },
+    {
+      "description": "Way Oil",
+      "type": "Chemicals & Consumables"
+    },
+    {
+      "description": "Machine Oil",
+      "type": "Chemicals & Consumables"
+    },
+    {
+      "description": "Grease",
+      "type": "Chemicals & Consumables"
+    },
+    {
+      "description": "Anti-Seize Compound",
+      "type": "Chemicals & Consumables"
+    },
+    {
+      "description": "Penetrating Oil",
+      "type": "Chemicals & Consumables"
+    },
+    {
+      "description": "Rust Converter",
+      "type": "Chemicals & Consumables"
+    },
+    {
+      "description": "Rust Inhibitor",
+      "type": "Chemicals & Consumables"
+    },
+    {
+      "description": "Paper Towels",
+      "type": "Chemicals & Consumables"
+    },
+    {
+      "description": "Nitrile Gloves",
+      "type": "Chemicals & Consumables"
+    },
+    {
+      "description": "Latex Gloves",
+      "type": "Chemicals & Consumables"
+    },
+    {
+      "description": "Zip Ties",
+      "type": "Chemicals & Consumables"
+    },
+    {
+      "description": "Duct Tape",
+      "type": "Chemicals & Consumables"
+    },
+    {
+      "description": "Masking Tape",
+      "type": "Chemicals & Consumables"
+    },
+    {
+      "description": "Electrical Tape",
+      "type": "Chemicals & Consumables"
+    },
+    {
+      "description": "Kapton Tape",
+      "type": "Chemicals & Consumables"
+    },
+    {
+      "description": "Double-Sided Tape",
+      "type": "Chemicals & Consumables"
+    },
+    {
+      "description": "Pegboard",
+      "type": "Storage, Handling & Organization"
+    },
+    {
+      "description": "Tool Hooks",
+      "type": "Storage, Handling & Organization"
+    },
+    {
+      "description": "Shelving Unit",
+      "type": "Storage, Handling & Organization"
+    },
+    {
+      "description": "Rolling Cart",
+      "type": "Storage, Handling & Organization"
+    },
+    {
+      "description": "Drawer Organizer",
+      "type": "Storage, Handling & Organization"
+    },
+    {
+      "description": "Label Maker",
+      "type": "Storage, Handling & Organization"
+    },
+    {
+      "description": "Magnetic Tool Holder",
+      "type": "Storage, Handling & Organization"
+    },
+    {
+      "description": "Wall-Mounted Rack",
+      "type": "Storage, Handling & Organization"
+    },
+    {
+      "description": "Stackable Bins",
+      "type": "Storage, Handling & Organization"
+    },
+    {
+      "description": "Hardware Organizer",
+      "type": "Storage, Handling & Organization"
+    },
+    {
+      "description": "Cable Management",
+      "type": "Storage, Handling & Organization"
+    },
+    {
+      "description": "Workbench",
+      "type": "Storage, Handling & Organization"
+    },
+    {
+      "description": "Tool Cabinet",
+      "type": "Storage, Handling & Organization"
+    },
+    {
+      "description": "Thermal Camera",
+      "type": "Power Measuring & Diagnostics"
+    },
+    {
+      "description": "Insulation Tester",
+      "type": "Power Measuring & Diagnostics"
+    },
+    {
+      "description": "Ground Resistance Tester",
+      "type": "Power Measuring & Diagnostics"
+    },
+    {
+      "description": "Phase Rotation Tester",
+      "type": "Power Measuring & Diagnostics"
+    },
+    {
+      "description": "Circuit Tracer",
+      "type": "Power Measuring & Diagnostics"
+    },
+    {
+      "description": "Voltage Detector",
+      "type": "Power Measuring & Diagnostics"
+    },
+    {
+      "description": "Current Probe",
+      "type": "Power Measuring & Diagnostics"
+    },
+    {
+      "description": "Air Compressor",
+      "type": "Pneumatic & Hydraulic Tools"
+    },
+    {
+      "description": "Air Hose",
+      "type": "Pneumatic & Hydraulic Tools"
+    },
+    {
+      "description": "Pneumatic Nailer",
+      "type": "Pneumatic & Hydraulic Tools"
+    },
+    {
+      "description": "Pneumatic Stapler",
+      "type": "Pneumatic & Hydraulic Tools"
+    },
+    {
+      "description": "Air Ratchet",
+      "type": "Pneumatic & Hydraulic Tools"
+    },
+    {
+      "description": "Air Impact Wrench",
+      "type": "Pneumatic & Hydraulic Tools"
+    },
+    {
+      "description": "Air Die Grinder",
+      "type": "Pneumatic & Hydraulic Tools"
+    },
+    {
+      "description": "Air Chisel",
+      "type": "Pneumatic & Hydraulic Tools"
+    },
+    {
+      "description": "Blow Gun",
+      "type": "Pneumatic & Hydraulic Tools"
+    },
+    {
+      "description": "Tire Inflator",
+      "type": "Pneumatic & Hydraulic Tools"
+    },
+    {
+      "description": "Hydraulic Jack",
+      "type": "Pneumatic & Hydraulic Tools"
+    },
+    {
+      "description": "Bottle Jack",
+      "type": "Pneumatic & Hydraulic Tools"
+    },
+    {
+      "description": "Floor Jack",
+      "type": "Pneumatic & Hydraulic Tools"
+    },
+    {
+      "description": "Jack Stands",
+      "type": "Pneumatic & Hydraulic Tools"
+    },
+    {
+      "description": "Hydraulic Pump",
+      "type": "Pneumatic & Hydraulic Tools"
+    },
+    {
+      "description": "Inspection Camera",
+      "type": "Inspection & Testing"
+    },
+    {
+      "description": "Borescope",
+      "type": "Inspection & Testing"
+    },
+    {
+      "description": "Endoscope",
+      "type": "Inspection & Testing"
+    },
+    {
+      "description": "Magnifying Glass",
+      "type": "Inspection & Testing"
+    },
+    {
+      "description": "Jeweler's Loupe",
+      "type": "Inspection & Testing"
+    },
+    {
+      "description": "Microscope",
+      "type": "Inspection & Testing"
+    },
+    {
+      "description": "USB Microscope",
+      "type": "Inspection & Testing"
+    },
+    {
+      "description": "Flashlight",
+      "type": "Inspection & Testing"
+    },
+    {
+      "description": "Work Light",
+      "type": "Inspection & Testing"
+    },
+    {
+      "description": "Headlamp",
+      "type": "Inspection & Testing"
+    },
+    {
+      "description": "UV Light",
+      "type": "Inspection & Testing"
+    },
+    {
+      "description": "Leak Detector",
+      "type": "Inspection & Testing"
+    },
+    {
+      "description": "Moisture Meter",
+      "type": "Inspection & Testing"
+    },
+    {
+      "description": "Sound Level Meter",
+      "type": "Inspection & Testing"
+    },
+    {
+      "description": "Vibration Meter",
+      "type": "Inspection & Testing"
+    },
+    {
+      "description": "Tachometer",
+      "type": "Inspection & Testing"
+    },
+    {
+      "description": "Infrared Thermometer",
+      "type": "Inspection & Testing"
+    },
+    {
+      "description": "Thermocouple",
+      "type": "Inspection & Testing"
+    },
+    {
+      "description": "pH Meter",
+      "type": "Inspection & Testing"
+    },
+    {
+      "description": "Hardness Tester",
+      "type": "Inspection & Testing"
+    }
+  ]
+}

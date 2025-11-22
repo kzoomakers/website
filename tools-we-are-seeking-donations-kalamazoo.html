@@ -41,6 +41,8 @@
   <link rel="stylesheet" href="css/style.css">
   <!-- Inventory Page Stylesheet -->
   <link rel="stylesheet" href="css/inventory.css">
+  <!-- Donations Page Stylesheet -->
+  <link rel="stylesheet" href="css/donations.css">
 </head>
 <body id="body">
 
@@ -109,37 +111,14 @@ End Fixed Navigation
           </div>
         </div>
         
-        <!-- Category Filter Section with Stats -->
-        <div class="category-filter-section">
-          <div class="filter-header-wrapper">
-            <div class="filter-content">
-              <h3>Filter by Tool Category</h3>
-              <div id="type-counts-container" class="category-filter-controls">
-                <!-- Category filters will be dynamically populated -->
-              </div>
-            </div>
-          </div>
-        </div>
+        <!-- Category Filters -->
+        <div id="category-filters"></div>
         
-        <div class="text-center mb-4 search-and-reset-container">
-          <input type="text" id="searchInput" class="search-box" placeholder="🔍 Search for tools to donate...">
-          <button id="resetFiltersBtn" class="btn btn-secondary ml-2">Reset Filters</button>
-        </div>
+        <!-- Search Box -->
+        <div id="search-box-container"></div>
         
-        <div class="inventory-table-wrapper">
-          <div class="table-container">
-            <div class="inventory-table">
-          <table id="inventoryTable">
-            <!-- Table will be dynamically populated by inventory.js -->
-          </table>
-            </div>
-          </div>
-        </div>
-
-        <div class="text-center mt-5">
-          <a href="index.html" class="btn btn-main">← Back to Home</a>
-          <a href="contact.html" class="btn btn-main ml-2">Contact Us About Donations</a>
-        </div>
+        <!-- Donation Table -->
+        <div id="inventoryTable"></div>
       </div>
     </div>
   </div>
@@ -172,17 +151,17 @@ End Fixed Navigation
 <!-- Dynamic Footer -->
 <script src="dynamic/js/footer.js"></script>
 
+<!-- Donation Inventory Script -->
+<script src="dynamic/js/inventory-donations.js"></script>
+
 <!-- Custom js -->
 <script src="js/script.js"></script>
-
-<!-- Dynamic Donation Inventory Library -->
-<script src="dynamic/js/inventory-donations.js"></script>
 
 <script>
   // Initialize the donation inventory table with tool data
   document.addEventListener('DOMContentLoaded', function() {
     const inventory = new DonationInventoryTable({
-      jsonPath: 'dynamic/json/inventory-misc-tools.json',
+      jsonPath: 'dynamic/json/inventory-donations-needed.json',
       tableId: 'inventoryTable',
       searchInputId: 'searchInput',
       statsConfig: {
