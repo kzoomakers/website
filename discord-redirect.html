@@ -14,22 +14,32 @@
   <script>
     window.addEventListener('load', function () {
       var redirectUrl = "https://discord.gg/e5zhJqeD";
+      var hammer = document.querySelector('.hammer');
       
-      // Trigger animation on load using requestAnimationFrame for proper timing
-      requestAnimationFrame(function() {
-        var hammer = document.querySelector('.hammer');
-        if (hammer) {
-          hammer.classList.add('animate');
-        }
-      });
+      // Start the looping animation
+      if (hammer) {
+        hammer.classList.add('animate');
+      }
       
-      // Redirect after animation completes (0.8s)
+      // Redirect after tracking fires (1.5s)
       setTimeout(function () {
         window.location.href = redirectUrl;
-      }, 800);
+      }, 1500);
     });
   </script>
   <style>
+    @keyframes hammerSwing {
+      0% {
+        transform: rotate(0deg);
+      }
+      50% {
+        transform: rotate(-90deg);
+      }
+      100% {
+        transform: rotate(0deg);
+      }
+    }
+
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       margin: 0;
@@ -61,16 +71,10 @@
       position: absolute;
       left: 45%;
       top: 30%;
-      /* Transitions with browser fallbacks */
-      -webkit-transition: -webkit-transform .8s ease-in-out;
-       -ms-transition: -ms-transform .8s ease-in-out;
-       transition: transform .8s ease-in-out;
     }
 
     .hammer.animate {
-      transform: rotate(-90deg);
-      -ms-transform: rotate(-90deg);
-      -webkit-transform: rotate(-90deg);
+      animation: hammerSwing 1.6s ease-in-out infinite;
     }
 
     .face {
