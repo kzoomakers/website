@@ -132,35 +132,109 @@
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
-
+ 
   <url>
     <loc>https://kzoomakers.org/s-wood-shop-kalamazoo-makerspace.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
-
+ 
   <url>
     <loc>https://kzoomakers.org/s-metal-shop-kalamazoo-makerspace.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
-
+ 
   <url>
     <loc>https://kzoomakers.org/s-welding-shop-kalamazoo.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
-
+ 
   <url>
     <loc>https://kzoomakers.org/s-industrial-laser-cutter-kalamazoo.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
-
+ 
   <url>
     <loc>https://kzoomakers.org/s-tool-rental-kalamazoo.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
+  <!-- Battle Creek area search landings -->
+  <url>
+    <loc>https://kzoomakers.org/s-3d-printing-service-battle-creek.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://kzoomakers.org/s-wood-shop-battle-creek-makerspace.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://kzoomakers.org/s-metal-shop-battle-creek-makerspace.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://kzoomakers.org/s-welding-shop-battle-creek.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://kzoomakers.org/s-industrial-laser-cutter-battle-creek.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://kzoomakers.org/s-tool-rental-battle-creek.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Portage area search landings -->
+  <url>
+    <loc>https://kzoomakers.org/s-3d-printing-service-portage.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://kzoomakers.org/s-wood-shop-portage-makerspace.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://kzoomakers.org/s-metal-shop-portage-makerspace.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://kzoomakers.org/s-welding-shop-portage.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://kzoomakers.org/s-industrial-laser-cutter-portage.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://kzoomakers.org/s-tool-rental-portage.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+ 
 </urlset>
