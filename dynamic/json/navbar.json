@@ -76,6 +76,10 @@
           "href": "laser-shop.html"
         },
         {
+          "label": "3D Printing",
+          "href": "3d-printing.html"
+        },
+        {
           "label": "Meeting Space",
           "href": "meeting-space.html"
         }
