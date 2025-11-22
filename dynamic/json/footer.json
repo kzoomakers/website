@@ -35,6 +35,10 @@
           "href": "about.html"
         },
         {
+          "label": "Tour",
+          "href": "tour-form-redirect.html"
+        },
+        {
           "label": "Pricing",
           "href": "pricing.html"
         },
