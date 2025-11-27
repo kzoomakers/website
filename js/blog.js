@@ -169,9 +169,10 @@
             initHomepageBlog();
         }
         
-        // Check if we're on the blog page
-        if (document.body.classList.contains('blog-page') || 
-            window.location.pathname.includes('blog.html')) {
+        // Check if we're on the blog/news page
+        if (document.body.classList.contains('blog-page') ||
+            window.location.pathname.includes('blog.html') ||
+            window.location.pathname.includes('news.html')) {
             initBlogPage();
         }
     }
