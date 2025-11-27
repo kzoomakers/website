@@ -136,8 +136,11 @@
      * Initialize blog posts on blog page
      */
     async function initBlogPage() {
-        const container = document.querySelector('.posts .row');
-        if (!container) return;
+        const container = document.querySelector('.posts .container .row');
+        if (!container) {
+            console.error('Blog container not found');
+            return;
+        }
 
         // Clear existing static content
         container.innerHTML = '<div class="col-12 text-center"><p>Loading posts...</p></div>';
