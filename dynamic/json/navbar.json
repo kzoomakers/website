@@ -13,6 +13,12 @@
       "href": "index.html"
     },
     {
+      "id": "news",
+      "label": "News",
+      "type": "link",
+      "href": "blog.html"
+    },
+    {
       "id": "events",
       "label": "Events",
       "type": "dropdown",
