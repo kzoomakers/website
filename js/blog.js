@@ -6,10 +6,10 @@
 (function() {
     'use strict';
 
-    const BLOG_API_URL = 'http://www.kzoomakers.org/news/wp-json/wp/v2/posts';
-    const MEDIA_API_URL = 'http://www.kzoomakers.org/news/wp-json/wp/v2/media';
+    const BLOG_API_URL = 'https://www.kzoomakers.org/news/wp-json/wp/v2/posts';
+    const MEDIA_API_URL = 'https://www.kzoomakers.org/news/wp-json/wp/v2/media';
     const MAX_POSTS_HOMEPAGE = 3; // Number of posts to show on homepage
-    const MAX_POSTS_BLOG_PAGE = 12; // Number of posts to show on blog page
+    const MAX_POSTS_BLOG_PAGE = 24; // Number of posts to show on blog page
 
     /**
      * Fetch blog posts from WordPress API
