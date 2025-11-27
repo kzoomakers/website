@@ -16,7 +16,7 @@
       "id": "news",
       "label": "News",
       "type": "link",
-      "href": "blog.html"
+      "href": "news.html"
     },
     {
       "id": "events",
