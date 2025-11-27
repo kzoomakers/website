@@ -4,6 +4,7 @@ function initialize() {
   var map;
   var latitude = $('#map_canvas').attr('data-latitude');
   var longitude = $('#map_canvas').attr('data-longitude');
+  var markerName = $('#map_canvas').attr('data-marker-name');
   var nottingham = new google.maps.LatLng(latitude, longitude);
   var style = [{
       "featureType": "administrative.locality",
@@ -250,7 +251,8 @@ function initialize() {
     position: nottingham,
     map: map,
     icon: pinIcon,
-    title: 'Shoper'
+    // label: markerName,
+    title: makerName
   });
 }
 var map = document.getElementById('map_canvas');
