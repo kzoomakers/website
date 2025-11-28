@@ -252,7 +252,7 @@ function initialize() {
     map: map,
     icon: pinIcon,
     // label: markerName,
-    title: makerName
+    title: markerName
   });
 }
 var map = document.getElementById('map_canvas');
