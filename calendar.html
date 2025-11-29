@@ -487,6 +487,7 @@ Start Call To Action
     today.setHours(0, 0, 0, 0);
     
     while (currentDate <= until && currentDate <= new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)) {
+      // For COUNT-based rules, we need to count ALL instances, not just future ones
       if (count && instanceCount >= count) break;
       
       if (currentDate >= today) {
@@ -498,9 +499,10 @@ Start Call To Action
           start: new Date(currentDate),
           end: instanceEnd
         });
-        
-        instanceCount++;
       }
+      
+      // Always increment count, even for past instances
+      instanceCount++;
       
       // Increment based on frequency
       if (freq === 'DAILY') {
@@ -568,6 +570,16 @@ Start Call To Action
             
             // Skip if recurring event has ended (UNTIL date is in the past)
             if (until && until < now) {
+              currentEvent = null;
+              currentField = '';
+              continue;
+            }
+            
+            // Skip recurring events that started more than 2 years ago and have no UNTIL date
+            // These are likely stale events that should have been removed
+            const twoYearsAgo = new Date();
+            twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+            if (!until && startDate < twoYearsAgo) {
               currentEvent = null;
               currentField = '';
               continue;
@@ -811,8 +823,8 @@ Start Call To Action
 
   // Clear filter and show all upcoming events
   function clearFilter() {
-    const now = new Date();
-    const upcoming = allEvents.filter(event => event.start >= now);
+    const now = new Date(); // Current moment
+    const upcoming = allEvents.filter(event => event.start > now);
     displayEvents(upcoming);
   }
 
@@ -853,9 +865,8 @@ Start Call To Action
       const icsContent = await response.text();
       allEvents = parseICS(icsContent);
       
-      // Filter to show current month + next 5 months by default (excluding past events)
-      const now = new Date();
-      now.setHours(0, 0, 0, 0); // Start of today
+      // Filter to show upcoming events only (excluding past and currently happening events)
+      const now = new Date(); // Current moment, not start of day
       
       const endDate = new Date(now.getFullYear(), now.getMonth() + 6, 0, 23, 59, 59, 999);
       // This creates a date at the last day of the month that is 5 months from now
@@ -864,7 +875,7 @@ Start Call To Action
       // Filter out past events and events beyond our date range
       const filtered = allEvents.filter(event => {
         const eventDate = new Date(event.start);
-        return eventDate >= now && eventDate <= endDate;
+        return eventDate > now && eventDate <= endDate;
       });
       
       console.log(`Showing ${filtered.length} events from ${now.toLocaleDateString()} to ${endDate.toLocaleDateString()}`);
