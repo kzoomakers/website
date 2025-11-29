@@ -574,16 +574,6 @@ Start Call To Action
               currentField = '';
               continue;
             }
-            
-            // Skip recurring events that started more than 2 years ago and have no UNTIL date
-            // These are likely stale events that should have been removed
-            const twoYearsAgo = new Date();
-            twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
-            if (!until && startDate < twoYearsAgo) {
-              currentEvent = null;
-              currentField = '';
-              continue;
-            }
           }
           
           const event = {
