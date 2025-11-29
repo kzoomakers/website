@@ -282,9 +282,10 @@ Start Calendar Section
         <div class="date-range-inputs">
           <label>Custom Range:</label>
           <input type="date" id="start-date" />
+          <span style="margin: 0 5px;">to</span>
           <input type="date" id="end-date" />
           <button class="btn-secondary" onclick="filterCustomRange()">Apply</button>
-          <button class="btn-secondary" onclick="clearFilter()">Show All</button>
+          <button class="btn-secondary" onclick="clearFilter()">Show All Upcoming</button>
         </div>
       </div>
     </div>
@@ -539,6 +540,11 @@ Start Call To Action
   function cleanDescription(desc) {
     if (!desc) return '';
     
+    // Unescape backslash-escaped characters (like \, and \n)
+    desc = desc.replace(/\\,/g, ',');
+    desc = desc.replace(/\\n/g, '\n');
+    desc = desc.replace(/\\\\/g, '\\');
+    
     // Convert <br> tags to newlines
     desc = desc.replace(/<br\s*\/?>/gi, '\n');
     
@@ -720,17 +726,24 @@ Start Call To Action
       const icsContent = await response.text();
       allEvents = parseICS(icsContent);
       
-      // Filter to show only upcoming events by default
+      // Filter to show current month + next 3 months by default (excluding past events)
       const now = new Date();
-      const upcoming = allEvents.filter(event => event.start >= now);
+      now.setHours(0, 0, 0, 0); // Start of today
       
-      displayEvents(upcoming);
+      const endDate = new Date(now);
+      endDate.setMonth(endDate.getMonth() + 4); // Current month + 3 more months
+      endDate.setDate(0); // Last day of the 3rd month from now
+      endDate.setHours(23, 59, 59, 999);
+      
+      const filtered = allEvents.filter(event => event.start >= now && event.start <= endDate);
+      
+      displayEvents(filtered);
       
     } catch (error) {
       console.error('Error loading calendar:', error);
       container.innerHTML = `
         <div class="error-message">
-          <strong>Unable to load calendar events.</strong><br>
+          <strong>Unable to load calendar events right now.</strong><br>
           Please try refreshing the page or switch to Calendar View to see events.
         </div>
       `;
