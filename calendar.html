@@ -474,6 +474,8 @@ Start Call To Action
     const lines = icsContent.split(/\r?\n/);
     let currentEvent = null;
     let currentField = '';
+    const now = new Date();
+    now.setHours(0, 0, 0, 0); // Start of today
     
     for (let i = 0; i < lines.length; i++) {
       let line = lines[i].trim();
@@ -496,6 +498,13 @@ Start Call To Action
         const endDate = parseICSDate(dtend, isAllDay);
         
         if (startDate) {
+          // Skip past events (including RECURRENCE-ID exceptions)
+          if (startDate < now) {
+            currentEvent = null;
+            currentField = '';
+            continue;
+          }
+          
           const event = {
             title: currentEvent.SUMMARY || 'Untitled Event',
             start: startDate,
@@ -505,11 +514,12 @@ Start Call To Action
             isAllDay: isAllDay
           };
           
-          // Handle recurring events
-          if (currentEvent.RRULE) {
+          // Handle recurring events (but not RECURRENCE-ID exceptions which are single instances)
+          if (currentEvent.RRULE && !currentEvent['RECURRENCE-ID']) {
             const instances = generateRecurringInstances(event, currentEvent.RRULE, startDate, endDate);
             events.push(...instances);
           } else {
+            // Single event or recurrence exception
             events.push(event);
           }
         }
