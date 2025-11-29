@@ -664,6 +664,9 @@ Start Call To Action
     return grouped;
   }
 
+  // Store events data for button access
+  const eventDataMap = new Map();
+
   // Display events
   function displayEvents(events) {
     const container = document.getElementById('events-list-container');
@@ -672,6 +675,9 @@ Start Call To Action
       container.innerHTML = '<div class="no-events-message">No events found for the selected date range.</div>';
       return;
     }
+    
+    // Clear previous event data
+    eventDataMap.clear();
     
     // Sort events by date
     events.sort((a, b) => a.start - b.start);
@@ -696,10 +702,23 @@ Start Call To Action
         // Create a unique ID for the event based on title and date
         const eventId = `event-${event.start.getTime()}-${index}`;
         
+        // Store event data for button access
+        eventDataMap.set(eventId, {
+          title: event.title,
+          start: event.start,
+          end: event.end,
+          description: event.description,
+          location: event.location,
+          isAllDay: event.isAllDay
+        });
+        
         html += `
           <div class="event-card" id="${eventId}">
             <div class="event-date">
               <span class="event-date-text">${dateStr}</span>
+              <button class="share-button" onclick="addToCalendar('${eventId}')" title="Add to your calendar">
+                📅 Add
+              </button>
               <button class="share-button" onclick="copyEventLink('${eventId}')" title="Copy link to clipboard">
                 📋 Copy
               </button>
@@ -874,20 +893,94 @@ Start Call To Action
     }, 3000);
   }
   
+  // Format date for ICS file
+  function formatICSDate(date, isAllDay = false) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    
+    if (isAllDay) {
+      return `${year}${month}${day}`;
+    }
+    
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    
+    return `${year}${month}${day}T${hours}${minutes}${seconds}`;
+  }
+  
+  // Add to calendar function - generates ICS file
+  function addToCalendar(eventId) {
+    const event = eventDataMap.get(eventId);
+    if (!event) return;
+    
+    const startDate = formatICSDate(event.start, event.isAllDay);
+    const endDate = formatICSDate(event.end, event.isAllDay);
+    const now = formatICSDate(new Date());
+    
+    // Escape special characters for ICS format
+    const escapeICS = (str) => {
+      return str.replace(/\\/g, '\\\\')
+                .replace(/;/g, '\\;')
+                .replace(/,/g, '\\,')
+                .replace(/\n/g, '\\n');
+    };
+    
+    const icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Kzoo Makers//Calendar//EN',
+      'BEGIN:VEVENT',
+      `UID:${eventId}@kzoomakers.org`,
+      `DTSTAMP:${now}`,
+      `DTSTART:${startDate}`,
+      `DTEND:${endDate}`,
+      `SUMMARY:${escapeICS(event.title)}`,
+      event.location ? `LOCATION:${escapeICS(event.location)}` : '',
+      event.description ? `DESCRIPTION:${escapeICS(event.description)}` : '',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].filter(line => line).join('\r\n');
+    
+    // Create blob and download
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${event.title.replace(/[^a-z0-9]/gi, '_')}.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+    
+    showNotification('📅 Calendar file downloaded!');
+  }
+  
   // Copy event link directly to clipboard
   function copyEventLink(eventId) {
     const url = `${window.location.origin}${window.location.pathname}#${eventId}`;
     copyToClipboard(url);
   }
   
-  // Share event function
+  // Share event function with event details
   function shareEvent(eventId) {
+    const event = eventDataMap.get(eventId);
     const url = `${window.location.origin}${window.location.pathname}#${eventId}`;
+    
+    if (!event) {
+      copyToClipboard(url);
+      return;
+    }
+    
+    // Format the date nicely
+    const dateStr = formatDate(event.start);
+    const shareText = `Check out the Kzoo Makers meeting "${event.title}" on ${dateStr} at ${url}`;
     
     // Try to use the Web Share API if available (mobile devices)
     if (navigator.share) {
       navigator.share({
-        title: 'Kzoo Makers Event',
+        title: `Kzoo Makers: ${event.title}`,
+        text: shareText,
         url: url
       }).catch(err => {
         // If share fails or is cancelled, fall back to copying to clipboard
