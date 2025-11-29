@@ -386,8 +386,9 @@ Start Call To Action
   function parseICSDate(dateStr, isAllDay = false) {
     if (!dateStr) return null;
     
-    // Remove TZID if present
-    dateStr = dateStr.split(':').pop();
+    // Remove TZID if present and get the actual date string
+    const parts = dateStr.split(':');
+    dateStr = parts[parts.length - 1];
     
     // Format: YYYYMMDDTHHMMSSZ or YYYYMMDD
     const year = parseInt(dateStr.substring(0, 4));
@@ -395,7 +396,8 @@ Start Call To Action
     const day = parseInt(dateStr.substring(6, 8));
     
     if (dateStr.length === 8 || isAllDay) {
-      return new Date(year, month, day);
+      // All-day event - use local midnight
+      return new Date(year, month, day, 0, 0, 0);
     }
     
     const hour = parseInt(dateStr.substring(9, 11));
@@ -403,9 +405,11 @@ Start Call To Action
     const second = parseInt(dateStr.substring(13, 15));
     
     if (dateStr.endsWith('Z')) {
+      // UTC time - create UTC date and it will be displayed in local time
       return new Date(Date.UTC(year, month, day, hour, minute, second));
     }
     
+    // Local time
     return new Date(year, month, day, hour, minute, second);
   }
 
@@ -735,7 +739,13 @@ Start Call To Action
       endDate.setDate(0); // Last day of the 3rd month from now
       endDate.setHours(23, 59, 59, 999);
       
-      const filtered = allEvents.filter(event => event.start >= now && event.start <= endDate);
+      // Filter out past events and events beyond our date range
+      const filtered = allEvents.filter(event => {
+        const eventDate = new Date(event.start);
+        return eventDate >= now && eventDate <= endDate;
+      });
+      
+      console.log(`Showing ${filtered.length} events from ${now.toLocaleDateString()} to ${endDate.toLocaleDateString()}`);
       
       displayEvents(filtered);
       
