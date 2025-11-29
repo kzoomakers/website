@@ -554,11 +554,24 @@ Start Call To Action
         
         if (startDate) {
           // For non-recurring events, skip past events
-          // For recurring events, let generateRecurringInstances handle the filtering
           if (!currentEvent.RRULE && startDate < now) {
             currentEvent = null;
             currentField = '';
             continue;
+          }
+          
+          // For recurring events, check if they have future instances
+          if (currentEvent.RRULE && !currentEvent['RECURRENCE-ID']) {
+            // Parse RRULE to check UNTIL date
+            const rules = parseRRule(currentEvent.RRULE);
+            const until = rules.UNTIL ? parseICSDate(rules.UNTIL) : null;
+            
+            // Skip if recurring event has ended (UNTIL date is in the past)
+            if (until && until < now) {
+              currentEvent = null;
+              currentField = '';
+              continue;
+            }
           }
           
           const event = {
