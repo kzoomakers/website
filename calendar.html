@@ -45,6 +45,172 @@
   <!-- Main Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
 
+  <style>
+    .calendar-controls {
+      text-align: center;
+      margin: 30px 0;
+    }
+    
+    .calendar-controls button {
+      margin: 5px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    
+    .calendar-controls .btn-primary {
+      background-color: #47424C;
+      color: white;
+    }
+    
+    .calendar-controls .btn-primary:hover {
+      background-color: #655D67;
+    }
+    
+    .calendar-controls .btn-secondary {
+      background-color: #e0e0e0;
+      color: #333;
+    }
+    
+    .calendar-controls .btn-secondary:hover {
+      background-color: #d0d0d0;
+    }
+    
+    .calendar-controls .btn-toggle {
+      background-color: #5cb85c;
+      color: white;
+      font-weight: bold;
+    }
+    
+    .calendar-controls .btn-toggle:hover {
+      background-color: #4cae4c;
+    }
+    
+    .date-range-inputs {
+      display: inline-block;
+      margin: 10px;
+    }
+    
+    .date-range-inputs input {
+      padding: 8px;
+      margin: 0 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    
+    .events-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .month-section {
+      margin-bottom: 40px;
+    }
+    
+    .month-header {
+      background-color: #47424C;
+      color: white;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    
+    .event-card {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .event-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    .event-date {
+      color: #47424C;
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+    
+    .event-time {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    
+    .event-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    
+    .event-location {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 10px;
+      font-style: italic;
+    }
+    
+    .event-description {
+      color: #555;
+      line-height: 1.6;
+      margin-top: 15px;
+    }
+    
+    .event-description a {
+      color: #47424C;
+      text-decoration: underline;
+    }
+    
+    .loading-message {
+      text-align: center;
+      padding: 40px;
+      font-size: 18px;
+      color: #666;
+    }
+    
+    .error-message {
+      text-align: center;
+      padding: 40px;
+      font-size: 18px;
+      color: #d9534f;
+      background-color: #f2dede;
+      border-radius: 5px;
+      margin: 20px;
+    }
+    
+    .no-events-message {
+      text-align: center;
+      padding: 40px;
+      font-size: 18px;
+      color: #666;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      margin: 20px;
+    }
+    
+    #calendar-iframe-container {
+      display: none;
+      text-align: center;
+      margin-top: 30px;
+    }
+    
+    #events-list-container {
+      display: block;
+    }
+  </style>
+
 </head>
 <body id="body">
 
@@ -106,16 +272,41 @@ Start Calendar Section
       <!-- /section title -->
     </div>
 
-    <div class="row justify-content-center">
-      <div class="col-lg-12">
-        <div style="text-align: center; margin-top: 30px;">
-          <iframe src="https://calendar.google.com/calendar/u/0/embed?src=kzoomakers.org_fkmebp59ti7pvl271vp65p1k8s@group.calendar.google.com&ctz=America/New_York" 
-                  style="border: 0; max-width: 100%;" 
-                  width="1000" 
-                  height="800" 
-                  frameborder="0" 
-                  scrolling="no">
-          </iframe>
+    <!-- Calendar Controls -->
+    <div class="calendar-controls">
+      <button id="toggle-view-btn" class="btn-toggle" onclick="toggleCalendarView()">Switch to Calendar View</button>
+      <br>
+      <div id="filter-controls" style="margin-top: 15px;">
+        <button class="btn-primary" onclick="filterThisMonth()">This Month</button>
+        <button class="btn-primary" onclick="filterNextMonth()">Next Month</button>
+        <div class="date-range-inputs">
+          <label>Custom Range:</label>
+          <input type="date" id="start-date" />
+          <input type="date" id="end-date" />
+          <button class="btn-secondary" onclick="filterCustomRange()">Apply</button>
+          <button class="btn-secondary" onclick="clearFilter()">Show All</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Events List Container -->
+    <div id="events-list-container">
+      <div class="loading-message">Loading events...</div>
+    </div>
+
+    <!-- Calendar Iframe Container -->
+    <div id="calendar-iframe-container">
+      <div class="row justify-content-center">
+        <div class="col-lg-12">
+          <div style="text-align: center;">
+            <iframe src="https://calendar.google.com/calendar/u/0/embed?src=kzoomakers.org_fkmebp59ti7pvl271vp65p1k8s@group.calendar.google.com&ctz=America/New_York" 
+                    style="border: 0; max-width: 100%;" 
+                    width="1000" 
+                    height="800" 
+                    frameborder="0" 
+                    scrolling="no">
+            </iframe>
+          </div>
         </div>
       </div>
     </div>
@@ -184,6 +375,371 @@ Start Call To Action
 
 <!-- Custom js -->
 <script src="js/script.js"></script>
+
+<!-- Calendar ICS Parser and Display -->
+<script>
+  let allEvents = [];
+  let currentView = 'list'; // 'list' or 'iframe'
+
+  // Parse ICS date format
+  function parseICSDate(dateStr, isAllDay = false) {
+    if (!dateStr) return null;
+    
+    // Remove TZID if present
+    dateStr = dateStr.split(':').pop();
+    
+    // Format: YYYYMMDDTHHMMSSZ or YYYYMMDD
+    const year = parseInt(dateStr.substring(0, 4));
+    const month = parseInt(dateStr.substring(4, 6)) - 1;
+    const day = parseInt(dateStr.substring(6, 8));
+    
+    if (dateStr.length === 8 || isAllDay) {
+      return new Date(year, month, day);
+    }
+    
+    const hour = parseInt(dateStr.substring(9, 11));
+    const minute = parseInt(dateStr.substring(11, 13));
+    const second = parseInt(dateStr.substring(13, 15));
+    
+    if (dateStr.endsWith('Z')) {
+      return new Date(Date.UTC(year, month, day, hour, minute, second));
+    }
+    
+    return new Date(year, month, day, hour, minute, second);
+  }
+
+  // Parse RRULE for recurring events
+  function parseRRule(rrule) {
+    const rules = {};
+    rrule.split(';').forEach(part => {
+      const [key, value] = part.split('=');
+      rules[key] = value;
+    });
+    return rules;
+  }
+
+  // Generate recurring event instances
+  function generateRecurringInstances(event, rrule, startDate, endDate) {
+    const instances = [];
+    const rules = parseRRule(rrule);
+    
+    const freq = rules.FREQ;
+    const until = rules.UNTIL ? parseICSDate(rules.UNTIL) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+    const count = rules.COUNT ? parseInt(rules.COUNT) : null;
+    
+    let currentDate = new Date(startDate);
+    let instanceCount = 0;
+    
+    while (currentDate <= until && currentDate <= new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)) {
+      if (count && instanceCount >= count) break;
+      
+      if (currentDate >= new Date()) {
+        const duration = endDate - startDate;
+        const instanceEnd = new Date(currentDate.getTime() + duration);
+        
+        instances.push({
+          ...event,
+          start: new Date(currentDate),
+          end: instanceEnd
+        });
+        
+        instanceCount++;
+      }
+      
+      // Increment based on frequency
+      if (freq === 'DAILY') {
+        currentDate.setDate(currentDate.getDate() + 1);
+      } else if (freq === 'WEEKLY') {
+        currentDate.setDate(currentDate.getDate() + 7);
+      } else if (freq === 'MONTHLY') {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+      } else if (freq === 'YEARLY') {
+        currentDate.setFullYear(currentDate.getFullYear() + 1);
+      } else {
+        break;
+      }
+    }
+    
+    return instances;
+  }
+
+  // Parse ICS content
+  function parseICS(icsContent) {
+    const events = [];
+    const lines = icsContent.split(/\r?\n/);
+    let currentEvent = null;
+    let currentField = '';
+    
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i].trim();
+      
+      // Handle line continuation
+      if (line.startsWith(' ') && currentField) {
+        currentEvent[currentField] += line.substring(1);
+        continue;
+      }
+      
+      if (line === 'BEGIN:VEVENT') {
+        currentEvent = {};
+      } else if (line === 'END:VEVENT' && currentEvent) {
+        // Parse dates
+        const dtstart = currentEvent.DTSTART || '';
+        const dtend = currentEvent.DTEND || '';
+        const isAllDay = !dtstart.includes('T');
+        
+        const startDate = parseICSDate(dtstart, isAllDay);
+        const endDate = parseICSDate(dtend, isAllDay);
+        
+        if (startDate) {
+          const event = {
+            title: currentEvent.SUMMARY || 'Untitled Event',
+            start: startDate,
+            end: endDate || startDate,
+            description: currentEvent.DESCRIPTION || '',
+            location: currentEvent.LOCATION || '',
+            isAllDay: isAllDay
+          };
+          
+          // Handle recurring events
+          if (currentEvent.RRULE) {
+            const instances = generateRecurringInstances(event, currentEvent.RRULE, startDate, endDate);
+            events.push(...instances);
+          } else {
+            events.push(event);
+          }
+        }
+        
+        currentEvent = null;
+        currentField = '';
+      } else if (currentEvent && line.includes(':')) {
+        const colonIndex = line.indexOf(':');
+        const field = line.substring(0, colonIndex).split(';')[0];
+        const value = line.substring(colonIndex + 1);
+        
+        currentEvent[field] = value;
+        currentField = field;
+      }
+    }
+    
+    return events;
+  }
+
+  // Format date for display
+  function formatDate(date) {
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+  }
+
+  // Format time for display
+  function formatTime(date) {
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  }
+
+  // Clean HTML from description
+  function cleanDescription(desc) {
+    if (!desc) return '';
+    
+    // Convert <br> tags to newlines
+    desc = desc.replace(/<br\s*\/?>/gi, '\n');
+    
+    // Preserve links but clean other HTML
+    desc = desc.replace(/<a\s+href="([^"]+)"[^>]*>([^<]+)<\/a>/gi, '<a href="$1" target="_blank">$2</a>');
+    
+    // Remove other HTML tags
+    desc = desc.replace(/<[^>]+>/g, '');
+    
+    // Decode HTML entities
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = desc;
+    desc = textarea.value;
+    
+    // Convert URLs to links if not already linked
+    desc = desc.replace(/(?<!href=")(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank">$1</a>');
+    
+    return desc;
+  }
+
+  // Group events by month
+  function groupEventsByMonth(events) {
+    const grouped = {};
+    
+    events.forEach(event => {
+      const monthKey = `${event.start.getFullYear()}-${String(event.start.getMonth() + 1).padStart(2, '0')}`;
+      const monthName = event.start.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+      
+      if (!grouped[monthKey]) {
+        grouped[monthKey] = {
+          name: monthName,
+          events: []
+        };
+      }
+      
+      grouped[monthKey].events.push(event);
+    });
+    
+    return grouped;
+  }
+
+  // Display events
+  function displayEvents(events) {
+    const container = document.getElementById('events-list-container');
+    
+    if (events.length === 0) {
+      container.innerHTML = '<div class="no-events-message">No events found for the selected date range.</div>';
+      return;
+    }
+    
+    // Sort events by date
+    events.sort((a, b) => a.start - b.start);
+    
+    // Group by month
+    const groupedEvents = groupEventsByMonth(events);
+    
+    let html = '<div class="events-container">';
+    
+    Object.keys(groupedEvents).sort().forEach(monthKey => {
+      const month = groupedEvents[monthKey];
+      
+      html += `<div class="month-section">`;
+      html += `<div class="month-header">${month.name}</div>`;
+      
+      month.events.forEach(event => {
+        const dateStr = formatDate(event.start);
+        const timeStr = event.isAllDay ? 'All Day' : `${formatTime(event.start)} - ${formatTime(event.end)}`;
+        const description = cleanDescription(event.description);
+        
+        html += `
+          <div class="event-card">
+            <div class="event-date">${dateStr}</div>
+            <div class="event-time">${timeStr}</div>
+            <div class="event-title">${event.title}</div>
+            ${event.location ? `<div class="event-location">📍 ${event.location}</div>` : ''}
+            ${description ? `<div class="event-description">${description}</div>` : ''}
+          </div>
+        `;
+      });
+      
+      html += `</div>`;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+  }
+
+  // Filter events by date range
+  function filterEvents(startDate, endDate) {
+    return allEvents.filter(event => {
+      return event.start >= startDate && event.start <= endDate;
+    });
+  }
+
+  // Filter: This Month
+  function filterThisMonth() {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    
+    const filtered = filterEvents(start, end);
+    displayEvents(filtered);
+  }
+
+  // Filter: Next Month
+  function filterNextMonth() {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59);
+    
+    const filtered = filterEvents(start, end);
+    displayEvents(filtered);
+  }
+
+  // Filter: Custom Range
+  function filterCustomRange() {
+    const startInput = document.getElementById('start-date').value;
+    const endInput = document.getElementById('end-date').value;
+    
+    if (!startInput || !endInput) {
+      alert('Please select both start and end dates');
+      return;
+    }
+    
+    const start = new Date(startInput);
+    const end = new Date(endInput);
+    end.setHours(23, 59, 59);
+    
+    if (start > end) {
+      alert('Start date must be before end date');
+      return;
+    }
+    
+    const filtered = filterEvents(start, end);
+    displayEvents(filtered);
+  }
+
+  // Clear filter and show all upcoming events
+  function clearFilter() {
+    const now = new Date();
+    const upcoming = allEvents.filter(event => event.start >= now);
+    displayEvents(upcoming);
+  }
+
+  // Toggle between list and iframe view
+  function toggleCalendarView() {
+    const listContainer = document.getElementById('events-list-container');
+    const iframeContainer = document.getElementById('calendar-iframe-container');
+    const toggleBtn = document.getElementById('toggle-view-btn');
+    const filterControls = document.getElementById('filter-controls');
+    
+    if (currentView === 'list') {
+      listContainer.style.display = 'none';
+      iframeContainer.style.display = 'block';
+      filterControls.style.display = 'none';
+      toggleBtn.textContent = 'Switch to List View';
+      currentView = 'iframe';
+    } else {
+      listContainer.style.display = 'block';
+      iframeContainer.style.display = 'none';
+      filterControls.style.display = 'block';
+      toggleBtn.textContent = 'Switch to Calendar View';
+      currentView = 'list';
+    }
+  }
+
+  // Fetch and parse calendar
+  async function loadCalendar() {
+    const container = document.getElementById('events-list-container');
+    
+    try {
+      // Use a CORS proxy to fetch the ICS file
+      const response = await fetch('https://kzoomakers.org/cal.ics');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch calendar');
+      }
+      
+      const icsContent = await response.text();
+      allEvents = parseICS(icsContent);
+      
+      // Filter to show only upcoming events by default
+      const now = new Date();
+      const upcoming = allEvents.filter(event => event.start >= now);
+      
+      displayEvents(upcoming);
+      
+    } catch (error) {
+      console.error('Error loading calendar:', error);
+      container.innerHTML = `
+        <div class="error-message">
+          <strong>Unable to load calendar events.</strong><br>
+          Please try refreshing the page or switch to Calendar View to see events.
+        </div>
+      `;
+    }
+  }
+
+  // Load calendar when page loads
+  document.addEventListener('DOMContentLoaded', loadCalendar);
+</script>
 
 </body>
 
