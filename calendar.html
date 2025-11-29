@@ -525,13 +525,17 @@ Start Call To Action
     now.setHours(0, 0, 0, 0); // Start of today
     
     for (let i = 0; i < lines.length; i++) {
-      let line = lines[i].trim();
+      let line = lines[i];
       
-      // Handle line continuation
-      if (line.startsWith(' ') && currentField) {
+      // Handle line continuation (lines starting with space or tab)
+      if ((line.startsWith(' ') || line.startsWith('\t')) && currentField) {
+        // Remove the leading space/tab and append to current field
         currentEvent[currentField] += line.substring(1);
         continue;
       }
+      
+      // Now trim the line for normal processing
+      line = line.trim();
       
       if (line === 'BEGIN:VEVENT') {
         currentEvent = {};
@@ -696,6 +700,9 @@ Start Call To Action
           <div class="event-card" id="${eventId}">
             <div class="event-date">
               <span class="event-date-text">${dateStr}</span>
+              <button class="share-button" onclick="copyEventLink('${eventId}')" title="Copy link to clipboard">
+                📋 Copy
+              </button>
               <button class="share-button" onclick="shareEvent('${eventId}')" title="Share this event">
                 🔗 Share
               </button>
@@ -865,6 +872,12 @@ Start Call To Action
         notification.remove();
       }, 300);
     }, 3000);
+  }
+  
+  // Copy event link directly to clipboard
+  function copyEventLink(eventId) {
+    const url = `${window.location.origin}${window.location.pathname}#${eventId}`;
+    copyToClipboard(url);
   }
   
   // Share event function
