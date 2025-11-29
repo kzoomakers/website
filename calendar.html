@@ -839,10 +839,9 @@ Start Call To Action
       const now = new Date();
       now.setHours(0, 0, 0, 0); // Start of today
       
-      const endDate = new Date(now);
-      endDate.setMonth(endDate.getMonth() + 4); // Current month + 3 more months
-      endDate.setDate(0); // Last day of the 3rd month from now
-      endDate.setHours(23, 59, 59, 999);
+      const endDate = new Date(now.getFullYear(), now.getMonth() + 4, 0, 23, 59, 59, 999);
+      // This creates a date at the last day of the month that is 3 months from now
+      // (month + 4 with day 0 = last day of month + 3)
       
       // Filter out past events and events beyond our date range
       const filtered = allEvents.filter(event => {
