@@ -140,6 +140,33 @@
       font-weight: bold;
       font-size: 18px;
       margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .event-date-text {
+      flex: 1;
+    }
+    
+    .share-button {
+      background-color: #47424C;
+      color: white;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background-color 0.2s;
+      margin-left: 10px;
+    }
+    
+    .share-button:hover {
+      background-color: #655D67;
+    }
+    
+    .share-button:active {
+      background-color: #3a3640;
     }
     
     .event-time {
@@ -208,6 +235,26 @@
     
     #events-list-container {
       display: block;
+    }
+    
+    .copy-notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #47424C;
+      color: white;
+      padding: 15px 25px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 10000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    
+    .copy-notification.show {
+      opacity: 1;
     }
   </style>
 
@@ -550,14 +597,27 @@ Start Call To Action
     return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   }
 
+  // Clean ICS text values (unescape and unfold)
+  function cleanICSText(text) {
+    if (!text) return '';
+    
+    // Unescape backslash-escaped characters (like \, and \n and \\)
+    // Order matters: do \\ first, then others
+    text = text.replace(/\\\\/g, '\x00'); // Temporarily replace \\ with null char
+    text = text.replace(/\\n/g, '\n');
+    text = text.replace(/\\,/g, ',');
+    text = text.replace(/\\;/g, ';');
+    text = text.replace(/\x00/g, '\\'); // Restore single backslashes
+    
+    return text.trim();
+  }
+
   // Clean HTML from description
   function cleanDescription(desc) {
     if (!desc) return '';
     
-    // Unescape backslash-escaped characters (like \, and \n)
-    desc = desc.replace(/\\,/g, ',');
-    desc = desc.replace(/\\n/g, '\n');
-    desc = desc.replace(/\\\\/g, '\\');
+    // First clean ICS escapes
+    desc = cleanICSText(desc);
     
     // Convert <br> tags to newlines
     desc = desc.replace(/<br\s*\/?>/gi, '\n');
@@ -623,17 +683,26 @@ Start Call To Action
       html += `<div class="month-section">`;
       html += `<div class="month-header">${month.name}</div>`;
       
-      month.events.forEach(event => {
+      month.events.forEach((event, index) => {
         const dateStr = formatDate(event.start);
         const timeStr = event.isAllDay ? 'All Day' : `${formatTime(event.start)} - ${formatTime(event.end)}`;
         const description = cleanDescription(event.description);
+        const location = cleanICSText(event.location);
+        
+        // Create a unique ID for the event based on title and date
+        const eventId = `event-${event.start.getTime()}-${index}`;
         
         html += `
-          <div class="event-card">
-            <div class="event-date">${dateStr}</div>
+          <div class="event-card" id="${eventId}">
+            <div class="event-date">
+              <span class="event-date-text">${dateStr}</span>
+              <button class="share-button" onclick="shareEvent('${eventId}')" title="Share this event">
+                🔗 Share
+              </button>
+            </div>
             <div class="event-time">${timeStr}</div>
             <div class="event-title">${event.title}</div>
-            ${event.location ? `<div class="event-location">📍 ${event.location}</div>` : ''}
+            ${location ? `<div class="event-location">📍 ${location}</div>` : ''}
             ${description ? `<div class="event-description">${description}</div>` : ''}
           </div>
         `;
@@ -770,8 +839,114 @@ Start Call To Action
     }
   }
 
+  // Show notification toast
+  function showNotification(message) {
+    // Remove any existing notification
+    const existing = document.querySelector('.copy-notification');
+    if (existing) {
+      existing.remove();
+    }
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = 'copy-notification';
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Trigger fade in
+    setTimeout(() => {
+      notification.classList.add('show');
+    }, 10);
+    
+    // Fade out and remove after 3 seconds
+    setTimeout(() => {
+      notification.classList.remove('show');
+      setTimeout(() => {
+        notification.remove();
+      }, 300);
+    }, 3000);
+  }
+  
+  // Share event function
+  function shareEvent(eventId) {
+    const url = `${window.location.origin}${window.location.pathname}#${eventId}`;
+    
+    // Try to use the Web Share API if available (mobile devices)
+    if (navigator.share) {
+      navigator.share({
+        title: 'Kzoo Makers Event',
+        url: url
+      }).catch(err => {
+        // If share fails or is cancelled, fall back to copying to clipboard
+        if (err.name !== 'AbortError') {
+          copyToClipboard(url);
+        }
+      });
+    } else {
+      // Fall back to copying to clipboard (desktop)
+      copyToClipboard(url);
+    }
+  }
+  
+  // Copy URL to clipboard
+  function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showNotification('🔗 Link copied to clipboard!');
+      }).catch(err => {
+        // Fallback for older browsers
+        fallbackCopyToClipboard(text);
+      });
+    } else {
+      fallbackCopyToClipboard(text);
+    }
+  }
+  
+  // Fallback copy method for older browsers
+  function fallbackCopyToClipboard(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+      document.execCommand('copy');
+      showNotification('🔗 Link copied to clipboard!');
+    } catch (err) {
+      showNotification('❌ Unable to copy link');
+    }
+    
+    document.body.removeChild(textArea);
+  }
+  
+  // Scroll to event if hash is present in URL
+  function scrollToEventIfNeeded() {
+    if (window.location.hash) {
+      const eventId = window.location.hash.substring(1);
+      const element = document.getElementById(eventId);
+      
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.style.backgroundColor = '#fff3cd';
+          setTimeout(() => {
+            element.style.transition = 'background-color 1s ease';
+            element.style.backgroundColor = 'white';
+          }, 1000);
+        }, 500);
+      }
+    }
+  }
+
   // Load calendar when page loads
-  document.addEventListener('DOMContentLoaded', loadCalendar);
+  document.addEventListener('DOMContentLoaded', () => {
+    loadCalendar().then(() => {
+      scrollToEventIfNeeded();
+    });
+  });
 </script>
 
 </body>
