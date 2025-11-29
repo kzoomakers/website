@@ -482,10 +482,14 @@ Start Call To Action
     let currentDate = new Date(startDate);
     let instanceCount = 0;
     
+    // Use start of today for comparison to include all events happening today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
     while (currentDate <= until && currentDate <= new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)) {
       if (count && instanceCount >= count) break;
       
-      if (currentDate >= new Date()) {
+      if (currentDate >= today) {
         const duration = endDate - startDate;
         const instanceEnd = new Date(currentDate.getTime() + duration);
         
@@ -549,8 +553,9 @@ Start Call To Action
         const endDate = parseICSDate(dtend, isAllDay);
         
         if (startDate) {
-          // Skip past events (including RECURRENCE-ID exceptions)
-          if (startDate < now) {
+          // For non-recurring events, skip past events
+          // For recurring events, let generateRecurringInstances handle the filtering
+          if (!currentEvent.RRULE && startDate < now) {
             currentEvent = null;
             currentField = '';
             continue;
@@ -835,13 +840,13 @@ Start Call To Action
       const icsContent = await response.text();
       allEvents = parseICS(icsContent);
       
-      // Filter to show current month + next 3 months by default (excluding past events)
+      // Filter to show current month + next 5 months by default (excluding past events)
       const now = new Date();
       now.setHours(0, 0, 0, 0); // Start of today
       
-      const endDate = new Date(now.getFullYear(), now.getMonth() + 4, 0, 23, 59, 59, 999);
-      // This creates a date at the last day of the month that is 3 months from now
-      // (month + 4 with day 0 = last day of month + 3)
+      const endDate = new Date(now.getFullYear(), now.getMonth() + 6, 0, 23, 59, 59, 999);
+      // This creates a date at the last day of the month that is 5 months from now
+      // (month + 6 with day 0 = last day of month + 5)
       
       // Filter out past events and events beyond our date range
       const filtered = allEvents.filter(event => {
