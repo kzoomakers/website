@@ -14,7 +14,7 @@
   <title>Kzoo Makers</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400..700&family=Lacquer&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400..700&family=Emilys+Candy&display=swap" rel="stylesheet">
 
   <!-- Mobile Specific Metas
   ================================================== -->
@@ -57,14 +57,29 @@
       font-size: 75px;
     }
     
-    /* Apply Lacquer font to specific section headings */
+    /* Apply Emilys Candy font to specific section headings */
     .what-is-makerspace h2,
     .about-2 h2,
     .service-2 h2,
     .wanna-tour h2,
     .hours-section h2,
     .blog h2 {
-      font-family: 'Lacquer', cursive;
+      font-family: 'Emilys Candy', cursive;
+      font-size: 38px;
+    }
+    
+    /* Make question mark image smaller on mobile */
+    @media (max-width: 768px) {
+      .what-is-makerspace img {
+        max-width: 60%;
+        margin: 0 auto;
+        display: block;
+      }
+    }
+    
+    /* Tighten spacing between "How our makerspace works" title and content */
+    .about-2 .title {
+      margin-bottom: 20px;
     }
   </style>
 
@@ -174,6 +189,7 @@ Start What is a Makerspace Section
 			</div>
 			<div class="col-lg-8">
 				<div class="title text-center">
+					<div class="border"></div>
 					<h2>What is a makerspace?</h2>
 					<div class="border"></div>
 					<p>A makerspace is a shared workshop where people create, experiment, and build together. We offer equipment for woodworking, sewing, laser cutting, metalwork, electronics, robotics, welding, 3D printing, and programming in a collaborative environment where members learn, share ideas, and bring their projects to life.</p>
