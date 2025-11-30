@@ -256,6 +256,78 @@
     .copy-notification.show {
       opacity: 1;
     }
+    
+    .purge-notification {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #47424C;
+      color: white;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      z-index: 10001;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      font-size: 16px;
+      max-width: 80%;
+      max-height: 80vh;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    
+    .purge-notification.show {
+      opacity: 1;
+    }
+    
+    .purge-notification.error {
+      background-color: #d9534f;
+    }
+    
+    .purge-button {
+      font-size: 24pt;
+      cursor: pointer;
+      transition: transform 0.2s;
+      display: inline-block;
+      text-decoration: none;
+      color: #cccccc;
+    }
+    
+    .purge-button:hover {
+      transform: scale(1.1);
+    }
+    
+    .purge-button.show-hover-image,
+    .purge-button.show-click-image {
+      font-size: 0;
+      display: inline-block;
+      width: auto;
+      height: auto;
+    }
+    
+    .purge-button.show-hover-image::before {
+      content: '';
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      background-image: url('images/samples/purge-pending.webp');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+    
+    .purge-button.show-click-image::before {
+      content: '';
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      background-image: url('images/samples/purge-click.webp');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
   </style>
 
 </head>
@@ -362,6 +434,11 @@ Start Calendar Section
   </div>
 </section>
 <!-- End Calendar Section -->
+
+<!-- Purge Button Section -->
+<div style="text-align: left; padding: 30px 0 30px 50px;">
+	<span class="purge-button" id="purge-button" style="cursor: pointer;">۞</span>
+</div>
 
 <!--
 Start Call To Action
@@ -1204,10 +1281,89 @@ Start Call To Action
     }
   }
 
+  // Show purge notification
+  function showPurgeNotification(message, isError = false) {
+    // Remove any existing notification
+    const existing = document.querySelector('.purge-notification');
+    if (existing) {
+      existing.remove();
+    }
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = 'purge-notification';
+    if (isError) {
+      notification.classList.add('error');
+    }
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Trigger fade in
+    setTimeout(() => {
+      notification.classList.add('show');
+    }, 10);
+    
+    // Fade out and remove after 5 seconds
+    setTimeout(() => {
+      notification.classList.remove('show');
+      setTimeout(() => {
+        notification.remove();
+      }, 300);
+    }, 5000);
+  }
+
   // Load calendar when page loads
   document.addEventListener('DOMContentLoaded', () => {
     loadCalendar().then(() => {
       scrollToEventIfNeeded();
+    });
+    
+    // Purge button functionality
+    const purgeButton = document.getElementById('purge-button');
+    let isClicked = false;
+    
+    // Show hover image on mouseover
+    purgeButton.addEventListener('mouseenter', () => {
+      if (!isClicked) {
+        purgeButton.classList.add('show-hover-image');
+      }
+    });
+    
+    // Hide hover image on mouseout
+    purgeButton.addEventListener('mouseleave', () => {
+      if (!isClicked) {
+        purgeButton.classList.remove('show-hover-image');
+      }
+    });
+    
+    // Make request and show response on click
+    purgeButton.addEventListener('click', async () => {
+      isClicked = true;
+      
+      // Remove hover class and add click class
+      purgeButton.classList.remove('show-hover-image');
+      purgeButton.classList.add('show-click-image');
+      
+      // Wait 1 second to show the click image
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Remove click image
+      purgeButton.classList.remove('show-click-image');
+      isClicked = false;
+      
+      // Make the request
+      try {
+        const response = await fetch('/purge/cal.ics');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const content = await response.text();
+        showPurgeNotification(content);
+      } catch (error) {
+        showPurgeNotification(`Failed to issue request: ${error.message}`, true);
+      }
     });
   });
 </script>
