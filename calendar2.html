@@ -765,24 +765,47 @@ Start Calendar Section
       <!-- /section title -->
     </div>
 
-    <!-- Interactive Calendar View -->
-    <div id="calendar"></div>
+    <!-- View Toggle Controls -->
+    <div class="calendar-controls">
+      <button id="toggle-list-view-btn" class="btn-toggle" onclick="toggleListView()">📋 List View</button>
+      <button id="toggle-grid-view-btn" class="btn-toggle" onclick="toggleGridView()" style="background-color: #5cb85c;">📅 Grid View</button>
+    </div>
 
-    <!-- Google Calendar Iframe -->
-    <div style="margin-top: 40px; text-align: center;">
-      <h3 style="color: #333; margin-bottom: 20px;">Full Calendar View</h3>
-      <iframe src="https://calendar.google.com/calendar/u/0/embed?src=kzoomakers.org_fkmebp59ti7pvl271vp65p1k8s@group.calendar.google.com&amp;ctz=America/New_York" 
-              style="border: 0; max-width: 100%;" 
-              width="1000" 
-              height="800" 
-              frameborder="0" 
-              scrolling="no">
-      </iframe>
+    <!-- List View Container -->
+    <div id="list-view-container" style="display: block;">
+      <div id="events-list-container">
+        <div class="loading-message">Loading events...</div>
+      </div>
+    </div>
+
+    <!-- Interactive Calendar Grid View -->
+    <div id="grid-view-container" style="display: none;">
+      <div id="calendar"></div>
     </div>
 
   </div>
 </section>
 <!-- End Calendar Section -->
+
+<!-- Google Calendar Iframe -->
+<section class="section" style="background-color: #f9f9f9; padding: 40px 0;">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-12">
+        <h3 style="color: #333; margin-bottom: 20px; text-align: center;">Full Calendar View</h3>
+        <div style="text-align: center;">
+          <iframe src="https://calendar.google.com/calendar/u/0/embed?src=kzoomakers.org_fkmebp59ti7pvl271vp65p1k8s@group.calendar.google.com&amp;ctz=America/New_York" 
+                  style="border: 0; max-width: 100%;" 
+                  width="1000" 
+                  height="800" 
+                  frameborder="0" 
+                  scrolling="no">
+          </iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- Purge Button Section -->
 <div style="text-align: left; padding: 30px 0 30px 50px;">
