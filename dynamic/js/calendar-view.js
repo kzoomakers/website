@@ -154,6 +154,9 @@
 
       }, []);
 
+
+       console.log(`drawEvents for day ${day.format('YYYY-MM-DD')}: checking ${this.events.length} events`);
+
       todaysEvents.forEach(function(ev) {
         var evSpan = createElement('span', ev.color);
         element.appendChild(evSpan);
