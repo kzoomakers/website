@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+
+<!--
+ // FACEBOOK: https://www.facebook.com/KzooMakers/
+ // GITHUB: https://github.com/kzoomakers/website
+-->
+
+<html lang="en">
+<head>
+
+  <!-- Basic Page Needs
+  ================================================== -->
+  <meta charset="utf-8">
+  <title>Calendar - Kzoo Makers</title>
+
+  <!-- Mobile Specific Metas
+  ================================================== -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="Kzoo Makers events calendar - View upcoming workshops, open houses, and community events at our Kalamazoo makerspace. Join us for hands-on learning, collaboration, and maker meetups. All members and visitors welcome.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="author" content="Kzoo Makers">
+  <meta name="generator" content="Kzoo Makers Community Website">
+  <meta name="keywords" content="makerspace events, Kalamazoo workshops, maker meetups, community events, open house, hands-on learning, maker calendar, workshop schedule">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="Kzoo Makers Events Calendar">
+  <meta property="og:description" content="View upcoming workshops, open houses, and community events at Kzoo Makers in Kalamazoo, MI.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://kzoomakers.org/calendar.html">
+
+  <!-- Favicon -->
+  <link rel="shortcut icon" type="image/x-icon" href="images/favicon.png" />
+
+  <!-- CSS
+  ================================================== -->
+  <!-- Themefisher Icon font -->
+  <link rel="stylesheet" href="plugins/themefisher-font/style.css">
+  <!-- bootstrap.min css -->
+  <link rel="stylesheet" href="plugins/bootstrap/bootstrap.min.css">
+  <!-- Lightbox.min css -->
+  <link rel="stylesheet" href="plugins/lightbox2/css/lightbox.min.css">
+  <!-- animation css -->
+  <link rel="stylesheet" href="plugins/animate/animate.css">
+  <!-- Slick Carousel -->
+  <link rel="stylesheet" href="plugins/slick/slick.css">
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- Moment.js for calendar view -->
+  <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.5.1/moment.min.js"></script>
+
+  <style>
+    .calendar-controls {
+      text-align: center;
+      margin: 30px 0;
+    }
+    
+    .calendar-controls button {
+      margin: 5px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    
+    .calendar-controls .btn-primary {
+      background-color: #47424C;
+      color: white;
+    }
+    
+    .calendar-controls .btn-primary:hover {
+      background-color: #655D67;
+    }
+    
+    .calendar-controls .btn-secondary {
+      background-color: #e0e0e0;
+      color: #333;
+    }
+    
+    .calendar-controls .btn-secondary:hover {
+      background-color: #d0d0d0;
+    }
+    
+    .calendar-controls .btn-toggle {
+      background-color: #5cb85c;
+      color: white;
+      font-weight: bold;
+    }
+    
+    .calendar-controls .btn-toggle:hover {
+      background-color: #4cae4c;
+    }
+    
+    .date-range-inputs {
+      display: inline-block;
+      margin: 10px;
+    }
+    
+    .date-range-inputs input {
+      padding: 8px;
+      margin: 0 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    
+    .events-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .month-section {
+      margin-bottom: 40px;
+    }
+    
+    .month-header {
+      background-color: #47424C;
+      color: white;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    
+    .event-card {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .event-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    .event-date {
+      color: #47424C;
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .event-date-text {
+      flex: 1;
+    }
+    
+    .share-button {
+      background-color: #47424C;
+      color: white;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background-color 0.2s;
+      margin-left: 10px;
+    }
+    
+    .share-button:hover {
+      background-color: #655D67;
+    }
+    
+    .share-button:active {
+      background-color: #3a3640;
+    }
+    
+    .event-time {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    
+    .event-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    
+    .event-location {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 10px;
+      font-style: italic;
+    }
+    
+    .event-description {
+      color: #555;
+      line-height: 1.6;
+      margin-top: 15px;
+    }
+    
+    .event-description a {
+      color: #47424C;
+      text-decoration: underline;
+    }
+    
+    .loading-message {
+      text-align: center;
+      padding: 40px;
+      font-size: 18px;
+      color: #666;
+    }
+    
+    .error-message {
+      text-align: center;
+      padding: 40px;
+      font-size: 18px;
+      color: #d9534f;
+      background-color: #f2dede;
+      border-radius: 5px;
+      margin: 20px;
+    }
+    
+    .no-events-message {
+      text-align: center;
+      padding: 40px;
+      font-size: 18px;
+      color: #666;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      margin: 20px;
+    }
+    
+    #calendar-iframe-container {
+      display: none;
+      text-align: center;
+      margin-top: 30px;
+    }
+    
+    #events-list-container {
+      display: block;
+    }
+    
+    .copy-notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #47424C;
+      color: white;
+      padding: 15px 25px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 10000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    
+    .copy-notification.show {
+      opacity: 1;
+    }
+    
+    .purge-notification {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #47424C;
+      color: white;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      z-index: 10001;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      font-size: 16px;
+      max-width: 80%;
+      max-height: 80vh;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    
+    .purge-notification.show {
+      opacity: 1;
+    }
+    
+    .purge-notification.error {
+      background-color: #d9534f;
+    }
+    
+    .purge-button {
+      font-size: 24pt;
+      cursor: pointer;
+      transition: transform 0.2s;
+      display: inline-block;
+      text-decoration: none;
+      color: #cccccc;
+    }
+    
+    .purge-button:hover {
+      transform: scale(1.1);
+    }
+    
+    .purge-button.show-hover-image,
+    .purge-button.show-click-image {
+      font-size: 0;
+      display: inline-block;
+      width: auto;
+      height: auto;
+    }
+    
+    .purge-button.show-hover-image::before {
+      content: '';
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      background-image: url('images/samples/purge-pending.webp');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+    
+    .purge-button.show-click-image::before {
+      content: '';
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      background-image: url('images/samples/purge-click.webp');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    /* Calendar View Styles */
+    #calendar {
+      -webkit-transform: translate3d(0, 0, 0);
+      -moz-transform: translate3d(0, 0, 0);
+      transform: translate3d(0, 0, 0);
+      width: 100%;
+      max-width: 420px;
+      margin: 0 auto;
+      height: auto;
+      overflow: hidden;
+    }
+
+    .header {
+      height: 50px;
+      width: 100%;
+      background: rgba(66, 66, 66, 1);
+      text-align: center;
+      position: relative;
+      z-index: 100;
+    }
+
+    .header h1 {
+      margin: 0;
+      padding: 0;
+      font-size: 20px;
+      line-height: 50px;
+      font-weight: 100;
+      letter-spacing: 1px;
+      color: rgba(255, 255, 255, 1);
+    }
+
+    .left, .right {
+      position: absolute;
+      width: 0px;
+      height: 0px;
+      border-style: solid;
+      top: 50%;
+      margin-top: -7.5px;
+      cursor: pointer;
+    }
+
+    .left {
+      border-width: 7.5px 10px 7.5px 0;
+      border-color: transparent rgba(160, 159, 160, 1) transparent transparent;
+      left: 20px;
+    }
+
+    .right {
+      border-width: 7.5px 0 7.5px 10px;
+      border-color: transparent transparent transparent rgba(160, 159, 160, 1);
+      right: 20px;
+    }
+
+    .month {
+      opacity: 0;
+    }
+
+    .month.new {
+      -webkit-animation: fadeIn 1s ease-out;
+      opacity: 1;
+    }
+
+    .month.in.next {
+      -webkit-animation: moveFromTopFadeMonth .4s ease-out;
+      -moz-animation: moveFromTopFadeMonth .4s ease-out;
+      animation: moveFromTopFadeMonth .4s ease-out;
+      opacity: 1;
+    }
+
+    .month.out.next {
+      -webkit-animation: moveToTopFadeMonth .4s ease-in;
+      -moz-animation: moveToTopFadeMonth .4s ease-in;
+      animation: moveToTopFadeMonth .4s ease-in;
+      opacity: 1;
+    }
+
+    .month.in.prev {
+      -webkit-animation: moveFromBottomFadeMonth .4s ease-out;
+      -moz-animation: moveFromBottomFadeMonth .4s ease-out;
+      animation: moveFromBottomFadeMonth .4s ease-out;
+      opacity: 1;
+    }
+
+    .month.out.prev {
+      -webkit-animation: moveToBottomFadeMonth .4s ease-in;
+      -moz-animation: moveToBottomFadeMonth .4s ease-in;
+      animation: moveToBottomFadeMonth .4s ease-in;
+      opacity: 1;
+    }
+
+    .week {
+      background: #4A4A4A;
+    }
+
+    .day {
+      display: inline-block;
+      width: 60px;
+      padding: 10px;
+      text-align: center;
+      vertical-align: top;
+      cursor: pointer;
+      background: #4A4A4A;
+      position: relative;
+      z-index: 100;
+    }
+
+    .day.other {
+      color: rgba(255, 255, 255, .3);
+    }
+
+    .day.today {
+      color: rgba(156, 202, 235, 1);
+    }
+
+    .day-name {
+      font-size: 9px;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+      color: rgba(255, 255, 255, .5);
+      letter-spacing: .7px;
+    }
+
+    .day-number {
+      font-size: 24px;
+      letter-spacing: 1.5px;
+      color: rgba(255, 255, 255, 1);
+    }
+
+    .day .day-events {
+      list-style: none;
+      margin-top: 3px;
+      text-align: center;
+      height: 12px;
+      line-height: 6px;
+      overflow: hidden;
+    }
+
+    .day .day-events span {
+      vertical-align: top;
+      display: inline-block;
+      padding: 0;
+      margin: 0;
+      width: 5px;
+      height: 5px;
+      line-height: 5px;
+      margin: 0 1px;
+    }
+
+    .blue { background: rgba(156, 202, 235, 1); }
+    .orange { background: rgba(247, 167, 0, 1); }
+    .green { background: rgba(153, 198, 109, 1); }
+    .yellow { background: rgba(249, 233, 0, 1); }
+
+    .details {
+      position: relative;
+      width: 100%;
+      max-width: 420px;
+      height: 75px;
+      background: rgba(164, 164, 164, 1);
+      margin-top: 5px;
+      border-radius: 4px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .details.in {
+      -webkit-animation: moveFromTopFade .5s ease both;
+      -moz-animation: moveFromTopFade .5s ease both;
+      animation: moveFromTopFade .5s ease both;
+    }
+
+    .details.out {
+      -webkit-animation: moveToTopFade .5s ease both;
+      -moz-animation: moveToTopFade .5s ease both;
+      animation: moveToTopFade .5s ease both;
+    }
+
+    .arrow {
+      position: absolute;
+      top: -5px;
+      left: 50%;
+      margin-left: -2px;
+      width: 0px;
+      height: 0px;
+      border-style: solid;
+      border-width: 0 5px 5px 5px;
+      border-color: transparent transparent rgba(164, 164, 164, 1) transparent;
+      transition: all 0.7s ease;
+    }
+
+    .events {
+      height: 75px;
+      padding: 7px 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .events.in {
+      -webkit-animation: fadeIn .3s ease both;
+      -moz-animation: fadeIn .3s ease both;
+      animation: fadeIn .3s ease both;
+    }
+
+    .events.in {
+      -webkit-animation-delay: .3s;
+      -moz-animation-delay: .3s;
+      animation-delay: .3s;
+    }
+
+    .details.out .events {
+      -webkit-animation: fadeOutShrink .4s ease both;
+      -moz-animation: fadeOutShink .4s ease both;
+      animation: fadeOutShink .4s ease both;
+    }
+
+    .events.out {
+      -webkit-animation: fadeOut .3s ease both;
+      -moz-animation: fadeOut .3s ease both;
+      animation: fadeOut .3s ease both;
+    }
+
+    .event {
+      font-size: 16px;
+      line-height: 22px;
+      letter-spacing: .5px;
+      padding: 2px 16px;
+      vertical-align: top;
+      color: rgba(255, 255, 255, 1);
+    }
+
+    .event.empty {
+      color: #eee;
+    }
+
+    .event-category {
+      height: 10px;
+      width: 10px;
+      display: inline-block;
+      margin: 6px 0 0;
+      vertical-align: top;
+    }
+
+    .event span {
+      display: inline-block;
+      padding: 0 0 0 7px;
+    }
+
+    .legend {
+      position: relative;
+      width: 100%;
+      height: 30px;
+      background: rgba(60, 60, 60, 1);
+      line-height: 30px;
+      text-align: center;
+    }
+
+    .entry {
+      position: relative;
+      padding: 0 0 0 25px;
+      font-size: 13px;
+      display: inline-block;
+      line-height: 30px;
+      background: transparent;
+      color: rgba(255, 255, 255, 1);
+    }
+
+    .entry:after {
+      position: absolute;
+      content: '';
+      height: 5px;
+      width: 5px;
+      top: 12px;
+      left: 14px;
+    }
+
+    .entry.blue:after { background: rgba(156, 202, 235, 1); }
+    .entry.orange:after { background: rgba(247, 167, 0, 1); }
+    .entry.green:after { background: rgba(153, 198, 109, 1); }
+    .entry.yellow:after { background: rgba(249, 233, 0, 1); }
+
+    /* Animations */
+    @-webkit-keyframes moveFromTopFade {
+      from { opacity: .3; height:0px; margin-top:0px; -webkit-transform: translateY(-100%); }
+    }
+    @-moz-keyframes moveFromTopFade {
+      from { height:0px; margin-top:0px; -moz-transform: translateY(-100%); }
+    }
+    @keyframes moveFromTopFade {
+      from { height:0px; margin-top:0px; transform: translateY(-100%); }
+    }
+
+    @-webkit-keyframes moveToTopFade {
+      to { opacity: .3; height:0px; margin-top:0px; opacity: 0.3; -webkit-transform: translateY(-100%); }
+    }
+    @-moz-keyframes moveToTopFade {
+      to { height:0px; -moz-transform: translateY(-100%); }
+    }
+    @keyframes moveToTopFade {
+      to { height:0px; transform: translateY(-100%); }
+    }
+
+    @-webkit-keyframes moveToTopFadeMonth {
+      to { opacity: 0; -webkit-transform: translateY(-30%) scale(.95); }
+    }
+    @-moz-keyframes moveToTopFadeMonth {
+      to { opacity: 0; -moz-transform: translateY(-30%); }
+    }
+    @keyframes moveToTopFadeMonth {
+      to { opacity: 0; -moz-transform: translateY(-30%); }
+    }
+
+    @-webkit-keyframes moveFromTopFadeMonth {
+      from { opacity: 0; -webkit-transform: translateY(30%) scale(.95); }
+    }
+    @-moz-keyframes moveFromTopFadeMonth {
+      from { opacity: 0; -moz-transform: translateY(30%); }
+    }
+    @keyframes moveFromTopFadeMonth {
+      from { opacity: 0; -moz-transform: translateY(30%); }
+    }
+
+    @-webkit-keyframes moveToBottomFadeMonth {
+      to { opacity: 0; -webkit-transform: translateY(30%) scale(.95); }
+    }
+    @-moz-keyframes moveToBottomFadeMonth {
+      to { opacity: 0; -webkit-transform: translateY(30%); }
+    }
+    @keyframes moveToBottomFadeMonth {
+      to { opacity: 0; -webkit-transform: translateY(30%); }
+    }
+
+    @-webkit-keyframes moveFromBottomFadeMonth {
+      from { opacity: 0; -webkit-transform: translateY(-30%) scale(.95); }
+    }
+    @-moz-keyframes moveFromBottomFadeMonth {
+      from { opacity: 0; -moz-transform: translateY(-30%); }
+    }
+    @keyframes moveFromBottomFadeMonth {
+      from { opacity: 0; -moz-transform: translateY(-30%); }
+    }
+
+    @-webkit-keyframes fadeIn  {
+      from { opacity: 0; }
+    }
+    @-moz-keyframes fadeIn  {
+      from { opacity: 0; }
+    }
+    @keyframes fadeIn  {
+      from { opacity: 0; }
+    }
+
+    @-webkit-keyframes fadeOut  {
+      to { opacity: 0; }
+    }
+    @-moz-keyframes fadeOut  {
+      to { opacity: 0; }
+    }
+    @keyframes fadeOut  {
+      to { opacity: 0; }
+    }
+
+    @-webkit-keyframes fadeOutShink  {
+      to { opacity: 0; padding: 0px; height: 0px; }
+    }
+    @-moz-keyframes fadeOutShink  {
+      to { opacity: 0; padding: 0px; height: 0px; }
+    }
+    @keyframes fadeOutShink  {
+      to { opacity: 0; padding: 0px; height: 0px; }
+    }
+  </style>
+
+</head>
+<body id="body">
+
+  <!--
+  Start Preloader
+  ==================================== -->
+  <div id="preloader">
+    <div class='preloader'>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </div>
+  <!--
+  End Preloader
+  ==================================== -->
+
+<!--
+Fixed Navigation
+==================================== -->
+<header class="navigation fixed-top">
+  <!-- Navigation will be dynamically loaded by navbar.js -->
+</header>
+<!--
+End Fixed Navigation
+==================================== -->
+
+<section class="single-page-header">
+	<div class="container">
+		<div class="row">
+			<div class="col-md-12">
+				<h2>Events Calendar</h2>
+				<ol class="breadcrumb header-bradcrumb justify-content-center">
+					<li class="breadcrumb-item"><a href="index.html" class="text-white">Home</a></li>
+					<li class="breadcrumb-item active" aria-current="page">Calendar</li>
+				</ol>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!--
+Start Calendar Section
+==================================== -->
+<section id="calendar" class="about section">
+  <div class="container" data-aos="fade-up">
+    <div class="row justify-content-center">
+      <!-- section title -->
+      <div class="col-xl-6 col-lg-8">
+        <div class="title text-center">
+          <h2>Upcoming Events</h2>
+          <p>Check out our upcoming workshops, open houses, and community events. All members and visitors are welcome, just ring the doorbell when you arrive!</p>
+          <div class="border"></div>
+        </div>
+      </div>
+      <!-- /section title -->
+    </div>
+
+    <!-- Interactive Calendar View -->
+    <div id="calendar"></div>
+
+    <!-- Google Calendar Iframe -->
+    <div style="margin-top: 40px; text-align: center;">
+      <h3 style="color: #333; margin-bottom: 20px;">Full Calendar View</h3>
+      <iframe src="https://calendar.google.com/calendar/u/0/embed?src=kzoomakers.org_fkmebp59ti7pvl271vp65p1k8s@group.calendar.google.com&amp;ctz=America/New_York" 
+              style="border: 0; max-width: 100%;" 
+              width="1000" 
+              height="800" 
+              frameborder="0" 
+              scrolling="no">
+      </iframe>
+    </div>
+
+  </div>
+</section>
+<!-- End Calendar Section -->
+
+<!-- Purge Button Section -->
+<div style="text-align: left; padding: 30px 0 30px 50px;">
+	<span class="purge-button" id="purge-button" style="cursor: pointer;">۞</span>
+</div>
+
+<!--
+Start Call To Action
+==================================== -->
+<section class="call-to-action section">
+	<div class="container">
+		<div class="row justify-content-center">
+			<div class="col-xl-6 col-lg-8 text-center">
+				<h2>Join Us at an Event</h2>
+				<p>Want to attend an event or schedule a tour? We'd love to meet you!</p>
+				<a href="pricing.html" class="btn btn-main">See Membership Options</a>
+				<a href="tour-form-redirect.html" class="btn btn-main">Schedule a Tour</a>
+			</div>
+		</div> <!-- End row -->
+	</div> <!-- End container -->
+</section> <!-- End section -->
+
+<footer id="footer" class="bg-one">
+  <!-- Footer will be dynamically loaded by footer.js -->
+</footer> <!-- end footer -->
+
+
+<!-- end Footer Area
+========================================== -->
+
+<!-- 
+    Essential Scripts
+    =====================================-->
+<!-- Main jQuery -->
+<script src="plugins/jquery/jquery.min.js"></script>
+
+<!-- Bootstrap4 -->
+<script src="plugins/bootstrap/bootstrap.min.js"></script>
+<!-- Parallax -->
+<script src="plugins/parallax/jquery.parallax-1.1.3.js"></script>
+<!-- lightbox -->
+<script src="plugins/lightbox2/js/lightbox.min.js"></script>
+<!-- Owl Carousel -->
+<script src="plugins/slick/slick.min.js"></script>
+<!-- filter -->
+<script src="plugins/filterizr/jquery.filterizr.min.js"></script>
+<!-- Smooth Scroll js -->
+<script src="plugins/smooth-scroll/smooth-scroll.min.js"></script>
+<!-- Google Map -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCcABaamniA6OL5YvYSpB3pFMNrXwXnLwU"></script>
+<script src="plugins/google-map/gmap.js"></script>
+
+<!-- Dynamic Navigation -->
+<script src="dynamic/js/navbar.js"></script>
+
+<!-- Dynamic Footer -->
+<script src="dynamic/js/footer.js"></script>
+
+<!-- Dynamic Hours -->
+<script src="dynamic/js/hours.js"></script>
+
+<!-- Dynamic Counters -->
+<script src="dynamic/js/counters.js"></script>
+
+<!-- Custom js -->
+<script src="js/script.js"></script>
+
+<!-- Calendar ICS Parser and Display -->
+<script src="dynamic/js/calendar.js"></script>
+
+<!-- Calendar View (Interactive Grid) -->
+<script src="dynamic/js/calendar-view.js"></script>
+
+</body>
+
+</html>
