@@ -612,6 +612,300 @@
     .entry.green:after { background: rgba(153, 198, 109, 1); }
     .entry.yellow:after { background: rgba(249, 233, 0, 1); }
 
+    /* New Calendar Grid Styles */
+    .app {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      gap: 14px;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      background: rgba(17, 26, 47, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 10px 12px;
+      backdrop-filter: blur(8px);
+    }
+    .topbar h1 {
+      font-size: 1.05rem;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .status {
+      color: #cfe7ff;
+      font-size: 0.9rem;
+    }
+    .month {
+      font-weight: 600;
+    }
+    #search {
+      background: #0e1935;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #fff;
+      border-radius: 10px;
+      padding: 8px 10px;
+      min-width: 260px;
+    }
+
+    .btn {
+      background: #172449;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #fff;
+      border-radius: 10px;
+      padding: 8px 10px;
+      cursor: pointer;
+    }
+    .btn:hover {
+      filter: brightness(1.08);
+    }
+    .btn-accent {
+      background: linear-gradient(180deg, #3cc7ff, #1ea9e6);
+      color: #062332;
+      border-color: #63d2ff;
+    }
+    .btn.danger {
+      background: #3e1a22;
+      border-color: #7a2a36;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.4fr 0.9fr 0.9fr;
+      gap: 14px;
+    }
+    @media (max-width: 1120px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: rgba(17, 26, 47, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+      backdrop-filter: blur(8px);
+    }
+
+    /* Calendar */
+    .weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      padding: 2px 4px;
+      color: #cfe7ff;
+      font-size: 0.9rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      min-height: 520px;
+    }
+    .cell {
+      background: #0b162f;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 8px;
+      display: grid;
+      gap: 8px;
+      cursor: pointer;
+      position: relative;
+      min-height: 100px;
+      transition: transform 0.08s ease;
+    }
+    .cell:hover {
+      transform: translateY(-1px);
+    }
+    .cell .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .cell .d {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-weight: 600;
+      color: #dbeafe;
+    }
+    .cell.out {
+      opacity: 0.55;
+    }
+    .cell.today .d {
+      background: linear-gradient(180deg, #3cc7ff, #1ea9e6);
+      color: #062332;
+    }
+    .dots {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .dots .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    .badge {
+      background: #0e1935;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 0.8rem;
+      color: #9ccfff;
+    }
+
+    .day-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .events {
+      list-style: none;
+      display: grid;
+      gap: 8px;
+    }
+    .events.small .ev {
+      padding: 6px 8px;
+    }
+    .ev {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 8px;
+      align-items: center;
+      background: #0b162f;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 8px 10px;
+    }
+    .ev .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .ev .t {
+      font-weight: 600;
+    }
+    .ev .m {
+      display: flex;
+      gap: 10px;
+      color: #cfe7ff;
+      font-size: 0.9rem;
+    }
+    .ev .loc::before {
+      content: "📍";
+    }
+    .ev .time::before {
+      content: "🕒";
+    }
+    .ev .tools {
+      display: flex;
+      gap: 6px;
+    }
+    .icon {
+      background: #172449;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #fff;
+      border-radius: 8px;
+      padding: 6px 8px;
+      cursor: pointer;
+    }
+    .icon:hover {
+      filter: brightness(1.08);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+    .card {
+      background: #0b162f;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 10px;
+    }
+    .card .k {
+      color: #cbd5e1;
+      font-size: 0.85rem;
+    }
+    .card .v {
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    dialog {
+      border: none;
+      border-radius: 12px;
+      background: #0e1935;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 14px;
+      width: min(720px, 96vw);
+    }
+    dialog::backdrop {
+      background: rgba(0, 0, 0, 0.6);
+    }
+    .form label {
+      display: grid;
+      gap: 6px;
+      font-size: 0.9rem;
+    }
+    .form input {
+      background: #0b162f;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #fff;
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .grid3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+    .dlg-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 10px;
+    }
+    .spacer {
+      flex: 1;
+    }
+    .pill {
+      background: #0e1935;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-size: 0.9rem;
+      color: #9ccfff;
+    }
+
     /* Animations */
     @-webkit-keyframes moveFromTopFade {
       from { opacity: .3; height:0px; margin-top:0px; -webkit-transform: translateY(-100%); }
@@ -780,7 +1074,123 @@ Start Calendar Section
 
     <!-- Interactive Calendar Grid View -->
     <div id="grid-view-container" style="display: none;">
-      <div id="calendar"></div>
+      <section class="app">
+        <header class="topbar">
+          <div class="brand">
+            <h1>Calendar — Event Planner</h1>
+            <div class="status" id="status"></div>
+          </div>
+          <div class="actions">
+            <button id="prev" class="btn">←</button>
+            <button id="today" class="btn">Today</button>
+            <button id="next" class="btn">→</button>
+            <div class="month" id="monthLabel">March 2025</div>
+            <input id="search" type="text" placeholder="Search events… (title, location, notes)">
+            <button id="add" class="btn btn-accent">+ Add event</button>
+          </div>
+        </header>
+
+        <div class="layout">
+          <main class="panel calendar">
+            <div class="weekdays">
+              <div>Mon</div>
+              <div>Tue</div>
+              <div>Wed</div>
+              <div>Thu</div>
+              <div>Fri</div>
+              <div>Sat</div>
+              <div>Sun</div>
+            </div>
+            <div id="grid" class="grid" aria-label="Month calendar"></div>
+          </main>
+
+          <aside class="panel day">
+            <div class="day-head">
+              <h2 id="dayLabel">—</h2>
+              <div class="pill" id="dayCount">0 events</div>
+            </div>
+            <ul id="dayList" class="events" aria-live="polite"></ul>
+          </aside>
+
+          <aside class="panel upcoming">
+            <h2>Upcoming</h2>
+            <ul id="upcomingList" class="events small"></ul>
+            <h2>Stats</h2>
+            <div class="stats">
+              <div class="card">
+                <div class="k">This week</div>
+                <div class="v" id="statWeek">0</div>
+              </div>
+              <div class="card">
+                <div class="k">This month</div>
+                <div class="v" id="statMonth">0</div>
+              </div>
+              <div class="card">
+                <div class="k">All</div>
+                <div class="v" id="statAll">0</div>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <!-- Dialog: Add/Edit -->
+        <dialog id="dlg">
+          <form method="dialog" class="form">
+            <h3 id="dlgTitle">Add event</h3>
+            <div class="grid2">
+              <label>Title
+                <input id="fTitle" type="text" required placeholder="e.g., Team meeting">
+              </label>
+              <label>Date
+                <input id="fDate" type="date" required>
+              </label>
+            </div>
+            <div class="grid3">
+              <label>Start
+                <input id="fStart" type="time">
+              </label>
+              <label>End
+                <input id="fEnd" type="time">
+              </label>
+              <label>Colour
+                <input id="fColor" type="color" value="#38bdf8">
+              </label>
+            </div>
+            <div class="grid2">
+              <label>Location
+                <input id="fLoc" type="text" placeholder="Room 301 / Zoom">
+              </label>
+              <label>Notes
+                <input id="fNotes" type="text" placeholder="Agenda, docs, etc.">
+              </label>
+            </div>
+            <menu class="dlg-actions">
+              <button id="btnDelete" class="btn danger" value="delete">Delete</button>
+              <div class="spacer"></div>
+              <button class="btn" value="cancel">Cancel</button>
+              <button id="btnSave" class="btn btn-accent" value="save">Save</button>
+            </menu>
+          </form>
+        </dialog>
+
+        <!-- Template event item -->
+        <template id="tplEvent">
+          <li class="ev">
+            <div class="dot"></div>
+            <div class="body">
+              <div class="t"></div>
+              <div class="m">
+                <span class="time"></span>
+                <span class="loc"></span>
+              </div>
+            </div>
+            <div class="tools">
+              <button class="icon edit" title="Edit">✎</button>
+              <button class="icon del" title="Delete">✕</button>
+            </div>
+          </li>
+        </template>
+      </section>
     </div>
 
   </div>
@@ -876,8 +1286,8 @@ Start Call To Action
 <!-- Calendar ICS Parser and Display -->
 <script src="dynamic/js/calendar.js"></script>
 
-<!-- Calendar View (Interactive Grid) -->
-<script src="dynamic/js/calendar-view.js"></script>
+<!-- Calendar Grid (New Interactive Calendar) -->
+<script src="dynamic/js/calendar-grid.js"></script>
 
 </body>
 
