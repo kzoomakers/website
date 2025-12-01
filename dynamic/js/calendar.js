@@ -820,11 +820,15 @@ function convertEventsForCalendarView(events) {
   let colorIndex = 0;
 
   return events.map((event, index) => {
+    // Assign colors in a round-robin fashion
+    const color = colors[colorIndex % colors.length];
+    colorIndex++;
+    
     return {
       eventName: event.title,
       calendar: 'Kzoo Makers',
-      color: colors[colorIndex % colors.length],
-      date: moment(event.start),
+      color: color,
+      date: moment(event.start), // Use the actual parsed start date
       originalEvent: event
     };
   });
@@ -873,7 +877,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize calendar grid view if the calendar element exists
     if (document.querySelector('#calendar')) {
       // Use all events (not just filtered) for the calendar grid
+      console.log(`Initializing calendar grid with ${allEvents.length} total events`);
       const calendarViewEvents = convertEventsForCalendarView(allEvents);
+      console.log(`Converted to ${calendarViewEvents.length} calendar view events`);
       window.calendarView = new CalendarView('#calendar', calendarViewEvents);
     }
     
