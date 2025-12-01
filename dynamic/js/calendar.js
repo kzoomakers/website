@@ -401,6 +401,11 @@ const eventDataMap = new Map();
 // Display events
 function displayEvents(events) {
   const container = document.getElementById('events-list-container');
+  
+  if (!container) {
+    console.warn('Events list container not found');
+    return;
+  }
 
   if (events.length === 0) {
     container.innerHTML = '<div class="no-events-message">No events found for the selected date range.</div>';
@@ -585,12 +590,14 @@ async function loadCalendar() {
 
   } catch (error) {
     console.error('Error loading calendar:', error);
-    container.innerHTML = `
-      <div class="error-message">
-        <strong>Unable to load calendar events right now.</strong><br>
-        Please try refreshing the page or switch to Calendar View to see events.
-      </div>
-    `;
+    if (container) {
+      container.innerHTML = `
+        <div class="error-message">
+          <strong>Unable to load calendar events right now.</strong><br>
+          Please try refreshing the page or switch to Calendar View to see events.
+        </div>
+      `;
+    }
   }
 }
 
@@ -823,20 +830,58 @@ function convertEventsForCalendarView(events) {
   });
 }
 
+// Toggle between list, grid, and Google calendar views
+function toggleListView() {
+  document.getElementById('list-view-container').style.display = 'block';
+  document.getElementById('grid-view-container').style.display = 'none';
+  document.getElementById('google-view-container').style.display = 'none';
+  
+  document.getElementById('toggle-list-view-btn').style.backgroundColor = '#47424C';
+  document.getElementById('toggle-grid-view-btn').style.backgroundColor = '#5cb85c';
+  document.getElementById('toggle-google-view-btn').style.backgroundColor = '#5cb85c';
+}
+
+function toggleGridView() {
+  document.getElementById('list-view-container').style.display = 'none';
+  document.getElementById('grid-view-container').style.display = 'block';
+  document.getElementById('google-view-container').style.display = 'none';
+  
+  document.getElementById('toggle-list-view-btn').style.backgroundColor = '#5cb85c';
+  document.getElementById('toggle-grid-view-btn').style.backgroundColor = '#47424C';
+  document.getElementById('toggle-google-view-btn').style.backgroundColor = '#5cb85c';
+}
+
+function toggleGoogleView() {
+  document.getElementById('list-view-container').style.display = 'none';
+  document.getElementById('grid-view-container').style.display = 'none';
+  document.getElementById('google-view-container').style.display = 'block';
+  
+  document.getElementById('toggle-list-view-btn').style.backgroundColor = '#5cb85c';
+  document.getElementById('toggle-grid-view-btn').style.backgroundColor = '#5cb85c';
+  document.getElementById('toggle-google-view-btn').style.backgroundColor = '#47424C';
+}
+
 // Load calendar when page loads
 document.addEventListener('DOMContentLoaded', () => {
   loadCalendar().then(() => {
     scrollToEventIfNeeded();
     
-    // Initialize calendar view if the calendar element exists
+    // Initialize calendar grid view if the calendar element exists
     if (document.querySelector('#calendar')) {
       const calendarViewEvents = convertEventsForCalendarView(allEvents);
       window.calendarView = new CalendarView('#calendar', calendarViewEvents);
     }
+    
+    // Display list view by default
+    toggleListView();
   });
 
   // Purge button functionality
   const purgeButton = document.getElementById('purge-button');
+  if (!purgeButton) {
+    return; // Purge button not on this page
+  }
+  
   let isClicked = false;
 
   // Show hover image on mouseover
