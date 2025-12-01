@@ -819,19 +819,30 @@ function convertEventsForCalendarView(events) {
   const colors = ['blue', 'orange', 'green', 'yellow'];
   let colorIndex = 0;
 
-  return events.map((event, index) => {
+  console.log(`convertEventsForCalendarView: Processing ${events.length} events`);
+  
+  const converted = events.map((event, index) => {
     // Assign colors in a round-robin fashion
     const color = colors[colorIndex % colors.length];
     colorIndex++;
+    
+    const momentDate = moment(event.start);
+    console.log(`  Event ${index}: ${event.title}`);
+    console.log(`    - Raw start: ${event.start}`);
+    console.log(`    - Moment date: ${momentDate.format('YYYY-MM-DD HH:mm:ss')}`);
+    console.log(`    - Moment ISO: ${momentDate.toISOString()}`);
     
     return {
       eventName: event.title,
       calendar: 'Kzoo Makers',
       color: color,
-      date: moment(event.start), // Use the actual parsed start date
+      date: momentDate, // Use the actual parsed start date
       originalEvent: event
     };
   });
+  
+  console.log(`Converted ${converted.length} events for calendar view`);
+  return converted;
 }
 
 // Toggle between list, grid, and Google calendar views
@@ -874,13 +885,11 @@ document.addEventListener('DOMContentLoaded', () => {
   loadCalendar().then(() => {
     scrollToEventIfNeeded();
     
-    // Initialize calendar grid view if the calendar element exists
-    if (document.querySelector('#calendar')) {
+    // Initialize calendar grid view if the grid element exists
+    if (document.querySelector('#grid') && window.initializeCalendarWithICSEvents) {
       // Use all events (not just filtered) for the calendar grid
       console.log(`Initializing calendar grid with ${allEvents.length} total events`);
-      const calendarViewEvents = convertEventsForCalendarView(allEvents);
-      console.log(`Converted to ${calendarViewEvents.length} calendar view events`);
-      window.calendarView = new CalendarView('#calendar', calendarViewEvents);
+      window.initializeCalendarWithICSEvents(allEvents);
     }
     
     // Display list view by default
