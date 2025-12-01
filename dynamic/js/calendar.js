@@ -832,33 +832,37 @@ function convertEventsForCalendarView(events) {
 
 // Toggle between list, grid, and Google calendar views
 function toggleListView() {
-  document.getElementById('list-view-container').style.display = 'block';
-  document.getElementById('grid-view-container').style.display = 'none';
-  document.getElementById('google-view-container').style.display = 'none';
+  const listContainer = document.getElementById('list-view-container');
+  const gridContainer = document.getElementById('grid-view-container');
+  const googleContainer = document.getElementById('google-view-container');
+  const listBtn = document.getElementById('toggle-list-view-btn');
+  const gridBtn = document.getElementById('toggle-grid-view-btn');
+  const googleBtn = document.getElementById('toggle-google-view-btn');
   
-  document.getElementById('toggle-list-view-btn').style.backgroundColor = '#47424C';
-  document.getElementById('toggle-grid-view-btn').style.backgroundColor = '#5cb85c';
-  document.getElementById('toggle-google-view-btn').style.backgroundColor = '#5cb85c';
+  if (listContainer) listContainer.style.display = 'block';
+  if (gridContainer) gridContainer.style.display = 'none';
+  if (googleContainer) googleContainer.style.display = 'none';
+  
+  if (listBtn) listBtn.style.backgroundColor = '#47424C';
+  if (gridBtn) gridBtn.style.backgroundColor = '#5cb85c';
+  if (googleBtn) googleBtn.style.backgroundColor = '#5cb85c';
 }
 
 function toggleGridView() {
-  document.getElementById('list-view-container').style.display = 'none';
-  document.getElementById('grid-view-container').style.display = 'block';
-  document.getElementById('google-view-container').style.display = 'none';
+  const listContainer = document.getElementById('list-view-container');
+  const gridContainer = document.getElementById('grid-view-container');
+  const googleContainer = document.getElementById('google-view-container');
+  const listBtn = document.getElementById('toggle-list-view-btn');
+  const gridBtn = document.getElementById('toggle-grid-view-btn');
+  const googleBtn = document.getElementById('toggle-google-view-btn');
   
-  document.getElementById('toggle-list-view-btn').style.backgroundColor = '#5cb85c';
-  document.getElementById('toggle-grid-view-btn').style.backgroundColor = '#47424C';
-  document.getElementById('toggle-google-view-btn').style.backgroundColor = '#5cb85c';
-}
-
-function toggleGoogleView() {
-  document.getElementById('list-view-container').style.display = 'none';
-  document.getElementById('grid-view-container').style.display = 'none';
-  document.getElementById('google-view-container').style.display = 'block';
+  if (listContainer) listContainer.style.display = 'none';
+  if (gridContainer) gridContainer.style.display = 'block';
+  if (googleContainer) googleContainer.style.display = 'none';
   
-  document.getElementById('toggle-list-view-btn').style.backgroundColor = '#5cb85c';
-  document.getElementById('toggle-grid-view-btn').style.backgroundColor = '#5cb85c';
-  document.getElementById('toggle-google-view-btn').style.backgroundColor = '#47424C';
+  if (listBtn) listBtn.style.backgroundColor = '#5cb85c';
+  if (gridBtn) gridBtn.style.backgroundColor = '#47424C';
+  if (googleBtn) googleBtn.style.backgroundColor = '#5cb85c';
 }
 
 // Load calendar when page loads
@@ -868,12 +872,15 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Initialize calendar grid view if the calendar element exists
     if (document.querySelector('#calendar')) {
+      // Use all events (not just filtered) for the calendar grid
       const calendarViewEvents = convertEventsForCalendarView(allEvents);
       window.calendarView = new CalendarView('#calendar', calendarViewEvents);
     }
     
     // Display list view by default
-    toggleListView();
+    if (document.getElementById('toggle-list-view-btn')) {
+      toggleListView();
+    }
   });
 
   // Purge button functionality
