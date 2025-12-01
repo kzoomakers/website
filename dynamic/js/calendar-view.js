@@ -8,6 +8,10 @@
   function CalendarView(selector, events) {
     this.el = document.querySelector(selector);
     this.events = events;
+    console.log('CalendarView initialized with ' + events.length + ' events');
+    events.forEach(function(ev) {
+      console.log('  - ' + ev.eventName + ' on ' + ev.date.format('YYYY-MM-DD'));
+    });
     this.current = moment().date(1);
     this.draw();
     var current = document.querySelector('.today');
@@ -143,6 +147,11 @@
           memo.push(ev);
         }
         return memo;
+
+       if(todaysEvents.length > 0) {
+         console.log('Found ' + todaysEvents.length + ' events on ' + day.format('YYYY-MM-DD'));
+       }
+
       }, []);
 
       todaysEvents.forEach(function(ev) {
