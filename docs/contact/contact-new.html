@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - Kalamazoo Makers</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+            font-family: Arial, sans-serif;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .message {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .char-count {
+            text-align: right;
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Contact Kalamazoo Makers</h1>
+        <p class="subtitle">Have a question? Send us a message and we'll get back to you soon.</p>
+        
+        <div id="messageBox"></div>
+        
+        <form id="contactForm">
+            <div class="form-group">
+                <label for="name">Name: *</label>
+                <input type="text" id="name" name="name" required maxlength="100" placeholder="Your name">
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email: *</label>
+                <input type="email" id="email" name="email" required maxlength="100" placeholder="your.email@example.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="message">Message: *</label>
+                <textarea id="message" name="message" required maxlength="5000" placeholder="Tell us what's on your mind..."></textarea>
+                <div class="char-count">
+                    <span id="charCount">0</span> / 5000 characters
+                </div>
+            </div>
+            
+            <button type="submit" id="submitBtn">Send Message</button>
+        </form>
+    </div>
+
+    <script>
+        let currentToken = null;
+        let tokenTimestamp = null;
+
+        // Character counter
+        const messageField = document.getElementById('message');
+        const charCount = document.getElementById('charCount');
+        
+        messageField.addEventListener('input', () => {
+            charCount.textContent = messageField.value.length;
+        });
+
+        // Fetch a fresh token when page loads
+        async function fetchToken() {
+            try {
+                const response = await fetch('/contact-token');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch token: ' + response.status);
+                }
+                const data = await response.json();
+                currentToken = data.token;
+                tokenTimestamp = data.timestamp;
+                console.log('Token fetched successfully');
+            } catch (error) {
+                console.error('Token fetch error:', error);
+                showMessage('Failed to initialize form. Please refresh the page.', 'error');
+            }
+        }
+
+        function showMessage(text, type) {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.innerHTML = `<div class="message ${type}">${text}</div>`;
+            
+            // Auto-hide after 8 seconds for success messages
+            if (type === 'success') {
+                setTimeout(() => {
+                    messageBox.innerHTML = '';
+                }, 8000);
+            }
+        }
+
+        document.getElementById('contactForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+
+            const formData = {
+                name: document.getElementById('name').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                message: document.getElementById('message').value.trim(),
+                token: currentToken,
+                timestamp: tokenTimestamp
+            };
+
+            // Basic client-side validation
+            if (!formData.name || !formData.email || !formData.message) {
+                showMessage('Please fill in all required fields.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Send Message';
+                return;
+            }
+
+            if (!formData.token || !formData.timestamp) {
+                showMessage('Security token missing. Refreshing...', 'error');
+                await fetchToken();
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Send Message';
+                return;
+            }
+
+            try {
+                const response = await fetch('/contact', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.text();
+
+                if (response.ok) {
+                    showMessage('✓ Message sent successfully! We\'ll get back to you soon.', 'success');
+                    document.getElementById('contactForm').reset();
+                    charCount.textContent = '0';
+                    // Fetch new token for next submission
+                    await fetchToken();
+                } else {
+                    // Handle specific error cases
+                    let errorMsg = result;
+                    if (response.status === 403) {
+                        errorMsg = 'Security validation failed. Please try again.';
+                        await fetchToken(); // Get new token
+                    } else if (response.status === 422) {
+                        errorMsg = 'Invalid characters detected in your message. Please use only standard characters.';
+                    } else if (response.status === 429) {
+                        errorMsg = 'Too many requests. Please wait a moment and try again.';
+                    } else if (response.status === 502) {
+                        errorMsg = 'Email service temporarily unavailable. Please try again later.';
+                    }
+                    showMessage(`Error: ${errorMsg}`, 'error');
+                    // Fetch new token on error
+                    await fetchToken();
+                }
+            } catch (error) {
+                console.error('Submission error:', error);
+                showMessage('Network error. Please check your connection and try again.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Send Message';
+            }
+        });
+
+        // Initialize token on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchToken();
+        });
+    </script>
+</body>
+</html>
