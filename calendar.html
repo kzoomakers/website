@@ -394,6 +394,10 @@ Start Calendar Section
     <!-- Calendar Controls -->
     <div class="calendar-controls">
       <button id="toggle-view-btn" class="btn-toggle" onclick="toggleCalendarView()">Switch to Calendar View</button>
+       <div style="margin-top: 15px; margin-bottom: 15px;">
+         <input type="text" id="search-input" placeholder="Search events by title or description..." style="padding: 10px; width: 100%; max-width: 500px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;" />
+       </div>
+
       <br>
       <div id="filter-controls" style="margin-top: 15px;">
         <button class="btn-primary" onclick="filterThisMonth()">This Month</button>
@@ -482,8 +486,6 @@ Start Call To Action
 <script src="plugins/filterizr/jquery.filterizr.min.js"></script>
 <!-- Smooth Scroll js -->
 <script src="plugins/smooth-scroll/smooth-scroll.min.js"></script>
-<!-- Google Map -->
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCcABaamniA6OL5YvYSpB3pFMNrXwXnLwU"></script>
 <script src="plugins/google-map/gmap.js"></script>
 
 <!-- Dynamic Navigation -->
@@ -1040,20 +1042,76 @@ Start Call To Action
     const iframeContainer = document.getElementById('calendar-iframe-container');
     const toggleBtn = document.getElementById('toggle-view-btn');
     const filterControls = document.getElementById('filter-controls');
+    const searchBox = document.getElementById('search-input').parentElement;
     
     if (currentView === 'list') {
       listContainer.style.display = 'none';
       iframeContainer.style.display = 'block';
       filterControls.style.display = 'none';
+      searchBox.style.display = 'none';
       toggleBtn.textContent = 'Switch to List View';
       currentView = 'iframe';
     } else {
       listContainer.style.display = 'block';
       iframeContainer.style.display = 'none';
       filterControls.style.display = 'block';
+      searchBox.style.display = 'block';
       toggleBtn.textContent = 'Switch to Calendar View';
       currentView = 'list';
     }
+  }
+
+  // Get search parameter from URL
+  function getSearchParameter() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('search') ? params.get('search').toLowerCase().trim() : null;
+  }
+
+  // Filter events by search term (matches title or description)
+  function filterEventsBySearch(events, searchTerm) {
+    if (!searchTerm) return events;
+    
+    return events.filter(event => {
+      const title = (event.title || '').toLowerCase();
+      const description = (event.description || '').toLowerCase();
+      return title.includes(searchTerm) || description.includes(searchTerm);
+    });
+  }
+
+  // Handle search input changes
+  function setupSearchInput() {
+    const searchInput = document.getElementById('search-input');
+    if (!searchInput) return;
+    
+    // Populate search input with URL parameter if present
+    const searchTerm = getSearchParameter();
+    if (searchTerm) {
+      searchInput.value = searchTerm;
+    }
+    
+    // Listen for input changes
+    searchInput.addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase().trim();
+      
+      // Update URL with search parameter
+      if (term) {
+        const newUrl = `${window.location.pathname}?search=${encodeURIComponent(term)}`;
+        window.history.pushState({ search: term }, '', newUrl);
+      } else {
+        const newUrl = window.location.pathname;
+        window.history.pushState({}, '', newUrl);
+      }
+      
+      // Filter and display events
+      if (term) {
+        const filtered = filterEventsBySearch(allEvents, term);
+        displayEvents(filtered);
+        console.log(`Searching for: "${term}" - Found ${filtered.length} matching events`);
+      } else {
+        // Show all upcoming events if search is cleared
+        clearFilter();
+      }
+    });
   }
 
   // Fetch and parse calendar
@@ -1078,12 +1136,19 @@ Start Call To Action
       // (month + 6 with day 0 = last day of month + 5)
       
       // Filter out past events and events beyond our date range
-      const filtered = allEvents.filter(event => {
+      let filtered = allEvents.filter(event => {
         const eventDate = new Date(event.start);
         return eventDate > now && eventDate <= endDate;
       });
       
-      console.log(`Showing ${filtered.length} events from ${now.toLocaleDateString()} to ${endDate.toLocaleDateString()}`);
+      // Apply search filter if search parameter is present
+      const searchTerm = getSearchParameter();
+      if (searchTerm) {
+        filtered = filterEventsBySearch(filtered, searchTerm);
+        console.log(`Searching for: "${searchTerm}" - Found ${filtered.length} matching events`);
+      } else {
+        console.log(`Showing ${filtered.length} events from ${now.toLocaleDateString()} to ${endDate.toLocaleDateString()}`);
+      }
       
       displayEvents(filtered);
       
@@ -1315,6 +1380,7 @@ Start Call To Action
   document.addEventListener('DOMContentLoaded', () => {
     loadCalendar().then(() => {
       scrollToEventIfNeeded();
+      setupSearchInput();
     });
     
     // Purge button functionality
