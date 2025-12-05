@@ -1055,7 +1055,7 @@ Start Call To Action
   function filterThisMonth() {
     const now = new Date();
     const start = new Date(now.getFullYear(), now.getMonth(), 1);
-    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
     
     updateURLWithDateRange('this-month');
     
@@ -1067,7 +1067,7 @@ Start Call To Action
   function filterNextMonth() {
     const now = new Date();
     const start = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    const end = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59);
+    const end = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59, 999);
     
     updateURLWithDateRange('next-month');
     
@@ -1087,7 +1087,7 @@ Start Call To Action
     
     const start = new Date(startInput);
     const end = new Date(endInput);
-    end.setHours(23, 59, 59);
+    end.setHours(23, 59, 59, 999);
     
     if (start > end) {
       alert('Start date must be before end date');
@@ -1202,13 +1202,13 @@ Start Call To Action
         switch (rangeType) {
           case 'this-month':
             start = new Date(now.getFullYear(), now.getMonth(), 1);
-            end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+            end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
             filtered = filterEvents(start, end);
             break;
             
           case 'next-month':
             start = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-            end = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59);
+            end = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59, 999);
             filtered = filterEvents(start, end);
             break;
             
@@ -1216,7 +1216,7 @@ Start Call To Action
             if (startParam && endParam) {
               start = new Date(startParam);
               end = new Date(endParam);
-              end.setHours(23, 59, 59);
+              end.setHours(23, 59, 59, 999);
               filtered = filterEvents(start, end);
             }
             break;
@@ -1251,12 +1251,12 @@ Start Call To Action
     switch (rangeType) {
       case 'this-month':
         start = new Date(now.getFullYear(), now.getMonth(), 1);
-        end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+        end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
         break;
         
       case 'next-month':
         start = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-        end = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59);
+        end = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59, 999);
         break;
         
       case 'custom':
@@ -1265,7 +1265,7 @@ Start Call To Action
         }
         start = new Date(startParam);
         end = new Date(endParam);
-        end.setHours(23, 59, 59);
+        end.setHours(23, 59, 59, 999);
         
         // Populate the date inputs
         const startInput = document.getElementById('start-date');
