@@ -1004,11 +1004,54 @@ Start Call To Action
     });
   }
 
+  // Helper: Update URL with date range parameters
+  function updateURLWithDateRange(rangeType, startDate = null, endDate = null) {
+    const params = new URLSearchParams(window.location.search);
+    
+    // Preserve search parameter if it exists
+    const searchTerm = params.get('search');
+    
+    // Clear old date params
+    params.delete('range');
+    params.delete('start');
+    params.delete('end');
+    
+    // Set new date params
+    if (rangeType) {
+      params.set('range', rangeType);
+      if (rangeType === 'custom' && startDate && endDate) {
+        params.set('start', startDate);
+        params.set('end', endDate);
+      }
+    }
+    
+    // Restore search if it existed
+    if (searchTerm) {
+      params.set('search', searchTerm);
+    }
+    
+    // Update URL
+    const newUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
+    window.history.pushState({ range: rangeType, start: startDate, end: endDate }, '', newUrl);
+  }
+
+  // Helper: Get date range from URL parameters
+  function getDateRangeFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    const rangeType = params.get('range');
+    const startParam = params.get('start');
+    const endParam = params.get('end');
+    
+    return { rangeType, startParam, endParam };
+  }
+
   // Filter: This Month
   function filterThisMonth() {
     const now = new Date();
     const start = new Date(now.getFullYear(), now.getMonth(), 1);
     const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    
+    updateURLWithDateRange('this-month');
     
     const filtered = filterEvents(start, end);
     displayEvents(filtered);
@@ -1019,6 +1062,8 @@ Start Call To Action
     const now = new Date();
     const start = new Date(now.getFullYear(), now.getMonth() + 1, 1);
     const end = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59);
+    
+    updateURLWithDateRange('next-month');
     
     const filtered = filterEvents(start, end);
     displayEvents(filtered);
@@ -1043,12 +1088,22 @@ Start Call To Action
       return;
     }
     
+    updateURLWithDateRange('custom', startInput, endInput);
+    
     const filtered = filterEvents(start, end);
     displayEvents(filtered);
   }
 
   // Clear filter and show all upcoming events
   function clearFilter() {
+    updateURLWithDateRange(null); // Clear date range params
+    
+    // Also clear the custom date inputs
+    const startInput = document.getElementById('start-date');
+    const endInput = document.getElementById('end-date');
+    if (startInput) startInput.value = '';
+    if (endInput) endInput.value = '';
+    
     const now = new Date(); // Current moment
     const upcoming = allEvents.filter(event => event.start > now);
     displayEvents(upcoming);
@@ -1132,6 +1187,52 @@ Start Call To Action
     });
   }
 
+  // Apply date range filter from URL parameters
+  function applyDateRangeFromURL() {
+    const { rangeType, startParam, endParam } = getDateRangeFromURL();
+    
+    if (!rangeType) {
+      return false; // No date range in URL
+    }
+    
+    const now = new Date();
+    let start, end;
+    
+    switch (rangeType) {
+      case 'this-month':
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+        end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+        break;
+        
+      case 'next-month':
+        start = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+        end = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59);
+        break;
+        
+      case 'custom':
+        if (!startParam || !endParam) {
+          return false; // Invalid custom range
+        }
+        start = new Date(startParam);
+        end = new Date(endParam);
+        end.setHours(23, 59, 59);
+        
+        // Populate the date inputs
+        const startInput = document.getElementById('start-date');
+        const endInput = document.getElementById('end-date');
+        if (startInput) startInput.value = startParam;
+        if (endInput) endInput.value = endParam;
+        break;
+        
+      default:
+        return false; // Unknown range type
+    }
+    
+    const filtered = filterEvents(start, end);
+    displayEvents(filtered);
+    return true;
+  }
+
   // Fetch and parse calendar
   async function loadCalendar() {
     const container = document.getElementById('events-list-container');
@@ -1146,29 +1247,35 @@ Start Call To Action
       const icsContent = await response.text();
       allEvents = parseICS(icsContent);
       
-      // Filter to show upcoming events only (excluding past and currently happening events)
-      const now = new Date(); // Current moment, not start of day
+      // Check if there's a date range filter in the URL
+      const hasDateRange = applyDateRangeFromURL();
       
-      const endDate = new Date(now.getFullYear(), now.getMonth() + 3, 0, 23, 59, 59, 999);
-      // This creates a date at the last day of the month that is 5 months from now
-      // (month + 6 with day 0 = last day of month + 5)
-      
-      // Filter out past events and events beyond our date range
-      let filtered = allEvents.filter(event => {
-        const eventDate = new Date(event.start);
-        return eventDate > now && eventDate <= endDate;
-      });
-      
-      // Apply search filter if search parameter is present
-      const searchTerm = getSearchParameter();
-      if (searchTerm) {
-        filtered = filterEventsBySearch(filtered, searchTerm);
-        console.log(`Searching for: "${searchTerm}" - Found ${filtered.length} matching events`);
-      } else {
-        console.log(`Showing ${filtered.length} events from ${now.toLocaleDateString()} to ${endDate.toLocaleDateString()}`);
+      if (!hasDateRange) {
+        // No date range filter, apply default filtering
+        // Filter to show upcoming events only (excluding past and currently happening events)
+        const now = new Date(); // Current moment, not start of day
+        
+        const endDate = new Date(now.getFullYear(), now.getMonth() + 3, 0, 23, 59, 59, 999);
+        // This creates a date at the last day of the month that is 5 months from now
+        // (month + 6 with day 0 = last day of month + 5)
+        
+        // Filter out past events and events beyond our date range
+        let filtered = allEvents.filter(event => {
+          const eventDate = new Date(event.start);
+          return eventDate > now && eventDate <= endDate;
+        });
+        
+        // Apply search filter if search parameter is present
+        const searchTerm = getSearchParameter();
+        if (searchTerm) {
+          filtered = filterEventsBySearch(filtered, searchTerm);
+          console.log(`Searching for: "${searchTerm}" - Found ${filtered.length} matching events`);
+        } else {
+          console.log(`Showing ${filtered.length} events from ${now.toLocaleDateString()} to ${endDate.toLocaleDateString()}`);
+        }
+        
+        displayEvents(filtered);
       }
-      
-      displayEvents(filtered);
       
     } catch (error) {
       console.error('Error loading calendar:', error);
