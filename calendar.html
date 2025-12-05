@@ -394,7 +394,6 @@ Start Calendar Section
     <!-- Calendar Controls -->
     <div class="calendar-controls">
       <button id="toggle-view-btn" class="btn-toggle" onclick="toggleCalendarView()">Switch to Calendar View</button>
-      <button class="btn-toggle" onclick="downloadFullICS()" title="Download the complete calendar ICS file">Download ICS File</button>
        <div style="margin-top: 15px; margin-bottom: 15px;">
          <input type="text" id="search-input" placeholder="Search events by title or description..." style="padding: 10px; width: 100%; max-width: 500px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;" />
        </div>
@@ -806,17 +805,7 @@ Start Call To Action
           if (currentEvent.RRULE && !currentEvent['RECURRENCE-ID']) {
             // Parse exception dates if present
             const exceptionDates = currentEvent.EXDATE ? parseEXDATE(currentEvent.EXDATE) : [];
-            const seriesId = `series-${currentEvent.UID || Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
             const instances = generateRecurringInstances(event, currentEvent.RRULE, startDate, endDate, exceptionDates);
-            
-            // Add series metadata to each instance
-            instances.forEach(instance => {
-              instance.seriesId = seriesId;
-              instance.rrule = currentEvent.RRULE;
-              instance.originalStart = startDate;
-              instance.originalEnd = endDate;
-            });
-            
             events.push(...instances);
           } else {
             // Single event or recurrence exception
@@ -958,23 +947,16 @@ Start Call To Action
           end: event.end,
           description: event.description,
           location: event.location,
-          isAllDay: event.isAllDay,
-          seriesId: event.seriesId,
-          rrule: event.rrule,
-          originalStart: event.originalStart,
-          originalEnd: event.originalEnd
+          isAllDay: event.isAllDay
         });
         
         html += `
           <div class="event-card" id="${eventId}">
             <div class="event-date">
               <span class="event-date-text">${dateStr}</span>
-              <button class="share-button" onclick="addToCalendar('${eventId}')" title="Add this event to your calendar">
-                📅 Add${event.rrule ? ' 1' : ''}
+              <button class="share-button" onclick="addToCalendar('${eventId}')" title="Add to your calendar">
+                📅 Add
               </button>
-              ${event.rrule ? `<button class="share-button" onclick="addSeriesToCalendar('${eventId}')" title="Add entire recurring series to your calendar">
-                📅 Add Series
-              </button>` : ''}
               <button class="share-button" onclick="copyEventLink('${eventId}')" title="Copy link to clipboard">
                 📋 Copy
               </button>
@@ -999,65 +981,16 @@ Start Call To Action
 
   // Filter events by date range
   function filterEvents(startDate, endDate) {
-    // Ensure endDate includes the entire day (set to 23:59:59 if it's at midnight)
-    const adjustedEndDate = new Date(endDate);
-    if (adjustedEndDate.getHours() === 0 && adjustedEndDate.getMinutes() === 0 && adjustedEndDate.getSeconds() === 0) {
-      adjustedEndDate.setHours(23, 59, 59, 999);
-    }
-    
     return allEvents.filter(event => {
-      return event.start >= startDate && event.start <= adjustedEndDate;
+      return event.start >= startDate && event.start <= endDate;
     });
-  }
-
-  // Helper: Update URL with date range parameters
-  function updateURLWithDateRange(rangeType, startDate = null, endDate = null) {
-    const params = new URLSearchParams(window.location.search);
-    
-    // Preserve search parameter if it exists
-    const searchTerm = params.get('search');
-    
-    // Clear old date params
-    params.delete('range');
-    params.delete('start');
-    params.delete('end');
-    
-    // Set new date params
-    if (rangeType) {
-      params.set('range', rangeType);
-      if (rangeType === 'custom' && startDate && endDate) {
-        params.set('start', startDate);
-        params.set('end', endDate);
-      }
-    }
-    
-    // Restore search if it existed
-    if (searchTerm) {
-      params.set('search', searchTerm);
-    }
-    
-    // Update URL
-    const newUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
-    window.history.pushState({ range: rangeType, start: startDate, end: endDate }, '', newUrl);
-  }
-
-  // Helper: Get date range from URL parameters
-  function getDateRangeFromURL() {
-    const params = new URLSearchParams(window.location.search);
-    const rangeType = params.get('range');
-    const startParam = params.get('start');
-    const endParam = params.get('end');
-    
-    return { rangeType, startParam, endParam };
   }
 
   // Filter: This Month
   function filterThisMonth() {
     const now = new Date();
     const start = new Date(now.getFullYear(), now.getMonth(), 1);
-    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-    
-    updateURLWithDateRange('this-month');
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
     
     const filtered = filterEvents(start, end);
     displayEvents(filtered);
@@ -1067,9 +1000,7 @@ Start Call To Action
   function filterNextMonth() {
     const now = new Date();
     const start = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    const end = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59, 999);
-    
-    updateURLWithDateRange('next-month');
+    const end = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59);
     
     const filtered = filterEvents(start, end);
     displayEvents(filtered);
@@ -1087,14 +1018,12 @@ Start Call To Action
     
     const start = new Date(startInput);
     const end = new Date(endInput);
-    end.setHours(23, 59, 59, 999);
+    end.setHours(23, 59, 59);
     
     if (start > end) {
       alert('Start date must be before end date');
       return;
     }
-    
-    updateURLWithDateRange('custom', startInput, endInput);
     
     const filtered = filterEvents(start, end);
     displayEvents(filtered);
@@ -1102,14 +1031,6 @@ Start Call To Action
 
   // Clear filter and show all upcoming events
   function clearFilter() {
-    updateURLWithDateRange(null); // Clear date range params
-    
-    // Also clear the custom date inputs
-    const startInput = document.getElementById('start-date');
-    const endInput = document.getElementById('end-date');
-    if (startInput) startInput.value = '';
-    if (endInput) endInput.value = '';
-    
     const now = new Date(); // Current moment
     const upcoming = allEvents.filter(event => event.start > now);
     displayEvents(upcoming);
@@ -1172,123 +1093,25 @@ Start Call To Action
     searchInput.addEventListener('input', (e) => {
       const term = e.target.value.toLowerCase().trim();
       
-      // Get current date range from URL
-      const { rangeType, startParam, endParam } = getDateRangeFromURL();
-      
-      // Update URL with search parameter while preserving date range
-      const params = new URLSearchParams();
-      if (rangeType) {
-        params.set('range', rangeType);
-        if (rangeType === 'custom' && startParam && endParam) {
-          params.set('start', startParam);
-          params.set('end', endParam);
-        }
-      }
+      // Update URL with search parameter
       if (term) {
-        params.set('search', term);
+        const newUrl = `${window.location.pathname}?search=${encodeURIComponent(term)}`;
+        window.history.pushState({ search: term }, '', newUrl);
+      } else {
+        const newUrl = window.location.pathname;
+        window.history.pushState({}, '', newUrl);
       }
-      
-      const newUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
-      window.history.pushState({ search: term }, '', newUrl);
       
       // Filter and display events
-      let filtered = allEvents;
-      
-      // Apply date range filter if active
-      if (rangeType) {
-        const now = new Date();
-        let start, end;
-        
-        switch (rangeType) {
-          case 'this-month':
-            start = new Date(now.getFullYear(), now.getMonth(), 1);
-            end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-            filtered = filterEvents(start, end);
-            break;
-            
-          case 'next-month':
-            start = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-            end = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59, 999);
-            filtered = filterEvents(start, end);
-            break;
-            
-          case 'custom':
-            if (startParam && endParam) {
-              start = new Date(startParam);
-              end = new Date(endParam);
-              end.setHours(23, 59, 59, 999);
-              filtered = filterEvents(start, end);
-            }
-            break;
-        }
-      } else {
-        // No date range, show upcoming events
-        const now = new Date();
-        filtered = allEvents.filter(event => event.start > now);
-      }
-      
-      // Apply search filter on top of date filter
       if (term) {
-        filtered = filterEventsBySearch(filtered, term);
+        const filtered = filterEventsBySearch(allEvents, term);
+        displayEvents(filtered);
         console.log(`Searching for: "${term}" - Found ${filtered.length} matching events`);
+      } else {
+        // Show all upcoming events if search is cleared
+        clearFilter();
       }
-      
-      displayEvents(filtered);
     });
-  }
-
-  // Apply date range filter from URL parameters
-  function applyDateRangeFromURL() {
-    const { rangeType, startParam, endParam } = getDateRangeFromURL();
-    
-    if (!rangeType) {
-      return false; // No date range in URL
-    }
-    
-    const now = new Date();
-    let start, end;
-    
-    switch (rangeType) {
-      case 'this-month':
-        start = new Date(now.getFullYear(), now.getMonth(), 1);
-        end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-        break;
-        
-      case 'next-month':
-        start = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-        end = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59, 999);
-        break;
-        
-      case 'custom':
-        if (!startParam || !endParam) {
-          return false; // Invalid custom range
-        }
-        start = new Date(startParam);
-        end = new Date(endParam);
-        end.setHours(23, 59, 59, 999);
-        
-        // Populate the date inputs
-        const startInput = document.getElementById('start-date');
-        const endInput = document.getElementById('end-date');
-        if (startInput) startInput.value = startParam;
-        if (endInput) endInput.value = endParam;
-        break;
-        
-      default:
-        return false; // Unknown range type
-    }
-    
-    let filtered = filterEvents(start, end);
-    
-    // Also apply search filter if present in URL
-    const searchTerm = getSearchParameter();
-    if (searchTerm) {
-      filtered = filterEventsBySearch(filtered, searchTerm);
-      console.log(`Applied date range and search: "${searchTerm}" - Found ${filtered.length} matching events`);
-    }
-    
-    displayEvents(filtered);
-    return true;
   }
 
   // Fetch and parse calendar
@@ -1305,35 +1128,29 @@ Start Call To Action
       const icsContent = await response.text();
       allEvents = parseICS(icsContent);
       
-      // Check if there's a date range filter in the URL
-      const hasDateRange = applyDateRangeFromURL();
+      // Filter to show upcoming events only (excluding past and currently happening events)
+      const now = new Date(); // Current moment, not start of day
       
-      if (!hasDateRange) {
-        // No date range filter, apply default filtering
-        // Filter to show upcoming events only (excluding past and currently happening events)
-        const now = new Date(); // Current moment, not start of day
-        
-        const endDate = new Date(now.getFullYear(), now.getMonth() + 3, 0, 23, 59, 59, 999);
-        // This creates a date at the last day of the month that is 5 months from now
-        // (month + 6 with day 0 = last day of month + 5)
-        
-        // Filter out past events and events beyond our date range
-        let filtered = allEvents.filter(event => {
-          const eventDate = new Date(event.start);
-          return eventDate > now && eventDate <= endDate;
-        });
-        
-        // Apply search filter if search parameter is present
-        const searchTerm = getSearchParameter();
-        if (searchTerm) {
-          filtered = filterEventsBySearch(filtered, searchTerm);
-          console.log(`Searching for: "${searchTerm}" - Found ${filtered.length} matching events`);
-        } else {
-          console.log(`Showing ${filtered.length} events from ${now.toLocaleDateString()} to ${endDate.toLocaleDateString()}`);
-        }
-        
-        displayEvents(filtered);
+      const endDate = new Date(now.getFullYear(), now.getMonth() + 3, 0, 23, 59, 59, 999);
+      // This creates a date at the last day of the month that is 5 months from now
+      // (month + 6 with day 0 = last day of month + 5)
+      
+      // Filter out past events and events beyond our date range
+      let filtered = allEvents.filter(event => {
+        const eventDate = new Date(event.start);
+        return eventDate > now && eventDate <= endDate;
+      });
+      
+      // Apply search filter if search parameter is present
+      const searchTerm = getSearchParameter();
+      if (searchTerm) {
+        filtered = filterEventsBySearch(filtered, searchTerm);
+        console.log(`Searching for: "${searchTerm}" - Found ${filtered.length} matching events`);
+      } else {
+        console.log(`Showing ${filtered.length} events from ${now.toLocaleDateString()} to ${endDate.toLocaleDateString()}`);
       }
+      
+      displayEvents(filtered);
       
     } catch (error) {
       console.error('Error loading calendar:', error);
@@ -1435,72 +1252,6 @@ Start Call To Action
     URL.revokeObjectURL(link.href);
     
     showNotification('📅 Calendar file downloaded!');
-  }
-  
-  // Add entire series to calendar function - generates ICS file with RRULE
-  function addSeriesToCalendar(eventId) {
-    const event = eventDataMap.get(eventId);
-    if (!event || !event.rrule) {
-      console.error('Event not found or not a recurring event');
-      return;
-    }
-    
-    const startDate = formatICSDate(event.originalStart, event.isAllDay);
-    const endDate = formatICSDate(event.originalEnd, event.isAllDay);
-    const now = formatICSDate(new Date());
-    
-    // Escape special characters for ICS format
-    const escapeICS = (str) => {
-      return str.replace(/\\/g, '\\\\')
-                .replace(/;/g, '\\;')
-                .replace(/,/g, '\\,')
-                .replace(/\n/g, '\\n');
-    };
-    
-    const icsContent = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//Kzoo Makers//Calendar//EN',
-      'BEGIN:VEVENT',
-      `UID:${event.seriesId}@kzoomakers.org`,
-      `DTSTAMP:${now}`,
-      `DTSTART:${startDate}`,
-      `DTEND:${endDate}`,
-      `RRULE:${event.rrule}`,
-      `SUMMARY:${escapeICS(event.title)}`,
-      event.location ? `LOCATION:${escapeICS(event.location)}` : '',
-      event.description ? `DESCRIPTION:${escapeICS(event.description)}` : '',
-      'END:VEVENT',
-      'END:VCALENDAR'
-    ].filter(line => line).join('\r\n');
-    
-    // Create blob and download
-    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `${event.title.replace(/[^a-z0-9]/gi, '_')}_series.ics`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(link.href);
-    
-    showNotification('📅 Recurring series calendar file downloaded!');
-  }
-  
-  // Download the full ICS file from the calendar URL
-  function downloadFullICS() {
-    const icsUrl = 'https://kzoomakers.org/cal.ics';
-    
-    // Create a temporary link and trigger download
-    const link = document.createElement('a');
-    link.href = icsUrl;
-    link.download = 'kzoomakers_calendar.ics';
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    showNotification('📅 Full calendar ICS file download started!');
   }
   
   // Copy event link directly to clipboard
