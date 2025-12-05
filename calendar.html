@@ -999,8 +999,14 @@ Start Call To Action
 
   // Filter events by date range
   function filterEvents(startDate, endDate) {
+    // Ensure endDate includes the entire day (set to 23:59:59 if it's at midnight)
+    const adjustedEndDate = new Date(endDate);
+    if (adjustedEndDate.getHours() === 0 && adjustedEndDate.getMinutes() === 0 && adjustedEndDate.getSeconds() === 0) {
+      adjustedEndDate.setHours(23, 59, 59, 999);
+    }
+    
     return allEvents.filter(event => {
-      return event.start >= startDate && event.start <= endDate;
+      return event.start >= startDate && event.start <= adjustedEndDate;
     });
   }
 
@@ -1166,24 +1172,68 @@ Start Call To Action
     searchInput.addEventListener('input', (e) => {
       const term = e.target.value.toLowerCase().trim();
       
-      // Update URL with search parameter
+      // Get current date range from URL
+      const { rangeType, startParam, endParam } = getDateRangeFromURL();
+      
+      // Update URL with search parameter while preserving date range
+      const params = new URLSearchParams();
+      if (rangeType) {
+        params.set('range', rangeType);
+        if (rangeType === 'custom' && startParam && endParam) {
+          params.set('start', startParam);
+          params.set('end', endParam);
+        }
+      }
       if (term) {
-        const newUrl = `${window.location.pathname}?search=${encodeURIComponent(term)}`;
-        window.history.pushState({ search: term }, '', newUrl);
-      } else {
-        const newUrl = window.location.pathname;
-        window.history.pushState({}, '', newUrl);
+        params.set('search', term);
       }
       
+      const newUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
+      window.history.pushState({ search: term }, '', newUrl);
+      
       // Filter and display events
-      if (term) {
-        const filtered = filterEventsBySearch(allEvents, term);
-        displayEvents(filtered);
-        console.log(`Searching for: "${term}" - Found ${filtered.length} matching events`);
+      let filtered = allEvents;
+      
+      // Apply date range filter if active
+      if (rangeType) {
+        const now = new Date();
+        let start, end;
+        
+        switch (rangeType) {
+          case 'this-month':
+            start = new Date(now.getFullYear(), now.getMonth(), 1);
+            end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+            filtered = filterEvents(start, end);
+            break;
+            
+          case 'next-month':
+            start = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+            end = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59);
+            filtered = filterEvents(start, end);
+            break;
+            
+          case 'custom':
+            if (startParam && endParam) {
+              start = new Date(startParam);
+              end = new Date(endParam);
+              end.setHours(23, 59, 59);
+              filtered = filterEvents(start, end);
+            }
+            break;
+        }
       } else {
-        // Show all upcoming events if search is cleared
-        clearFilter();
+        // No date range, show upcoming events
+        const now = new Date();
+        filtered = allEvents.filter(event => event.start > now);
       }
+      
+      // Apply search filter on top of date filter
+      if (term) {
+        filtered = filterEventsBySearch(filtered, term);
+        console.log(`Searching for: "${term}" - Found ${filtered.length} matching events`);
+      }
+      
+      displayEvents(filtered);
     });
   }
 
