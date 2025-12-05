@@ -394,6 +394,7 @@ Start Calendar Section
     <!-- Calendar Controls -->
     <div class="calendar-controls">
       <button id="toggle-view-btn" class="btn-toggle" onclick="toggleCalendarView()">Switch to Calendar View</button>
+      <button class="btn-toggle" onclick="downloadFullICS()" title="Download the complete calendar ICS file">Download ICS File</button>
        <div style="margin-top: 15px; margin-bottom: 15px;">
          <input type="text" id="search-input" placeholder="Search events by title or description..." style="padding: 10px; width: 100%; max-width: 500px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;" />
        </div>
@@ -1319,6 +1320,22 @@ Start Call To Action
     URL.revokeObjectURL(link.href);
     
     showNotification('📅 Recurring series calendar file downloaded!');
+  }
+  
+  // Download the full ICS file from the calendar URL
+  function downloadFullICS() {
+    const icsUrl = 'https://kzoomakers.org/cal.ics';
+    
+    // Create a temporary link and trigger download
+    const link = document.createElement('a');
+    link.href = icsUrl;
+    link.download = 'kzoomakers_calendar.ics';
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showNotification('📅 Full calendar ICS file download started!');
   }
   
   // Copy event link directly to clipboard
