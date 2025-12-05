@@ -1278,7 +1278,15 @@ Start Call To Action
         return false; // Unknown range type
     }
     
-    const filtered = filterEvents(start, end);
+    let filtered = filterEvents(start, end);
+    
+    // Also apply search filter if present in URL
+    const searchTerm = getSearchParameter();
+    if (searchTerm) {
+      filtered = filterEventsBySearch(filtered, searchTerm);
+      console.log(`Applied date range and search: "${searchTerm}" - Found ${filtered.length} matching events`);
+    }
+    
     displayEvents(filtered);
     return true;
   }
