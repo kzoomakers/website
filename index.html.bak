@@ -11,15 +11,27 @@
   <!-- Basic Page Needs
   ================================================== -->
   <meta charset="utf-8">
-  <title>KzooMakers</title>
+  <title>Kzoo Makers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400..700&family=Emilys+Candy&display=swap" rel="stylesheet">
 
   <!-- Mobile Specific Metas
   ================================================== -->
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="description" content="One page parallax responsive HTML Template">
+  <meta name="description" content="Kalamazoo Makerspace - Community workshop in Kalamazoo, MI offering wood shop, metal shop, laser cutting, 3D printing, welding, and fabrication tools. Join our 501(c)(3) nonprofit makerspace for DIY projects, prototyping, and collaborative making. Equipment training, membership access, and community events available.">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <meta name="author" content="Themefisher">
-  <meta name="generator" content="Themefisher Bingo HTML Template v1.0">
+  <meta name="author" content="Kzoo Makers">
+  <meta name="generator" content="Kzoo Makers Community Website">
+  <meta name="keywords" content="makerspace, Kalamazoo, Michigan, wood shop, metal shop, laser cutting, 3D printing, welding, fabrication, DIY, community workshop, nonprofit, maker community, prototyping, CNC, tools, equipment training">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="Kzoo Makers - Kalamazoo Community Makerspace">
+  <meta property="og:description" content="Community-driven makerspace in Kalamazoo, MI with wood shop, metal shop, laser cutting, 3D printing, and more. Join our nonprofit maker community.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://kzoomakers.org">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Kzoo Makers - Kalamazoo Community Makerspace">
+  <meta name="twitter:description" content="Community-driven makerspace in Kalamazoo, MI with wood shop, metal shop, laser cutting, 3D printing, and more.">
 
   <!-- Favicon -->
   <link rel="shortcut icon" type="image/x-icon" href="images/favicon.png" />
@@ -38,6 +50,38 @@
   <link rel="stylesheet" href="plugins/slick/slick.css">
   <!-- Main Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
+
+  <style>
+    h1[data-duration-in] {
+      font-family: 'Caveat', cursive;
+      font-size: 75px;
+    }
+    
+    /* Apply Emilys Candy font to specific section headings */
+    .what-is-makerspace h2,
+    .about-2 h2,
+    .service-2 h2,
+    .wanna-tour h2,
+    .hours-section h2,
+    .blog h2 {
+      font-family: 'Emilys Candy', cursive;
+      font-size: 38px;
+    }
+    
+    /* Make question mark image smaller on mobile */
+    @media (max-width: 768px) {
+      .what-is-makerspace img {
+        max-width: 60%;
+        margin: 0 auto;
+        display: block;
+      }
+    }
+    
+    /* Tighten spacing between "How our makerspace works" title and content */
+    .about-2 .title {
+      margin-bottom: 20px;
+    }
+  </style>
 
 </head>
 <body id="body">
@@ -70,7 +114,7 @@ End Fixed Navigation
 ==================================== -->
 
 <div class="hero-slider">
-	<div class="slider-item th-fullpage hero-area" style="background-image: url(images/slider/slider-bg-1.jpg);">
+	<div class="slider-item th-fullpage hero-area" style="background-image: url(images/slider/slider-bg-0.webp);">
 		<div class="container">
 			<div class="row">
 				<div class="col-md-12 text-center">
@@ -82,19 +126,19 @@ End Fixed Navigation
 			</div>
 		</div>
 	</div>
-	<div class="slider-item th-fullpage hero-area" style="background-image: url(images/slider/slider-bg-2.jpg);">
+	<div class="slider-item th-fullpage hero-area" style="background-image: url(images/slider/slider-bg-6.webp);">
 		<div class="container">
 			<div class="row">
 				<div class="col-md-12 text-center">
-					<h1 data-duration-in=".3" data-animation-in="fadeInDown" data-delay-in=".1">You bring Creativity <br> We bring Tools</h1>
+					<h1 data-duration-in=".3" data-animation-in="fadeInDown" data-delay-in=".1">You bring Creativity <br> We provide Tools</h1>
 					<p data-duration-in=".3" data-animation-in="fadeInDown" data-delay-in=".5">Where creativity meets craftsmanship.</p>
 					<a data-duration-in=".3" data-animation-in="fadeInDown" data-delay-in=".8" class="btn btn-main"
-						href="service.html">Explore Us</a>
+						href="about.html">About Us</a>
 				</div>
 			</div>
 		</div>
 	</div>
-	<div class="slider-item th-fullpage hero-area" style="background-image: url(images/slider/slider-bg-3.jpg);">
+	<div class="slider-item th-fullpage hero-area" style="background-image: url(images/slider/slider-bg-7.jpeg);">
 		<div class="container">
 			<div class="row">
 				<div class="col-md-12 text-center">
@@ -105,24 +149,24 @@ End Fixed Navigation
 						Tools, space, and mentorship to bring your vision to life.
 					</p>
 					<a data-duration-in=".3" data-animation-in="fadeInDown" data-delay-in=".8" class="btn btn-main"
-						href="projects.html">See Projects</a>
+						href="about.html">About Us</a>
 				</div>
 			</div>
 		</div>
 	</div>
 	
-	<div class="slider-item th-fullpage hero-area" style="background-image: url(images/slider/slider-bg-4.jpg);">
+	<div class="slider-item th-fullpage hero-area" style="background-image: url(images/slider/slider-bg-8.jpeg);">
 		<div class="container">
 			<div class="row">
 				<div class="col-md-12 text-center">
 					<h1 data-duration-in=".3" data-animation-in="fadeInDown" data-delay-in=".1">
-						Collaborate. Create. Inspire.
+						Come &amp; Socialize.
 					</h1>
 					<p data-duration-in=".3" data-animation-in="fadeInDown" data-delay-in=".5">
-						A community-driven hub for makers, tinkerers, and dreamers.
+						A community-driven hub for makers, tinkerers, and creators.
 					</p>
 					<a data-duration-in=".3" data-animation-in="fadeInDown" data-delay-in=".8" class="btn btn-main"
-						href="membership.html">Join the Community</a>
+						href="about.html">About Us</a>
 				</div>
 			</div>
 		</div>
@@ -145,11 +189,11 @@ Start What is a Makerspace Section
 			</div>
 			<div class="col-lg-8">
 				<div class="title text-center">
+					<div class="border"></div>
 					<h2>What is a makerspace?</h2>
 					<div class="border"></div>
-					<p>A makerspace is a shared, community-oriented workshop where people can design, prototype, and build things using tools, equipment, and digital fabrication technologies.</p>
-					</br>
-					<p>Makerspaces are generally supported by memberships — people join and pay a monthly or an annual fee to have access to equipment, resources and like-minded individuals with knowledge and expertise. Most are run by nonprofit organizations and supported by membership fees and donations, and many teach technical skills. However, some for-profit makerspaces also exist, such as the California-based franchise TechShop.</p>
+					<p>A makerspace is a shared workshop where people create, experiment, and build together. We offer equipment for woodworking, sewing, laser cutting, metalwork, electronics, robotics, welding, 3D printing, and programming in a collaborative environment where members learn, share ideas, and bring their projects to life.</p>
+					<p>Some makerspaces are part of libraries, schools, or universities, while others are independent non-profit community spaces like us!</p>
 				</div>
 			</div>
 			<!-- /section title -->
@@ -163,7 +207,7 @@ Start What is a Makerspace Section
 			<!-- section title -->
 			<div class="col-lg-6">
 				<div class="title text-center">
-					<h2>How this makerspace works</h2>
+					<h2>How our makerspace works</h2>
 					<div class="border"></div>
 				</div>
 			</div>
@@ -177,17 +221,15 @@ Start What is a Makerspace Section
 			</div>
 			<div class="col-md-6">
 				<ul class="checklist">
-					<li>We are a <b>501(c)(3) non-profit</b>, nobody gets paid and no profit is made.</li>
-					<li>Everyone volunteers where they can, from tours to emptying the trash.</li>
-					<li>Companies or individuals donate equipment and grow our tool collection.</li>
-					<li>Membership prices cover costs like rent, electric, gas, insurance, supplies, repairs, community outreach.</li>
-					<li>All members must complete safety and equipment training before independent use of machinery.</li>
-					<li>Members are responsible for maintaining cleanliness and properly storing tools after use.</li>
-
+					<li>We are a volunteer operated <b>501(c)(3) non-profit</b>, nobody gets paid.</li>
+					<li>Everyone pitches in, whether it’s giving tours or taking out the trash</li>
+					<li>Our tool collection grows through donated and loaned gear from makers</li>
+					<li>Membership fees keep the lights on — rent, utilities, insurance, supplies, repairs, outreach</li>
+					<li>Safety first: members complete training before they’re turned loose on the machines.</li>
 				</ul>
 				<a href="about.html" class="btn btn-main mt-20">Learn More About Us</a>
 			</br></br>
-				<a href="pricing.html" class="btn btn-main">See pricing</a>
+				<a href="pricing.html" class="btn btn-main pricing-cta">See pricing</a>
 			</div>
 		</div> <!-- End row -->
 	</div> <!-- End container -->
@@ -230,7 +272,7 @@ Start About Section
           <div class="col-md-6 col-sm-6">
             <a href="wood-shop.html" style="text-decoration: none; color: inherit; display: block;">
               <div class="service-item">
-                <img src="https://kzoomakers.org/static/img/zones_wood.jpg" alt="Wood Shop icon" class="img-fluid">
+                <img src="images/wood-shop/zones_wood.jpg" alt="Wood Shop icon" class="img-fluid">
                 <h4>Wood Shop</h4>
               </div>
             </a>
@@ -238,7 +280,7 @@ Start About Section
           <div class="col-md-6 col-sm-6">
             <a href="laser-shop.html" style="text-decoration: none; color: inherit; display: block;">
               <div class="service-item">
-                <img src="images/photoreel/laser/trotec-speedy500.webp" alt="Lasers icon" class="img-fluid">
+                <img src="images/about/laser.webp" alt="Lasers icon" class="img-fluid">
                 <h4>Lasers</h4>
               </div>
             </a>
@@ -246,7 +288,7 @@ Start About Section
           <div class="col-md-6 col-sm-6">
             <a href="metal-shop.html" style="text-decoration: none; color: inherit; display: block;">
               <div class="service-item">
-                <img src="https://kzoomakers.org/static/img/zones_wood.jpg" alt="3D Printing icon" class="img-fluid">
+                <img src="images/about/bridgeport-operator-large.webp" alt="3D Printing icon" class="img-fluid">
                 <h4>Metal Shop</h4>
               </div>
             </a>
@@ -254,29 +296,32 @@ Start About Section
           <div class="col-md-6 col-sm-6">
             <a href="metal-shop.html" style="text-decoration: none; color: inherit; display: block;">
               <div class="service-item">
-                <img src="https://kzoomakers.org/static/img/zones_wood.jpg" alt="Welding icon" class="img-fluid">
+                <img src="images/about/welder-large.webp" alt="Welding icon" class="img-fluid">
                 <h4>Welding</h4>
               </div>
             </a>
           </div><!-- END COL -->
           <div class="col-md-6 col-sm-6">
-            <a href="fiber.html" style="text-decoration: none; color: inherit; display: block;">
-              <div class="service-item">
-                <h4>Fiber Arts</h4>
-              </div>
-            </a>
-          </div><!-- END COL -->
-          <div class="col-md-6 col-sm-6">
             <a href="3d-printing.html" style="text-decoration: none; color: inherit; display: block;">
+				<div class="service-item">
+					<img src="images/about/3dprinter.webp" alt="Welding icon" class="img-fluid">
+					<h4>3D Printing</h4>
+				  </div>
+            </a>
+          </div><!-- END COL -->
+          <div class="col-md-6 col-sm-6">
+            <a href="meetup-fiber-arts.html" style="text-decoration: none; color: inherit; display: block;">
               <div class="service-item">
-                <h4>3D Printers</h4>
+				<img src="images/about/fiber-arts.webp" alt="Welding icon" class="img-fluid">
+				<h4>Fiber Arts</h4>
               </div>
             </a>
           </div><!-- END COL -->
           <div class="col-md-6 col-sm-6">
-            <a href="misc-tools.html" style="text-decoration: none; color: inherit; display: block;">
+            <a href="tools-we-are-seeking-donations-kalamazoo.html" style="text-decoration: none; color: inherit; display: block;">
               <div class="service-item">
-                <h4>Misc Tools</h4>
+				<img src="images/about/misctools.jpg" alt="Seeking Donations in Kalamazoo" class="img-fluid">
+				<h4>Donate Tools</h4>
               </div>
             </a>
           </div><!-- END COL -->
@@ -295,12 +340,38 @@ Start Call To Action
 			<div class="col-xl-6 col-lg-8 text-center">
 				<h2>Want a tour?</h2>
 				<p>Tours are free and no pressure.</br>We like showing the space to new groups!</p>
-				<a href="pricing.html" class="btn btn-main">See pricing</a>
+				<a href="pricing.html" class="btn btn-main pricing-cta">See pricing</a>
 			</br>
-				<a href="https://docs.google.com/forms/d/e/1FAIpQLSekvaWfF6zHaQ50nkNLbj131irosv6RQnRCT0qzNWXDnn2y3Q/viewform" class="btn btn-main">Tour Sign Up</a>
+				<a href="tour-form-redirect.html" class="btn btn-main">Tour Sign Up</a>
 				<p><sub>* Please allow a few days to get scheduled with a volunteer</sub></p>
 			</div>
 		</div> <!-- End row -->
+	</div> <!-- End container -->
+</section> <!-- End section -->
+
+<!--
+Start Hours of Operation Section
+==================================== -->
+<section class="hours-section section-sm" style="background-color: #f8f9fa;">
+	<div class="container">
+		<div class="row justify-content-center">
+			<div class="col-xl-8 col-lg-10 text-center">
+				<div class="title">
+					<h2>Hours of Operation</h2>
+					<div class="border"></div>
+				</div>
+			</div>
+		</div>
+		<div class="row justify-content-center mt-4">
+			<div class="col-lg-8 col-md-10" id="hours-homepage-section">
+				<!-- Hours will be dynamically loaded by hours.js -->
+				<div class="card shadow-sm" style="border: none; border-radius: 10px;">
+					<div class="card-body text-center p-5">
+						<p>Loading hours...</p>
+					</div>
+				</div>
+			</div>
+		</div>
 	</div> <!-- End container -->
 </section> <!-- End section -->
 
@@ -328,144 +399,217 @@ Start Counter Section
 		
 	<section class="testimonial section" id="testimonial">
 		<div class="container">
-			<div class="row">				
+			<div class="row">
 				<div class="col-lg-12">
 					<!-- testimonial wrapper -->
-					<div class="testimonial-slider">
-						<!-- testimonial single -->
-						<div class="item text-center">
-							<i class="tf-ion-chatbubbles"></i>
-							<!-- client info -->
-							<div class="client-details">
-								<p>KzooMakers is easily one of the most inspiring spaces I’ve encountered. The range of equipment—from 3D printers to CNC machines and electronics benches—is impressive, but what really sets it apart is the community. Experienced members are generous with their knowledge, and new makers are encouraged to dive in without intimidation. You walk in with an idea and leave with something real in your hands.</p>
+					<div class="testimonial-slider-wrapper">
+						<div class="testimonial-slider">
+							<!-- testimonial single -->
+							<div class="item text-center">
+								<i class="tf-ion-chatbubbles"></i>
+								<!-- client info -->
+								<div class="client-details">
+									<p>Kzoo Makers is easily one of the most inspiring spaces I’ve encountered. The range of equipment—from 3D printers to CNC machines and electronics benches—is impressive, but what really sets it apart is the community. Experienced members are generous with their knowledge, and new makers are encouraged to dive in without intimidation. You walk in with an idea and leave with something real in your hands.</p>
+								</div>
+								<!-- /client info -->
+								<!-- client photo -->
+								<div class="client-thumb">
+									<img loading="lazy" src="images/client-logo/chrisc.webp" class="img-fluid" alt="">
+								</div>
+								<div class="client-meta">
+									<h3>Chris</h3>
+									<span>Makerspace Member</span>
+								</div>
+								<!-- /client photo -->
 							</div>
-							<!-- /client info -->
-							<!-- client photo -->
-							<div class="client-thumb">
-								<img loading="lazy" src="images/client-logo/clients-1.jpg" class="img-fluid" alt="">
-							</div>
-							<div class="client-meta">
-								<h3>Martin</h3>
-								<span>Makerspace Member</span>
-							</div>
-							<!-- /client photo -->
-						</div>
-						<!-- /testimonial single -->
-				
-						<!-- testimonial single -->
-						<div class="item text-center">
-							<i class="tf-ion-chatbubbles"></i>
-							<!-- client info -->
-							<div class="client-details">
-								<p>As a small business owner prototyping new products, I found the makerspace invaluable. The facility has everything I need to iterate quickly, but the real value comes from the people.  Ryan and other members foster a culture of collaboration that you rarely find elsewhere. Whether you’re working with metal, wood, or code, there’s always someone nearby who can help you refine your approach and get unstuck.</p>
-							</div>
-							<!-- /client info -->
-							<!-- client photo -->
-							<div class="client-thumb">
-								<img loading="lazy" src="images/client-logo/clients-2.png" class="img-fluid" alt="">
-							</div>
-							<div class="client-meta">
-								<h3>Austin</h3>
-								<span>Makerspace Member</span>
-							</div>
-							<!-- /client photo -->
-						</div>
-						<!-- /testimonial single -->
+							<!-- /testimonial single -->
 					
-						<!-- testimonial single -->
-						<div class="item text-center">
-							<i class="tf-ion-chatbubbles"></i>
-							<!-- client info -->
-							<div class="client-details">
-								<p>I joined KzooMakers after years of tinkering in my garage, and the difference is night and day. Access to professional-grade tools is great, but being surrounded by others who share the same curiosity and drive to learn makes the experience transformative. Every visit teaches me something new—from soldering to laser engraving to Linux tinkering. It’s a place where creativity truly scales.</p>
+							<!-- testimonial single -->
+							<div class="item text-center">
+								<i class="tf-ion-chatbubbles"></i>
+								<!-- client info -->
+								<div class="client-details">
+									<p>As a small business owner prototyping new products, I found the makerspace invaluable. The facility has everything I need to iterate quickly, but the real value comes from the people.  Ryan and other members foster a culture of collaboration that you rarely find elsewhere. Whether you’re working with metal, wood, or code, there’s always someone nearby who can help you refine your approach and get unstuck.</p>
+								</div>
+								<!-- /client info -->
+								<!-- client photo -->
+								<div class="client-thumb">
+									<img loading="lazy" src="images/client-logo/clients-2.png" class="img-fluid" alt="">
+								</div>
+								<div class="client-meta">
+									<h3>Austin</h3>
+									<span>Makerspace Member</span>
+								</div>
+								<!-- /client photo -->
 							</div>
-							<!-- /client info -->
-							<!-- client photo -->
-							<div class="client-thumb">
-								<img loading="lazy" src="images/client-logo/clients-3.jpg" class="img-fluid" alt="">
+							<!-- /testimonial single -->
+	 
+							<!-- testimonial single -->
+							<div class="item text-center">
+								<i class="tf-ion-chatbubbles"></i>
+								<div class="client-details">
+									<p>Before joining Kzoo Makers, most of my projects stalled out halfway. Having immediate access to people who actually understand fabrication workflows changed that. I’ve gone from guesswork to deliberate iteration, especially with wood CNC and safety practices. It’s the first place where my ideas stop being hypothetical.</p>
+								</div>
+								<div class="client-thumb">
+									<img loading="lazy" src="images/client-logo/member-1.jpeg" class="img-fluid" alt="">
+								</div>
+								<div class="client-meta">
+									<h3>Riley</h3>
+									<span>Makerspace Member</span>
+								</div>
 							</div>
-							<div class="client-meta">
-								<h3>Lucas</h3>
-								<span>Makerspace Member, KLUG Member</span>
+							<!-- /testimonial single -->
+	 
+							<!-- testimonial single -->
+							<div class="item text-center">
+								<i class="tf-ion-chatbubbles"></i>
+								<div class="client-details">
+									<p>I came for access to a 3D printer and ended up learning far more about electronics diagnostics than I planned. Members here don’t oversell anything; they show you what works, what fails, and why. That honesty makes learning efficient instead of frustrating.</p>
+								</div>
+								<div class="client-thumb">
+									<img loading="lazy" src="images/client-logo/member-2.jpeg" class="img-fluid" alt="">
+								</div>
+								<div class="client-meta">
+									<h3>Sam</h3>
+									<span>Makerspace Member</span>
+								</div>
 							</div>
-							<!-- /client photo -->
+							<!-- /testimonial single -->
+	 
+							<!-- testimonial single -->
+							<div class="item text-center">
+								<i class="tf-ion-chatbubbles"></i>
+								<div class="client-details">
+									<p>Kzoo Makers gave me my first exposure to metalworking tools that most hobbyists can’t justify at home. The learning curve was steep, but the guidance here is structured enough to prevent bad habits from forming. It’s one of the few places where experimentation and discipline actually coexist.</p>
+								</div>
+								<div class="client-thumb">
+									<img loading="lazy" src="images/client-logo/member-3.jpeg" class="img-fluid" alt="">
+								</div>
+								<div class="client-meta">
+									<h3>Taylor</h3>
+									<span>Workshop Attendee</span>
+								</div>
+							</div>
+							<!-- /testimonial single -->
+	 
+							<!-- testimonial single -->
+							<div class="item text-center">
+								<i class="tf-ion-chatbubbles"></i>
+								<div class="client-details">
+									<p>I joined to prototype a product idea, and the environment forced me to confront weak points in my process—design clarity, tool selection, and project planning. The space doesn’t magically make you better, but it removes excuses and exposes gaps you didn’t notice on your own.</p>
+								</div>
+								<div class="client-thumb">
+									<img loading="lazy" src="images/client-logo/member-4.jpeg" class="img-fluid" alt="">
+								</div>
+								<div class="client-meta">
+									<h3>Jordan</h3>
+									<span>Makerspace Member</span>
+								</div>
+							</div>
+							<!-- /testimonial single -->
+	 
+							<!-- testimonial single -->
+							<div class="item text-center">
+								<i class="tf-ion-chatbubbles"></i>
+								<div class="client-details">
+									<p>What surprised me most is the range of skills represented here. One day someone is troubleshooting my Fusion 360 file; the next day I’m helping them with microcontroller debugging. The reciprocity feels natural, not performative. It’s collaborative without drifting into chaos.</p>
+								</div>
+								<div class="client-thumb">
+									<img loading="lazy" src="images/client-logo/member-5.jpeg" class="img-fluid" alt="">
+								</div>
+								<div class="client-meta">
+									<h3>Avery</h3>
+									<span>Makerspace Member</span>
+								</div>
+							</div>
+							<!-- /testimonial single -->
+	 
+							<!-- testimonial single -->
+							<div class="item text-center">
+								<i class="tf-ion-chatbubbles"></i>
+								<div class="client-details">
+									<p>I’ve worked in corporate engineering labs, but accessibility was always limited. Here, the tools and space are straightforward to book, and the informal knowledge-sharing makes problem-solving faster. It’s not just equipment—it’s operational freedom.</p>
+								</div>
+								<div class="client-thumb">
+									<img loading="lazy" src="images/client-logo/member-6.jpeg" class="img-fluid" alt="">
+								</div>
+								<div class="client-meta">
+									<h3>Morgan</h3>
+									<span>Makerspace Member</span>
+								</div>
+							</div>
+							<!-- /testimonial single -->
+	 
+							<!-- testimonial single -->
+							<div class="item text-center">
+								<i class="tf-ion-chatbubbles"></i>
+								<div class="client-details">
+									<p>The biggest shift for me has been confidence in tool proficiency. At home I hesitated before every cut or print. Here, measured feedback from experienced members eliminates that uncertainty. It’s iterative learning without the isolation that usually slows progress.</p>
+								</div>
+								<div class="client-thumb">
+									<img loading="lazy" src="images/client-logo/member-8.jpeg" class="img-fluid" alt="">
+								</div>
+								<div class="client-meta">
+									<h3>Parker</h3>
+									<span>Makerspace Member</span>
+								</div>
+							</div>
+							<!-- /testimonial single -->
+	 
+							<!-- testimonial single -->
+							<div class="item text-center">
+								<i class="tf-ion-chatbubbles"></i>
+								<!-- client info -->
+								<div class="client-details">
+									<p>I go to Kalamazoo Linux Users group and I use Linux, people are very friendly at The Makerspace.</br>Thank you for listening Ryan.</p>
+								</div>
+								<!-- /client info -->
+								<!-- client photo -->
+								<div class="client-thumb">
+									<img loading="lazy" src="images/client-logo/member-10.jpeg" class="img-fluid" alt="">
+								</div>
+								<div class="client-meta">
+									<h3>Lucas</h3>
+									<span>KLUG Member</span>
+								</div>
+								<!-- /client photo -->
+							</div>
+							<!-- /testimonial single -->
 						</div>
-						<!-- /testimonial single -->
 					</div>
 				</div> 		<!-- end col lg 12 -->
 			</div>	    <!-- End row -->
 		</div>       <!-- End container -->
 	</section>    <!-- End Section -->
 
-<!--
-Start Blog Section
+<!-- Start Blog Section
 =========================================== -->
 <section class="blog" id="blog">
 	<div class="container">
 		<div class="row justify-content-center">
 			<!-- section title -->
 			<div class="col-xl-6 col-lg-8">
-				<div class="title text-center ">
-					<h2> Latest <span class="color">News</span></h2>
+				<div class="title text-center">
+					<h2>Latest <span class="color">News</span></h2>
 					<div class="border"></div>
-					<p>Heading for newsletter</p>
+					<p>Stay updated with our latest projects and community events</p>
 				</div>
 			</div>
 			<!-- /section title -->
 		</div>
 
-		<div class="row">
-			<!-- single blog post -->
-			<article class="col-lg-4 col-md-6">
-				<div class="post-item">
-					<div class="media-wrapper">
-						<img loading="lazy" src="images/blog/post-1.jpg" alt="amazing caves coverimage" class="img-fluid">
-					</div>
-
-					<div class="content">
-						<h3><a href="single-post.html">Reasons to Smile</a></h3>
-						<p>Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf
-							moon officia aute, non skateboard dolor brunch.</p>
-						<a class="btn btn-main" href="single-post.html">Read more</a>
-					</div>
-				</div>
-			</article>
-			<!-- /single blog post -->
-
-			<!-- single blog post -->
-			<article class="col-lg-4 col-md-6">
-				<div class="post-item">
-					<div class="media-wrapper">
-						<img loading="lazy" src="images/blog/post-2.jpg" alt="amazing caves coverimage" class="img-fluid">
-					</div>
-
-					<div class="content">
-						<h3><a href="single-post.html">A Few Moments</a></h3>
-						<p>Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf
-							moon officia aute, non skateboard dolor brunch.</p>
-						<a class="btn btn-main" href="single-post.html">Read more</a>
-					</div>
-				</div>
-			</article>
-			<!-- end single blog post -->
-
-			<!-- single blog post -->
-			<article class="col-lg-4 col-md-6">
-				<div class="post-item">
-					<div class="media-wrapper">
-						<img loading="lazy" src="images/blog/post-3.jpg" alt="amazing caves coverimage" class="img-fluid">
-					</div>
-
-					<div class="content">
-						<h3><a href="single-post.html">Hints for Life</a></h3>
-						<p>Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf
-							moon officia aute, non skateboard dolor brunch.</p>
-						<a class="btn btn-main" href="single-post.html">Read more</a>
-					</div>
-				</div>
-			</article>
-			<!-- end single blog post -->
+		<div class="row" id="blog-posts-container">
+			<!-- Blog posts will be dynamically loaded here -->
+			<div class="col-12 text-center">
+				<p>Loading latest posts...</p>
+			</div>
 		</div> <!-- end row -->
+		
+		<div class="row mt-4">
+			<div class="col-12 text-center">
+				<a href="news.html" class="btn btn-main">View All Posts</a>
+			</div>
+		</div>
 	</div> <!-- end container -->
 </section> <!-- end section -->
 
@@ -506,6 +650,12 @@ Start Blog Section
 
 <!-- Dynamic Counters -->
 <script src="dynamic/js/counters.js"></script>
+
+<!-- Dynamic Hours -->
+<script src="dynamic/js/hours.js"></script>
+
+<!-- Dynamic Blog Posts -->
+<script src="js/blog.js"></script>
 
 <!-- Custom js -->
 <script src="js/script.js"></script>

@@ -1509,7 +1509,7 @@ Wanna tour? 1
   background: #28ABE3;
   position: relative;
   padding-bottom: 0px;
-  margin-bottom: 80px;
+  margin-bottom: 100px;
 }
 .testimonial:before {
   content: "";
@@ -1518,31 +1518,137 @@ Wanna tour? 1
   left: 0%;
   right: 0%;
   bottom: 0;
-  height: 145px;
+  height: 200px;
   background-color: rgb(255, 255, 255);
 }
 .testimonial .item i {
-  font-size: 60px;
-  color: #fff;
-  margin-bottom: 50px;
+  font-size: 50px;
+  color: rgba(255, 255, 255, 0.3);
+  margin-bottom: 30px;
   display: inline-block;
 }
 .testimonial .item .client-details {
-  padding-bottom: 30px;
+  padding-bottom: 80px;
+  margin-bottom: 0;
 }
 .testimonial .item .client-details p {
-  font-size: 17px;
+  font-size: 18px;
   color: #fff;
-  font-weight: 200;
-  padding: 0 10%;
+  font-weight: 300;
+  padding: 0 12%;
+  line-height: 1.8;
+  margin-bottom: 0;
 }
+
+/* Profile image container with overlap effect */
+.testimonial .item .client-thumb {
+  position: relative;
+  z-index: 10;
+  margin-top: -80px;
+  margin-bottom: 30px;
+}
+
 .testimonial .item .client-thumb img {
   display: inline-block;
   border-radius: 100%;
-  width: 120px;
-  height: 120px;
+  width: 140px;
+  height: 140px;
   object-fit: cover;
-  margin-bottom: 20px;
+  border: 6px solid #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.testimonial .item .client-thumb img:hover {
+  transform: scale(1.05);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* Client name and title styling */
+.testimonial .item .client-meta h3 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 5px;
+  margin-top: 0;
+}
+
+.testimonial .item .client-meta span {
+  font-size: 14px;
+  color: #777;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 500;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .testimonial {
+    padding-top: 60px;
+    margin-bottom: 60px;
+  }
+  
+  .testimonial:before {
+    height: 180px;
+  }
+  
+  .testimonial .item i {
+    font-size: 40px;
+    margin-bottom: 20px;
+  }
+  
+  .testimonial .item .client-details {
+    padding-bottom: 60px;
+  }
+  
+  .testimonial .item .client-details p {
+    font-size: 16px;
+    padding: 0 8%;
+    line-height: 1.7;
+  }
+  
+  .testimonial .item .client-thumb {
+    margin-top: -60px;
+    margin-bottom: 20px;
+  }
+  
+  .testimonial .item .client-thumb img {
+    width: 110px;
+    height: 110px;
+    border: 5px solid #fff;
+  }
+  
+  .testimonial .item .client-meta h3 {
+    font-size: 20px;
+  }
+  
+  .testimonial .item .client-meta span {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .testimonial {
+    padding-top: 50px;
+  }
+  
+  .testimonial:before {
+    height: 160px;
+  }
+  
+  .testimonial .item .client-details p {
+    font-size: 15px;
+    padding: 0 5%;
+  }
+  
+  .testimonial .item .client-thumb {
+    margin-top: -50px;
+  }
+  
+  .testimonial .item .client-thumb img {
+    width: 100px;
+    height: 100px;
+  }
 }
 
 .testimonial-slider-wrapper {
@@ -2580,4 +2686,93 @@ Wanna tour? 1
 .sticky-header #menu-btn.open .text {
   color: #ff0000;
 }
+/*=================================================================
+  Polaroid Gallery Styles
+==================================================================*/
+/* --- Galerie Container --- */
+.gallery-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.875rem; /* 30px */
+  padding: 1.25rem; /* 20px */
+}
+
+/* --- Polaroid-Design --- */
+.polaroid {
+  background-color: #fff;
+  padding: 1rem 1rem 4.5rem 1rem; /* 15px 15px 70px 15px */
+  border-radius: 2px;
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1),
+    0 0.625rem 1.25rem rgba(0, 0, 0, 0.1);
+  margin: 0.625rem; /* 10px */
+  position: relative;
+  width: 250px;
+  transition: transform 0.3s ease-in-out;
+  /* "realistische" Papier-Textur */
+  background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><filter id="n" x="0" y="0"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="10" stitchTiles="stitch"/></filter><rect width="100" height="100" filter="url(%23n)" opacity="0.12"/></svg>');
+  background-size: cover;
+}
+
+.polaroid:hover {
+  transform: scale(1.05) rotate(0deg) !important;
+  z-index: 10;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2), 0 1rem 2rem rgba(0, 0, 0, 0.2);
+}
+
+/* --- Bild-Stil + Animation --- */
+.polaroid img {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  display: block;
+  animation: fadeInPhoto 5s ease-in-out forwards;
+  filter: brightness(0);
+}
+
+@keyframes fadeInPhoto {
+  0% {
+    filter: brightness(0) sepia(1);
+    opacity: 0.8;
+  }
+  50% {
+    filter: brightness(0.5) sepia(0.5);
+    opacity: 0.9;
+  }
+  100% {
+    filter: brightness(1) sepia(0);
+    opacity: 1;
+  }
+}
+
+/* --- Beschriftung --- */
+.polaroid figcaption {
+  position: absolute;
+  bottom: 1rem; /* 15px */
+  left: 1rem;
+  right: 1rem;
+  text-align: center;
+  font-family: "Permanent Marker", cursive;
+  font-size: 1.2rem;
+  color: #2a52be;
+  line-height: 1;
+}
+
+/* --- Responsive --- */
+@media (max-width: 1200px) {
+  .polaroid {
+    width: calc(33.33% - 2.5rem);
+  }
+}
+@media (max-width: 900px) {
+  .polaroid {
+    width: calc(50% - 2.5rem);
+  }
+}
+@media (max-width: 600px) {
+  .polaroid {
+    width: calc(100% - 2.5rem);
+  }
+}
+
 /*# sourceMappingURL=style.css.map */
