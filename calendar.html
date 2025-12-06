@@ -1016,9 +1016,22 @@ Start Call To Action
       return;
     }
     
-    const start = new Date(startInput);
-    const end = new Date(endInput);
-    end.setHours(23, 59, 59);
+    // Parse date strings as local dates (YYYY-MM-DD format)
+    const startParts = startInput.split('-');
+    const endParts = endInput.split('-');
+    
+    const start = new Date(
+      parseInt(startParts[0]),
+      parseInt(startParts[1]) - 1,
+      parseInt(startParts[2]),
+      0, 0, 0, 0
+    );
+    const end = new Date(
+      parseInt(endParts[0]),
+      parseInt(endParts[1]) - 1,
+      parseInt(endParts[2]),
+      23, 59, 59, 999
+    );
     
     if (start > end) {
       alert('Start date must be before end date');
