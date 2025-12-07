@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+
+<!--
+ // FACEBOOK: https://www.facebook.com/KzooMakers/
+ // GITHUB: https://github.com/kzoomakers/website
+-->
+
+<html lang="en">
+<head>
+
+  <!-- Basic Page Needs
+  ================================================== -->
+  <meta charset="utf-8">
+  <title>Kzoo Makers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400..700&family=Emilys+Candy&family=Inter:wght@400;500;600;700&family=Permanent+Marker&display=swap" rel="stylesheet">
+
+  <!-- Mobile Specific Metas
+  ================================================== -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="Kalamazoo Makerspace - Community workshop in Kalamazoo, MI offering wood shop, metal shop, laser cutting, 3D printing, welding, and fabrication tools. Join our 501(c)(3) nonprofit makerspace for DIY projects, prototyping, and collaborative making. Equipment training, membership access, and community events available.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="author" content="Kzoo Makers">
+  <meta name="generator" content="Kzoo Makers Community Website">
+  <meta name="keywords" content="makerspace, Kalamazoo, Michigan, wood shop, metal shop, laser cutting, 3D printing, welding, fabrication, DIY, community workshop, nonprofit, maker community, prototyping, CNC, tools, equipment training">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="Kzoo Makers - Kalamazoo Community Makerspace">
+  <meta property="og:description" content="Community-driven makerspace in Kalamazoo, MI with wood shop, metal shop, laser cutting, 3D printing, and more. Join our nonprofit maker community.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://kzoomakers.org">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Kzoo Makers - Kalamazoo Community Makerspace">
+  <meta name="twitter:description" content="Community-driven makerspace in Kalamazoo, MI with wood shop, metal shop, laser cutting, 3D printing, and more.">
+
+  <!-- Favicon -->
+  <link rel="shortcut icon" type="image/x-icon" href="images/favicon.png" />
+
+  <!-- CSS
+  ================================================== -->
+  <!-- Themefisher Icon font -->
+  <link rel="stylesheet" href="plugins/themefisher-font/style.css">
+  <!-- bootstrap.min css -->
+  <link rel="stylesheet" href="plugins/bootstrap/bootstrap.min.css">
+  <!-- Lightbox.min css -->
+  <link rel="stylesheet" href="plugins/lightbox2/css/lightbox.min.css">
+  <!-- animation css -->
+  <link rel="stylesheet" href="plugins/animate/animate.css">
+  <!-- Slick Carousel -->
+  <link rel="stylesheet" href="plugins/slick/slick.css">
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <style>
+    h1[data-duration-in] {
+      font-family: 'Caveat', cursive;
+      font-size: 75px;
+    }
+    
+    /* Apply Emilys Candy font to specific section headings */
+    .what-is-makerspace h2,
+    .about-2 h2,
+    .service-2 h2,
+    .wanna-tour h2,
+    .hours-section h2,
+    .blog h2 {
+      font-family: 'Emilys Candy', cursive;
+      font-size: 38px;
+    }
+    
+    /* Make question mark image smaller on mobile */
+    @media (max-width: 768px) {
+      .what-is-makerspace img {
+        max-width: 60%;
+        margin: 0 auto;
+        display: block;
+      }
+    }
+    
+    /* Tighten spacing between "How our makerspace works" title and content */
+    .about-2 .title {
+      margin-bottom: 20px;
+    }
+
+    /* Particle canvas styles */
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    #canvas{
+      display:block;
+      width:100vw;
+      height:100vh;
+      background: radial-gradient(circle at 10% 10%, #05031a 0%, #0b0925 40%, #02020a 100%);
+    }
+    
+    /* Hero text overlay */
+    .hero-text-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: white;
+      z-index: 10;
+      pointer-events: none;
+    }
+    
+    .hero-text-overlay h1 {
+      font-family: 'Caveat', cursive;
+      font-size: 75px;
+      margin: 0;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+    }
+    
+    .hero-text-overlay h2 {
+      font-family: 'Emilys Candy', cursive;
+      font-size: 38px;
+      margin: 10px 0 0 0;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+    }
+    
+    .canvas-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+    
+    @media (max-width: 768px) {
+      .hero-text-overlay h1 {
+        font-size: 50px;
+      }
+      .hero-text-overlay h2 {
+        font-size: 28px;
+      }
+    }
+  </style>
+
+</head>
+<body id="body">
+
+  <!--
+  Start Preloader
+  ==================================== -->
+  <div id="preloader">
+    <div class='preloader'>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </div>
+  <!--
+  End Preloader
+  ==================================== -->
+
+<!--
+Fixed Navigation
+==================================== -->
+<header class="navigation fixed-top">
+  <!-- Navigation will be dynamically loaded by navbar.js -->
+</header>
+<!--
+End Fixed Navigation
+==================================== -->
+
+<div class="canvas-container">
+  <canvas id="canvas"></canvas>
+  <div class="hero-text-overlay">
+    <h1>Kzoo Makers</h1>
+    <h2>A Brief History</h2>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let W = canvas.width = innerWidth;
+let H = canvas.height = innerHeight;
+
+window.addEventListener('resize', ()=>{ W=canvas.width=innerWidth; H=canvas.height=innerHeight; init(); });
+
+const mouse = { x: W/2, y: H/2, down:false };
+window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+window.addEventListener('mousedown', ()=>mouse.down=true);
+window.addEventListener('mouseup', ()=>mouse.down=false);
+
+class Particle {
+  constructor(){
+    this.reset();
+  }
+  reset(){
+    this.x = Math.random()*W;
+    this.y = Math.random()*H;
+    this.vx = (Math.random()-0.5)*0.6;
+    this.vy = (Math.random()-0.5)*0.6;
+    this.size = Math.random()*1.6 + 0.4;
+    this.h = Math.floor(Math.random()*60)+200;
+    this.life = Math.random()*200 + 200;
+  }
+  update(){
+    // attraction to mouse
+    const dx = mouse.x - this.x;
+    const dy = mouse.y - this.y;
+    const dist = Math.sqrt(dx*dx + dy*dy) + 0.001;
+    const maxForce = 0.6;
+    const force = (mouse.down ? 2000 : 800) / (dist*dist); // stronger when mouse down
+    const ax = dx/dist * force;
+    const ay = dy/dist * force;
+
+    this.vx += ax * 0.015;
+    this.vy += ay * 0.015;
+
+    // slight friction
+    this.vx *= 0.98;
+    this.vy *= 0.98;
+
+    this.x += this.vx;
+    this.y += this.vy;
+
+    // wrap-around for continuity
+    if(this.x < -50) this.x = W + 50;
+    if(this.x > W + 50) this.x = -50;
+    if(this.y < -50) this.y = H + 50;
+    if(this.y > H + 50) this.y = -50;
+
+    this.life--;
+    if(this.life <= 0) this.reset();
+  }
+  draw(){
+    ctx.beginPath();
+    ctx.fillStyle = `hsla(${this.h}, 85%, 60%, 0.9)`;
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+    ctx.fill();
+  }
+}
+
+let particles = [];
+function init(count = Math.floor((W*H)/5000)){
+  particles = [];
+  for(let i=0;i<count;i++) particles.push(new Particle());
+}
+init();
+
+function animate(){
+  requestAnimationFrame(animate);
+  // subtle fade to create trails
+  ctx.fillStyle = 'rgba(2,2,8,0.14)';
+  ctx.fillRect(0,0,W,H);
+
+  // draw connecting lines (only for near pairs)
+  for(let i=0;i<particles.length;i++){
+    const p = particles[i];
+    p.update();
+    p.draw();
+
+    for(let j=i+1;j<particles.length;j++){
+      const q = particles[j];
+      const dx = p.x - q.x;
+      const dy = p.y - q.y;
+      const d2 = dx*dx + dy*dy;
+      if(d2 < 9000){ // threshold
+        const alpha = 0.7 - (d2/9000)*0.7;
+        ctx.beginPath();
+        ctx.strokeStyle = `rgba(160,200,255,${alpha * 0.5})`;
+        ctx.lineWidth = 0.6;
+        ctx.moveTo(p.x,p.y);
+        ctx.lineTo(q.x,q.y);
+        ctx.stroke();
+      }
+    }
+  }
+}
+animate();
+</script>
+
+<!--
+Start KII History Section
+==================================== -->
+<section class="about-2 section">
+	<div class="container">
+		<div class="row justify-content-center">
+			<!-- section title -->
+			<div class="col-lg-8">
+				<div class="title text-center">
+					<h2>Kalamazoo Innovation Initiative (KII)</h2>
+					<div class="border"></div>
+				</div>
+			</div>
+			<!-- /section title -->
+		</div>
+
+		<div class="row">
+			<div class="col-md-12">
+				<p>The Kalamazoo Innovation Initiative (KII) is a 501(c)3 nonprofit that was formed in 2016 with the sole purpose to open a makerspace. Kevin Wixsom originally filed the paperwork to incorporate using a legal firm. Al Hollaway was the president, Amy Braat was the secretary, and Jason Preuss was the treasurer. </p>
+
+				<p>KII was formed to support the creation and operation of a Maker Space in Kalamazoo.</p>
+			</div>
+		</div> <!-- End row -->
+	</div> <!-- End container -->
+</section> <!-- End section -->
+
+<!--
+Start Our Maker Space History Section
+==================================== -->
+<section class="about-2 section">
+	<div class="container">
+		<div class="row justify-content-center">
+			<!-- section title -->
+			<div class="col-lg-8">
+				<div class="title text-center">
+					<h2>The Makers Guild</h2>
+					<div class="border"></div>
+				</div>
+			</div>
+			<!-- /section title -->
+		</div>
+
+		<div class="row">
+			<div class="col-md-12">
+				<p>The Kalamazoo Maker Guild was started around 2014 by Kevin Wixsom as a Meetup group. Al shortly became a co-organizer of the group since he arranged the meetings being held at the Airzoo. The group met once a month and was a show and tell for grownups. The projects were wide ranging, from robots, to amateur rocketry, to arduinos, 3d printing, fiber arts and more.</p>
+				
+				<p>The maker guild was a feeder group for the makerspace. At the beginning most of the personal memberships were people from the makers meetup guild. This was not unusual, as the GR makerspace followed the same trajectory of having a thriving maker group that lead into a maker space. It is important to note that the maker guild was not the makerspace and were separate entities.</p>
+				
+				<p>There were other independent tech groups that were invited to use the space such as Kalamazoo Linux User Group, and Hacker Gals.</p>
+			</div>
+		</div> <!-- End row -->
+	</div> <!-- End container -->
+</section> <!-- End section -->
+
+<!--
+Start History of Maker Spaces in Kalamazoo Section
+==================================== -->
+<section class="service-2 section">
+	<div class="container">
+		<div class="row justify-content-center">
+			<!-- section title -->
+			<div class="col-lg-8">
+				<div class="title text-center">
+					<h2>History of Maker Spaces in Kalamazoo</h2>
+					<div class="border"></div>
+				</div>
+			</div>
+			<!-- /section title -->
+		</div>
+
+		<div class="row">
+			<div class="col-md-12">
+				<p>There have been attempts to start a makerspace in Kalamazoo. There was one called "The Geek Group" that moved to GR a few years ago. The official reason for the move was a property tax dispute. Eventually the Grand Rapids space was shut down by the Secret Service for <a href="https://www.justice.gov/Usao-wdmi/pr/2022_0228_Boden">illegal bitcoin operations</a>.</p>
+				
+				<p>Xipherspace never really got going financially. They were a for-profit enterprise and were never able to really establish a community. They are one example of why we went about establishing a growing maker community before starting to think about having a space. The Kalamazoo Makers Guild (KMG) is that community. It has grown steadily and now lists 226 members.</p>
+			</div>
+		</div> <!-- End row -->
+	</div> <!-- End container -->
+</section> <!-- End section -->
+
+
+<!--
+Visionary Statement
+==================================== -->
+<section class="call-to-action-2 section">
+	<div class="container">
+		<div class="row">
+			<div class="col-md-12 text-center">
+				<h2>A place where curiosity meets craftsmanship </br>for every maker to turn ideas into impact, together.</h2>
+			</div>
+		</div> 		<!-- End row -->
+	</div>   	<!-- End container -->
+</section>   <!-- End section -->
+
+
+<footer id="footer" class="bg-one">
+  <!-- Footer will be dynamically loaded by footer.js -->
+</footer> <!-- end footer -->
+
+
+<!-- end Footer Area
+========================================== -->
+<!-- 
+    Essential Scripts
+    =====================================-->
+<!-- Main jQuery -->
+<script src="plugins/jquery/jquery.min.js"></script>
+
+<!-- Bootstrap4 -->
+<script src="plugins/bootstrap/bootstrap.min.js"></script>
+<!-- Parallax -->
+<script src="plugins/parallax/jquery.parallax-1.1.3.js"></script>
+<!-- lightbox -->
+<script src="plugins/lightbox2/js/lightbox.min.js"></script>
+<!-- Owl Carousel -->
+<script src="plugins/slick/slick.min.js"></script>
+<!-- filter -->
+<script src="plugins/filterizr/jquery.filterizr.min.js"></script>
+<!-- Smooth Scroll js -->
+<script src="plugins/smooth-scroll/smooth-scroll.min.js"></script>
+<!-- Google Map -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCcABaamniA6OL5YvYSpB3pFMNrXwXnLwU"></script>
+<script src="plugins/google-map/gmap.js"></script>
+
+<!-- Dynamic Navigation -->
+<script src="dynamic/js/navbar.js"></script>
+
+<!-- Dynamic Footer -->
+<script src="dynamic/js/footer.js"></script>
+
+<!-- Dynamic Counters -->
+<script src="dynamic/js/counters.js"></script>
+
+<!-- Dynamic Hours -->
+<script src="dynamic/js/hours.js"></script>
+
+<!-- Dynamic Blog Posts -->
+<script src="js/blog.js"></script>
+
+<!-- Custom js -->
+<script src="js/script.js"></script>
+
+</body>
+
+</html>

@@ -52,6 +52,10 @@
         {
           "label": "The Team",
           "href": "team.html"
+        },
+        {
+          "label": "History",
+          "href": "history.html"
         }
       ]
     },
