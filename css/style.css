@@ -1062,10 +1062,93 @@ Wanna tour? 1
 .pricing-table {
   padding: 100px 0;
   padding-bottom: 70px;
-  background: url("../images/headers/diamondplate.jpg");
-  background-size: cover;
-  background-position: center;
   position: relative;
+  background: #222024;
+}
+
+.pricing-table::before {
+  content: '';
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  left: 0;
+  top: 0;
+  padding: 32px;
+  background: linear-gradient(150deg,
+    hsl(210, 15%, 35%) 0%,
+    hsl(240, 20%, 20%) 10%,
+    hsl(220, 15%, 25%) 25%,
+    hsl(230, 10%, 35%) 30%,
+    hsl(220, 20%, 20%) 35%,
+    hsl(240, 25%, 25%) 65%,
+    hsl(230, 10%, 20%) 70%,
+    hsl(190, 15%, 10%) 100%);
+  box-shadow:
+    0 1px 0 1px rgba(0, 0, 0, 0.3),
+    inset 0 1px 1px 1px rgba(255, 255, 255, 0.3),
+    0 2px 1px -1px rgba(0, 0, 0, 0.4),
+    0 4px 1px -2px rgba(0, 0, 0, 0.4),
+    0 6px 1px -3px rgba(0, 0, 0, 0.4),
+    0 8px 1px -4px rgba(0, 0, 0, 0.4),
+    0 10px 1px -5px rgba(0, 0, 0, 0.4),
+    0 12px 1px -6px rgba(0, 0, 0, 0.4),
+    0 14px 1px -7px rgba(0, 0, 0, 0.4),
+    0 16px 1px -8px rgba(0, 0, 0, 0.4),
+    0 18px 1px -9px rgba(0, 0, 0, 0.4),
+    0 20px 1px -10px rgba(0, 0, 0, 0.4),
+    10px 40px 10px -20px rgba(0, 0, 0, 0.4),
+    30px 50px 20px -30px rgba(0, 0, 0, 0.4);
+}
+
+.pricing-table::after {
+  content: '';
+  position: absolute;
+  height: calc(100% - 64px);
+  width: calc(100% - 64px);
+  left: 32px;
+  top: 32px;
+  box-shadow:
+    0 1px 1px 2px rgba(255, 255, 255, 0.1),
+    inset 0 1px 1px 1px rgba(0, 0, 0, 0.4),
+    inset 0 2px 1px 2px rgba(0, 0, 0, 0.4),
+    inset 0 3px 1px 3px rgba(0, 0, 0, 0.4),
+    inset 0 4px 1px 4px rgba(0, 0, 0, 0.4),
+    inset 0 5px 1px 5px rgba(0, 0, 0, 0.4),
+    inset 0 6px 1px 6px rgba(0, 0, 0, 0.4);
+  background:
+    radial-gradient(circle at center,
+      #222 20%, transparent 20%),
+    radial-gradient(circle at center,
+      rgba(255, 255, 255, 0.7) 20%, transparent 20%),
+    radial-gradient(circle at center,
+      #111 20%, transparent 20%),
+    radial-gradient(circle at center,
+      rgba(255, 255, 255, 0.7) 20%, transparent 20%),
+    radial-gradient(ellipse 125% 90% at 10% 10%,
+      hsla(120, 40%, 20%, 0.25) 0%,
+      hsla(240, 50%, 20%, 0.4) 60%,
+      hsla(200, 40%, 15%, 0.4) 80%,
+      hsla(160, 30%, 5%, 0.4) 100%),
+    linear-gradient(150deg,
+      hsl(210, 20%, 25%) 0%,
+      hsl(240, 25%, 15%) 8%,
+      hsl(220, 10%, 20%) 22%,
+      hsl(230, 5%, 35%) 35%,
+      hsl(200, 15%, 25%) 40%,
+      hsl(240, 25%, 15%) 70%,
+      hsl(230, 15%, 10%) 80%,
+      hsl(210, 25%, 10%) 100%);
+  background-size:
+    50px 50px, 50px 50px,
+    50px 50px, 50px 50px,
+    100% 100%, 100% 100%;
+  background-position:
+    0px 0px,
+    0px -1px,
+    25px 25px,
+    25px 26px,
+    2px 0px,
+    2px 2px;
 }
 .pricing-table .title p {
   color: #fff;
@@ -1086,8 +1169,12 @@ Wanna tour? 1
 }
 .pricing-table .pricing-item {
   padding: 40px 55px 65px;
-  background: #fff;
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #2c3e50 100%);
   margin-bottom: 30px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 .pricing-table .pricing-item a.btn-main {
   text-transform: uppercase;
@@ -1096,10 +1183,11 @@ Wanna tour? 1
 .pricing-table .pricing-item li {
   font-weight: 400;
   padding: 10px 0;
-  color: #666;
+  color: #e0e0e0;
 }
 .pricing-table .pricing-item li i {
   margin-right: 6px;
+  color: #28ABE3;
 }
 .pricing-table .price-title {
   padding: 50px 0 24px; /* extra top/bottom padding so \"Was\" badge has breathing room */
@@ -1109,12 +1197,14 @@ Wanna tour? 1
   margin: 0 0 5px;
   font-size: 15px;
   text-transform: uppercase;
+  color: #ffffff;
 }
 .pricing-table .price-title > p {
   font-size: 14px;
   font-weight: 400;
   line-height: 18px;
   margin-top: 5px;
+  color: #d0d0d0;
 }
 .pricing-table .price-title .value {
   color: #28ABE3;
