@@ -82,6 +82,196 @@
       margin-bottom: 20px;
     }
 
+    /* Image Carousel Styles */
+    .image-thumbnail-carousel *,
+    .image-thumbnail-carousel *::after,
+    .image-thumbnail-carousel *::before {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    .image-thumbnail-carousel {
+        --items: 5;
+        --gap: 0.75rem;
+        --border-xl: 20px;
+        --border-m: 8px;
+        --border-s: 6px;
+        --accent-color: hsl(198, 86%, 53%);
+        --fill-primary: hsl(204, 3%, 47%);
+        --fill-active: hsl(204, 23%, 20%);
+        --fill-disabled: hsl(204, 9%, 85%);
+    }
+
+    .image-thumbnail-carousel img {
+        height: 100%;
+        width: 100%;
+        max-width: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .image-thumbnail-carousel {
+        padding: 1rem;
+        width: clamp(360px, 90vw, 820px);
+        display: flex;
+        flex-flow: column;
+        gap: 1rem;
+        position: relative;
+        margin: 2rem auto;
+    }
+
+    .image-display {
+        border-radius: var(--border-xl);
+        overflow: hidden;
+        min-height: 30vmin;
+        aspect-ratio: 16 / 9;
+        box-shadow: 0 0.375em 0.67em #0003, 0 0.5em 1.3em #0002;
+    }
+
+    .screen {
+        block-size: 100%;
+        display: flex;
+        background-image: linear-gradient(12deg, #aaa, #eee);
+        position: relative;
+        user-select: none;
+    }
+
+    .thumbnail-carousel {
+        display: flex;
+        gap: var(--gap);
+        block-size: 100%;
+    }
+
+    .carousel__btn {
+        flex: 1 0 max(2.75rem, 5.834%);
+        background: #0000;
+        border: 1px solid #0000;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+    }
+
+    .arrow-icon {
+        margin-inline: auto;
+        outline: none;
+        border: 0;
+        scale: 1;
+        display: inline grid;
+        width: max(80%, 1.5rem);
+        height: max(80%, 1.5rem);
+        fill: var(--fill-primary);
+    }
+
+    .carousel__btn:hover .arrow-icon {
+        fill: var(--fill-active);
+    }
+
+    .carousel__btn:disabled {
+        opacity: 0.1;
+        pointer-events: none;
+    }
+
+    .carousel__slider {
+        user-select: none;
+        flex-grow: 999;
+        list-style: none;
+        display: flex;
+        gap: var(--gap);
+        padding: 0.5rem;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+    }
+
+    .carousel__slider::-webkit-scrollbar {
+        display: none;
+    }
+
+    .carousel__slide {
+        cursor: pointer;
+        border-radius: var(--border-m);
+        overflow: hidden;
+        scroll-snap-align: center;
+        flex: 1 0 calc((100% / var(--items)) - 10px);
+    }
+
+    .active.carousel__slide {
+        outline: 0.125em solid var(--accent-color);
+        outline-offset: -0.37em;
+    }
+
+    @media (max-width: 680px) {
+        .image-thumbnail-carousel {
+            width: 90vw;
+        }
+
+        .active.carousel__slide {
+            background-color: var(--fill-active);
+            outline-offset: 3px;
+        }
+
+        .carousel__btn {
+            flex-grow: 0;
+        }
+
+        .thumbnail-carousel {
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .carousel__slider {
+            max-width: fit-content;
+            align-items: center;
+            gap: 1em;
+        }
+
+        .carousel__slide {
+            flex: none;
+            aspect-ratio: 1;
+            block-size: 0.625rem;
+            border-radius: 50%;
+            background-color: var(--fill-primary);
+        }
+
+        .thumbnail {
+            opacity: 0;
+            display: none;
+            aspect-ratio: 16 / 9;
+            block-size: 8vw;
+            position: absolute;
+            border-radius: var(--border-s);
+            overflow: hidden;
+            z-index: 99;
+            will-change: transform, opacity;
+            transition: opacity 150ms ease-out;
+            transform-origin: bottom;
+            translate: -50%;
+            bottom: 20%;
+        }
+
+        .carousel__slide:not(.active):hover .thumbnail {
+            opacity: 1;
+            display: block;
+            animation: show 250ms ease-out forwards;
+            box-shadow: 0 0.375em 0.67em #0003, 0 0.5em 1.3em #0002;
+        }
+
+        @keyframes show {
+            from {
+                opacity: 0;
+                transform: scale(0);
+            }
+            to {
+                display: block;
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    }
+
     /* Particle canvas styles */
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{height:100%}
@@ -169,6 +359,73 @@ End Fixed Navigation
   <div class="hero-text-overlay">
     <h1>Kzoo Makers</h1>
     <h2>A Brief History</h2>
+  </div>
+  
+  <!-- Image Slider in Hero -->
+  <div class="image-thumbnail-carousel" style="position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); z-index: 20; pointer-events: auto;">
+    <section class="image-display">
+        <div class="screen"></div>
+    </section>
+    <div class="image-caption" style="text-align: center; color: white; background: rgba(0,0,0,0.8); padding: 12px 20px; font-size: 15px; margin: 10px 0; border-radius: 8px; min-height: 45px; display: flex; align-items: center; justify-content: center;"></div>
+    <section class="thumbnail-carousel">
+        <button type="button" class="carousel__btn prev" aria-label="Previous slide">
+            <svg width="16" height="16" fill="currentColor" class="arrow-icon arrow-left-circle" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8m15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-4.5-.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5z" />
+            </svg>
+        </button>
+        <ul class="carousel__slider">
+            <li class="carousel__slide" data-caption="The founding members of Kzoo Makers who started the makerspace journey">
+                <div class="thumbnail">
+                    <img loading="lazy" src="images/history/founders.webp" alt="Kzoo Makers Founders">
+                </div>
+            </li>
+            <li class="carousel__slide" data-caption="Early days at Kzoo Makers in 2017 - Building our community">
+                <div class="thumbnail">
+                    <img loading="lazy" src="images/history/2017_1.jpg" alt="Kzoo Makers 2017">
+                </div>
+            </li>
+            <li class="carousel__slide" data-caption="Members collaborating on projects in 2019">
+                <div class="thumbnail">
+                    <img loading="lazy" src="images/history/kzoomakers_2019_2.jpg" alt="Kzoo Makers 2019">
+                </div>
+            </li>
+            <li class="carousel__slide" data-caption="Growing our maker community in 2021">
+                <div class="thumbnail">
+                    <img loading="lazy" src="images/history/2021_1.webp" alt="Kzoo Makers 2021">
+                </div>
+            </li>
+            <li class="carousel__slide" data-caption="Community gathering and collaboration - May 2022">
+                <div class="thumbnail">
+                    <img loading="lazy" src="images/history/2022-05-31.webp" alt="Kzoo Makers 2022">
+                </div>
+            </li>
+            <li class="carousel__slide" data-caption="Kalamazoo Makers thriving community in 2023">
+                <div class="thumbnail">
+                    <img loading="lazy" src="images/history/kalamazoo-makers-2023.jpg" alt="Kzoo Makers 2023">
+                </div>
+            </li>
+            <li class="carousel__slide" data-caption="Hands-on workshop and skill sharing in 2024">
+                <div class="thumbnail">
+                    <img loading="lazy" src="images/history/2024_workshop.webp" alt="Kzoo Makers Workshop 2024">
+                </div>
+            </li>
+            <li class="carousel__slide" data-caption="Our vibrant maker community continues to grow - 2024">
+                <div class="thumbnail">
+                    <img loading="lazy" src="images/history/2024-kzoomakers.jpg" alt="Kzoo Makers 2024">
+                </div>
+            </li>
+            <li class="carousel__slide" data-caption="The front of our makerspace - Where creativity happens">
+                <div class="thumbnail">
+                    <img loading="lazy" src="images/history/kzoo-makers-front.jpg" alt="Kzoo Makers Front">
+                </div>
+            </li>
+        </ul>
+        <button type="button" class="carousel__btn next" aria-label="Next slide">
+            <svg width="16" height="16" fill="currentColor" class="arrow-icon arrow-right-circle" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8m15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0M4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5z" />
+            </svg>
+        </button>
+    </section>
   </div>
 </div>
 
@@ -415,6 +672,132 @@ Visionary Statement
 
 <!-- Custom js -->
 <script src="js/script.js"></script>
+
+<!-- Image Carousel Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const Carousel = (() => {
+        const getActiveSlide = () =>
+            document.querySelector(".carousel__slide.active");
+        const getFirstSlide = () =>
+            document.querySelector(".carousel__slider").firstElementChild;
+        const getLastSlide = () =>
+            document.querySelector(".carousel__slider").lastElementChild;
+
+        const getSiblingSlide = (slide, direction) =>
+            direction === "prev"
+                ? slide.previousElementSibling
+                : slide.nextElementSibling;
+
+        const getNewActiveSlide = (key, activeSlide) => {
+            const actions = {
+                Home: getFirstSlide,
+                End: getLastSlide,
+                ArrowLeft: () => getSiblingSlide(activeSlide, "prev"),
+                ArrowRight: () => getSiblingSlide(activeSlide, "next")
+            };
+            return actions[key]?.() || null;
+        };
+
+        const updateScreen = (activeSlide) => {
+            const carouselScreen = document.querySelector(".image-display .screen");
+            const captionElement = document.querySelector(".image-caption");
+            const img = activeSlide.querySelector("img").cloneNode(true);
+            const caption = activeSlide.getAttribute("data-caption") || "";
+            
+            carouselScreen.innerHTML = "";
+            carouselScreen.appendChild(img);
+            
+            if (captionElement) {
+                captionElement.textContent = caption;
+            }
+        };
+
+        const scrollToActiveSlide = (activeSlide) => {
+            const carouselSlider = document.querySelector(".carousel__slider");
+            const { offsetLeft, offsetWidth } = activeSlide;
+            const { clientWidth } = carouselSlider;
+
+            carouselSlider.scrollTo({
+                left: offsetLeft - clientWidth / 2 + offsetWidth / 2,
+                behavior: "smooth"
+            });
+        };
+
+        const updateActiveSlideClass = (activeSlide) => {
+            document
+                .querySelectorAll(".carousel__slide.active")
+                .forEach((slide) => slide.classList.remove("active"));
+            activeSlide.classList.add("active");
+        };
+
+        const updateCarousel = (activeSlide) => {
+            updateActiveSlideClass(activeSlide);
+            updateScreen(activeSlide);
+            scrollToActiveSlide(activeSlide);
+            updateButtonStates(activeSlide);
+        };
+
+        const updateButtonStates = (activeSlide) => {
+            const prevButton = document.querySelector(".carousel__btn.prev");
+            const nextButton = document.querySelector(".carousel__btn.next");
+
+            prevButton.disabled = !getSiblingSlide(activeSlide, "prev");
+            nextButton.disabled = !getSiblingSlide(activeSlide, "next");
+        };
+
+        const handleKeydown = (e) => {
+            if (!e.target.closest(".carousel__slider")) return;
+            const activeSlide = getActiveSlide();
+            const newActiveSlide = getNewActiveSlide(e.key, activeSlide);
+
+            if (newActiveSlide) {
+                e.preventDefault();
+                updateCarousel(newActiveSlide);
+            }
+        };
+
+        const handleButtonClick = (e) => {
+            const activeSlide = getActiveSlide();
+            const newActiveSlide = getSiblingSlide(
+                activeSlide,
+                e.currentTarget.classList.contains("prev") ? "prev" : "next"
+            );
+
+            if (newActiveSlide) {
+                updateCarousel(newActiveSlide);
+            }
+        };
+
+        const handleCarouselClick = (e) => {
+            const clickedSlide = e.target.closest(".carousel__slide");
+            if (clickedSlide) {
+                updateCarousel(clickedSlide);
+            }
+        };
+
+        const initCarousel = () => {
+            const carouselSlider = document.querySelector(".carousel__slider");
+            const prevButton = document.querySelector(".carousel__btn.prev");
+            const nextButton = document.querySelector(".carousel__btn.next");
+
+            if (!carouselSlider || !prevButton || !nextButton) {
+                console.error('Carousel elements not found');
+                return;
+            }
+
+            updateCarousel(getFirstSlide());
+
+            document.addEventListener("keydown", handleKeydown);
+            prevButton.addEventListener("click", handleButtonClick);
+            nextButton.addEventListener("click", handleButtonClick);
+            carouselSlider.addEventListener("click", handleCarouselClick);
+        };
+
+        initCarousel();
+    })();
+});
+</script>
 
 </body>
 
