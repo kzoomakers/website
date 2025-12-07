@@ -1168,13 +1168,15 @@ Wanna tour? 1
   z-index: 999;
 }
 .pricing-table .pricing-item {
-  padding: 40px 55px 65px;
-  background: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #2c3e50 100%);
+  padding: 25px 30px 40px;
+  background: linear-gradient(145deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
   margin-bottom: 30px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5);
 }
 .pricing-table .pricing-item a.btn-main {
   text-transform: uppercase;
@@ -1182,7 +1184,8 @@ Wanna tour? 1
 }
 .pricing-table .pricing-item li {
   font-weight: 400;
-  padding: 10px 0;
+  padding: 8px 0;
+  font-size: 13px;
   color: #e0e0e0;
 }
 .pricing-table .pricing-item li i {
@@ -1190,33 +1193,43 @@ Wanna tour? 1
   color: #28ABE3;
 }
 .pricing-table .price-title {
-  padding: 50px 0 24px; /* extra top/bottom padding so \"Was\" badge has breathing room */
+  padding: 0 0 20px;
+  text-align: center;
 }
 .pricing-table .price-title > h3 {
   font-weight: 700;
-  margin: 0 0 5px;
-  font-size: 15px;
+  margin: 0 0 15px;
+  padding: 15px 10px;
+  font-size: 13px;
   text-transform: uppercase;
   color: #ffffff;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 15px 15px 0 0;
+  margin-left: -30px;
+  margin-right: -30px;
+  margin-top: -25px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 .pricing-table .price-title > p {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 400;
-  line-height: 18px;
+  line-height: 16px;
   margin-top: 5px;
   color: #d0d0d0;
 }
 .pricing-table .price-title .value {
   color: #28ABE3;
-  font-size: 50px;
-  padding: 10px 0;
+  font-size: 42px;
+  padding: 8px 0;
 }
 
 /* Green badge that sits above the current price */
 .offer-badge {
-  display: inline-block;
-  margin-top: 4px;
-  margin-bottom: 4px;
+  display: block;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  margin-left: auto;
+  margin-right: auto;
   padding: 4px 10px;
   font-size: 0.85rem;
   font-weight: 700;
@@ -1225,6 +1238,7 @@ Wanna tour? 1
   color: #ffffff;
   background-color: #28a745;
   border-radius: 999px;
+  width: fit-content;
 
   /* Animate.css heartBeat animation, looping continuously */
   animation-name: heartBeat;
@@ -1238,21 +1252,18 @@ Wanna tour? 1
   position: relative;
 }
 
-/* "Normally $X/m" label in top-right with red strike-through */
+/* "Normally $X/m" label without strike-through */
 .normal-price-label {
-  position: absolute;
-  top: 14px;
-  right: 18px;
-  transform: none;
-  font-size: 1.9rem;        /* bigger \"Was\" price text */
+  display: block;
+  margin-top: 8px;
+  margin-bottom: -8px;
+  font-size: 1.3rem;
   font-weight: 800;
   color: #c00000;
-  padding: 8px 18px;        /* more padding inside the badge */
-  border-radius: 4px;
+  padding: 4px 0;
   white-space: nowrap;
   text-align: center;
   pointer-events: none;
-  z-index: 5;
   background-color: transparent;
 
   /* Animate.css hinge effect on old price */
@@ -1260,19 +1271,6 @@ Wanna tour? 1
   animation-duration: 5s;
   animation-iteration-count: infinite;
   animation-timing-function: ease-in-out;
-  transform-origin: top left;
-}
-
-/* Crisp diagonal red slash over the old price */
-.normal-price-label::after {
-  content: "";
-  position: absolute;
-  left: -10%;
-  right: -10%;
-  top: 50%;
-  height: 3px;
-  background-color: #ff0000;
-  transform: rotate(-18deg);
   transform-origin: center;
 }
 
