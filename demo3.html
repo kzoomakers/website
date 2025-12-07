@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASCII Spiral Animation with Unscrambling Logo</title>
+  <style>
+    :root {
+      --bg-color: #09183e; /* Dark background */
+      --primary-color: #6b88b9; /* Bright blue */
+      --spiral-font-family: 'Source Code Pro', "SFMono-Regular", Menlo, Consolas, Monaco, monospace;
+    }
+
+    html {
+      background-color: var(--bg-color);
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, rgba(15, 15, 26, 0.5) 0%, rgba(26, 26, 46, 0.5) 100%);
+      overflow-x: hidden;
+      position: relative;
+      z-index: 0;
+    }
+
+    /* Simple fix for white overspill during scrolling */
+    html::before {
+      content: '';
+      position: fixed;
+      width: 100%;
+      height: 200%;
+      top: -50%;
+      left: 0;
+      background-color: var(--bg-color);
+      z-index: -2;
+    }
+
+    #stage {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: -1;
+      user-select: none;
+      pointer-events: none;
+      font-family: var(--spiral-font-family);
+      font-size: 10px;
+      line-height: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: var(--primary-color);
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #stage pre {
+      margin: 0;
+      padding: 0;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="stage">
+    <!-- Animation will be inserted here -->
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const stage = document.getElementById('stage');
+        if (!stage) {
+            console.error('Stage element #stage not found for ASCII spiral.');
+            return;
+        }
+
+        // Force the stage to be fully visible
+        stage.style.opacity = '0.4';
+        
+        // Adjust cols/rows based on viewport and desired density
+        const cols = Math.floor(window.innerWidth / 6); // Reduced divisor for more columns (full width)
+        const rows = Math.floor(window.innerHeight / 12); 
+        
+        const glyphs = " .:-=+*#%@";  // 10 chars from "empty" to "full"
+
+        // Centered text for the logo
+        const logoText = [
+          " /$$   /$$                                     /$$      /$$           /$$                                    ",
+          "| $$  /$$/                                    | $$$    /$$$          | $$                                    ",
+          "| $$ /$$/  /$$$$$$$$  /$$$$$$   /$$$$$$       | $$$$  /$$$$  /$$$$$$ | $$   /$$  /$$$$$$   /$$$$$$   /$$$$$$$",
+          "| $$$$$/  |____ /$$/ /$$__  $$ /$$__  $$      | $$ $$/$$ $$ |____  $$| $$  /$$/ /$$__  $$ /$$__  $$ /$$_____/ ",
+          "| $$  $$     /$$$$/ | $$  \\ $$| $$  \\ $$      | $$  $$$| $$  /$$$$$$$| $$$$$$/ | $$$$$$$$| $$  \\__/|  $$$$$$ ",
+          "| $$\\  $$   /$$__/  | $$  | $$| $$  | $$      | $$\\  $ | $$ /$$__  $$| $$_  $$ | $$_____/| $$       \\____  $$",
+          "| $$ \\  $$ /$$$$$$$$|  $$$$$$/|  $$$$$$/      | $$ \\/  | $$|  $$$$$$$| $$ \\  $$|  $$$$$$$| $$       /$$$$$$$/",
+          "|__/  \\__/|________/ \\______/  \\______/       |__/     |__/ \\_______/|__/  \\__/ \\_______/|__/      |_______/ ",
+          "                                                                                                              ",
+          "                                                                                                              ",
+          "                                                                                                              "
+        ];
+
+        
+        // Create scrambled versions of the logo for animation
+        const scrambleChars = "▁▂▃▄▅▆▇█▉▊▋▌▍▎▏▐░▒▓▔▕▖▗▘▙▚▛▜▝▞▟■□▢▣▤▥▦▧▨▩▪▫▬▭▮▯";
+        const logoTextScrambled = [];
+        
+        // Generate multiple scrambled versions (more scrambled to less scrambled)
+        // Increased to 18 steps for smoother animation
+        for (let scrambleLevel = 17; scrambleLevel >= 0; scrambleLevel--) {
+            const currentScramble = [];
+            
+            for (let i = 0; i < logoText.length; i++) {
+                let newRow = "";
+                for (let j = 0; j < logoText[i].length; j++) {
+                    const originalChar = logoText[i][j];
+                    if (originalChar === " ") {
+                        newRow += " "; // Keep spaces as spaces
+                    } else {
+                        // Higher scramble levels have more randomness
+                        const randomFactor = scrambleLevel / 17; // 1.0 to 0.0 (adjusted for 18 steps)
+                        
+                        if (Math.random() < randomFactor) {
+                            // Choose a random character from our scramble chars
+                            newRow += scrambleChars[Math.floor(Math.random() * scrambleChars.length)];
+                        } else {
+                            // Keep the original character
+                            newRow += originalChar;
+                        }
+                    }
+                }
+                currentScramble.push(newRow);
+            }
+            logoTextScrambled.push(currentScramble);
+        }
+        
+        // Add the final form (original logo text) as the last entry
+        logoTextScrambled.push(logoText);
+
+        // Pre-calculate logo dimensions and offsets for centering
+        const logoHeight = logoText.length;
+        const logoWidth = logoText[0].length; // Assumes all logo lines have same length
+        const logoStartRow = Math.floor(rows / 2 - logoHeight / 2);
+        const logoStartCol = Math.floor(cols / 2 - logoWidth / 2);
+
+        let animationFrameId = null;
+
+        // Adapted animation function
+        function frame(time) {
+            // Increase the time scaling factor for faster animation
+            const e = time * 0.0009 + 0.8; // Increased for faster animation
+            const out = [];
+            const k = glyphs.length / 2; // Midpoint of glyphs for bipolar calculation
+            
+            // Phase for logo reveal
+            const revealPhase = Math.PI / 2.5;
+            
+            // Variables for unscrambling animation
+            const unscrambleDuration = 1.0; // 1 second unscramble
+            const unscrambleStartTime = revealPhase + 0.1; // Start soon after reveal
+            const unscrambleEndTime = unscrambleStartTime + unscrambleDuration;
+            
+            // Calculate which scrambled version to use based on time
+            let currentLogoVersion = logoText; // Default to the original
+            
+            if (e > unscrambleStartTime && e < unscrambleEndTime) {
+                // During unscramble animation
+                const progress = (e - unscrambleStartTime) / unscrambleDuration;
+                const scrambleIndex = Math.min(
+                    logoTextScrambled.length - 1,
+                    Math.floor(progress * logoTextScrambled.length)
+                );
+                currentLogoVersion = logoTextScrambled[scrambleIndex];
+            } else if (e >= unscrambleEndTime) {
+                // After unscramble is complete
+                currentLogoVersion = logoText;
+            }
+
+            for (let y = 0; y < rows; y++) {
+                let rowString = "";
+                const Y = y / rows * 2 - 1; // -1 to 1
+
+                for (let x = 0; x < cols; x++) {
+                    const X = x / cols * 2 - 1; // -1 to 1
+
+                    const l = Math.hypot(X, Y); // r or radius
+                    let a = Math.atan2(Y, X);   // angle
+
+                    let char_idx = 0;
+                    let ch = glyphs[0];
+
+                    if (l < 1.0) { // Only draw if within unit circle (approx)
+                        a += e; // Rotate angle by time
+                        a += l * Math.PI; // Add spiral based on radius
+
+                        // This part creates the swirl pattern
+                        char_idx = Math.floor(
+                            (Math.cos(a * 3 + l * 2 + e * 2) + Math.sin(a * 2 - l * 3 + e * 3)) / 2 * k + k
+                        );
+                        
+                        char_idx = Math.max(0, Math.min(glyphs.length - 1, char_idx)); // Clamp index
+                        ch = glyphs[char_idx];
+                    }
+
+                    // Logo reveal logic
+                    const logorow_idx = y - logoStartRow;
+                    const logocol_idx = x - logoStartCol;
+
+                    if (e > revealPhase &&
+                        logorow_idx >= 0 && logorow_idx < logoHeight &&
+                        logocol_idx >= 0 && logocol_idx < logoWidth &&
+                        currentLogoVersion[logorow_idx][logocol_idx] !== undefined &&
+                        currentLogoVersion[logorow_idx][logocol_idx] !== " ") {
+
+                        // Threshold-based transition to avoid character interpolation issues
+                        const pct = Math.min(1, (e - revealPhase) / 0.2); // Fast transition
+                        
+                        if (pct > 0.5) {
+                            // Once we're past 50% of the transition, show the logo character
+                            const logoChar = currentLogoVersion[logorow_idx][logocol_idx];
+                            
+                            // After unscramble is complete, add white color and glow
+                            if (e >= unscrambleEndTime) {
+                                ch = `<span style="color: white; text-shadow: 0 0 5px rgba(255,255,255,0.7);">${logoChar}</span>`;
+                            } else {
+                                // During unscramble, just show without special styling
+                                ch = logoChar;
+                            }
+                        } else {
+                            // Before that, show brightened spiral character
+                            const idx = Math.min(glyphs.length - 1, char_idx + Math.floor(pct * 10));
+                            ch = glyphs[idx];
+                        }
+                    }
+                    rowString += ch;
+                }
+                out.push(rowString);
+            }
+
+            // Use innerHTML to render the output with spans for white logo characters
+            stage.innerHTML = out.map(row => `<pre>${row}</pre>`).join('');
+            animationFrameId = requestAnimationFrame(frame);
+        }
+
+        // Handle window resizing
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                }
+                
+                // Recalculate dimensions based on new window size
+                const newCols = Math.floor(window.innerWidth / 6); 
+                const newRows = Math.floor(window.innerHeight / parseFloat(getComputedStyle(stage).fontSize));
+                
+                // Update logo positioning
+                const newLogoStartRow = Math.floor(newRows / 2 - logoHeight / 2);
+                const newLogoStartCol = Math.floor(newCols / 2 - logoWidth / 2);
+                
+                // Create a new animation function with updated dimensions
+                function updateFrame(time) {
+                    // Same animation logic with updated dimensions
+                    const e = time * 0.0009 + 0.8;
+                    const out = [];
+                    const k = glyphs.length / 2;
+                    const revealPhase = Math.PI / 2.5;
+                    
+                    const unscrambleDuration = 1.0;
+                    const unscrambleStartTime = revealPhase + 0.1;
+                    const unscrambleEndTime = unscrambleStartTime + unscrambleDuration;
+                    
+                    let currentLogoVersion = logoText;
+                    
+                    if (e > unscrambleStartTime && e < unscrambleEndTime) {
+                        const progress = (e - unscrambleStartTime) / unscrambleDuration;
+                        const scrambleIndex = Math.min(
+                            logoTextScrambled.length - 1,
+                            Math.floor(progress * logoTextScrambled.length)
+                        );
+                        currentLogoVersion = logoTextScrambled[scrambleIndex];
+                    } else if (e >= unscrambleEndTime) {
+                        currentLogoVersion = logoText;
+                    }
+
+                    for (let y = 0; y < newRows; y++) {
+                        let rowString = "";
+                        const Y = y / newRows * 2 - 1;
+
+                        for (let x = 0; x < newCols; x++) {
+                            const X = x / newCols * 2 - 1;
+                            const l = Math.hypot(X, Y);
+                            let a = Math.atan2(Y, X);
+                            let char_idx = 0;
+                            let ch = glyphs[0];
+
+                            if (l < 1.0) {
+                                a += e;
+                                a += l * Math.PI;
+                                char_idx = Math.floor(
+                                    (Math.cos(a * 3 + l * 2 + e * 2) + Math.sin(a * 2 - l * 3 + e * 3)) / 2 * k + k
+                                );
+                                char_idx = Math.max(0, Math.min(glyphs.length - 1, char_idx));
+                                ch = glyphs[char_idx];
+                            }
+
+                            const logorow_idx = y - newLogoStartRow;
+                            const logocol_idx = x - newLogoStartCol;
+
+                            if (e > revealPhase &&
+                                logorow_idx >= 0 && logorow_idx < logoHeight &&
+                                logocol_idx >= 0 && logocol_idx < logoWidth &&
+                                currentLogoVersion[logorow_idx][logocol_idx] !== undefined &&
+                                currentLogoVersion[logorow_idx][logocol_idx] !== " ") {
+
+                                const pct = Math.min(1, (e - revealPhase) / 0.2);
+                                
+                                if (pct > 0.5) {
+                                    const logoChar = currentLogoVersion[logorow_idx][logocol_idx];
+                                    
+                                    if (e >= unscrambleEndTime) {
+                                        ch = `<span style="color: white; text-shadow: 0 0 5px rgba(255,255,255,0.7);">${logoChar}</span>`;
+                                    } else {
+                                        ch = logoChar;
+                                    }
+                                } else {
+                                    const idx = Math.min(glyphs.length - 1, char_idx + Math.floor(pct * 10));
+                                    ch = glyphs[idx];
+                                }
+                            }
+                            rowString += ch;
+                        }
+                        out.push(rowString);
+                    }
+
+                    stage.innerHTML = out.map(row => `<pre>${row}</pre>`).join('');
+                    animationFrameId = requestAnimationFrame(updateFrame);
+                }
+
+                console.log("Resized. Animation restarted with new dimensions.");
+                requestAnimationFrame(updateFrame);
+            }, 250); // Debounce resize event
+        });
+
+        // Start the animation
+        requestAnimationFrame(frame);
+    });
+  </script>
+</body>
+</html>
