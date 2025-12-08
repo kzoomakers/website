@@ -169,12 +169,12 @@ End Fixed Navigation
 <!--
 Start About Section
 ==================================== -->
-<section class="about-2 section" id="about" style="position: relative; overflow: hidden; min-height: 150px; padding: 40px 0; background-color: #1a1a1a;">
+<section class="about-2 section" id="about" style="position: relative; overflow: hidden; min-height: 150px; padding: 40px 0; background-color: #000000;">
 	<canvas id="canvas-dots"></canvas>
 	<div class="container" style="position: relative; z-index: 1;">
 		<div class="row">
 			<div class="col-md-12 text-center">
-				<h2 style="color: white;">A place where curiosity meets craftsmanship </br>for every maker to turn ideas into impact, together.</h2>
+				<h2 id="about-heading" style="color: white;">A place where curiosity meets craftsmanship </br>for every maker to turn ideas into impact, together.</h2>
 			</div>
 		</div> 		<!-- End row -->
 	</div>   	<!-- End container -->
@@ -354,6 +354,24 @@ Start About Section
   left: 0;
   bottom: 0;
   z-index: 0;
+}
+
+/* Hide canvas animation on mobile devices and show wood background instead */
+@media (max-width: 768px) {
+  #canvas-dots {
+    display: none !important;
+  }
+  
+  #about {
+    background-image: url('images/call-to-action/woodbg.jpg') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+  }
+  
+  #about-heading {
+    color: black !important;
+  }
 }
 </style>
 
