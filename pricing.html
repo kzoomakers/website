@@ -356,21 +356,10 @@ Start About Section
   z-index: 0;
 }
 
-/* Hide canvas animation on mobile devices and show wood background instead */
+/* Hide entire section on mobile devices */
 @media (max-width: 768px) {
-  #canvas-dots {
-    display: none !important;
-  }
-  
   #about {
-    background-image: url('images/call-to-action/woodbg.jpg') !important;
-    background-size: cover !important;
-    background-position: center !important;
-    background-repeat: no-repeat !important;
-  }
-  
-  #about-heading {
-    color: black !important;
+    display: none !important;
   }
 }
 </style>
