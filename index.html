@@ -174,18 +174,33 @@
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
     }
     
+    /* Static fallback backgrounds - always visible, enhanced by JS */
+    .wanna-tour {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    }
+    
+    .call-to-action-2 {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    }
+    
     /* Respect reduced motion preferences */
     @media (prefers-reduced-motion: reduce) {
       #tour-canvas-container,
       #particle-canvas-container {
-        display: none;
+        display: none !important;
       }
-      .wanna-tour {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      }
-      .call-to-action-2 {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      }
+    }
+    
+    /* Hide canvas containers until JS loads and initializes them */
+    #tour-canvas-container,
+    #particle-canvas-container {
+      opacity: 0;
+      transition: opacity 0.5s ease-in;
+    }
+    
+    #tour-canvas-container.loaded,
+    #particle-canvas-container.loaded {
+      opacity: 1;
     }
   </style>
   
@@ -770,17 +785,45 @@ Start Counter Section
 
 <!-- Three.js Tour Background -->
 <script type="module">
-	import * as THREE from "three";
-	import { OrbitControls } from "jsm/controls/OrbitControls.js";
-	import { EffectComposer } from "jsm/postprocessing/EffectComposer.js";
-	import { RenderPass } from "jsm/postprocessing/RenderPass.js";
-	import { UnrealBloomPass } from "jsm/postprocessing/UnrealBloomPass.js";
-
-	// Check for reduced motion preference
-	const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	// Defer Three.js initialization until section is visible
+	function initTourAnimation() {
+		// Check for reduced motion preference
+		const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		
+		const container = document.getElementById('tour-canvas-container');
+		if (!container || prefersReducedMotion) {
+			return;
+		}
+		
+		// Use Intersection Observer to only load when section is near viewport
+		const observer = new IntersectionObserver((entries) => {
+			entries.forEach(entry => {
+				if (entry.isIntersecting) {
+					observer.disconnect(); // Only initialize once
+					loadThreeJsAnimation();
+				}
+			});
+		}, { rootMargin: '200px' }); // Start loading before visible
+		
+		observer.observe(container);
+	}
 	
-	const container = document.getElementById('tour-canvas-container');
-	if (container && !prefersReducedMotion) {
+	async function loadThreeJsAnimation() {
+		const container = document.getElementById('tour-canvas-container');
+		if (!container) return;
+		
+		// Dynamic import of Three.js modules
+		const [THREE, { OrbitControls }, { EffectComposer }, { RenderPass }, { UnrealBloomPass }] = await Promise.all([
+			import("three"),
+			import("jsm/controls/OrbitControls.js"),
+			import("jsm/postprocessing/EffectComposer.js"),
+			import("jsm/postprocessing/RenderPass.js"),
+			import("jsm/postprocessing/UnrealBloomPass.js")
+		]);
+		
+		// Check for reduced motion preference inside the function
+		const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		
 		const w = container.offsetWidth;
 		const h = container.offsetHeight;
 		const scene = new THREE.Scene();
@@ -913,12 +956,41 @@ Start Counter Section
 			composer.setSize(newW, newH);
 		}
 		window.addEventListener("resize", handleWindowResize, false);
+		
+		// Mark as loaded for fade-in effect
+		container.classList.add('loaded');
+	}
+	
+	// Initialize after page load
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', initTourAnimation);
+	} else {
+		initTourAnimation();
 	}
 </script>
 
 <!-- Particle Swarm Background for Visionary Statement -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
+<script>
+	// Defer loading of heavy libraries until after page load
+	function loadParticleLibraries() {
+		return Promise.all([
+			new Promise((resolve) => {
+				const script = document.createElement('script');
+				script.src = 'https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js';
+				script.onload = resolve;
+				script.onerror = resolve; // Continue even if library fails
+				document.head.appendChild(script);
+			}),
+			new Promise((resolve) => {
+				const script = document.createElement('script');
+				script.src = 'https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js';
+				script.onload = resolve;
+				script.onerror = resolve;
+				document.head.appendChild(script);
+			})
+		]);
+	}
+</script>
 <script>
 	// Check for reduced motion preference
 	const prefersReducedMotionParticles = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1230,6 +1302,32 @@ Start Counter Section
 
 			hue = ((hue + .5) % 360);
 		}());
+		
+		// Mark as loaded for fade-in effect
+		particleContainer.classList.add('loaded');
+	}
+	
+	// Use Intersection Observer to only initialize when section is visible
+	function initParticleAnimation() {
+		const observer = new IntersectionObserver((entries) => {
+			entries.forEach(entry => {
+				if (entry.isIntersecting) {
+					observer.disconnect(); // Only initialize once
+					loadParticleLibraries().then(() => {
+						// Particle animation code already executed above
+					});
+				}
+			});
+		}, { rootMargin: '100px' }); // Start loading slightly before visible
+		
+		observer.observe(particleContainer);
+	}
+	
+	// Initialize after page load
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', initParticleAnimation);
+	} else {
+		initParticleAnimation();
 	}
 </script>
 
