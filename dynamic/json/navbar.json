@@ -50,6 +50,10 @@
           "href": "pricing.html"
         },
         {
+          "label": "Why Kzoo Makers?",
+          "href": "why-kzoo-makers.html"
+        },
+        {
           "label": "The Team",
           "href": "team.html"
         },
@@ -126,7 +130,11 @@
       "icon": "tf-ion-chevron-down",
       "items": [
         {
-          "label": "Other Makerspaces",
+          "label": "Kzoo Makerspaces",
+          "href": "comparison.html"
+        },
+        {
+          "label": "Michigan Makerspaces",
           "href": "other-makerspaces.html"
         },
         {

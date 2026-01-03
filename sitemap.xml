@@ -22,6 +22,27 @@
     <loc>https://kzoomakers.org/calendar.html</loc>
   </url>
 
+  <!-- Makerspace Comparison Pages - High Priority -->
+  <url>
+    <loc>https://kzoomakers.org/comparison.html</loc>
+  </url>
+
+  <url>
+    <loc>https://kzoomakers.org/why-kzoo-makers.html</loc>
+  </url>
+
+  <url>
+    <loc>https://kzoomakers.org/makerspace-vs-library.html</loc>
+  </url>
+
+  <url>
+    <loc>https://kzoomakers.org/makerspace-vs-university.html</loc>
+  </url>
+
+  <url>
+    <loc>https://kzoomakers.org/makerspace-vs-wmu.html</loc>
+  </url>
+
   <!-- Workshop & Equipment Pages - High Priority -->
   <url>
     <loc>https://kzoomakers.org/wood-shop.html</loc>
