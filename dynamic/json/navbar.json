@@ -130,11 +130,11 @@
       "icon": "tf-ion-chevron-down",
       "items": [
         {
-          "label": "Compare Local Makerspaces",
+          "label": "Local Makerspaces",
           "href": "comparison.html"
         },
         {
-          "label": "Other Michigan Makerspaces",
+          "label": "Other MI Makerspaces",
           "href": "other-makerspaces.html"
         },
         {
