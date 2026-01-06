@@ -15,7 +15,7 @@ body {
 
 p {
   font-family: "Source Sans Pro", sans-serif;
-  color: #848484;
+  color: #000000;
   font-size: 16px;
   line-height: 1.65;
 }
@@ -261,7 +261,7 @@ a:focus, a:hover {
   color: #232323;
 }
 .title p {
-  color: #848484;
+  color: #262626;
   margin: 0 auto;
 }
 .title.title-white h2 {
@@ -834,7 +834,7 @@ a:focus, a:hover {
   position: relative;
   margin-bottom: 15px;
   font-size: 16px;
-  color: #777;
+  color: #161616;
   font-family: "Source Sans Pro", sans-serif;
 }
 .about-2 .checklist li:before {
