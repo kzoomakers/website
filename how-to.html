@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>How To - Kzoo Makers</title>
+  <title>How To Guides - Kzoo Makers</title>
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="description" content="How to guides and tutorials for Kalamazoo Makerspace equipment">
+  <meta name="description" content="Browse how-to guides and tutorials for Kalamazoo Makerspace equipment by category">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <meta name="author" content="Kzoo Makers">
   
@@ -17,7 +17,175 @@
   <link rel="stylesheet" href="plugins/lightbox2/css/lightbox.min.css">
   <link rel="stylesheet" href="plugins/animate/animate.css">
   <link rel="stylesheet" href="plugins/slick/slick.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
+  
+  <style>
+    .product-groups-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .section-card {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        height: 500px;
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 20px;
+    }
+
+    .section-header {
+        background: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+        padding: 12px 16px;
+        font-weight: 600;
+        font-size: 14px;
+        color: #495057;
+        flex-shrink: 0;
+    }
+
+    .section-content {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .category-item {
+        padding: 12px 16px;
+        border-bottom: 1px solid #f1f3f4;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: #495057;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .category-item:last-child {
+        border-bottom: none;
+    }
+
+    .category-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .category-item.active {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .category-item.active:hover {
+        background-color: #0056b3;
+    }
+
+    .category-icon {
+        margin-right: 8px;
+        width: 16px;
+    }
+
+    .category-arrow {
+        color: #6c757d;
+        font-size: 12px;
+    }
+
+    .category-item.active .category-arrow {
+        color: white;
+    }
+
+    .empty-state {
+        padding: 24px 16px;
+        text-align: center;
+        color: #6c757d;
+        font-size: 13px;
+    }
+
+    .article-link {
+        display: block;
+        padding: 12px 16px;
+        border-bottom: 1px solid #f1f3f4;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: #495057;
+        font-size: 14px;
+        text-decoration: none;
+    }
+
+    .article-link:last-child {
+        border-bottom: none;
+    }
+
+    .article-link:hover {
+        background-color: #f8f9fa;
+        color: #007bff;
+        text-decoration: none;
+    }
+
+    .article-link i {
+        margin-right: 8px;
+        color: #007bff;
+    }
+
+    .selected-badges {
+        margin-bottom: 20px;
+        min-height: 40px;
+        padding: 10px 0;
+    }
+
+    .selection-badge {
+        display: inline-block;
+        background-color: #007bff;
+        color: white;
+        padding: 6px 12px;
+        margin: 2px 4px;
+        border-radius: 16px;
+        font-size: 12px;
+        font-weight: 500;
+        position: relative;
+    }
+
+    .selection-badge .remove-badge {
+        margin-left: 8px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .selection-badge .remove-badge:hover {
+        color: #ffdddd;
+    }
+
+    .section-title {
+        margin: 0;
+        font-size: 14px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 767px) {
+        .section-card {
+            height: 400px;
+            margin-bottom: 15px;
+        }
+        
+        .category-item {
+            padding: 10px 12px;
+            font-size: 13px;
+        }
+        
+        .article-link {
+            padding: 10px 12px;
+            font-size: 13px;
+        }
+    }
+
+    @media (max-width: 575px) {
+        .section-card {
+            height: 350px;
+        }
+    }
+  </style>
 </head>
 <body id="body">
 
@@ -44,7 +212,7 @@
       <div class="row">
         <div class="col-md-12">
           <h1>How To Guides</h1>
-          <p>Learn how to use our equipment and tools</p>
+          <p>Browse our equipment guides and tutorials by category</p>
         </div>
       </div>
     </div>
@@ -53,116 +221,64 @@
   <!-- Main Content -->
   <section class="section">
     <div class="container">
-      <div class="row">
-        <div class="col-lg-8 mx-auto">
-          <div class="content">
-            <h2>Equipment Guides</h2>
-            <p>Explore our comprehensive how-to guides for using various equipment at Kzoo Makers:</p>
-            
-            <div class="row mt-5">
-              <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                  <div class="card-body">
-                    <h5 class="card-title">How to use a Bridgeport Mill</h5>
-                    <p class="card-text">Learn the basics of operating a Bridgeport milling machine, including setup, safety procedures, and common operations.</p>
-                    <a href="how-to-use-a-bridgeport-mill.html" class="btn btn-main">Read Guide</a>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                  <div class="card-body">
-                    <h5 class="card-title">How to use a Metal Lathe</h5>
-                    <p class="card-text">Master the fundamentals of metal lathe operation, from spindle speeds to tool positioning and finishing techniques.</p>
-                    <a href="how-to-use-a-metal-lathe.html" class="btn btn-main">Read Guide</a>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                  <div class="card-body">
-                    <h5 class="card-title">How to use a Laser Cutter</h5>
-                    <p class="card-text">Discover how to design, prepare, and cut materials using our laser cutting equipment safely and effectively.</p>
-                    <a href="how-to-use-a-laser-cutter.html" class="btn btn-main">Read Guide</a>
-                  </div>
-                </div>
-              </div>
+        <div class="row justify-content-center">
+            <div class="col-lg-10 col-xl-8">
+                <div class="product-groups-container">
+                    <!-- Selected Options Badges -->
+                    <div class="selected-badges" id="selected-badges">
+                        <!-- Badges will be displayed here -->
+                    </div>
+                    
+                    <div class="row justify-content-center">
+                        <!-- Main Categories Section -->
+                        <div class="col-md-6">
+                            <div class="section-card">
+                                <div class="section-header">
+                                    <h6 class="section-title">Equipment Categories</h6>
+                                </div>
+                                <div class="section-content">
+                                    <div id="main-categories">
+                                        <div class="category-item" data-category="woodworking">
+                                            <span><i class="fas fa-hammer category-icon"></i>Woodworking</span>
+                                            <i class="fas fa-chevron-right category-arrow"></i>
+                                        </div>
+                                        <div class="category-item" data-category="metalworking">
+                                            <span><i class="fas fa-cog category-icon"></i>Metalworking</span>
+                                            <i class="fas fa-chevron-right category-arrow"></i>
+                                        </div>
+                                        <div class="category-item" data-category="digital-fabrication">
+                                            <span><i class="fas fa-cube category-icon"></i>Laser Systems</span>
+                                            <i class="fas fa-chevron-right category-arrow"></i>
+                                        </div>
+                                        <div class="category-item" data-category="3d-printing">
+                                            <span><i class="fas fa-print category-icon"></i>3D Printing</span>
+                                            <i class="fas fa-chevron-right category-arrow"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-              <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                  <div class="card-body">
-                    <h5 class="card-title">Table Saw Safety Guide</h5>
-                    <p class="card-text">Essential safety training for using the table saw. Includes the complete safety manual, exam, and certification requirements.</p>
-                    <a href="how-to-woodsaw-safety.html" class="btn btn-main">Read Guide</a>
-                  </div>
+                        <!-- Articles Section -->
+                        <div class="col-md-6">
+                            <div class="section-card">
+                                <div class="section-header">
+                                    <h6 class="section-title">How-To Articles</h6>
+                                </div>
+                                <div class="section-content">
+                                    <div id="articles">
+                                        <div class="empty-state">
+                                            <i class="fas fa-arrow-left text-muted mb-2"></i>
+                                            <div>Select a category to view guides</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
-
-              <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                  <div class="card-body">
-                    <h5 class="card-title">Jointer Safety Guide</h5>
-                    <p class="card-text">Critical safety information for operating the jointer. Learn proper techniques, hazard awareness, and best practices to prevent serious injuries.</p>
-                    <a href="how-to-use-a-jointer-safety.html" class="btn btn-main">Read Guide</a>
-                  </div>
-                </div>
-              </div>
-
-              <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                  <div class="card-body">
-                    <h5 class="card-title">Router Safety Guide</h5>
-                    <p class="card-text">Essential safety training for using routers. Includes the complete safety manual, exam, and certification requirements for safe router operation.</p>
-                    <a href="how-to-routing-safe-and-sound.html" class="btn btn-main">Read Guide</a>
-                  </div>
-                </div>
-              </div>
-
-              <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                  <div class="card-body">
-                    <h5 class="card-title">Laser Cutting: The Ultimate Guide</h5>
-                    <p class="card-text">Dive deeper into the origins of laser cutting, how lasers work, compatible materials, and industrial applications, adapted from Sculpteo's ultimate guide.</p>
-                    <a href="laser-cutting-guide.html" class="btn btn-main">Read Guide</a>
-                  </div>
-                </div>
-              </div>
-
-              <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                  <div class="card-body">
-                    <h5 class="card-title">3D Printing Failures We See Every Week</h5>
-                    <p class="card-text">Learn about the most common 3D printing mistakes in a makerspace: first-layer failures, material selection, orientation, tolerances, and more.</p>
-                    <a href="how-to-3d-print-failures-we-see-every-week.html" class="btn btn-main">Read Guide</a>
-                  </div>
-                </div>
-              </div>
-
-              <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                  <div class="card-body">
-                    <h5 class="card-title">Why Most Home 3D Printers Collect Dust</h5>
-                    <p class="card-text">Understand the structural reasons home 3D printers sit unused and how makerspaces solve calibration, maintenance, and support challenges.</p>
-                    <a href="how-to-why-most-3d-printers-sit-at-home-gathering-dust.html" class="btn btn-main">Read Guide</a>
-                  </div>
-                </div>
-              </div>
-
-              <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                  <div class="card-body">
-                    <h5 class="card-title">What 3D Printing Is Bad At</h5>
-                    <p class="card-text">Learn the real limitations of 3D printing in strength, surface finish, speed, and materials. Understand when to use other fabrication tools instead.</p>
-                    <a href="how-to-what-3d-printing-is-bad-at.html" class="btn btn-main">Read Guide</a>
-                  </div>
-                </div>
-              </div>
             </div>
-          </div>
         </div>
-      </div>
     </div>
   </section>
 
@@ -192,5 +308,90 @@
   
   <!-- Custom js -->
   <script src="js/script.js"></script>
+  
+  <script>
+    // Category data structure with how-to articles
+    const categoryData = {
+        woodworking: [
+            { title: 'Table Saw Safety Guide', url: 'how-to-woodsaw-safety.html', icon: 'fa-saw-blade' },
+            { title: 'Jointer Safety Guide', url: 'how-to-use-a-jointer-safety.html', icon: 'fa-triangle-exclamation' },
+            { title: 'Router Safety Guide', url: 'how-to-routing-safe-and-sound.html', icon: 'fa-shield-halved' }
+        ],
+        metalworking: [
+            { title: 'How to Use a Bridgeport Mill', url: 'how-to-use-a-bridgeport-mill.html', icon: 'fa-gears' },
+            { title: 'How to Use a Metal Lathe', url: 'how-to-use-a-metal-lathe.html', icon: 'fa-circle-notch' }
+        ],
+        'digital-fabrication': [
+            { title: 'How to Use a Laser Cutter', url: 'how-to-use-a-laser-cutter.html', icon: 'fa-laser' },
+            { title: 'Laser Cutting: The Ultimate Guide', url: 'laser-cutting-guide.html', icon: 'fa-book' }
+        ],
+        '3d-printing': [
+            { title: '3D Printing Failures We See Every Week', url: 'how-to-3d-print-failures-we-see-every-week.html', icon: 'fa-triangle-exclamation' },
+            { title: 'Why Most Home 3D Printers Collect Dust', url: 'how-to-why-most-3d-printers-sit-at-home-gathering-dust.html', icon: 'fa-house' },
+            { title: 'What 3D Printing Is Bad At', url: 'how-to-what-3d-printing-is-bad-at.html', icon: 'fa-circle-xmark' }
+        ]
+    };
+
+    $(document).ready(function () {
+        // Main category click handler
+        $('#main-categories .category-item').click(function () {
+            $('#main-categories .category-item').removeClass('active');
+            $(this).addClass('active');
+
+            const category = $(this).data('category');
+            loadArticles(category);
+            updateBadges(category);
+        });
+
+        // Badge removal handler
+        $(document).on('click', '.remove-badge', function () {
+            $('#main-categories .category-item').removeClass('active');
+            clearArticles();
+            updateBadges();
+        });
+    });
+
+    function loadArticles(category) {
+        const articles = categoryData[category];
+        let html = '';
+
+        articles.forEach(article => {
+            html += `
+                <a href="${article.url}" class="article-link">
+                    <i class="fas ${article.icon}"></i>${article.title}
+                </a>
+            `;
+        });
+
+        $('#articles').html(html);
+    }
+
+    function clearArticles() {
+        $('#articles').html(`
+            <div class="empty-state">
+                <i class="fas fa-arrow-left text-muted mb-2"></i>
+                <div>Select a category to view guides</div>
+            </div>
+        `);
+    }
+
+    function updateBadges(category) {
+        let badgesHtml = '';
+
+        const activeCategory = category || $('#main-categories .category-item.active').data('category');
+
+        if (activeCategory) {
+            const categoryName = $('#main-categories .category-item.active').text().trim();
+            badgesHtml += `
+                <span class="selection-badge">
+                    ${categoryName}
+                    <span class="remove-badge" data-type="category">×</span>
+                </span>
+            `;
+        }
+
+        $('#selected-badges').html(badgesHtml);
+    }
+  </script>
 </body>
 </html>
