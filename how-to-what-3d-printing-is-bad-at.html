@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+
+<!--
+ // FACEBOOK: https://www.facebook.com/KzooMakers/
+ // GITHUB: https://github.com/kzoomakers/website
+-->
+
+<html lang="en">
+<head>
+
+  <!-- Basic Page Needs
+  ================================================== -->
+  <meta charset="utf-8">
+  <title>What 3D Printing Is Bad At (And Why That Matters) | Kalamazoo Makerspace</title>
+
+  <!-- Mobile Specific Metas
+  ================================================== -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="Understand the real limitations of 3D printing: strength, surface finish, speed, and materials. Learn when to use other fabrication tools for better results.">
+  <meta name="keywords" content="3D printing limitations, 3D printing weaknesses, when not to 3D print, fabrication tools, laser cutting vs 3D printing, CNC vs 3D printing, makerspace tools, kzoomakers">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="author" content="Kzoo Makers">
+  <meta name="generator" content="Kzoo Makers Community Website">
+  <meta name="robots" content="index, follow">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="What 3D Printing Is Bad At (And Why That Matters) | Kalamazoo Makerspace">
+  <meta property="og:description" content="3D printing has specific weaknesses. Learn when to use laser cutting, CNC, or traditional tools instead for better results.">
+  <meta property="og:url" content="https://kzoomakers.org/how-to-what-3d-printing-is-bad-at.html">
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="What 3D Printing Is Bad At (And Why That Matters)">
+  <meta name="twitter:description" content="Understanding 3D printing's limitations helps you choose the right fabrication tool for each job.">
+
+  <!-- Favicon -->
+  <link rel="shortcut icon" type="image/x-icon" href="images/favicon.png" />
+  <link rel="canonical" href="https://kzoomakers.org/how-to-what-3d-printing-is-bad-at.html">
+
+  <!-- CSS
+  ================================================== -->
+  <!-- Themefisher Icon font -->
+  <link rel="stylesheet" href="plugins/themefisher-font/style.css">
+  <!-- bootstrap.min css -->
+  <link rel="stylesheet" href="plugins/bootstrap/bootstrap.min.css">
+  <!-- Lightbox.min css -->
+  <link rel="stylesheet" href="plugins/lightbox2/css/lightbox.min.css">
+  <!-- animation css -->
+  <link rel="stylesheet" href="plugins/animate/animate.css">
+  <!-- Slick Carousel -->
+  <link rel="stylesheet" href="plugins/slick/slick.css">
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- Structured Data for SEO: Article -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "What 3D Printing Is Bad At (And Why That Matters)",
+    "description": "An honest assessment of 3D printing's limitations in strength, surface finish, speed, and materials, and why tool diversity matters in a makerspace.",
+    "author": {
+      "@type": "Organization",
+      "name": "Kalamazoo Makerspace"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Kalamazoo Makerspace"
+    },
+    "datePublished": "2026-01-07",
+    "articleSection": "3D Printing"
+  }
+  </script>
+
+</head>
+<body id="body">
+
+  <!--
+  Start Preloader
+  ==================================== -->
+  <div id="preloader">
+    <div class='preloader'>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </div>
+  <!--
+  End Preloader
+  ==================================== -->
+
+<!--
+Fixed Navigation
+==================================== -->
+<header class="navigation fixed-top">
+  <!-- Navigation will be dynamically loaded by navbar.js -->
+</header>
+<!--
+End Fixed Navigation
+==================================== -->
+
+<section class="single-page-header">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <h1>What 3D Printing Is Bad At</h1>
+        <ol class="breadcrumb header-bradcrumb justify-content-center">
+          <li class="breadcrumb-item"><a href="index.html" class="text-white">Home</a></li>
+          <li class="breadcrumb-item"><a href="how-to.html" class="text-white">How-To Guides</a></li>
+          <li class="breadcrumb-item active" aria-current="page">3D Printing Limitations</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Start Main Content Section
+=========================================== -->
+<section class="about-2 section" id="printing-limitations">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <div class="title text-center">
+          <h2>What 3D Printing Is Bad At</h2>
+          <p class="lead">(And Why That Matters)</p>
+          <p>3D printing is often presented as a general-purpose manufacturing solution. In practice, it is a narrow tool with specific strengths and equally specific weaknesses. Experienced makers usually learn this through failed parts rather than documentation.</p>
+          <p><strong>Being explicit about what 3D printing does poorly is not pessimism. It is a marker of technical maturity.</strong></p>
+          <div class="border"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mt-5">
+      <div class="col-lg-10 mx-auto">
+        
+        <p>Unrealistic expectations waste time, materials, and effort—and they are one of the fastest ways to stall a project.</p>
+
+        <!-- Section 1 -->
+        <div class="mb-5 mt-5">
+          <h3>Strength and Structural Limitations</h3>
+          <p>Most consumer and prosumer 3D printing relies on layer-by-layer deposition. This introduces anisotropy by default.</p>
+          <ul class="checklist">
+            <li>Parts are weakest along layer lines</li>
+            <li>Tensile strength varies by orientation</li>
+            <li>Small design changes can dramatically affect failure modes</li>
+          </ul>
+          <p>Even with optimized settings, printed plastics rarely compete with machined, molded, or laser-cut parts in structural reliability. Reinforced filaments help, but they increase cost, wear hardware, and still do not eliminate directional weakness.</p>
+          <div class="alert alert-warning mt-3">
+            <strong>This matters</strong> when parts are load-bearing, safety-critical, or repeatedly stressed. In those cases, printing may be acceptable for iteration—but not for the final solution.
+          </div>
+        </div>
+
+        <!-- Section 2 -->
+        <div class="mb-5">
+          <h3>Surface Finish and Dimensional Reality</h3>
+          <p>3D printed parts advertise precision, but surface finish tells a different story.</p>
+          <ul class="checklist">
+            <li>Layer lines are inherent, not a defect</li>
+            <li>Post-processing adds labor and inconsistency</li>
+            <li>Fine features degrade quickly at small scales</li>
+          </ul>
+          <p>Achieving smooth, flat, or optically clean surfaces usually requires sanding, filling, chemical smoothing, or secondary machining. Each step adds time and introduces variability.</p>
+          <p><strong>For parts where appearance, tolerances, or mating surfaces matter, printing is often the slowest path to an acceptable result.</strong></p>
+        </div>
+
+        <!-- Section 3 -->
+        <div class="mb-5">
+          <h3>Speed: Printing vs. Subtractive Tools</h3>
+          <p>3D printing is often described as "fast," but this is only true in specific contexts.</p>
+          <p><strong>Compared to CNC machining or laser cutting:</strong></p>
+          <ul class="checklist">
+            <li>Printing is slow for flat or simple geometries</li>
+            <li>Setup time may be lower, but run time is much higher</li>
+            <li>Single-part production often masks inefficiency</li>
+          </ul>
+          <p>A laser cutter can produce precise flat components in minutes. A CNC mill can remove material quickly and repeatably. A 3D printer excels when geometry cannot be made subtractively—but struggles when it can.</p>
+          <div class="alert alert-info mt-3">
+            <strong>Using a printer for parts that should be cut or milled is not innovation; it is tool mismatch.</strong>
+          </div>
+        </div>
+
+        <!-- Section 4 -->
+        <div class="mb-5">
+          <h3>Material Constraints Are Real</h3>
+          <p>Despite a growing list of filaments, material choice remains limited.</p>
+          <ul class="checklist">
+            <li>Mechanical properties vary wildly by brand and batch</li>
+            <li>Heat resistance is often overstated</li>
+            <li>Chemical resistance is inconsistent</li>
+          </ul>
+          <p>Printed plastics are rarely equivalent to their bulk material counterparts. Fiber-filled filaments improve stiffness but reduce impact resistance and layer adhesion. Engineering plastics introduce enclosure, moisture, and temperature constraints that many setups cannot reliably meet.</p>
+          <p><strong>This becomes critical when parts must survive heat, UV exposure, solvents, or long-term stress.</strong></p>
+        </div>
+
+        <!-- Section 5 -->
+        <div class="mb-5">
+          <h3>Why This Matters at the System Level</h3>
+          <p>When 3D printing is treated as a universal solution, it becomes a bottleneck. Projects stall because the wrong tool is being forced to do the job.</p>
+          <p><strong>The correct response is not better printers—it is tool diversity.</strong></p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Tool Diversity Section
+=========================================== -->
+<section class="section" style="background: #f9f9f9;">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <div class="title text-center">
+          <h2>Why Multiple Fabrication Tools Change Everything</h2>
+          <div class="border"></div>
+        </div>
+      </div>
+    </div>
+    <div class="row mt-4">
+      <div class="col-lg-10 mx-auto">
+        <p>In a space with only a 3D printer, printing becomes the default. In a space with multiple fabrication tools, it becomes one option among several.</p>
+        
+        <p><strong>A shared shop that includes:</strong></p>
+        <ul class="checklist">
+          <li>Laser cutting for flat, precise parts</li>
+          <li>CNC routing or milling for strength and accuracy</li>
+          <li>Traditional tools for finishing and assembly</li>
+          <li>3D printing for complex geometry and iteration</li>
+        </ul>
+        
+        <p class="mt-4">…allows each tool to be used where it excels. Design decisions improve because constraints are visible early, not discovered after hours of failed prints.</p>
+        
+        <div class="alert alert-success mt-4">
+          <strong>This is not about having more equipment for its own sake.</strong> It is about reducing friction by matching the problem to the correct process.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Next Steps Section
+=========================================== -->
+<section class="section">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="title text-center">
+          <h2>Access the Right Tool for Every Job</h2>
+          <div class="border"></div>
+        </div>
+      </div>
+    </div>
+    <div class="row mt-4">
+      <div class="col-md-6 mb-4">
+        <h3>Explore Our Full Fabrication Lab</h3>
+        <p>Kalamazoo Makerspace provides access to multiple fabrication tools so you can choose the best method for each part:</p>
+        <ul class="checklist">
+          <li><a href="3d-printing.html">3D printing lab</a> for complex geometry and rapid iteration</li>
+          <li><a href="how-to-use-a-laser-cutter.html">Laser cutting</a> for precise flat parts and fast production</li>
+          <li>CNC routing and milling for strength and accuracy</li>
+          <li>Wood and metal shops for traditional fabrication</li>
+        </ul>
+        <a href="pricing.html" class="btn btn-main mt-3">View Membership Options</a>
+      </div>
+      <div class="col-md-6 mb-4">
+        <h3>Learn More About 3D Printing</h3>
+        <p>Understanding when and how to use 3D printing effectively:</p>
+        <ul class="checklist">
+          <li><a href="how-to-3d-print-failures-we-see-every-week.html">Common 3D printing failures</a> and how to prevent them</li>
+          <li><a href="how-to-why-most-3d-printers-sit-at-home-gathering-dust.html">Why home printers sit unused</a> and how makerspaces solve this</li>
+          <li>Material selection and design for additive manufacturing</li>
+          <li>When to combine 3D printing with other fabrication methods</li>
+        </ul>
+        <a href="3d-printing.html" class="btn btn-main mt-3">Visit Our 3D Printing Lab</a>
+      </div>
+    </div>
+    <div class="row mt-4">
+      <div class="col-lg-12 text-center">
+        <p>Want to see how tool diversity improves your projects? Schedule a tour and explore our full fabrication lab.</p>
+        <a href="tour-form-redirect.html" class="btn btn-transparent mt-20">Schedule a Tour</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer id="footer" class="bg-one">
+  <!-- Footer will be dynamically loaded by footer.js -->
+</footer> <!-- end footer -->
+
+
+<!-- end Footer Area
+========================================== -->
+<!-- 
+    Essential Scripts
+    =====================================-->
+<!-- Main jQuery -->
+<script src="plugins/jquery/jquery.min.js"></script>
+
+<!-- Bootstrap4 -->
+<script src="plugins/bootstrap/bootstrap.min.js"></script>
+<!-- Parallax -->
+<script src="plugins/parallax/jquery.parallax-1.1.3.js"></script>
+<!-- lightbox -->
+<script src="plugins/lightbox2/js/lightbox.min.js"></script>
+<!-- Owl Carousel -->
+<script src="plugins/slick/slick.min.js"></script>
+<!-- filter -->
+<script src="plugins/filterizr/jquery.filterizr.min.js"></script>
+<!-- Smooth Scroll js -->
+<script src="plugins/smooth-scroll/smooth-scroll.min.js"></script>
+<!-- Google Map -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCcABaamniA6OL5YvYSpB3pFMNrXwXnLwU"></script>
+<script src="plugins/google-map/gmap.js"></script>
+
+<!-- Dynamic Navigation -->
+<script src="dynamic/js/navbar.js"></script>
+
+<!-- Dynamic Footer -->
+<script src="dynamic/js/footer.js"></script>
+<!-- Dynamic Hours -->
+<script src="dynamic/js/hours.js"></script>
+
+<!-- Custom js -->
+<script src="js/script.js"></script>
+
+</body>
+
+</html>
