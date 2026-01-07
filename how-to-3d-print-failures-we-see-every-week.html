@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+
+<!--
+ // FACEBOOK: https://www.facebook.com/KzooMakers/
+ // GITHUB: https://github.com/kzoomakers/website
+-->
+
+<html lang="en">
+<head>
+
+  <!-- Basic Page Needs
+  ================================================== -->
+  <meta charset="utf-8">
+  <title>8 Common 3D Printing Failures We See Every Week | Kalamazoo Makerspace</title>
+
+  <!-- Mobile Specific Metas
+  ================================================== -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="Learn about the most common 3D printing mistakes we see at Kalamazoo Makerspace. From first-layer failures to material selection, understand what causes prints to fail and how to prevent them.">
+  <meta name="keywords" content="3D printing failures, 3D printing mistakes, first layer problems, 3D print troubleshooting, FDM printing errors, 3D printing tips, makerspace 3D printing, kzoomakers">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="author" content="Kzoo Makers">
+  <meta name="generator" content="Kzoo Makers Community Website">
+  <meta name="robots" content="index, follow">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="8 Common 3D Printing Failures We See Every Week | Kalamazoo Makerspace">
+  <meta property="og:description" content="Understand the most persistent 3D printing mistakes and how to avoid them. From bed leveling to material selection, learn what causes failures in a shared makerspace.">
+  <meta property="og:url" content="https://kzoomakers.org/how-to-3d-print-failures-we-see-every-week.html">
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="8 Common 3D Printing Failures We See Every Week">
+  <meta name="twitter:description" content="Learn from common 3D printing mistakes: first-layer failures, material selection, orientation, tolerances, and more.">
+
+  <!-- Favicon -->
+  <link rel="shortcut icon" type="image/x-icon" href="images/favicon.png" />
+  <link rel="canonical" href="https://kzoomakers.org/how-to-3d-print-failures-we-see-every-week.html">
+
+  <!-- CSS
+  ================================================== -->
+  <!-- Themefisher Icon font -->
+  <link rel="stylesheet" href="plugins/themefisher-font/style.css">
+  <!-- bootstrap.min css -->
+  <link rel="stylesheet" href="plugins/bootstrap/bootstrap.min.css">
+  <!-- Lightbox.min css -->
+  <link rel="stylesheet" href="plugins/lightbox2/css/lightbox.min.css">
+  <!-- animation css -->
+  <link rel="stylesheet" href="plugins/animate/animate.css">
+  <!-- Slick Carousel -->
+  <link rel="stylesheet" href="plugins/slick/slick.css">
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- Structured Data for SEO: Article -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "8 Common 3D Printing Failures We See Every Week",
+    "description": "A practical guide to the most persistent 3D printing mistakes in a makerspace environment, from first-layer failures to material selection and design issues.",
+    "author": {
+      "@type": "Organization",
+      "name": "Kalamazoo Makerspace"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Kalamazoo Makerspace"
+    },
+    "datePublished": "2026-01-07",
+    "articleSection": "3D Printing"
+  }
+  </script>
+
+</head>
+<body id="body">
+
+  <!--
+  Start Preloader
+  ==================================== -->
+  <div id="preloader">
+    <div class='preloader'>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </div>
+  <!--
+  End Preloader
+  ==================================== -->
+
+<!--
+Fixed Navigation
+==================================== -->
+<header class="navigation fixed-top">
+  <!-- Navigation will be dynamically loaded by navbar.js -->
+</header>
+<!--
+End Fixed Navigation
+==================================== -->
+
+<section class="single-page-header">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <h1>3D Printing Failures We See Every Week</h1>
+        <ol class="breadcrumb header-bradcrumb justify-content-center">
+          <li class="breadcrumb-item"><a href="index.html" class="text-white">Home</a></li>
+          <li class="breadcrumb-item"><a href="how-to.html" class="text-white">How-To Guides</a></li>
+          <li class="breadcrumb-item active" aria-current="page">3D Printing Failures</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Start Main Content Section
+=========================================== -->
+<section class="about-2 section" id="printing-failures">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <div class="title text-center">
+          <h2>Common 3D Printing Mistakes and How to Avoid Them</h2>
+          <p><strong>These problems are not signs of inexperience—they are normal.</strong></p>
+          <p>In a makerspace, we see the same 3D printing failures week after week. Understanding these basics improves outcomes for everyone and reduces wear, downtime, and frustration.</p>
+          <div class="border"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mt-5">
+      <div class="col-lg-10 mx-auto">
+        
+        <!-- Failure 1 -->
+        <div class="mb-5">
+          <h3>1. Treating the Printer Like an Appliance</h3>
+          <p>The most persistent mistake is assuming the printer will compensate for poor setup or design decisions.</p>
+          <p><strong>Beginners often expect:</strong></p>
+          <ul>
+            <li>automatic leveling to fix everything</li>
+            <li>slicer defaults to be "good enough"</li>
+            <li>the printer to adapt to bad geometry</li>
+          </ul>
+          <p>In reality, 3D printers are unforgiving. Small deviations in leveling, temperature, or material quality produce visible failures. The machine will not warn you before wasting six hours of print time.</p>
+          <div class="alert alert-info mt-3">
+            <strong>Correction:</strong> Understand that printing is a process, not a button. Setup and verification are part of the job.
+          </div>
+        </div>
+
+        <!-- Failure 2 -->
+        <div class="mb-5">
+          <h3>2. Ignoring First-Layer Quality</h3>
+          <p>If the first layer is wrong, the print is already failed.</p>
+          <p><strong>Common symptoms:</strong></p>
+          <ul>
+            <li>corners lifting</li>
+            <li>lines not sticking</li>
+            <li>nozzle dragging through plastic</li>
+          </ul>
+          <p>Beginners often respond by increasing print speed or restarting repeatedly, instead of diagnosing adhesion.</p>
+          <p><strong>What's usually wrong:</strong></p>
+          <ul>
+            <li>bed not level relative to the nozzle</li>
+            <li>incorrect Z-offset</li>
+            <li>dirty or inappropriate build surface</li>
+            <li>wrong bed temperature for the material</li>
+          </ul>
+          <div class="alert alert-info mt-3">
+            <strong>Correction:</strong> Slow the first layer down. Verify squish visually. If the first layer isn't clean, stop the print.
+          </div>
+        </div>
+
+        <!-- Failure 3 -->
+        <div class="mb-5">
+          <h3>3. Using the Wrong Material for the Job</h3>
+          <p>PLA is not a universal solution, but beginners treat it as one.</p>
+          <p><strong>We regularly see:</strong></p>
+          <ul>
+            <li>PLA parts used near heat sources</li>
+            <li>structural parts printed in brittle materials</li>
+            <li>outdoor parts printed without UV resistance</li>
+          </ul>
+          <p>This leads to warped parts, cracks, and rapid failure.</p>
+          <div class="alert alert-info mt-3">
+            <strong>Correction:</strong> Choose materials based on environment and load, not convenience. Ask before printing if the part matters.
+          </div>
+        </div>
+
+        <!-- Failure 4 -->
+        <div class="mb-5">
+          <h3>4. Overtrusting Slicer Defaults</h3>
+          <p>Slicers are optimized for speed of onboarding, not correctness.</p>
+          <p><strong>Defaults often assume:</strong></p>
+          <ul>
+            <li>simple geometry</li>
+            <li>cosmetic parts</li>
+            <li>ideal cooling</li>
+            <li>no tolerance requirements</li>
+          </ul>
+          <p>Beginners rely on these defaults even when printing mechanical components.</p>
+          <p><strong>Common results:</strong></p>
+          <ul>
+            <li>weak layer bonding</li>
+            <li>unnecessary supports</li>
+            <li>poor surface finish on functional faces</li>
+          </ul>
+          <div class="alert alert-info mt-3">
+            <strong>Correction:</strong> Learn what infill, wall count, orientation, and layer height actually do. Defaults are a starting point, not a solution.
+          </div>
+        </div>
+
+        <!-- Failure 5 -->
+        <div class="mb-5">
+          <h3>5. Designing Parts That Shouldn't Be 3D Printed</h3>
+          <p>Not every object belongs on a printer.</p>
+          <p><strong>We frequently see:</strong></p>
+          <ul>
+            <li>flat panels better suited to laser cutting</li>
+            <li>load-bearing parts that should be machined</li>
+            <li>assemblies printed as one piece for convenience</li>
+          </ul>
+          <p>3D printing excels at complex geometry, not strength, speed, or surface finish.</p>
+          <div class="alert alert-info mt-3">
+            <strong>Correction:</strong> Start by asking whether 3D printing is the right tool. In a makerspace, it often isn't the only option.
+          </div>
+        </div>
+
+        <!-- Failure 6 -->
+        <div class="mb-5">
+          <h3>6. Ignoring Orientation and Load Direction</h3>
+          <p>Print orientation determines strength. Beginners rarely account for this.</p>
+          <p>Layer lines are failure planes. Printing a bracket vertically when it will be loaded horizontally is a predictable mistake.</p>
+          <div class="alert alert-info mt-3">
+            <strong>Correction:</strong> Orient parts so forces act across layers, not between them. Strength is directional in printed parts.
+          </div>
+        </div>
+
+        <!-- Failure 7 -->
+        <div class="mb-5">
+          <h3>7. Printing Without Tolerances</h3>
+          <p>Beginners expect parts to fit together exactly as modeled.</p>
+          <p><strong>They do not.</strong></p>
+          <p>Shrinkage, extrusion width, and layer height all affect final dimensions. Press-fit parts designed at nominal dimensions usually fail.</p>
+          <div class="alert alert-info mt-3">
+            <strong>Correction:</strong> Design with clearance. Test small sections before committing to full prints.
+          </div>
+        </div>
+
+        <!-- Failure 8 -->
+        <div class="mb-5">
+          <h3>8. Walking Away From Long Prints Unchecked</h3>
+          <p>Starting a long print and leaving immediately is common—and risky.</p>
+          <p><strong>Failures often occur in the first 10–20 minutes:</strong></p>
+          <ul>
+            <li>bed adhesion issues</li>
+            <li>under-extrusion</li>
+            <li>cooling problems</li>
+          </ul>
+          <p>By the time someone returns, filament and time are already wasted.</p>
+          <div class="alert alert-info mt-3">
+            <strong>Correction:</strong> Stay for the first layers. Confirm stability before leaving.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Why We Emphasize These Mistakes Section
+=========================================== -->
+<section class="section" style="background: #f9f9f9;">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <div class="title text-center">
+          <h2>Why We Emphasize These Mistakes</h2>
+          <div class="border"></div>
+        </div>
+      </div>
+    </div>
+    <div class="row mt-4">
+      <div class="col-lg-10 mx-auto">
+        <p>These problems are not signs of inexperience. They are normal. The issue is that most online content minimizes them or frames failure as user error rather than a learning signal.</p>
+        <p>In a makerspace, shared equipment means mistakes affect more than one person. Understanding these basics improves outcomes for everyone and reduces wear, downtime, and frustration.</p>
+        <p class="mt-4"><strong>3D printing rewards patience, observation, and iteration. Treat it accordingly.</strong></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Next Steps Section
+=========================================== -->
+<section class="section">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="title text-center">
+          <h2>Ready to Learn 3D Printing the Right Way?</h2>
+          <div class="border"></div>
+        </div>
+      </div>
+    </div>
+    <div class="row mt-4">
+      <div class="col-md-6 mb-4">
+        <h3>Visit Our 3D Printing Lab</h3>
+        <p>Kalamazoo Makerspace offers hands-on training, multiple FDM printers, and a community of experienced makers who can help you avoid these common mistakes.</p>
+        <ul class="checklist">
+          <li>Learn proper bed leveling and first-layer techniques</li>
+          <li>Get guidance on material selection for your project</li>
+          <li>Understand slicer settings beyond the defaults</li>
+          <li>Design parts that work with 3D printing's strengths</li>
+        </ul>
+        <a href="3d-printing.html" class="btn btn-main mt-3">Explore Our 3D Printing Lab</a>
+      </div>
+      <div class="col-md-6 mb-4">
+        <h3>Combine with Other Tools</h3>
+        <p>Many of these failures can be avoided by choosing the right fabrication method. Our makerspace offers:</p>
+        <ul class="checklist">
+          <li><a href="how-to-use-a-laser-cutter.html">Laser cutting</a> for flat panels and precise 2D parts</li>
+          <li>CNC routing for stronger wooden components</li>
+          <li>Metal shop for load-bearing brackets and fixtures</li>
+          <li>Electronics lab for integrating your printed parts</li>
+        </ul>
+        <a href="pricing.html" class="btn btn-main mt-3">View Membership Options</a>
+      </div>
+    </div>
+    <div class="row mt-4">
+      <div class="col-lg-12 text-center">
+        <p>Want to see the space in person? Schedule a tour and talk to members who print regularly.</p>
+        <a href="tour-form-redirect.html" class="btn btn-transparent mt-20">Schedule a Tour</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer id="footer" class="bg-one">
+  <!-- Footer will be dynamically loaded by footer.js -->
+</footer> <!-- end footer -->
+
+
+<!-- end Footer Area
+========================================== -->
+<!-- 
+    Essential Scripts
+    =====================================-->
+<!-- Main jQuery -->
+<script src="plugins/jquery/jquery.min.js"></script>
+
+<!-- Bootstrap4 -->
+<script src="plugins/bootstrap/bootstrap.min.js"></script>
+<!-- Parallax -->
+<script src="plugins/parallax/jquery.parallax-1.1.3.js"></script>
+<!-- lightbox -->
+<script src="plugins/lightbox2/js/lightbox.min.js"></script>
+<!-- Owl Carousel -->
+<script src="plugins/slick/slick.min.js"></script>
+<!-- filter -->
+<script src="plugins/filterizr/jquery.filterizr.min.js"></script>
+<!-- Smooth Scroll js -->
+<script src="plugins/smooth-scroll/smooth-scroll.min.js"></script>
+<!-- Google Map -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCcABaamniA6OL5YvYSpB3pFMNrXwXnLwU"></script>
+<script src="plugins/google-map/gmap.js"></script>
+
+<!-- Dynamic Navigation -->
+<script src="dynamic/js/navbar.js"></script>
+
+<!-- Dynamic Footer -->
+<script src="dynamic/js/footer.js"></script>
+<!-- Dynamic Hours -->
+<script src="dynamic/js/hours.js"></script>
+
+<!-- Custom js -->
+<script src="js/script.js"></script>
+
+</body>
+
+</html>
