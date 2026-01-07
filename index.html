@@ -116,6 +116,53 @@
       z-index: 2;
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
     }
+    
+    /* Typing animation styles */
+    .typing-container {
+      margin-top: 30px;
+    }
+    .first-line {
+      margin-bottom: 15px;
+    }
+    .static-text {
+      color: white;
+      font: 700 normal 1.8em 'tahoma';
+      text-shadow: 3px 2px #222324, 2px 3px #222324, 2px 4px #222324;
+      display: inline-block;
+      margin-right: 10px;
+    }
+    .word {
+      display: inline-block;
+      color: #00ff00;
+      font: 400 normal 1.8em 'Courier New', monospace;
+      background-color: rgba(0, 100, 0, 0.3);
+      padding: 8px 15px;
+      border: 2px solid rgba(0, 150, 0, 0.5);
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+      min-width: 200px;
+      text-align: left;
+    }
+    .second-line {
+      color: white;
+      font: 700 normal 1.5em 'tahoma';
+      text-shadow: 3px 2px #222324, 2px 3px #222324, 2px 4px #222324;
+      margin-top: 15px;
+    }
+    
+    @media (max-width: 768px) {
+      .static-text {
+        font-size: 1.2em;
+      }
+      .word {
+        font-size: 1.2em;
+        min-width: 150px;
+        padding: 6px 12px;
+      }
+      .second-line {
+        font-size: 1em;
+      }
+    }
   </style>
   
 
@@ -158,6 +205,15 @@ End Fixed Navigation
 					<p data-duration-in=".3" data-animation-in="fadeInUp" data-delay-in=".5"></p>
 					<!-- <a data-duration-in=".3" data-animation-in="fadeInUp" data-delay-in=".8" class="btn btn-main"
 						href="service.html">Explore Us</a> -->
+					
+					<!-- Typing Animation -->
+					<div class="typing-container" data-duration-in=".3" data-animation-in="fadeInUp" data-delay-in=".8">
+						<div class="first-line">
+							<span class="static-text">We create with</span>
+							<span class="word"></span>
+						</div>
+						<div class="second-line">What will you create with?</div>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -652,6 +708,66 @@ Start Counter Section
     =====================================-->
 <!-- Main jQuery -->
 <script src="plugins/jquery/jquery.min.js"></script>
+
+<!-- Typing Animation Script -->
+<script>
+var words = [
+    '3D Printing',
+    'Laser Cutting',
+    'Woodworking',
+    'Metalworking',
+    'Welding',
+    'CNC Machining',
+    'Electronics',
+    'Fiber Arts'
+],
+part,
+i = 0,
+offset = 0,
+len = words.length,
+forwards = true,
+skip_count = 0,
+skip_delay = 15,
+speed = 70;
+
+var wordflick = function () {
+    setInterval(function () {
+        if (forwards) {
+            if (offset >= words[i].length) {
+                ++skip_count;
+                if (skip_count == skip_delay) {
+                    forwards = false;
+                    skip_count = 0;
+                }
+            }
+        }
+        else {
+            if (offset == 0) {
+                forwards = true;
+                i++;
+                offset = 0;
+                if (i >= len) {
+                    i = 0;
+                }
+            }
+        }
+        part = words[i].substr(0, offset);
+        if (skip_count == 0) {
+            if (forwards) {
+                offset++;
+            }
+            else {
+                offset--;
+            }
+        }
+        $('.word').text(part);
+    }, speed);
+};
+
+$(document).ready(function () {
+    wordflick();
+});
+</script>
 
 <!-- Bootstrap4 -->
 <script src="plugins/bootstrap/bootstrap.min.js"></script>
