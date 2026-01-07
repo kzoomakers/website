@@ -50,16 +50,20 @@
           "href": "pricing.html"
         },
         {
-          "label": "Why Kzoo Makers?",
-          "href": "why-kzoo-makers.html"
-        },
-        {
           "label": "The Team",
           "href": "team.html"
         },
         {
           "label": "History",
           "href": "history.html"
+        },
+        {
+          "label": "How To",
+          "href": "how-to.html"
+        },
+        {
+          "label": "Why join us?",
+          "href": "why-kzoo-makers.html"
         }
       ]
     },
@@ -124,22 +128,18 @@
       ]
     },
     {
-      "id": "resources",
-      "label": "Resources",
+      "id": "otherspaces",
+      "label": "Other Makerspaces",
       "type": "dropdown",
       "icon": "tf-ion-chevron-down",
       "items": [
         {
-          "label": "Local Makerspaces",
+          "label": "Kalamazoo Makerspaces",
           "href": "comparison.html"
         },
         {
-          "label": "Other MI Makerspaces",
+          "label": "Michigan Makerspaces",
           "href": "other-makerspaces.html"
-        },
-        {
-          "label": "How To",
-          "href": "how-to.html"
         }
       ]
     }
