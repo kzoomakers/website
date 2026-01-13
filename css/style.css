@@ -3000,6 +3000,11 @@ body.meetups-page {
   background: linear-gradient(315deg, #4dff03, #00d0ff);
 }
 
+.meetups-page .meetup-card:nth-child(4)::before,
+.meetups-page .meetup-card:nth-child(4)::after {
+  background: linear-gradient(315deg, #9333ea, #ec4899);
+}
+
 /* Floating blur blobs over/behind the glass */
 .meetups-page .meetup-card-glow {
   position: absolute;
