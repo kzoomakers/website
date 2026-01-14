@@ -165,7 +165,8 @@
       width: 105px;
       height: 105px;
       z-index: 10;
-      pointer-events: none;
+      pointer-events: auto;
+      cursor: pointer;
       transform: translateX(-100px);
       transition: none;
     }
@@ -1034,6 +1035,69 @@ $(document).ready(function() {
     // Listen for window resize to snap ball to new position
     $(window).on('resize', function() {
         snapBallToPosition();
+    });
+    
+    // Bounce animation variables
+    var isBouncing = false;
+    var bounceTimeout = null;
+    
+    // Click handler for bounce animation
+    rollingBall.on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Don't start bouncing if already bouncing or if roll animation hasn't completed
+        if (isBouncing || !hasAnimated || animationInProgress) return;
+        
+        isBouncing = true;
+        var baseY = parseFloat(rollingBall.css('top'));
+        var currentRotation = 0;
+        var bounceCount = 0;
+        var maxBounces = 8 + Math.floor(Math.random() * 5); // 8-12 bounces
+        var bounceHeight = 40 + Math.random() * 30; // Initial bounce height 40-70px
+        var dampening = 0.7 + Math.random() * 0.15; // How much bounce reduces each time
+        
+        function doBounce() {
+            if (bounceCount >= maxBounces) {
+                // Animation complete, snap back to base position
+                rollingBall.css({
+                    'top': baseY + 'px',
+                    'transform': 'rotate(' + currentRotation + 'deg)'
+                });
+                isBouncing = false;
+                return;
+            }
+            
+            // Add randomness to each bounce
+            var thisHeight = bounceHeight * Math.pow(dampening, bounceCount);
+            thisHeight += (Math.random() - 0.5) * 10; // Add ±5px randomness
+            var duration = 150 + Math.random() * 50; // 150-200ms per half-bounce
+            
+            // Random rotation per bounce
+            var rotationChange = (Math.random() - 0.5) * 30; // ±15 degrees
+            
+            // Bounce up
+            $({progress: 0}).animate({progress: 1}, {
+                duration: duration,
+                easing: 'easeOutQuad',
+                step: function(progress) {
+                    var y = baseY - (thisHeight * Math.sin(progress * Math.PI));
+                    var rot = currentRotation + (rotationChange * progress);
+                    rollingBall.css({
+                        'top': y + 'px',
+                        'transform': 'rotate(' + rot + 'deg)'
+                    });
+                },
+                complete: function() {
+                    currentRotation += rotationChange;
+                    bounceCount++;
+                    // Small delay between bounces for more natural feel
+                    bounceTimeout = setTimeout(doBounce, 20 + Math.random() * 30);
+                }
+            });
+        }
+        
+        doBounce();
     });
     
     // Also check on page load in case section is already visible
