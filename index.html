@@ -154,6 +154,35 @@
       }
     }
     
+    /* Rolling ball animation styles */
+    .what-is-makerspace {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .rolling-ball {
+      position: absolute;
+      width: 105px;
+      height: 105px;
+      z-index: 10;
+      pointer-events: none;
+      transform: translateX(-100px);
+      transition: none;
+    }
+    
+    .rolling-ball img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    
+    @media (max-width: 768px) {
+      .rolling-ball {
+        width: 50px;
+        height: 50px;
+      }
+    }
+    
     /* Tighten spacing between "How our makerspace works" title and content */
     .about-2 .title {
       margin-bottom: 20px;
@@ -350,11 +379,15 @@ Start About Section
 Start What is a Makerspace Section
 ==================================== -->
 <section class="what-is-makerspace section">
+	<!-- Rolling ball element -->
+	<div class="rolling-ball" id="rolling-ball">
+		<img src="images/clipart/qmarkball.png" alt="Rolling question mark ball">
+	</div>
 	<div class="container">
 		<div class="row justify-content-center">
 			<!-- section title -->
 			<div class="col-md-6 mb-4 mb-md-0">
-				<img loading="lazy" src="images/clipart/questionmark2.0.webp" class="img-fluid" alt="">
+				<img loading="lazy" src="images/clipart/questionmark.webp" class="img-fluid questionmark-target" id="questionmark-target" alt="">
 			</div>
 			<div class="col-lg-8">
 				<div class="title text-center">
@@ -879,6 +912,134 @@ $(document).ready(function () {
 
 <!-- Custom js -->
 <script src="js/script.js"></script>
+
+<!-- Rolling Ball Animation Script -->
+<script>
+$(document).ready(function() {
+    var rollingBall = $('#rolling-ball');
+    var targetImage = $('#questionmark-target');
+    var section = $('.what-is-makerspace');
+    var hasAnimated = false;
+    var animationInProgress = false;
+
+    // Target coordinates on the original 1920x1080 image
+    var targetCoordX = 1673;
+    var targetCoordY = 963;
+    var originalImageWidth = 1920;
+    var originalImageHeight = 1080;
+    
+    // Function to calculate and return the target position
+    function getTargetPosition() {
+        var sectionOffset = section.offset();
+        var targetOffset = targetImage.offset();
+        var currentImageWidth = targetImage.width();
+        var currentImageHeight = targetImage.height();
+        
+        // Calculate scale factor based on current image size vs original
+        var scaleX = currentImageWidth / originalImageWidth;
+        var scaleY = currentImageHeight / originalImageHeight;
+        
+        // Calculate the scaled target position within the image
+        var scaledTargetX = targetCoordX * scaleX;
+        var scaledTargetY = targetCoordY * scaleY;
+        
+        // Calculate end position relative to section
+        var endX = targetOffset.left + scaledTargetX - (rollingBall.width() / 2) - sectionOffset.left;
+        var endY = targetOffset.top + scaledTargetY - (rollingBall.height() / 2) - sectionOffset.top;
+        
+        return { x: endX, y: endY };
+    }
+    
+    // Function to snap ball to correct position on resize
+    function snapBallToPosition() {
+        if (hasAnimated && !animationInProgress) {
+            var pos = getTargetPosition();
+            rollingBall.css({
+                'left': pos.x + 'px',
+                'top': pos.y + 'px'
+            });
+        }
+    }
+    
+    function animateRollingBall() {
+        if (hasAnimated || animationInProgress) return;
+        
+        var sectionOffset = section.offset();
+        var sectionHeight = section.outerHeight();
+        var scrollTop = $(window).scrollTop();
+        var windowHeight = $(window).height();
+        
+        // Check if section is in view (at least 30% visible)
+        var sectionTop = sectionOffset.top;
+        var sectionBottom = sectionTop + sectionHeight;
+        var viewportBottom = scrollTop + windowHeight;
+        
+        if (viewportBottom > sectionTop + (sectionHeight * 0.3) && scrollTop < sectionBottom) {
+            animationInProgress = true;
+            
+            var pos = getTargetPosition();
+            var endX = pos.x;
+            var endY = pos.y;
+            
+            // Start position (off-screen left, same Y as end)
+            var startX = -100;
+            var startY = endY;
+            
+            // Calculate distance for rotation
+            var distance = endX - startX;
+            var ballCircumference = Math.PI * rollingBall.width();
+            var rotations = distance / ballCircumference;
+            var totalRotation = rotations * 360;
+            
+            // Set initial position
+            rollingBall.css({
+                'left': startX + 'px',
+                'top': startY + 'px',
+                'transform': 'translateX(0) rotate(0deg)',
+                'opacity': '1'
+            });
+            
+            // Animate the ball rolling
+            $({progress: 0}).animate({progress: 1}, {
+                duration: 2000,
+                easing: 'easeOutQuad',
+                step: function(progress) {
+                    var currentX = startX + (distance * progress);
+                    var currentRotation = totalRotation * progress;
+                    rollingBall.css({
+                        'left': currentX + 'px',
+                        'transform': 'rotate(' + currentRotation + 'deg)'
+                    });
+                },
+                complete: function() {
+                    hasAnimated = true;
+                    animationInProgress = false;
+                }
+            });
+        }
+    }
+    
+    // Add easing function if not available
+    if (!$.easing.easeOutQuad) {
+        $.easing.easeOutQuad = function(x, t, b, c, d) {
+            return -c *(t/=d)*(t-2) + b;
+        };
+    }
+    
+    // Listen for scroll events
+    $(window).on('scroll', function() {
+        animateRollingBall();
+    });
+    
+    // Listen for window resize to snap ball to new position
+    $(window).on('resize', function() {
+        snapBallToPosition();
+    });
+    
+    // Also check on page load in case section is already visible
+    setTimeout(animateRollingBall, 500);
+});
+</script>
 
 
 </body>
