@@ -129,7 +129,7 @@
     },
     {
       "id": "otherspaces",
-      "label": "Other Makerspaces",
+      "label": "Other",
       "type": "dropdown",
       "icon": "tf-ion-chevron-down",
       "items": [
@@ -140,6 +140,18 @@
         {
           "label": "Michigan Makerspaces",
           "href": "other-makerspaces.html"
+        }
+      ]
+    },
+    {
+      "id": "internal",
+      "label": "Internal",
+      "type": "dropdown",
+      "icon": "tf-ion-chevron-down",
+      "items": [
+        {
+          "label": "Camera Feeds",
+          "href": "https://cameras.kzoomakers.net/"
         }
       ]
     }
