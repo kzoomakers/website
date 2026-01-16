@@ -142,18 +142,6 @@
           "href": "other-makerspaces.html"
         }
       ]
-    },
-    {
-      "id": "members",
-      "label": "Members",
-      "type": "dropdown",
-      "icon": "tf-ion-chevron-down",
-      "items": [
-        {
-          "label": "Camera Feeds",
-          "href": "https://cameras.kzoomakers.net/"
-        }
-      ]
     }
   ]
 }
