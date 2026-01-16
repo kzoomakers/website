@@ -144,8 +144,8 @@
       ]
     },
     {
-      "id": "internal",
-      "label": "Internal",
+      "id": "members",
+      "label": "Members",
       "type": "dropdown",
       "icon": "tf-ion-chevron-down",
       "items": [
