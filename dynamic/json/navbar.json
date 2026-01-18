@@ -150,12 +150,16 @@
       "icon": "tf-ion-chevron-down",
       "items": [
         {
-          "label": "Cameras",
-          "href": "https://cameras.kzoomakers.net/"
+          "label": "Wiki",
+          "href": "https://wiki.kzoomakers.net/"
         },
         {
           "label": "Cloud Storage",
           "href": "https://files.kzoomakers.net/"
+        },
+        {
+          "label": "Cameras",
+          "href": "https://cameras.kzoomakers.net/"
         }
       ]
     }
