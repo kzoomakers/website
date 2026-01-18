@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+
+<!--
+ // FACEBOOK: https://www.facebook.com/KzooMakers/
+ // GITHUB: https://github.com/kzoomakers/website
+-->
+
+<html lang="en">
+<head>
+
+  <!-- Basic Page Needs
+  ================================================== -->
+  <meta charset="utf-8">
+  <title>Wiki Offline - Kzoo Makers</title>
+
+  <!-- Mobile Specific Metas
+  ================================================== -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="Wiki access - Kzoo Makers. The wiki is only available while connected to the wifi inside the makerspace.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="author" content="Kzoo Makers">
+  <meta name="generator" content="Kzoo Makers Community Website">
+  <meta name="robots" content="noindex, follow">
+
+  <!-- Favicon -->
+  <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.png" />
+
+  <!-- CSS
+  ================================================== -->
+  <!-- Themefisher Icon font -->
+  <link rel="stylesheet" href="/plugins/themefisher-font/style.css">
+  <!-- bootstrap.min css -->
+  <link rel="stylesheet" href="/plugins/bootstrap/bootstrap.min.css">
+  <!-- Lightbox.min css -->
+  <link rel="stylesheet" href="/plugins/lightbox2/css/lightbox.min.css">
+  <!-- animation css -->
+  <link rel="stylesheet" href="/plugins/animate/animate.css">
+  <!-- Slick Carousel -->
+  <link rel="stylesheet" href="/plugins/slick/slick.css">
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <style>
+    .body-wiki-offline {
+       background-color: black;
+       color: white;
+       font-family: sans-serif;
+    }
+
+    .page-wiki-offline {
+        min-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+
+    .metallic-box {
+        background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+        border: 3px solid #4a4a4a;
+        border-radius: 15px;
+        padding: 3rem 4rem;
+        box-shadow: 
+            0 10px 30px rgba(0, 0, 0, 0.5),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+        position: relative;
+        max-width: 800px;
+        width: 100%;
+    }
+
+    .metallic-box::before {
+        content: '';
+        position: absolute;
+        top: -3px;
+        left: -3px;
+        right: -3px;
+        bottom: -3px;
+        background: linear-gradient(45deg, 
+            #666 0%, 
+            #888 25%, 
+            #aaa 50%, 
+            #888 75%, 
+            #666 100%);
+        border-radius: 15px;
+        z-index: -1;
+        opacity: 0.3;
+    }
+
+    .metallic-box::after {
+        content: '';
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        right: 5px;
+        bottom: 5px;
+        background: linear-gradient(135deg, 
+            rgba(255, 255, 255, 0.05) 0%, 
+            rgba(255, 255, 255, 0) 50%);
+        border-radius: 12px;
+        pointer-events: none;
+    }
+
+    .metallic-box h1 {
+        font-family: "Courier New", Courier, monospace;
+        font-size: 1.8rem;
+        color: #e0e0e0;
+        text-align: center;
+        margin: 0;
+        text-shadow: 
+            0 1px 0 rgba(0, 0, 0, 0.8),
+            0 2px 10px rgba(255, 255, 255, 0.1);
+        line-height: 1.6;
+        position: relative;
+        z-index: 1;
+    }
+
+    .rivet {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        background: radial-gradient(circle at 30% 30%, #666, #333);
+        border-radius: 50%;
+        box-shadow: 
+            inset 0 1px 2px rgba(0, 0, 0, 0.5),
+            0 1px 1px rgba(255, 255, 255, 0.1);
+    }
+
+    .rivet.top-left { top: 15px; left: 15px; }
+    .rivet.top-right { top: 15px; right: 15px; }
+    .rivet.bottom-left { bottom: 15px; left: 15px; }
+    .rivet.bottom-right { bottom: 15px; right: 15px; }
+
+    .back-link {
+        margin-top: 2rem;
+        text-align: center;
+    }
+
+    @media (max-width: 768px) {
+        .metallic-box {
+            padding: 2rem 1.5rem;
+        }
+        
+        .metallic-box h1 {
+            font-size: 1.3rem;
+        }
+    }
+  </style>
+
+</head>
+<body id="body" class="body-wiki-offline">
+
+  <!--
+  Start Preloader
+  ==================================== -->
+  <div id="preloader">
+    <div class='preloader'>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </div>
+  <!--
+  End Preloader
+  ==================================== -->
+
+<!--
+Fixed Navigation
+==================================== -->
+<header class="navigation fixed-top">
+  <!-- Navigation will be dynamically loaded by navbar.js -->
+</header>
+<!--
+End Fixed Navigation
+==================================== -->
+
+<section class="page-wiki-offline section text-center">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="metallic-box">
+                    <div class="rivet top-left"></div>
+                    <div class="rivet top-right"></div>
+                    <div class="rivet bottom-left"></div>
+                    <div class="rivet bottom-right"></div>
+                    
+                    <h1>The wiki is only available while connected to the wifi inside the makerspace</h1>
+                </div>
+                
+                <div class="back-link">
+                    <a href="/index.html" class="btn btn-main mt-20">Go to Homepage</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer id="footer" class="bg-one">
+  <!-- Footer will be dynamically loaded by footer.js -->
+</footer> <!-- end footer -->
+
+<!-- 
+    Essential Scripts
+    =====================================-->
+<!-- Main jQuery -->
+<script src="/plugins/jquery/jquery.min.js"></script>
+
+<!-- Bootstrap4 -->
+<script src="/plugins/bootstrap/bootstrap.min.js"></script>
+<!-- Parallax -->
+<script src="/plugins/parallax/jquery.parallax-1.1.3.js"></script>
+<!-- lightbox -->
+<script src="/plugins/lightbox2/js/lightbox.min.js"></script>
+<!-- Owl Carousel -->
+<script src="/plugins/slick/slick.min.js"></script>
+<!-- filter -->
+<script src="/plugins/filterizr/jquery.filterizr.min.js"></script>
+<!-- Smooth Scroll js -->
+<script src="/plugins/smooth-scroll/smooth-scroll.min.js"></script>
+
+<!-- Dynamic Navigation -->
+<script src="/dynamic/js/navbar.js"></script>
+
+<!-- Dynamic Footer -->
+<script src="/dynamic/js/footer.js"></script>
+
+<!-- Dynamic Hours -->
+<script src="dynamic/js/hours.js"></script>
+
+<!-- Custom js -->
+<script src="/js/script.js"></script>
+
+</body>
+
+</html>
