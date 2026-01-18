@@ -152,6 +152,10 @@
         {
           "label": "Cameras",
           "href": "https://cameras.kzoomakers.net/"
+        },
+        {
+          "label": "File Storage",
+          "href": "https://files.kzoomakers.net/"
         }
       ]
     }
