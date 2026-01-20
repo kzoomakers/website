@@ -46,6 +46,20 @@
   <!-- Main Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
 
+  <!-- Custom styles for team page -->
+  <style>
+    /* Hide placeholder "Maybe you" images on mobile devices */
+    @media (max-width: 767px) {
+      .member-photo img[src*="clipart/silo-"] {
+        display: none;
+      }
+      /* Adjust member-photo container when image is hidden */
+      .member-photo:has(img[src*="clipart/silo-"]) {
+        display: none;
+      }
+    }
+  </style>
+
 </head>
 <body id="body">
 
