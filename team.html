@@ -26,6 +26,7 @@
   <meta property="og:description" content="Meet our volunteer board members and community leaders who guide Kalamazoo's nonprofit makerspace.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://kzoomakers.org/team.html">
+  <meta property="og:image" content="https://kzoomakers.org/images/man-pointing-min.png">
 
   <!-- Favicon -->
   <link rel="shortcut icon" type="image/x-icon" href="images/favicon.png" />
@@ -44,6 +45,20 @@
   <link rel="stylesheet" href="plugins/slick/slick.css">
   <!-- Main Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
+
+  <!-- Custom styles for team page -->
+  <style>
+    /* Hide placeholder "Needed" images on mobile devices */
+    @media (max-width: 767px) {
+      .member-photo img[src*="clipart/silo-"] {
+        display: none;
+      }
+      /* Adjust member-photo container when image is hidden */
+      .member-photo:has(img[src*="clipart/silo-"]) {
+        display: none;
+      }
+    }
+  </style>
 
 </head>
 <body id="body">
@@ -203,182 +218,422 @@ Start About Section
 		</div> <!-- End row -->
 	</div> <!-- End container -->
 </section> <!-- End section -->
-<!-- Start Our Team
+<!-- Start Volunteers Section
 		=========================================== -->
-<section class="team" id="team">
+<section class="volunteers" id="volunteers" style="padding: 60px 0;">
 	<div class="container">
 		<div class="row justify-content-center">
 			<!-- section title -->
 			<div class="col-xl-6 col-lg-8">
-				<div class="title text-center ">
-					<h2>The Board</h2>
-					<p>The Board sets the vision, sustainability, and growth of this non-profit. They manage finances, safety policies, insurance and other business related operations required for sustainability, working to ensure the space remains available, innovative, and collaborative. We have a shared goal: to keep our makerspace thriving as a hub for creativity, learning, and hands-on experimentation.</p>
+				<div class="title text-center">
+					<h2>The Doers</h2>
+					<p>Our volunteers are the heartbeat of Kzoo Makers. They dedicate their time, skills, and passion to keep our space running, teach workshops, maintain equipment, clean up and welcome new members and show them the ropes. Without their time, we wouldn't be here.</p>
 					<div class="border"></div>
 				</div>
 			</div>
 			<!-- /section title -->
 		</div>
 		<div class="row">
-			<!-- team member -->
-			<div class="col-lg-4 col-md-6">
+			<!-- volunteer member -->
+			<div class="col-lg-2 col-md-4 col-sm-6 mb-4">
 				<div class="team-member text-center">
-					<div class="member-photo">
-						<!-- member photo -->
-						<img loading="lazy" class="img-fluid" src="images/team/zach.png" alt="Zach">
-						<!-- /member photo -->
-
-						<!-- member social profile -->
-						<!-- <div class="mask">
-							<ul class="clearfix">
-								<li><a href="https://themefisher.com/"><i class="tf-ion-social-facebook"></i></a></li>
-								<li><a href="https://themefisher.com/"><i class="tf-ion-social-twitter"></i></a></li>
-								<li><a href="https://themefisher.com/"><i class="tf-ion-social-google-outline"></i></a></li>
-								<li><a href="https://themefisher.com/"><i class="tf-ion-social-dribbble"></i></a></li>
-							</ul>
-						</div> -->
-						<!-- /member social profile -->
+					<div class="member-photo" style="width: 100%; padding-bottom: 100%; position: relative; overflow: hidden;">
+						<img loading="lazy" class="img-fluid" src="images/client-logo/chrisc2.jpg" alt="Volunteer 1" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; object-position: center;">
 					</div>
-
-					<!-- member name & designation -->
 					<div class="member-content">
-						<h3>Zach Enos</h3>
-						<span>President</span>
-						<p>Zach leads the makerspace with a steady balance of vision and pragmatism. As President, he guides the board and membership toward sustainable growth while ensuring that creativity, learning, and community remain at the heart of every decision. With a deep commitment to open collaboration and hands-on innovation, Zach sets the tone for an inclusive, forward-thinking maker culture.</p>
+						<h5>Chris C</h5>
+						<span style="font-size: 0.9em; background-color: #000; color: #fff; padding: 4px 10px; border-radius: 4px; display: inline-block;"><b>TITLE REDACTED</b></span>
+						<p style="font-size: 0.85em;">Chris avoids titles, but functionally fills the gaps that keep everything running. He consistently steps in when something breaks, stalls before it becomes visible to anyone else. Whether it’s fixing equipment, handling logistics, or addressing operational gaps as they arise, Chris operates with a bias toward action rather than delegation.</p>
 					</div>
-					<!-- /member name & designation -->
-
 				</div>
 			</div>
-			<!-- end team member -->
+			<!-- end volunteer member -->
 
-			<!-- team member -->
-			<div class="col-lg-4 col-md-6">
+			<!-- volunteer member -->
+			<div class="col-lg-2 col-md-4 col-sm-6 mb-4">
 				<div class="team-member text-center">
-					<div class="member-photo">
-						<!-- member photo -->
-						<img loading="lazy" class="img-fluid" src="images/team/ryan.png" alt="Ryan">
-						<!-- /member photo -->
-
-						<!-- member social profile -->
-						<!-- <div class="mask">
-							<ul class="clearfix">
-								<li><a href="https://themefisher.com/"><i class="tf-ion-social-facebook"></i></a></li>
-								<li><a href="https://themefisher.com/"><i class="tf-ion-social-twitter"></i></a></li>
-								<li><a href="https://themefisher.com/"><i class="tf-ion-social-google-outline"></i></a></li>
-								<li><a href="https://themefisher.com/"><i class="tf-ion-social-dribbble"></i></a></li>
-							</ul>
-						</div> -->
-						<!-- /member social profile -->
+					<div class="member-photo" style="width: 100%; padding-bottom: 100%; position: relative; overflow: hidden;">
+						<img loading="lazy" class="img-fluid" src="images/client-logo/jon2k.jpeg" alt="Volunteer 2" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; object-position: center;">
 					</div>
-
-					<!-- member name & designation -->
 					<div class="member-content">
-						<h3>Ryan Rank</h3>
-						<span>Treasurer</span>
-						<p>Ryan is one of the true cornerstones of our organization. As treasurer, he not only oversees billing operations with precision and reliability but also brings a personal touch to nearly every tour and event—chances are, you’ve met him or benefited from his work in some way. His breadth of knowledge spans every corner of our operations, and his readiness to jump in and help turn an idea into something tangible is unmatched. Ryan embodies the spirit of collaboration and creativity that defines our community.</p>
+						<h5>Jon K</h5>
+						<span style="font-size: 0.9em; background-color: #008080; color: #fff; padding: 4px 10px; border-radius: 4px; display: inline-block;"><b>Chief Technology Officer</b></span>
+						<p style="font-size: 0.85em;">Oversees the organization's website, internal software, operational tooling, and back-office systems. Leads RFID access control integration, technology solutions, network security, and management of the local area network. Along with being our digital janitor, he also takes out the trash and mops the floor from time to time.</p>
 					</div>
-					<!-- /member name & designation -->
 				</div>
 			</div>
-			<!-- end team member -->
+			<!-- end volunteer member -->
 
-			<!-- team member -->
-			<div class="col-lg-4 col-md-6">
+			<!-- volunteer member -->
+			<div class="col-lg-2 col-md-4 col-sm-6 mb-4">
 				<div class="team-member text-center">
-					<div class="member-photo">
-						<!-- member photo -->
-						<img loading="lazy" class="img-fluid" src="images/team/jonk.png" alt="Jon">
-						<!-- /member photo -->
-
-						<!-- member social profile -->
-						<!-- <div class="mask">
-							<ul class="clearfix">
-								<li><a href="https://themefisher.com/"><i class="tf-ion-social-facebook"></i></a></li>
-								<li><a href="https://themefisher.com/"><i class="tf-ion-social-twitter"></i></a></li>
-								<li><a href="https://themefisher.com/"><i class="tf-ion-social-google-outline"></i></a></li>
-								<li><a href="https://themefisher.com/"><i class="tf-ion-social-dribbble"></i></a></li>
-							</ul>
-						</div> -->
-						<!-- /member social profile -->
+					<div class="member-photo" style="width: 100%; padding-bottom: 100%; position: relative; overflow: hidden;">
+						<img loading="lazy" class="img-fluid" src="images/client-logo/brian.jpeg" alt="Volunteer 2" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; object-position: center;">
 					</div>
-
-					<!-- member name & designation -->
 					<div class="member-content">
-						<h3>Jon Kelley</h3>
-						<span>Secretary</span>
-						<p>As Board Secretary and principal liaison with LARA, he ensures Kzoo Makers has accurate business notes and compliant with corporate governance — he blends creativity, engineering, and leadership in equal parts. A laser enthusiast and seasoned technologist with 23 years of experience, he manages the makerspace’s network, web services, and technical infrastructure. His precision-crafted laser engravings mark his presence throughout the space.</p>
+						<h5>Brian I</h5>
+						<span style="font-size: 0.9em; background-color: #008080; color: #fff; padding: 4px 10px; border-radius: 4px; display: inline-block;"><b>3D Printshop Leader</b></span>
+						<p style="font-size: 0.85em;">Manages and maintains the makerspace's 3D printers, oversees printer scheduling and readiness, assists members with setup and troubleshooting, and supports responsible use of equipment. Acts as a technical resource for members' 3D printing needs and helps ensure reliable, safe, and accessible operation of the 3D printing area.</p>
 					</div>
-					<!-- /member name & designation -->
-
 				</div>
 			</div>
-			<!-- end team member -->
+			<!-- end volunteer member -->
+
+			<!-- volunteer member -->
+			<div class="col-lg-2 col-md-4 col-sm-6 mb-4">
+				<div class="team-member text-center">
+					<div class="member-photo" style="width: 100%; padding-bottom: 100%; position: relative; overflow: hidden;">
+						<img loading="lazy" class="img-fluid" src="images/client-logo/ryanr2.webp" alt="Volunteer 2" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; object-position: center;">
+					</div>
+					<div class="member-content">
+						<h5>Ryan R</h5>
+						<span style="font-size: 0.9em; background-color: #008080; color: #fff; padding: 4px 10px; border-radius: 4px; display: inline-block;"><b>Director of Too Many Hats</b></span>
+						<p style="font-size: 0.85em;">Ryan does it all—signups, tours, equipment fixes, operations, safety, you name it. Honestly, he's wearing way too many hats and could use some backup. If you want to help lighten his load, we'd all appreciate it.</p>
+					</div>
+				</div>
+			</div>
+			<!-- end volunteer member -->
+
+			<!-- volunteer member -->
+			<div class="col-lg-2 col-md-4 col-sm-6 mb-4">
+				<div class="team-member text-center">
+					<div class="member-photo" style="width: 100%; padding-bottom: 100%; position: relative; overflow: hidden;">
+						<img loading="lazy" class="img-fluid" src="images/client-logo/maredith.webp" alt="Meredith" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; object-position: center;">
+					</div>
+					<div class="member-content">
+						<h5>Meredith K</h5>
+						<span style="font-size: 0.9em; background-color: #008080; color: #fff; padding: 4px 10px; border-radius: 4px; display: inline-block;"><b>Cosplay Meetup Coordinator</b></span>
+						<p style="font-size: 0.85em;">An avid cosplayer and costume designer, Meredith brings creativity and community together. She manages our Cosplay Connections Meetup, helping fellow cosplayers connect, share techniques, and bring their favorite characters to life.</p>
+					</div>
+				</div>
+			</div>
+			<!-- end volunteer member -->
+
+			<!-- volunteer member -->
+			<div class="col-lg-2 col-md-4 col-sm-6 mb-4">
+				<div class="team-member text-center">
+					<div class="member-photo" style="width: 100%; padding-bottom: 100%; position: relative; overflow: hidden;">
+						<img loading="lazy" class="img-fluid" src="images/client-logo/scott2.jpg" alt="Meredith" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; object-position: center;">
+					</div>
+					<div class="member-content">
+						<h5>Scott C</h5>
+						<span style="font-size: 0.9em; background-color: #008080; color: #fff; padding: 4px 10px; border-radius: 4px; display: inline-block;"><b>Building Coordinator</b></span>
+						<p style="font-size: 0.85em;">Scott brings extensive experience in facility build-outs and general construction. He has advised us on significant work across the space, including framing, lighting, electrical. His contributions have been central to upgrading the facility and coordinating the work needed to make it operational.</p>
+					</div>
+				</div>
+			</div>
+			<!-- end volunteer member -->
+
+
 		</div> <!-- End row -->
+
+
 		<div class="row">
-			<!-- team member -->
-			<div class="col-lg-4 col-md-6">
+			<!-- volunteer member -->
+			<div class="col-lg-2 col-md-4 col-sm-6 mb-4">
 				<div class="team-member text-center">
 					<div class="member-photo">
-						<!-- member photo -->
-						<img loading="lazy" class="img-fluid" src="images/team/lyndon.png" alt="Member Name">
-						<!-- /member photo -->
-
-						<!-- member social profile -->
-						<!-- <div class="mask">
-							<ul class="clearfix">
-								<li><a href="https://themefisher.com/"><i class="tf-ion-social-facebook"></i></a></li>
-								<li><a href="https://themefisher.com/"><i class="tf-ion-social-twitter"></i></a></li>
-								<li><a href="https://themefisher.com/"><i class="tf-ion-social-google-outline"></i></a></li>
-								<li><a href="https://themefisher.com/"><i class="tf-ion-social-dribbble"></i></a></li>
-							</ul>
-						</div> -->
-						<!-- /member social profile -->
+						<img loading="lazy" class="img-fluid" src="images/clipart/silo-female2.webp" alt="Volunteer 1" style="max-height: 200px; object-fit: cover;">
 					</div>
-
-					<!-- member name & designation -->
 					<div class="member-content">
-						<h3>Lynden</h3>
-						<span>Resident Board Member</span>
-						<p>Lynden’s bench is often a hub of activity—his deep understanding of systems, from circuit design to Linux kernel nuances, makes him an indispensable mentor to makers of all experience levels. Whether troubleshooting a stubborn wiring issue or helping a new member configure their first Raspberry Pi, Lyndon brings the same patience, precision, and passion that have defined his many years of service to the board.</p>
+						<h5>Needed</h5>
+						<span style="font-size: 0.9em;"><b>Tour Coordinator</b></span>
+						<p style="font-size: 0.85em;">Love showing off cool spaces? Respond to tour requests and welcome visitors to our makerspace. Share your enthusiasm, answer questions, and help potential members discover what we're all about.</p>
 					</div>
-					<!-- /member name & designation -->
-
 				</div>
 			</div>
-			<!-- end team member -->
+			<!-- end volunteer member -->
 
-			<!-- team member -->
-			<div class="col-lg-4 col-md-6">
+			<!-- volunteer member -->
+			<div class="col-lg-2 col-md-4 col-sm-6 mb-4">
+				<div class="team-member text-center">
+					<div class="member-photo" style="width: 100%; padding-bottom: 100%; position: relative; overflow: hidden;">
+						<img loading="lazy" class="img-fluid" src="images/clipart/silo-man2.webp" alt="Volunteer 2" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; object-position: center;">
+					</div>
+					<div class="member-content">
+						<h5>Needed</h5>
+						<span style="font-size: 0.9em;"><b>Grant Writer</b></span>
+						<p style="font-size: 0.85em;">Strong writer with a knack for storytelling? Help us secure funding by researching and writing grant applications. Your words can help us acquire new equipment and expand our programs.</p>
+					</div>
+				</div>
+			</div>
+			<!-- end volunteer member -->
+
+			<!-- volunteer member -->
+			<div class="col-lg-2 col-md-4 col-sm-6 mb-4">
 				<div class="team-member text-center">
 					<div class="member-photo">
-						<!-- member photo -->
-						<img loading="lazy" class="img-fluid" src="images/team/alan.png" alt="Member Name">
-						<!-- /member photo -->
-
-						<!-- member social profile -->
-						<!-- <div class="mask">
-							<ul class="clearfix">
-								<li><a href="https://themefisher.com/"><i class="tf-ion-social-facebook"></i></a></li>
-								<li><a href="https://themefisher.com/"><i class="tf-ion-social-twitter"></i></a></li>
-								<li><a href="https://themefisher.com/"><i class="tf-ion-social-google-outline"></i></a></li>
-								<li><a href="https://themefisher.com/"><i class="tf-ion-social-dribbble"></i></a></li>
-							</ul>
-						</div> -->
-						<!-- /member social profile -->
+						<img loading="lazy" class="img-fluid" src="images/clipart/silo-female3.webp" alt="Volunteer 2" style="max-height: 200px; object-fit: cover;">
 					</div>
-
-					<!-- member name & designation -->
 					<div class="member-content">
-						<h3>Al Hollaway</h3>
-						<span>Resident Board Member</span>
-						<p>Al has been part of Kzoo Makers since the beginning. His journey started the day he discovered MAKE: magazine and thought, “I want to do all these things.” That moment sparked a lasting passion for hands-on creation, open collaboration, and community-driven innovation.
-
-							He was the first President of Kalamazoo Innovation Initiative (KII), the non-profit corporation behind Kzoo Makers and previously was Manager of Technical Resources at the Air Zoo. Al combines technical expertise with a vision for an inclusive maker community.</p>
+						<h5>Needed</h5>
+						<span style="font-size: 0.9em;"><b>Photography / Media Archivist</b></span>
+						<p style="font-size: 0.85em;">Got an eye for photography or video? Capture the amazing projects and moments at our space. Create content for social media, our website, and marketing materials that showcase what makes us special.</p>
 					</div>
-					<!-- /member name & designation -->
 				</div>
 			</div>
-			<!-- end team member -->
+			<!-- end volunteer member -->
+
+			<!-- volunteer member -->
+			<div class="col-lg-2 col-md-4 col-sm-6 mb-4">
+				<div class="team-member text-center">
+					<div class="member-photo">
+						<img loading="lazy" class="img-fluid" src="images/clipart/silo-man3.webp" alt="Volunteer 2" style="max-height: 200px; object-fit: cover;">
+					</div>
+					<div class="member-content">
+						<h5>Needed</h5>
+						<span style="font-size: 0.9em;"><b>Member Retention Coordinator</b></span>
+						<p style="font-size: 0.85em;">Social butterfly who loves bringing people together? Plan fun events, build community recognition programs, and create opportunities for members to connect. Keep our community engaged and growing.</p>
+					</div>
+				</div>
+			</div>
+			<!-- end volunteer member -->
+
+			<!-- volunteer member -->
+			<div class="col-lg-2 col-md-4 col-sm-6 mb-4">
+				<div class="team-member text-center">
+					<div class="member-photo">
+						<img loading="lazy" class="img-fluid" src="images/clipart/silo-man2.webp" alt="Volunteer 2" style="max-height: 200px; object-fit: cover;">
+					</div>
+					<div class="member-content">
+						<h5>Needed</h5>
+						<span style="font-size: 0.9em;"><b>Welding Lead</b></span>
+						<p style="font-size: 0.85em;">Know how to weld? We have all the equipment but need someone to teach it! Lead our welding area, ensure safe practices, and help members learn MIG, TIG, and stick welding techniques.</p>
+					</div>
+				</div>
+			</div>
+			<!-- end volunteer member -->
+
+			<!-- volunteer member -->
+			<div class="col-lg-2 col-md-4 col-sm-6 mb-4">
+				<div class="team-member text-center">
+					<div class="member-photo">
+						<img loading="lazy" class="img-fluid" src="images/clipart/silo-female1.webp" alt="Volunteer 6" style="max-height: 200px; object-fit: cover;">
+					</div>
+					<div class="member-content">
+						<h5>Needed</h5>
+						<span style="font-size: 0.9em;"><b>Ceramics Lead</b></span>
+						<p style="font-size: 0.85em;">Pottery enthusiast? Help us launch our ceramics program! We're planning to acquire a kiln and need someone to lead this new area, teach techniques, and build a community of clay artists.</p>
+					</div>
+				</div>
+			</div>
+			<!-- end volunteer member -->
+		</div> <!-- End row -->
+
+		<div class="row">
+			<!-- volunteer member -->
+			<div class="col-lg-2 col-md-4 col-sm-6 mb-4">
+				<div class="team-member text-center">
+					<div class="member-photo">
+						<img loading="lazy" class="img-fluid" src="images/clipart/silo-man1.webp" alt="Volunteer" style="max-height: 200px; object-fit: cover;">
+					</div>
+					<div class="member-content">
+						<h5>Needed</h5>
+						<span style="font-size: 0.9em;"><b>Woodshop Workshop Lead</b></span>
+						<p style="font-size: 0.85em;">Love the smell of sawdust? Help members safely use our table saws, jointers, and routers. Share your woodworking knowledge, keep tools sharp and maintained, and create a welcoming environment for beginners and experts alike.</p>
+					</div>
+				</div>
+			</div>
+			<!-- end volunteer member -->
+
+			<!-- volunteer member -->
+			<div class="col-lg-2 col-md-4 col-sm-6 mb-4">
+				<div class="team-member text-center">
+					<div class="member-photo">
+						<img loading="lazy" class="img-fluid" src="images/clipart/silo-man2.webp" alt="Volunteer" style="max-height: 200px; object-fit: cover;">
+					</div>
+					<div class="member-content">
+						<h5>Needed</h5>
+						<span style="font-size: 0.9em;"><b>Metal Workshop Lead</b></span>
+						<p style="font-size: 0.85em;">Got metalworking skills? Help members learn to use our mills, lathes, and grinders safely. Maintain equipment, troubleshoot projects, and share your expertise with those looking to work with metal for the first time.</p>
+					</div>
+				</div>
+			</div>
+			<!-- end volunteer member -->
+
+			<!-- volunteer member -->
+			<div class="col-lg-2 col-md-4 col-sm-6 mb-4">
+				<div class="team-member text-center">
+					<div class="member-photo">
+						<img loading="lazy" class="img-fluid" src="images/clipart/silo-female1.webp" alt="Volunteer" style="max-height: 200px; object-fit: cover;">
+					</div>
+					<div class="member-content">
+						<h5>Needed</h5>
+						<span style="font-size: 0.9em;"><b>Laser Workshop Lead</b></span>
+						<p style="font-size: 0.85em;">Know your way around laser cutters? Help members prepare files, choose materials, and create amazing projects. Keep our lasers calibrated and clean, and teach safe operation to new users.</p>
+					</div>
+				</div>
+			</div>
+			<!-- end volunteer member -->
+
+			<!-- volunteer member -->
+			<div class="col-lg-2 col-md-4 col-sm-6 mb-4">
+				<div class="team-member text-center">
+					<div class="member-photo">
+						<img loading="lazy" class="img-fluid" src="images/clipart/silo-man3.webp" alt="Volunteer" style="max-height: 200px; object-fit: cover;">
+					</div>
+					<div class="member-content">
+						<h5>Needed</h5>
+						<span style="font-size: 0.9em;"><b>CNC Workshop Lead</b></span>
+						<p style="font-size: 0.85em;">CNC experience? Help members navigate CAM software, generate toolpaths, and bring their designs to life. Maintain our CNC equipment, manage bits and tools, and ensure everyone operates safely.</p>
+					</div>
+				</div>
+			</div>
+			<!-- end volunteer member -->
+
+			<!-- volunteer member -->
+			<div class="col-lg-2 col-md-4 col-sm-6 mb-4">
+				<div class="team-member text-center">
+					<div class="member-photo">
+						<img loading="lazy" class="img-fluid" src="images/clipart/silo-female2.webp" alt="Volunteer" style="max-height: 200px; object-fit: cover;">
+					</div>
+					<div class="member-content">
+						<h5>Needed</h5>
+						<span style="font-size: 0.9em;"><b>Safety Officer</b></span>
+						<p style="font-size: 0.85em;">Safety-minded? Help us keep everyone protected by developing safety policies, conducting audits, and ensuring proper signage and PPE are available. Coordinate training sessions and help create a culture of safety first.</p>
+					</div>
+				</div>
+			</div>
+			<!-- end volunteer member -->
+
+			<!-- volunteer member -->
+			<div class="col-lg-2 col-md-4 col-sm-6 mb-4">
+				<div class="team-member text-center">
+					<div class="member-photo">
+						<img loading="lazy" class="img-fluid" src="images/clipart/silo-man1.webp" alt="Volunteer" style="max-height: 200px; object-fit: cover;">
+					</div>
+					<div class="member-content">
+						<h5>Needed</h5>
+						<span style="font-size: 0.9em;"><b>Inventory Manager</b></span>
+						<p style="font-size: 0.85em;">Love organization? Keep track of our consumables, tools, and supplies. Coordinate donations, maintain stock levels, and create systems that help everyone find what they need when they need it.</p>
+					</div>
+				</div>
+			</div>
+			<!-- end volunteer member -->
+		</div> <!-- End row -->
+
+		<div class="row">
+			<!-- volunteer member -->
+			<div class="col-lg-2 col-md-4 col-sm-6 mb-4">
+				<div class="team-member text-center">
+					<div class="member-photo">
+						<img loading="lazy" class="img-fluid" src="images/clipart/silo-man2.webp" alt="Volunteer" style="max-height: 200px; object-fit: cover;">
+					</div>
+					<div class="member-content">
+						<h5>Needed</h5>
+						<span style="font-size: 0.9em;"><b>Facilities Maintenance Coordinator</b></span>
+						<p style="font-size: 0.85em;">Handy with building systems? Keep our space running smoothly by handling HVAC, plumbing, and electrical issues. Coordinate repairs and maintenance to ensure our facility stays functional and comfortable for all members.</p>
+					</div>
+				</div>
+			</div>
+			<!-- end volunteer member -->
+
+			<!-- volunteer member -->
+			<div class="col-lg-2 col-md-4 col-sm-6 mb-4">
+				<div class="team-member text-center">
+					<div class="member-photo">
+						<img loading="lazy" class="img-fluid" src="images/clipart/silo-female3.webp" alt="Volunteer" style="max-height: 200px; object-fit: cover;">
+					</div>
+					<div class="member-content">
+						<h5>Needed</h5>
+						<span style="font-size: 0.9em;"><b>Community Outreach Coordinator</b></span>
+						<p style="font-size: 0.85em;">Love connecting with people? Build partnerships with schools, libraries, and local organizations. Represent us at community events and develop programs that bring new makers into our space.</p>
+					</div>
+				</div>
+			</div>
+			<!-- end volunteer member -->
+
+			<!-- volunteer member -->
+			<div class="col-lg-2 col-md-4 col-sm-6 mb-4">
+				<div class="team-member text-center">
+					<div class="member-photo">
+						<img loading="lazy" class="img-fluid" src="images/clipart/silo-man3.webp" alt="Volunteer" style="max-height: 200px; object-fit: cover;">
+					</div>
+					<div class="member-content">
+						<h5>Needed</h5>
+						<span style="font-size: 0.9em;"><b>Donation Coordinator</b></span>
+						<p style="font-size: 0.85em;">Good with people and paperwork? Manage equipment and monetary donations, work with generous donors, handle tax documentation, and evaluate what donations will best serve our community.</p>
+					</div>
+				</div>
+			</div>
+			<!-- end volunteer member -->
+
+			<!-- volunteer member -->
+			<div class="col-lg-2 col-md-4 col-sm-6 mb-4">
+				<div class="team-member text-center">
+					<div class="member-photo">
+						<img loading="lazy" class="img-fluid" src="images/clipart/silo-female1.webp" alt="Volunteer" style="max-height: 200px; object-fit: cover;">
+					</div>
+					<div class="member-content">
+						<h5>Needed</h5>
+						<span style="font-size: 0.9em;"><b>Textile/Sewing Workshop Lead</b></span>
+						<p style="font-size: 0.85em;">Passionate about fabric arts? Help members use our sewing machines, sergers, and embroidery equipment. Teach textile skills, maintain equipment, and build a welcoming community for sewers and crafters of all levels.</p>
+					</div>
+				</div>
+			</div>
+			<!-- end volunteer member -->
+
+			<!-- volunteer member -->
+			<div class="col-lg-2 col-md-4 col-sm-6 mb-4">
+				<div class="team-member text-center">
+					<div class="member-photo">
+						<img loading="lazy" class="img-fluid" src="images/clipart/silo-man1.webp" alt="Volunteer" style="max-height: 200px; object-fit: cover;">
+					</div>
+					<div class="member-content">
+						<h5>Needed</h5>
+						<span style="font-size: 0.9em;"><b>Volunteer Coordinator</b></span>
+						<p style="font-size: 0.85em;">Great at organizing people? Recruit new volunteers, schedule shifts, track hours, and make sure everyone has the support and resources they need to make a real impact at our makerspace.</p>
+					</div>
+				</div>
+			</div>
+			<!-- end volunteer member -->
+		
+			<!-- volunteer member -->
+			<div class="col-lg-2 col-md-4 col-sm-6 mb-4">
+				<div class="team-member text-center">
+					<div class="member-photo">
+						<img loading="lazy" class="img-fluid" src="images/clipart/silo-man3.webp" alt="Volunteer 2" style="max-height: 200px; object-fit: cover;">
+					</div>
+					<div class="member-content">
+						<h5>Needed</h5>
+						<span style="font-size: 0.9em;"><b>Electronics Lead</b></span>
+						<p style="font-size: 0.85em;">Passionate about electronics? Start Arduino classes, teach soldering skills, and build our electronics program from the ground up. Help members bring their electronic projects to life.</p>
+					</div>
+				</div>
+			</div>
+			<!-- end volunteer member -->
+		</div> <!-- End row -->
+		
+		<!-- Seeking Volunteers Section -->
+		<div class="row justify-content-center mt-5">
+			<div class="col-xl-8 col-lg-10">
+				<div class="text-center" style="background: #f8f9fa; padding: 40px 30px; border-radius: 8px;">
+					<h3 style="margin-bottom: 20px;">Want to do someting?</h3>
+					<p style="font-size: 1.1em; margin-bottom: 25px;">We're always looking for passionate individuals to join our volunteer team! If you have willingness to help, we'd love to hear from you.</p>
+					<div>
+						<a href="contact.html" class="btn btn-main">Contact Us to Volunteer</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- End Seeking Volunteers Section -->
+
+		<!--- Row -->
+	</div> <!-- End container -->
+</section> <!-- End volunteers section -->
+
+<!-- Board of Directors Link Section
+		=========================================== -->
+<section class="call-to-action-board section" style="background-image: url('images/about/emptyboardroom.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; background-attachment: scroll; padding: 100px 0;">
+	<div class="container">
+		<div class="row justify-content-center">
+			<div class="col-xl-8 col-lg-10 text-center">
+				<div style="background-color: rgba(0, 0, 0, 0.7); padding: 30px; border-radius: 10px;">
+					<h2 style="color: white;">Meet Our Board of Directors</h2>
+					<p style="color: white;">The Board sets the vision, sustainability, and growth of this non-profit. They manage finances, safety policies, insurance and other business related operations required for sustainability, working to ensure the space remains available, innovative, and collaborative.</p>
+					<a href="board.html" class="btn btn-main mt-3">View Board of Directors</a>
+				</div>
+			</div>
 		</div> <!-- End row -->
 	</div> <!-- End container -->
 </section> <!-- End section -->
