@@ -621,193 +621,441 @@ Start Counter Section
 </section> <!-- end section -->
 
 
-<!-- Start Testimonial
+<!-- Start Animated Reviews Section
 =========================================== -->
-		
-	<section class="testimonial section" id="testimonial">
-		<div class="container">
-			<div class="row">
-				<div class="col-lg-12">
-					<!-- testimonial wrapper -->
-					<div class="testimonial-slider-wrapper">
-						<div class="testimonial-slider">
-							<!-- testimonial single -->
-							<div class="item text-center">
-								<i class="tf-ion-chatbubbles"></i>
-								<!-- client info -->
-								<div class="client-details">
-									<p>Kzoo Makers is easily one of the most inspiring spaces I’ve encountered. The range of equipment—from 3D printers to CNC machines and electronics benches—is impressive, but what really sets it apart is the community. Experienced members are generous with their knowledge, and new makers are encouraged to dive in without intimidation. You walk in with an idea and leave with something real in your hands.</p>
+<style>
+	.reviews-section {
+		font-family: 'Inter', sans-serif;
+		background-color: #0f172a;
+		color: white;
+		padding: 5rem 0;
+	}
+
+	.gradient-text {
+		background: linear-gradient(to right, #60a5fa, #a855f7);
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+		color: transparent;
+	}
+
+	.review-container {
+		height: 40rem;
+		overflow: hidden;
+		border-radius: 1.5rem;
+		-webkit-mask-image: linear-gradient(to bottom, transparent, white 20%, white 80%, transparent);
+		mask-image: linear-gradient(to bottom, transparent, white 20%, white 80%, transparent);
+	}
+
+	.review-container-reverse {
+		-webkit-mask-image: linear-gradient(to top, transparent, white 20%, white 80%, transparent);
+		mask-image: linear-gradient(to top, transparent, white 20%, white 80%, transparent);
+	}
+
+	.review-card {
+		background-color: #1f2937;
+		border: 1px solid #374151;
+		border-radius: 1rem;
+		box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+		transition: transform 0.3s ease;
+		padding: 1.5rem;
+	}
+
+	.review-card:hover {
+		transform: scale(1.05);
+	}
+
+	.review-avatar {
+		width: 60px;
+		height: 60px;
+		border-radius: 50%;
+		object-fit: cover;
+		border: 2px solid #60a5fa;
+	}
+
+	.stars {
+		color: #fbbf24;
+	}
+
+	.text-gray-300 {
+		color: #d1d5db;
+	}
+
+	.text-gray-400 {
+		color: #9ca3af;
+	}
+
+	.text-gray-500 {
+		color: #6b7280;
+	}
+
+	/* Define keyframes for the top-to-bottom scroll animation */
+	@keyframes scroll-top-to-bottom {
+		0% {
+			transform: translateY(0);
+		}
+
+		100% {
+			transform: translateY(-50%);
+		}
+	}
+
+	/* Define keyframes for the bottom-to-top scroll animation */
+	@keyframes scroll-bottom-to-top {
+		0% {
+			transform: translateY(-50%);
+		}
+
+		100% {
+			transform: translateY(0);
+		}
+	}
+
+	/* Class to apply the top-to-bottom animation */
+	.animate-scroll-t2b {
+		animation: scroll-top-to-bottom 60s linear infinite;
+	}
+
+	/* Class to apply the bottom-to-top animation */
+	.animate-scroll-b2t {
+		animation: scroll-bottom-to-top 60s linear infinite;
+	}
+
+	/* Utility class to pause the animation on hover */
+	.reviews-wrapper:hover .group-hover-pause {
+		animation-play-state: paused;
+	}
+
+	@media (max-width: 767.98px) {
+		.d-md-block {
+			display: none !important;
+		}
+	}
+
+	@media (max-width: 991.98px) {
+		.d-lg-block {
+			display: none !important;
+		}
+	}
+</style>
+
+<section class="reviews-section" id="testimonial">
+	<div class="container-fluid reviews-wrapper" style="max-width: 1280px;">
+		<div class="text-center mb-5 pb-3">
+			<h1 class="display-2 fw-bold mb-4 gradient-text" style="letter-spacing: -0.025em;">
+				What Our Members Say
+			</h1>
+			<p class="fs-4 text-gray-400">
+				Hear from makers who are part of our community.
+			</p>
+		</div>
+
+		<div class="row g-4 g-md-5">
+			<!-- First Column -->
+			<div class="col-12 col-md-6 col-lg-4">
+				<div class="review-container">
+					<div class="d-flex flex-column gap-4 group-hover-pause animate-scroll-t2b">
+						<div class="d-flex flex-column gap-4">
+							<div class="review-card">
+								<div class="d-flex align-items-center mb-3">
+									<img src="images/client-logo/chrisc.webp" alt="Chris" class="review-avatar me-3">
+									<div>
+										<p class="fw-semibold text-white mb-0">Chris</p>
+										<p class="small text-gray-500 mb-0">Makerspace Member</p>
+									</div>
 								</div>
-								<!-- /client info -->
-								<!-- client photo -->
-								<div class="client-thumb">
-									<img loading="lazy" src="images/client-logo/chrisc.webp" class="img-fluid" alt="">
-								</div>
-								<div class="client-meta">
-									<h3>Chris</h3>
-									<span>Makerspace Member</span>
-								</div>
-								<!-- /client photo -->
+								<div class="stars mb-2">★★★★★</div>
+								<p class="text-gray-300 fst-italic mb-0">"Kzoo Makers is easily one of the most inspiring spaces I've encountered. The range of equipment is impressive, but what really sets it apart is the community."</p>
 							</div>
-							<!-- /testimonial single -->
-					
-							<!-- testimonial single -->
-							<div class="item text-center">
-								<i class="tf-ion-chatbubbles"></i>
-								<!-- client info -->
-								<div class="client-details">
-									<p>As a small business owner prototyping new products, I found the makerspace invaluable. The facility has everything I need to iterate quickly, but the real value comes from the people.  Ryan and other members foster a culture of collaboration that you rarely find elsewhere. Whether you’re working with metal, wood, or code, there’s always someone nearby who can help you refine your approach and get unstuck.</p>
+							<div class="review-card">
+								<div class="d-flex align-items-center mb-3">
+									<img src="images/client-logo/member-1.jpeg" alt="Riley" class="review-avatar me-3">
+									<div>
+										<p class="fw-semibold text-white mb-0">Riley</p>
+										<p class="small text-gray-500 mb-0">Makerspace Member</p>
+									</div>
 								</div>
-								<!-- /client info -->
-								<!-- client photo -->
-								<div class="client-thumb">
-									<img loading="lazy" src="images/client-logo/clients-2.png" class="img-fluid" alt="">
-								</div>
-								<div class="client-meta">
-									<h3>Austin</h3>
-									<span>Makerspace Member</span>
-								</div>
-								<!-- /client photo -->
+								<div class="stars mb-2">★★★★★</div>
+								<p class="text-gray-300 fst-italic mb-0">"Before joining Kzoo Makers, most of my projects stalled out halfway. Having immediate access to people who understand fabrication workflows changed that."</p>
 							</div>
-							<!-- /testimonial single -->
-	 
-							<!-- testimonial single -->
-							<div class="item text-center">
-								<i class="tf-ion-chatbubbles"></i>
-								<div class="client-details">
-									<p>Before joining Kzoo Makers, most of my projects stalled out halfway. Having immediate access to people who actually understand fabrication workflows changed that. I’ve gone from guesswork to deliberate iteration, especially with wood CNC and safety practices. It’s the first place where my ideas stop being hypothetical.</p>
+							<div class="review-card">
+								<div class="d-flex align-items-center mb-3">
+									<img src="images/client-logo/member-3.jpeg" alt="Taylor" class="review-avatar me-3">
+									<div>
+										<p class="fw-semibold text-white mb-0">Taylor</p>
+										<p class="small text-gray-500 mb-0">Workshop Attendee</p>
+									</div>
 								</div>
-								<div class="client-thumb">
-									<img loading="lazy" src="images/client-logo/member-1.jpeg" class="img-fluid" alt="">
-								</div>
-								<div class="client-meta">
-									<h3>Riley</h3>
-									<span>Makerspace Member</span>
-								</div>
+								<div class="stars mb-2">★★★★★</div>
+								<p class="text-gray-300 fst-italic mb-0">"Kzoo Makers gave me my first exposure to metalworking tools that most hobbyists can't justify at home. It's one of the few places where experimentation and discipline coexist."</p>
 							</div>
-							<!-- /testimonial single -->
-	 
-							<!-- testimonial single -->
-							<div class="item text-center">
-								<i class="tf-ion-chatbubbles"></i>
-								<div class="client-details">
-									<p>I came for access to a 3D printer and ended up learning far more about electronics diagnostics than I planned. Members here don’t oversell anything; they show you what works, what fails, and why. That honesty makes learning efficient instead of frustrating.</p>
+							<div class="review-card">
+								<div class="d-flex align-items-center mb-3">
+									<img src="images/client-logo/member-5.jpeg" alt="Avery" class="review-avatar me-3">
+									<div>
+										<p class="fw-semibold text-white mb-0">Avery</p>
+										<p class="small text-gray-500 mb-0">Makerspace Member</p>
+									</div>
 								</div>
-								<div class="client-thumb">
-									<img loading="lazy" src="images/client-logo/member-2.jpeg" class="img-fluid" alt="">
-								</div>
-								<div class="client-meta">
-									<h3>Sam</h3>
-									<span>Makerspace Member</span>
-								</div>
+								<div class="stars mb-2">★★★★★</div>
+								<p class="text-gray-300 fst-italic mb-0">"What surprised me most is the range of skills represented here. The reciprocity feels natural. It's collaborative without drifting into chaos."</p>
 							</div>
-							<!-- /testimonial single -->
-	 
-							<!-- testimonial single -->
-							<div class="item text-center">
-								<i class="tf-ion-chatbubbles"></i>
-								<div class="client-details">
-									<p>Kzoo Makers gave me my first exposure to metalworking tools that most hobbyists can’t justify at home. The learning curve was steep, but the guidance here is structured enough to prevent bad habits from forming. It’s one of the few places where experimentation and discipline actually coexist.</p>
+						</div>
+						<!-- Duplicate for seamless loop -->
+						<div class="d-flex flex-column gap-4">
+							<div class="review-card">
+								<div class="d-flex align-items-center mb-3">
+									<img src="images/client-logo/chrisc.webp" alt="Chris" class="review-avatar me-3">
+									<div>
+										<p class="fw-semibold text-white mb-0">Chris</p>
+										<p class="small text-gray-500 mb-0">Makerspace Member</p>
+									</div>
 								</div>
-								<div class="client-thumb">
-									<img loading="lazy" src="images/client-logo/member-3.jpeg" class="img-fluid" alt="">
-								</div>
-								<div class="client-meta">
-									<h3>Taylor</h3>
-									<span>Workshop Attendee</span>
-								</div>
+								<div class="stars mb-2">★★★★★</div>
+								<p class="text-gray-300 fst-italic mb-0">"Kzoo Makers is easily one of the most inspiring spaces I've encountered. The range of equipment is impressive, but what really sets it apart is the community."</p>
 							</div>
-							<!-- /testimonial single -->
-	 
-							<!-- testimonial single -->
-							<div class="item text-center">
-								<i class="tf-ion-chatbubbles"></i>
-								<div class="client-details">
-									<p>I joined to prototype a product idea, and the environment forced me to confront weak points in my process—design clarity, tool selection, and project planning. The space doesn’t magically make you better, but it removes excuses and exposes gaps you didn’t notice on your own.</p>
+							<div class="review-card">
+								<div class="d-flex align-items-center mb-3">
+									<img src="images/client-logo/member-1.jpeg" alt="Riley" class="review-avatar me-3">
+									<div>
+										<p class="fw-semibold text-white mb-0">Riley</p>
+										<p class="small text-gray-500 mb-0">Makerspace Member</p>
+									</div>
 								</div>
-								<div class="client-thumb">
-									<img loading="lazy" src="images/client-logo/member-4.jpeg" class="img-fluid" alt="">
-								</div>
-								<div class="client-meta">
-									<h3>Jordan</h3>
-									<span>Makerspace Member</span>
-								</div>
+								<div class="stars mb-2">★★★★★</div>
+								<p class="text-gray-300 fst-italic mb-0">"Before joining Kzoo Makers, most of my projects stalled out halfway. Having immediate access to people who understand what I am doing changed that."</p>
 							</div>
-							<!-- /testimonial single -->
-	 
-							<!-- testimonial single -->
-							<div class="item text-center">
-								<i class="tf-ion-chatbubbles"></i>
-								<div class="client-details">
-									<p>What surprised me most is the range of skills represented here. One day someone is troubleshooting my Fusion 360 file; the next day I’m helping them with microcontroller debugging. The reciprocity feels natural, not performative. It’s collaborative without drifting into chaos.</p>
+							<div class="review-card">
+								<div class="d-flex align-items-center mb-3">
+									<img src="images/client-logo/member-3.jpeg" alt="Taylor" class="review-avatar me-3">
+									<div>
+										<p class="fw-semibold text-white mb-0">Taylor</p>
+										<p class="small text-gray-500 mb-0">Workshop Attendee</p>
+									</div>
 								</div>
-								<div class="client-thumb">
-									<img loading="lazy" src="images/client-logo/member-5.jpeg" class="img-fluid" alt="">
-								</div>
-								<div class="client-meta">
-									<h3>Avery</h3>
-									<span>Makerspace Member</span>
-								</div>
+								<div class="stars mb-2">★★★★★</div>
+								<p class="text-gray-300 fst-italic mb-0">"Kzoo Makers gave me my first exposure to metalworking tools that most hobbyists can't justify at home. It's one of the few places where experimentation comes at a low cost."</p>
 							</div>
-							<!-- /testimonial single -->
-	 
-							<!-- testimonial single -->
-							<div class="item text-center">
-								<i class="tf-ion-chatbubbles"></i>
-								<div class="client-details">
-									<p>I’ve worked in corporate engineering labs, but accessibility was always limited. Here, the tools and space are straightforward to book, and the informal knowledge-sharing makes problem-solving faster. It’s not just equipment—it’s operational freedom.</p>
+							<div class="review-card">
+								<div class="d-flex align-items-center mb-3">
+									<img src="images/client-logo/member-5.jpeg" alt="Avery" class="review-avatar me-3">
+									<div>
+										<p class="fw-semibold text-white mb-0">Avery</p>
+										<p class="small text-gray-500 mb-0">Makerspace Member</p>
+									</div>
 								</div>
-								<div class="client-thumb">
-									<img loading="lazy" src="images/client-logo/member-6.jpeg" class="img-fluid" alt="">
-								</div>
-								<div class="client-meta">
-									<h3>Morgan</h3>
-									<span>Makerspace Member</span>
-								</div>
+								<div class="stars mb-2">★★★★★</div>
+								<p class="text-gray-300 fst-italic mb-0">"What surprised me most is the range of skills represented here. The reciprocity feels natural, not performative. It's collaborative without drifting into chaos."</p>
 							</div>
-							<!-- /testimonial single -->
-	 
-							<!-- testimonial single -->
-							<div class="item text-center">
-								<i class="tf-ion-chatbubbles"></i>
-								<div class="client-details">
-									<p>The biggest shift for me has been confidence in tool proficiency. At home I hesitated before every cut or print. Here, measured feedback from experienced members eliminates that uncertainty. It’s iterative learning without the isolation that usually slows progress.</p>
-								</div>
-								<div class="client-thumb">
-									<img loading="lazy" src="images/client-logo/member-8.jpeg" class="img-fluid" alt="">
-								</div>
-								<div class="client-meta">
-									<h3>Parker</h3>
-									<span>Makerspace Member</span>
-								</div>
-							</div>
-							<!-- /testimonial single -->
-	 
-							<!-- testimonial single -->
-							<div class="item text-center">
-								<i class="tf-ion-chatbubbles"></i>
-								<!-- client info -->
-								<div class="client-details">
-									<p>I go to Kalamazoo Linux Users group and I use Linux, people are very friendly at The Makerspace.</br>Thank you for listening Ryan.</p>
-								</div>
-								<!-- /client info -->
-								<!-- client photo -->
-								<div class="client-thumb">
-									<img loading="lazy" src="images/client-logo/member-10.jpeg" class="img-fluid" alt="">
-								</div>
-								<div class="client-meta">
-									<h3>Lucas</h3>
-									<span>KLUG Member</span>
-								</div>
-								<!-- /client photo -->
-							</div>
-							<!-- /testimonial single -->
 						</div>
 					</div>
-				</div> 		<!-- end col lg 12 -->
-			</div>	    <!-- End row -->
-		</div>       <!-- End container -->
-	</section>    <!-- End Section -->
+				</div>
+			</div>
+
+			<!-- Second Column -->
+			<div class="col-12 col-md-6 col-lg-4 d-md-block">
+				<div class="review-container review-container-reverse">
+					<div class="d-flex flex-column gap-4 group-hover-pause animate-scroll-b2t">
+						<div class="d-flex flex-column gap-4">
+							<div class="review-card">
+								<div class="d-flex align-items-center mb-3">
+									<img src="images/client-logo/clients-2.png" alt="Austin" class="review-avatar me-3">
+									<div>
+										<p class="fw-semibold text-white mb-0">Austin</p>
+										<p class="small text-gray-500 mb-0">Makerspace Member</p>
+									</div>
+								</div>
+								<div class="stars mb-2">★★★★★</div>
+								<p class="text-gray-300 fst-italic mb-0">"As a small business owner prototyping new products, I found the makerspace invaluable. The real value comes from the people and culture of collaboration."</p>
+							</div>
+							<div class="review-card">
+								<div class="d-flex align-items-center mb-3">
+									<img src="images/client-logo/member-2.jpeg" alt="Sam" class="review-avatar me-3">
+									<div>
+										<p class="fw-semibold text-white mb-0">Sam</p>
+										<p class="small text-gray-500 mb-0">Makerspace Member</p>
+									</div>
+								</div>
+								<div class="stars mb-2">★★★★★</div>
+								<p class="text-gray-300 fst-italic mb-0">"I came for access to a 3D printer and ended up learning far more about electronics diagnostics than I planned. That honesty makes learning efficient instead of frustrating."</p>
+							</div>
+							<div class="review-card">
+								<div class="d-flex align-items-center mb-3">
+									<img src="images/client-logo/member-4.jpeg" alt="Jordan" class="review-avatar me-3">
+									<div>
+										<p class="fw-semibold text-white mb-0">Jordan</p>
+										<p class="small text-gray-500 mb-0">Makerspace Member</p>
+									</div>
+								</div>
+								<div class="stars mb-2">★★★★★</div>
+								<p class="text-gray-300 fst-italic mb-0">"I joined to prototype a product idea, and the environment forced me to confront weak points in my process. The space removes excuses and exposes gaps you didn't notice."</p>
+							</div>
+							<div class="review-card">
+								<div class="d-flex align-items-center mb-3">
+									<img src="images/client-logo/member-6.jpeg" alt="Morgan" class="review-avatar me-3">
+									<div>
+										<p class="fw-semibold text-white mb-0">Morgan</p>
+										<p class="small text-gray-500 mb-0">Makerspace Member</p>
+									</div>
+								</div>
+								<div class="stars mb-2">★★★★★</div>
+								<p class="text-gray-300 fst-italic mb-0">"I've worked in corporate engineering labs, but accessibility was always limited. Here, the tools and space are straightforward to book. It's not just equipment—it's operational freedom."</p>
+							</div>
+						</div>
+						<!-- Duplicate for seamless loop -->
+						<div class="d-flex flex-column gap-4">
+							<div class="review-card">
+								<div class="d-flex align-items-center mb-3">
+									<img src="images/client-logo/clients-2.png" alt="Austin" class="review-avatar me-3">
+									<div>
+										<p class="fw-semibold text-white mb-0">Austin</p>
+										<p class="small text-gray-500 mb-0">Makerspace Member</p>
+									</div>
+								</div>
+								<div class="stars mb-2">★★★★★</div>
+								<p class="text-gray-300 fst-italic mb-0">"As a small business owner prototyping new products, I found the makerspace invaluable. The real value comes from the people and culture of collaboration."</p>
+							</div>
+							<div class="review-card">
+								<div class="d-flex align-items-center mb-3">
+									<img src="images/client-logo/member-2.jpeg" alt="Sam" class="review-avatar me-3">
+									<div>
+										<p class="fw-semibold text-white mb-0">Sam</p>
+										<p class="small text-gray-500 mb-0">Makerspace Member</p>
+									</div>
+								</div>
+								<div class="stars mb-2">★★★★★</div>
+								<p class="text-gray-300 fst-italic mb-0">"I came for access to a 3D printer and ended up learning far more about electronics diagnostics than I planned. That honesty makes learning efficient instead of frustrating."</p>
+							</div>
+							<div class="review-card">
+								<div class="d-flex align-items-center mb-3">
+									<img src="images/client-logo/member-4.jpeg" alt="Jordan" class="review-avatar me-3">
+									<div>
+										<p class="fw-semibold text-white mb-0">Jordan</p>
+										<p class="small text-gray-500 mb-0">Makerspace Member</p>
+									</div>
+								</div>
+								<div class="stars mb-2">★★★★★</div>
+								<p class="text-gray-300 fst-italic mb-0">"I joined to prototype a product idea, and the environment forced me to confront weak points in my process. The space removes excuses and exposes gaps you didn't notice."</p>
+							</div>
+							<div class="review-card">
+								<div class="d-flex align-items-center mb-3">
+									<img src="images/client-logo/member-6.jpeg" alt="Morgan" class="review-avatar me-3">
+									<div>
+										<p class="fw-semibold text-white mb-0">Morgan</p>
+										<p class="small text-gray-500 mb-0">Makerspace Member</p>
+									</div>
+								</div>
+								<div class="stars mb-2">★★★★★</div>
+								<p class="text-gray-300 fst-italic mb-0">"I've worked in corporate engineering labs, but accessibility was always limited. Here, the tools and space are straightforward to book. It's not just equipment—it's operational freedom."</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Third Column -->
+			<div class="col-12 col-md-6 col-lg-4 d-lg-block">
+				<div class="review-container">
+					<div class="d-flex flex-column gap-4 group-hover-pause animate-scroll-t2b">
+						<div class="d-flex flex-column gap-4">
+							<div class="review-card">
+								<div class="d-flex align-items-center mb-3">
+									<img src="images/client-logo/member-8.jpeg" alt="Parker" class="review-avatar me-3">
+									<div>
+										<p class="fw-semibold text-white mb-0">Parker</p>
+										<p class="small text-gray-500 mb-0">Makerspace Member</p>
+									</div>
+								</div>
+								<div class="stars mb-2">★★★★★</div>
+								<p class="text-gray-300 fst-italic mb-0">"The biggest shift for me has been confidence in tool proficiency. At home I hesitated before every cut or print. Here, measured feedback from experienced members eliminates that uncertainty."</p>
+							</div>
+							<div class="review-card">
+								<div class="d-flex align-items-center mb-3">
+									<img src="images/client-logo/member-10.jpeg" alt="Lucas" class="review-avatar me-3">
+									<div>
+										<p class="fw-semibold text-white mb-0">Lucas</p>
+										<p class="small text-gray-500 mb-0">KLUG Member</p>
+									</div>
+								</div>
+								<div class="stars mb-2">★★★★★</div>
+								<p class="text-gray-300 fst-italic mb-0">"I go to Kalamazoo Linux Users group and I use Linux, people are very friendly at The Makerspace. Thank you for listening Ryan."</p>
+							</div>
+							<div class="review-card">
+								<div class="d-flex align-items-center mb-3">
+									<img src="images/client-logo/chrisc.webp" alt="Chris" class="review-avatar me-3">
+									<div>
+										<p class="fw-semibold text-white mb-0">Chris</p>
+										<p class="small text-gray-500 mb-0">Makerspace Member</p>
+									</div>
+								</div>
+								<div class="stars mb-2">★★★★★</div>
+								<p class="text-gray-300 fst-italic mb-0">"Experienced members are generous with their knowledge, and new makers are encouraged to dive in without intimidation. You walk in with an idea and leave with something real in your hands."</p>
+							</div>
+							<div class="review-card">
+								<div class="d-flex align-items-center mb-3">
+									<img src="images/client-logo/member-1.jpeg" alt="Riley" class="review-avatar me-3">
+									<div>
+										<p class="fw-semibold text-white mb-0">Riley</p>
+										<p class="small text-gray-500 mb-0">Makerspace Member</p>
+									</div>
+								</div>
+								<div class="stars mb-2">★★★★★</div>
+								<p class="text-gray-300 fst-italic mb-0">"I've gone from guesswork to deliberate iteration, especially with wood CNC and safety practices. It's the first place where my ideas stop being hypothetical."</p>
+							</div>
+						</div>
+						<!-- Duplicate for seamless loop -->
+						<div class="d-flex flex-column gap-4">
+							<div class="review-card">
+								<div class="d-flex align-items-center mb-3">
+									<img src="images/client-logo/member-8.jpeg" alt="Parker" class="review-avatar me-3">
+									<div>
+										<p class="fw-semibold text-white mb-0">Parker</p>
+										<p class="small text-gray-500 mb-0">Makerspace Member</p>
+									</div>
+								</div>
+								<div class="stars mb-2">★★★★★</div>
+								<p class="text-gray-300 fst-italic mb-0">"The biggest shift for me has been confidence in tool proficiency. At home I hesitated before every cut or print. Here, measured feedback from experienced members eliminates that uncertainty."</p>
+							</div>
+							<div class="review-card">
+								<div class="d-flex align-items-center mb-3">
+									<img src="images/client-logo/member-10.jpeg" alt="Lucas" class="review-avatar me-3">
+									<div>
+										<p class="fw-semibold text-white mb-0">Lucas</p>
+										<p class="small text-gray-500 mb-0">KLUG Member</p>
+									</div>
+								</div>
+								<div class="stars mb-2">★★★★★</div>
+								<p class="text-gray-300 fst-italic mb-0">"I go to Kalamazoo Linux Users group and I use Linux, people are very friendly at The Makerspace. Thank you for listening Ryan."</p>
+							</div>
+							<div class="review-card">
+								<div class="d-flex align-items-center mb-3">
+									<img src="images/client-logo/chrisc.webp" alt="Chris" class="review-avatar me-3">
+									<div>
+										<p class="fw-semibold text-white mb-0">Chris</p>
+										<p class="small text-gray-500 mb-0">Makerspace Member</p>
+									</div>
+								</div>
+								<div class="stars mb-2">★★★★★</div>
+								<p class="text-gray-300 fst-italic mb-0">"Experienced members are generous with their knowledge, and new makers are encouraged to dive in without intimidation. You walk in with an idea and leave with something real in your hands."</p>
+							</div>
+							<div class="review-card">
+								<div class="d-flex align-items-center mb-3">
+									<img src="images/client-logo/member-1.jpeg" alt="Riley" class="review-avatar me-3">
+									<div>
+										<p class="fw-semibold text-white mb-0">Riley</p>
+										<p class="small text-gray-500 mb-0">Makerspace Member</p>
+									</div>
+								</div>
+								<div class="stars mb-2">★★★★★</div>
+								<p class="text-gray-300 fst-italic mb-0">"I've gone from guesswork to deliberate iteration, especially with wood CNC and safety practices. It's the first place where my ideas stop being hypothetical."</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>    <!-- End Section -->
 
 <footer id="footer" class="bg-one">
   <!-- Footer will be dynamically loaded by footer.js -->
