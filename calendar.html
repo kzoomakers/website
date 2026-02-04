@@ -1148,18 +1148,20 @@ Start Call To Action
       // This creates a date at the last day of the month that is 5 months from now
       // (month + 6 with day 0 = last day of month + 5)
       
-      // Filter out past events and events beyond our date range
-      let filtered = allEvents.filter(event => {
-        const eventDate = new Date(event.start);
-        return eventDate > now && eventDate <= endDate;
-      });
-      
-      // Apply search filter if search parameter is present
+      // Check if there's a search parameter - if so, search all events (not date-filtered)
       const searchTerm = getSearchParameter();
+      let filtered;
+      
       if (searchTerm) {
-        filtered = filterEventsBySearch(filtered, searchTerm);
+        // When searching via URL parameter, search through ALL events (matching input box behavior)
+        filtered = filterEventsBySearch(allEvents, searchTerm);
         console.log(`Searching for: "${searchTerm}" - Found ${filtered.length} matching events`);
       } else {
+        // No search term - filter by date range for default view
+        filtered = allEvents.filter(event => {
+          const eventDate = new Date(event.start);
+          return eventDate > now && eventDate <= endDate;
+        });
         console.log(`Showing ${filtered.length} events from ${now.toLocaleDateString()} to ${endDate.toLocaleDateString()}`);
       }
       
