@@ -983,6 +983,17 @@ Start Counter Section
 								<div class="stars mb-2">★★★★★</div>
 								<p class="text-gray-300 fst-italic mb-0">"I've worked in corporate engineering labs, but accessibility was always limited. Here, the tools and space are straightforward to book. It's not just equipment—it's operational freedom."</p>
 							</div>
+							<div class="review-card">
+								<div class="d-flex align-items-center mb-3">
+									<img src="images/client-logo/member-11.jpeg" alt="James" class="review-avatar me-3">
+									<div>
+										<p class="fw-semibold text-white mb-0">James</p>
+										<p class="small text-gray-500 mb-0">Makerspace Member</p>
+									</div>
+								</div>
+								<div class="stars mb-2">★★★★★</div>
+								<p class="text-gray-300 fst-italic mb-0">"I've got all this equipment at my house, but after woodworking for 33 years it's boring at home. I like how I can come in to the building and collaborate and bounce ideas off peoples heads."</p>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -1014,28 +1025,6 @@ Start Counter Section
 								</div>
 								<div class="stars mb-2">★★★★★</div>
 								<p class="text-gray-300 fst-italic mb-0">"I go to Kalamazoo Linux Users group and I use Linux, people are very friendly at The Makerspace. Thank you for listening Ryan."</p>
-							</div>
-							<div class="review-card">
-								<div class="d-flex align-items-center mb-3">
-									<img src="images/client-logo/member-11.jpeg" alt="James" class="review-avatar me-3">
-									<div>
-										<p class="fw-semibold text-white mb-0">James</p>
-										<p class="small text-gray-500 mb-0">Makerspace Member</p>
-									</div>
-								</div>
-								<div class="stars mb-2">★★★★★</div>
-								<p class="text-gray-300 fst-italic mb-0">"I've got all this equipment at my house, but after woodworking for 33 years it's boring at home. I like how I can come in to the building and collaborate and bounce ideas off peoples heads."</p>
-							</div>
-							<div class="review-card">
-								<div class="d-flex align-items-center mb-3">
-									<img src="images/client-logo/member-12.webp" alt="Sigrid" class="review-avatar me-3">
-									<div>
-										<p class="fw-semibold text-white mb-0">Sigrid</p>
-										<p class="small text-gray-500 mb-0">KLUG Member</p>
-									</div>
-								</div>
-								<div class="stars mb-2">★★★★★</div>
-								<p class="text-gray-300 fst-italic mb-0">"I like how inclusive and creative people are here, this space is special to me because it's like my second home after the coffee shop of course!"</p>
 							</div>
 							<div class="review-card">
 								<div class="d-flex align-items-center mb-3">
@@ -1083,28 +1072,6 @@ Start Counter Section
 								</div>
 								<div class="stars mb-2">★★★★★</div>
 								<p class="text-gray-300 fst-italic mb-0">"I go to Kalamazoo Linux Users group and I use Linux, people are very friendly at The Makerspace. Thank you for listening Ryan."</p>
-							</div>
-							<div class="review-card">
-								<div class="d-flex align-items-center mb-3">
-									<img src="images/client-logo/member-11.jpeg" alt="James" class="review-avatar me-3">
-									<div>
-										<p class="fw-semibold text-white mb-0">James</p>
-										<p class="small text-gray-500 mb-0">Makerspace Member</p>
-									</div>
-								</div>
-								<div class="stars mb-2">★★★★★</div>
-								<p class="text-gray-300 fst-italic mb-0">"I've got all this equipment at my house, but after woodworking for 33 years it's boring at home. I like how I can come in to the building and collaborate and bounce ideas off peoples heads."</p>
-							</div>
-							<div class="review-card">
-								<div class="d-flex align-items-center mb-3">
-									<img src="images/client-logo/member-12.webp" alt="Sigrid" class="review-avatar me-3">
-									<div>
-										<p class="fw-semibold text-white mb-0">Sigrid</p>
-										<p class="small text-gray-500 mb-0">KLUG Member</p>
-									</div>
-								</div>
-								<div class="stars mb-2">★★★★★</div>
-								<p class="text-gray-300 fst-italic mb-0">"I like how inclusive and creative people are here, this space is special to me because it's like my second home after the coffee shop of course!"</p>
 							</div>
 							<div class="review-card">
 								<div class="d-flex align-items-center mb-3">
@@ -1159,9 +1126,29 @@ var words = [
     'Welding',
     'CNC Machining',
     'Electronics',
-    'Fiber Arts'
-],
-part,
+    'Fiber Arts',
+    'Arduinos',
+    '3D Printers',
+    'Lathes',
+    'Bridgeport Mills',
+    'Sewing Machines',
+    'Soldering Irons'
+];
+
+// Fisher-Yates shuffle: randomize order when page loads
+function shuffleArray(arr) {
+    var a = arr.slice();
+    for (var j = a.length - 1; j > 0; j--) {
+        var k = Math.floor(Math.random() * (j + 1));
+        var t = a[j];
+        a[j] = a[k];
+        a[k] = t;
+    }
+    return a;
+}
+words = shuffleArray(words);
+
+var part,
 i = 0,
 offset = 0,
 len = words.length,
