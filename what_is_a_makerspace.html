@@ -45,6 +45,36 @@
   <!-- Main Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
 
+  <!-- Call-to-action with speakergals2 image -->
+  <style>
+    .call-to-action-speakergals {
+      padding: 100px 0;
+      background-image: url("images/slider/speakergals2.jpg");
+      background-size: cover;
+      background-position: center center;
+      color: #fff;
+      position: relative;
+    }
+    .call-to-action-speakergals::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.6);
+      z-index: 0;
+    }
+    .call-to-action-speakergals .container {
+      position: relative;
+      z-index: 1;
+    }
+    .call-to-action-speakergals h2 {
+      line-height: 1.5;
+      color: white;
+    }
+    .call-to-action-speakergals p {
+      color: #fff;
+    }
+  </style>
+
 </head>
 <body id="body">
 
@@ -105,7 +135,7 @@ End Fixed Navigation
 <!--
 All Are Welcome
 ==================================== -->
-<section class="call-to-action-2 section">
+<section class="call-to-action-speakergals section">
 	<div class="container">
 		<div class="row">
 			<div class="col-md-12 text-center">
