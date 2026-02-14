@@ -154,6 +154,10 @@
       "icon": "tf-ion-chevron-down",
       "items": [
         {
+          "label": "Request Training",
+          "href": "https://booking.kzoomakers.org/training_bookings"
+        },
+        {
           "label": "Wiki",
           "href": "https://wiki.kzoomakers.net/"
         },
