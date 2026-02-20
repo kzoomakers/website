@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kzoo Makers Membership Handbook</title>
+  <style>
+    :root {
+      --primary: #1a3a5c;
+      --primary-light: #2a5a8c;
+      --accent: #e8913a;
+      --accent-light: #f4a84e;
+      --bg: #fafbfc;
+      --sidebar-bg: #f0f2f5;
+      --text: #2c3e50;
+      --text-light: #5a6a7a;
+      --border: #dce1e8;
+      --card-bg: #ffffff;
+      --section-bg: #f7f9fb;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 24px;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.7;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: #fff;
+      padding: 48px 32px 40px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 30% 70%, rgba(232,145,58,0.12) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    header h1 {
+      font-size: 2.4rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    header p {
+      font-size: 1rem;
+      opacity: 0.88;
+      max-width: 720px;
+      margin: 0 auto;
+      line-height: 1.6;
+      position: relative;
+    }
+
+    .layout {
+      display: flex;
+      max-width: 1280px;
+      margin: 0 auto;
+      gap: 0;
+    }
+
+    nav.toc {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      width: 300px;
+      min-width: 300px;
+      overflow-y: auto;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      padding: 28px 0;
+      font-size: 0.88rem;
+    }
+
+    nav.toc::-webkit-scrollbar { width: 5px; }
+    nav.toc::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    nav.toc h2 {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-light);
+      padding: 0 24px;
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+
+    nav.toc ol {
+      list-style: none;
+      padding: 0;
+    }
+
+    nav.toc > ol > li {
+      margin-bottom: 2px;
+    }
+
+    nav.toc > ol > li > a {
+      display: block;
+      padding: 8px 24px;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.88rem;
+      border-left: 3px solid transparent;
+      transition: all 0.15s ease;
+    }
+
+    nav.toc > ol > li > a:hover {
+      background: rgba(26,58,92,0.06);
+      border-left-color: var(--accent);
+      color: var(--primary-light);
+    }
+
+    nav.toc > ol > li > ol {
+      list-style: none;
+      padding: 0;
+    }
+
+    nav.toc > ol > li > ol > li > a {
+      display: block;
+      padding: 4px 24px 4px 40px;
+      color: var(--text-light);
+      text-decoration: none;
+      font-size: 0.82rem;
+      transition: all 0.15s ease;
+      border-left: 3px solid transparent;
+    }
+
+    nav.toc > ol > li > ol > li > a:hover {
+      color: var(--primary);
+      background: rgba(26,58,92,0.04);
+      border-left-color: var(--accent-light);
+    }
+
+    main {
+      flex: 1;
+      min-width: 0;
+      padding: 40px 48px 80px;
+    }
+
+    .preamble {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin-bottom: 40px;
+      font-size: 0.92rem;
+      color: var(--text-light);
+      line-height: 1.65;
+    }
+
+    section {
+      margin-bottom: 48px;
+    }
+
+    section > h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--accent);
+      margin-bottom: 24px;
+      letter-spacing: -0.01em;
+    }
+
+    .subsection {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px 28px;
+      margin-bottom: 16px;
+      transition: box-shadow 0.2s ease;
+    }
+
+    .subsection:hover {
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    .subsection:target {
+      box-shadow: 0 0 0 2px var(--accent), 0 4px 16px rgba(232,145,58,0.15);
+    }
+
+    .subsection h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--primary-light);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      font-size: 0.92rem;
+    }
+
+    .subsection p {
+      font-size: 0.93rem;
+      line-height: 1.75;
+      color: var(--text);
+    }
+
+    .subsection p + p {
+      margin-top: 12px;
+    }
+
+    .subsection ul {
+      margin: 10px 0 10px 20px;
+      font-size: 0.93rem;
+      color: var(--text);
+    }
+
+    .subsection ul li {
+      margin-bottom: 6px;
+      line-height: 1.6;
+    }
+
+    .back-to-top {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      transition: transform 0.2s, background 0.2s;
+      text-decoration: none;
+    }
+
+    .back-to-top:hover {
+      background: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    footer {
+      text-align: center;
+      padding: 32px;
+      font-size: 0.82rem;
+      color: var(--text-light);
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 900px) {
+      .layout { flex-direction: column; }
+      nav.toc {
+        position: relative;
+        width: 100%;
+        min-width: unset;
+        height: auto;
+        max-height: 50vh;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+      main { padding: 28px 20px 60px; }
+      header h1 { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header id="top">
+  <h1>Kzoo Makers Membership Handbook</h1>
+  <p>This Handbook is incorporated by reference into the Kzoo Makers Membership Agreement and is binding upon all Members and Guests as a condition of membership and facility use. Violations of any provision in this Handbook constitute violations of the Membership Agreement and may result in suspension, restriction, or termination of membership.</p>
+</header>
+
+<div class="layout">
+
+<nav class="toc">
+  <h2>Table of Contents</h2>
+  <ol>
+    <li>
+      <a href="#section-1">1. Facility Access, Equipment Use, and Safety</a>
+      <ol>
+        <li><a href="#s1-1">1.1 Equipment Availability</a></li>
+        <li><a href="#s1-2">1.2 Operation of Equipment</a></li>
+        <li><a href="#s1-3">1.3 Mandatory Compliance with Signage and PPE</a></li>
+        <li><a href="#s1-4">1.4 Intoxication and Impairment</a></li>
+        <li><a href="#s1-5">1.5 Emergency Medical Consent</a></li>
+        <li><a href="#s1-6">1.6 Hours and Availability</a></li>
+        <li><a href="#s1-7">1.7 Force Majeure and Facility Closure</a></li>
+      </ol>
+    </li>
+    <li>
+      <a href="#section-2">2. Guests, Minors, and Supervision</a>
+      <ol>
+        <li><a href="#s2-1">2.1 Guests</a></li>
+        <li><a href="#s2-2">2.2 Minors and Youth Participation</a></li>
+      </ol>
+    </li>
+    <li>
+      <a href="#section-3">3. Conduct, Behavior, and Acceptable Use</a>
+      <ol>
+        <li><a href="#s3-1">3.1 Direction of Staff and Adherence to SOPs</a></li>
+        <li><a href="#s3-2">3.2 Harassment, Discrimination, and Conduct Standards</a></li>
+        <li><a href="#s3-3">3.3 Internet Acceptable Use Policy</a></li>
+        <li><a href="#s3-4">3.4 Prohibited Political Content</a></li>
+        <li><a href="#s3-5">3.5 Compliance with Law and Prohibited Activities</a></li>
+      </ol>
+    </li>
+    <li>
+      <a href="#section-4">4. Materials, Projects, and Hazardous Substances</a>
+      <ol>
+        <li><a href="#s4-1">4.1 Consumables and Raw Materials</a></li>
+        <li><a href="#s4-2">4.2 Hazardous Materials and HMIS/MSDS Requirements</a></li>
+        <li><a href="#s4-3">4.3 Non-Production / Non-Commercial Use</a></li>
+        <li><a href="#s4-4">4.4 Export Control Compliance</a></li>
+      </ol>
+    </li>
+    <li>
+      <a href="#section-5">5. Property, Storage, and Damage</a>
+      <ol>
+        <li><a href="#s5-1">5.1 Damage, Cleaning, and Performance</a></li>
+        <li><a href="#s5-2">5.2 Storage Space</a></li>
+        <li><a href="#s5-3">5.3 Storage Labeling, Duration, and Abandonment</a></li>
+        <li><a href="#s5-4">5.4 No Bailment or Custodial Relationship</a></li>
+        <li><a href="#s5-5">5.5 Personal Property Disclaimer</a></li>
+      </ol>
+    </li>
+    <li>
+      <a href="#section-6">6. Consulting, Assistance, and No Professional Responsibility</a>
+      <ol>
+        <li><a href="#s6-1">6.1 Consulting and Assistance</a></li>
+        <li><a href="#s6-2">6.2 No Design, Engineering, or Project Responsibility</a></li>
+      </ol>
+    </li>
+    <li>
+      <a href="#section-7">7. Access Control and Security</a>
+      <ol>
+        <li><a href="#s7-1">7.1 Keys, Keyfobs, and Credentials</a></li>
+        <li><a href="#s7-2">7.2 Reporting Loss or Compromise</a></li>
+      </ol>
+    </li>
+    <li>
+      <a href="#section-8">8. Membership Terms and Administration</a>
+      <ol>
+        <li><a href="#s8-1">8.1 Membership Levels and Access</a></li>
+        <li><a href="#s8-2">8.2 Assignment and Non-Transferability</a></li>
+        <li><a href="#s8-3">8.3 Payments of Dues</a></li>
+        <li><a href="#s8-4">8.4 Refunds and Non-Refundability</a></li>
+      </ol>
+    </li>
+    <li>
+      <a href="#section-9">9. Termination, Cancellation, and Access Changes</a>
+      <ol>
+        <li><a href="#s9-1">9.1 Termination of Membership</a></li>
+        <li><a href="#s9-2">9.2 Cancellation by Member</a></li>
+        <li><a href="#s9-3">9.3 Suspension, Restriction, or Modification of Access</a></li>
+        <li><a href="#s9-4">9.4 Vacating the Facility</a></li>
+      </ol>
+    </li>
+    <li>
+      <a href="#section-10">10. Intellectual Property and Confidentiality</a>
+      <ol>
+        <li><a href="#s10-1">10.1 Ownership of Member Materials</a></li>
+        <li><a href="#s10-2">10.2 No Confidentiality Guarantee</a></li>
+        <li><a href="#s10-3">10.3 No Partnership or Fiduciary Relationship</a></li>
+      </ol>
+    </li>
+  </ol>
+</nav>
+
+<main>
+
+<div class="preamble">
+  This Handbook is incorporated by reference into the Kzoo Makers Membership Agreement and is binding upon all Members and Guests as a condition of membership and facility use. Violations of any provision in this Handbook constitute violations of the Membership Agreement and may result in suspension, restriction, or termination of membership.
+</div>
+
+<!-- Section 1 -->
+<section id="section-1">
+  <h2>1. Facility Access, Equipment Use, and Safety</h2>
+
+  <div class="subsection" id="s1-1">
+    <h3>1.1 Equipment Availability</h3>
+    <p>Kzoo Makers will endeavor to make all equipment available on a regular basis. Equipment may be added, removed, or modified at any time. The unavailability of equipment is not grounds for termination of this agreement. Access to equipment may be limited to allow shared use by other members.</p>
+  </div>
+
+  <div class="subsection" id="s1-2">
+    <h3>1.2 Operation of Equipment</h3>
+    <p>Failure to operate equipment in the prescribed manner is grounds for suspension of member's privileges to use specific equipment or all equipment (as determined in Kzoo Makers sole discretion). Suspension of privileges to use equipment is not grounds for termination of this agreement. A member may only operate equipment that the member has been authorized to operate by Kzoo Makers staff. Specifically identified equipment will require the successful completion of a safety workshop prior to operation. A fee may be charged for the initial completion of a safety class. No fee will be charged for repeat attendance of the same class. Kzoo Makers reserves the right to change the schedule and content of safety classes and the fee structure of the safety classes.</p>
+  </div>
+
+  <div class="subsection" id="s1-3">
+    <h3>1.3 Mandatory Compliance with Warning Signage and Safety Notices</h3>
+    <p>Member acknowledges and agrees that all warning signage, instructional signage, hazard notices, safety placards, equipment labels, access restrictions, and personal protective equipment ("PPE") requirements posted within the Kzoo Makers facility or on or near any equipment are mandatory conditions of membership and facility use.</p>
+    <p>Such signage may include, without limitation, requirements relating to eye protection, hearing protection, respiratory protection, gloves, guards, barriers, lockout/tagout, restricted access zones, equipment-specific hazards, and prohibited conduct.</p>
+    <p>Failure to observe, follow, or comply with posted signage or PPE requirements constitutes a violation of this Agreement and may result in immediate suspension of access, restriction of privileges, or termination of membership without refund.</p>
+  </div>
+
+  <div class="subsection" id="s1-4">
+    <h3>1.4 Intoxication and Impairment</h3>
+    <p>Members and guests are strictly prohibited from operating, assisting with, or being in the immediate vicinity of any powered equipment while intoxicated or impaired. Intoxication includes, but is not limited to, impairment due to alcohol, cannabis, or any prescription or non-prescription drug that carries a warning regarding the operation of machinery, heavy equipment, or tools. Any Member or guest who appears impaired may be required to immediately cease activities, vacate the equipment area, or leave the facility at the direction of Kzoo Makers staff. Membership can be terminated without refund at the sole discretion of Kzoo Makers based on severity or impact of any specific incident. Determinations of impairment are made at the sole discretion of Kzoo Makers and are final.</p>
+  </div>
+
+  <div class="subsection" id="s1-5">
+    <h3>1.5 Emergency Medical Consent</h3>
+    <p>Member authorizes Kzoo Makers staff, volunteers or members to contact emergency medical services and to obtain emergency medical treatment for the Member if, in the reasonable judgment of Kzoo Makers staff, such treatment is necessary due to illness, injury, or medical emergency occurring at or in connection with use of the facility. Member understands that Kzoo Makers assumes no responsibility for the provision, quality, or outcome of any medical care and that all costs associated with such care are the sole responsibility of the Member.</p>
+  </div>
+
+  <div class="subsection" id="s1-6">
+    <h3>1.6 Hours and Availability</h3>
+    <p>Hours of operation, days of availability, access windows, staffing coverage, and scheduling may be established, modified, reduced, suspended, or eliminated at any time in Kzoo Makers' sole discretion, with or without notice. Any such changes shall not constitute a breach of this Agreement and shall not entitle any Member to any refund, credit, proration, or reduction of fees. Changes of hours and availability will be communicated to general membership if they need to take place.</p>
+  </div>
+
+  <div class="subsection" id="s1-7">
+    <h3>1.7 Force Majeure / Facility Closure</h3>
+    <p>Kzoo Makers shall not be liable for any failure or delay in performance under this Agreement, nor shall such failure constitute a breach, if caused by events beyond its reasonable control, including but not limited to acts of God, fire, flood, severe weather, utility outages, equipment failure, pandemics, public health emergencies, government orders, labor shortages, building repairs, relocation, or other circumstances that render the facility partially or wholly unavailable. During any such period, membership fees shall continue unless otherwise determined by Kzoo Makers in its sole discretion. Temporary closure or reduced access shall not entitle Member to refund, or damages.</p>
+  </div>
+</section>
+
+<!-- Section 2 -->
+<section id="section-2">
+  <h2>2. Guests, Minors, and Supervision</h2>
+
+  <div class="subsection" id="s2-1">
+    <h3>2.1 Guests</h3>
+    <p>A member may bring not more than one (1) guest into the Kzoo Makers facility at any one time. Guests will be required to complete a Privacy Release, Release, Indemnity, and Assumption of Risk Agreement. Guests of the members are subject to all the same rules as regular members; however, guests may not operate equipment (including computers) at any time. The guest also agrees to always be in the presence and escort of the inviting member while at the Kzoo Makers' facility. The inviting member will be responsible for his/her guest.</p>
+  </div>
+
+  <div class="subsection" id="s2-2">
+    <h3>2.2 Minors and Youth Participation</h3>
+    <p>Individuals under the age of eighteen (18) ("Minors") are permitted to access the Kzoo Makers facility only with the prior written consent of a parent or legal guardian and subject to all restrictions imposed by Kzoo Makers. Kzoo Makers reserves the right to establish minimum age requirements, supervision requirements, equipment access restrictions, and program-specific rules for Minors, which may vary by activity or equipment and may be modified at any time.</p>
+    <p>A parent or legal guardian of a Minor ("Guardian") must execute this Agreement on behalf of the Minor. The Guardian acknowledges and agrees that Minors cannot waive liability on their own behalf and, to the fullest extent permitted by law, the Guardian hereby assumes all risks associated with the Minor's participation in activities at Kzoo Makers, including use of the facilities, equipment, tools, and participation in any classes or programs.</p>
+    <p>The Guardian further agrees to release, waive, and discharge Kzoo Makers and its owners, directors, officers, staff, volunteers, agents, contractors, and affiliates from any and all claims arising from or related to the Minor's participation, except to the extent caused by gross negligence or willful misconduct. The Guardian agrees to defend, indemnify, and hold harmless Kzoo Makers from and against any and all claims, damages, losses, liabilities, costs, and expenses (including reasonable attorneys' fees) arising out of or related to the Minor's acts or omissions, the Guardian's acts or omissions, or the Minor's participation in activities at Kzoo Makers.</p>
+    <p>Unless expressly authorized in writing by Kzoo Makers, Minors must be under the direct supervision of their Guardian at all times and may not operate hazardous equipment, or equipment requiring safety certification. Kzoo Makers staff may deny or revoke a Minor's access at any time in its sole discretion. The Guardian acknowledges that Kzoo Makers is not a childcare facility and assumes no responsibility for supervision, monitoring, or control of Minors beyond enforcement of general safety rules.</p>
+  </div>
+</section>
+
+<!-- Section 3 -->
+<section id="section-3">
+  <h2>3. Conduct, Behavior, and Acceptable Use</h2>
+
+  <div class="subsection" id="s3-1">
+    <h3>3.1 Direction of Kzoo Makers Staff and Adherence to Procedures</h3>
+    <p>Members and guests must comply with directions of Kzoo Makers staff and must also adhere to Kzoo Makers general and equipment-specific Standard Operating Procedures ("SOP").</p>
+  </div>
+
+  <div class="subsection" id="s3-2">
+    <h3>3.2 Harassment, Discrimination, and Conduct</h3>
+    <p>Kzoo Makers commits to maintaining a safe, respectful, and inclusive environment. Harassment, intimidation, discrimination, or abusive conduct of any kind is strictly prohibited. Members and Guests shall not engage in behavior that is verbal, physical, written, visual, or electronic that is threatening, hostile, disruptive, or offensive, including but not limited to bullying, intimidation, unwanted sexual advances or comments, discriminatory conduct based on any protected characteristic under applicable law, persistent unwanted contact, stalking, or retaliation.</p>
+    <p>This prohibition applies to conduct occurring in person, online, through use of Kzoo Makers' internet or systems, or in connection with any Kzoo Makers activity, whether on or off the premises when related to membership or facility use.</p>
+    <p>Kzoo Makers reserves the right, in its sole discretion, to investigate any alleged violation and to impose consequences including warnings, suspension of access or privileges, or immediate termination of membership without refund. Members are responsible for the conduct of their Guests, and violations by a Guest may be treated as violations by the inviting Member. Report violations to contact@kzoomakers.org, any Board Member, staff or volunteer directly depending on your level of comfort.</p>
+  </div>
+
+  <div class="subsection" id="s3-3">
+    <h3>3.3 Internet Acceptable Use Policy</h3>
+    <p>Kzoo Makers provides internet access as a convenience. Use is a privilege, not a right. Members and Guests agree they shall not use Kzoo Makers' internet, network, or connected systems to:</p>
+    <ul>
+      <li>Engage in any unlawful, fraudulent, or prohibited activity;</li>
+      <li>Access, transmit, or store content that is illegal, obscene, explicit, defamatory, threatening, harassing, or discriminatory;</li>
+      <li>Infringe upon the intellectual property rights of others, including copyright infringement, piracy, or unauthorized distribution of protected material;</li>
+      <li>Attempt to gain unauthorized access to any computer systems, networks, accounts, data or introduce malware, viruses, ransomware, or any other malicious code;</li>
+      <li>Operate servers or high-bandwidth services without prior written approval from Kzoo Makers.</li>
+    </ul>
+  </div>
+
+  <div class="subsection" id="s3-4">
+    <h3>3.4 Prohibited Political Content</h3>
+    <p>Kzoo Makers is legally obligated by the IRS to maintain organizational neutrality towards political parties, candidates and office holders. Therefore the facility, equipment, tools, materials and consumables may not be used to fabricate, modify, assemble, distribute, store, or support materials that endorse, oppose, promote, disparage, or call for the election, defeat, recall, resignation, or removal of any clearly identified candidate for public office, current elected or appointed public official, political party, or political campaign, including but not limited to signage, slogans, merchandise, or protest materials directed at a named individual or officeholder. This prohibition applies regardless if materials are intended for personal use, noncommercial use, commercial use, protests, demonstrations, picketing or other activities with or without profit incentive.</p>
+    <p>However, nothing in this section prohibits Members from engaging in lawful, non-partisan, issue-based expression that does not reference, target, or reasonably identify a specific political party, candidate or public official, provided such activity otherwise complies with this Agreement and applicable law.</p>
+    <p>Kzoo Makers reserves the right, in its sole discretion, to refuse, halt, restrict, or require removal of any project, material, or activity that it determines may violate this section or pose a legal, regulatory, financial or organizational risk. Any violation of this section constitutes grounds for immediate suspension or termination of membership without refund.</p>
+  </div>
+
+  <div class="subsection" id="s3-5">
+    <h3>3.5 Use of Facilities and Compliance with Law</h3>
+    <p>Kzoo Makers' facility and property shall be used only for lawful purposes and only for activities expressly permitted by Kzoo Makers. Only property owned by or in the custody of a Member may be brought into and stored in the Kzoo Makers facility. The fabrication, modification, assembly, or repair of any sort of weapon is strictly prohibited. Kzoo Makers reserves the right, in its sole discretion, to prohibit any equipment, materials, tools, or activities that it determines may pose a safety, legal, or liability risk, including but not limited to firearms, firearm-related work, or weapon-adjacent projects.</p>
+  </div>
+</section>
+
+<!-- Section 4 -->
+<section id="section-4">
+  <h2>4. Materials, Projects, and Hazardous Substances</h2>
+
+  <div class="subsection" id="s4-1">
+    <h3>4.1 Consumables and Raw Materials</h3>
+    <p>Members are responsible for the purchase or provision of consumables and raw materials. Kzoo Makers may provide, but does not guarantee to provide, limited and basic tooling for some equipment. In order to maintain equipment service conditions and warranties, certain consumables and raw materials must be purchased from Kzoo Makers. Staff members will provide that information upon request. Kzoo Makers is not responsible for any aspect of materials and tooling provided by Members and reserves the right to decline the donation of materials and tooling.</p>
+  </div>
+
+  <div class="subsection" id="s4-2">
+    <h3>4.2 Hazardous Materials and HMIS/MSDS Requirements</h3>
+    <p>Hazardous and toxic materials are not allowed into Kzoo Makers' facility without the prior written approval of Kzoo Makers staff. Members must complete a Hazardous Materials Information Sheet ("HMIS") prior to bringing hazardous materials into Kzoo Makers' facility. Members must also furnish a Materials Safety Data Sheet ("MSDS") for hazardous material (available from the material manufacturer). Members must remove all hazardous materials from Kzoo Makers' facility at the end of each day unless Kzoo Makers staff provides specific written approval.</p>
+  </div>
+
+  <div class="subsection" id="s4-3">
+    <h3>4.3 Non-Production / Non-Commercial Use</h3>
+    <p>Kzoo Makers provides the facilities to the member for the shared use of all members. The facilities are not provided as a place of business or production of commercial goods, except by specific written agreement with Kzoo Makers. Unless otherwise agreed to by Kzoo Makers, the use of the facilities for any purpose other than personal, non-commercial activities is prohibited.</p>
+  </div>
+
+  <div class="subsection" id="s4-4">
+    <h3>4.4 Export Control Compliance</h3>
+    <p>Member acknowledges that certain technologies, designs, software, equipment, materials, and technical data may be subject to United States export control laws and regulations, including but not limited to the International Traffic in Arms Regulations ("ITAR"), the Export Administration Regulations ("EAR"), and economic sanctions administered by the U.S. Department of the Treasury. Member agrees that Kzoo Makers' facilities, equipment, tools, systems, and resources may not be used to create, access, share, fabricate, modify, store, or transmit any controlled technical data, export-restricted designs, or regulated items, nor to provide assistance, training, or services to any person or entity prohibited or restricted under applicable export control or sanctions laws. Kzoo Makers does not screen projects for export-control compliance and assumes no responsibility for determining whether any Member activity is subject to such laws. Compliance with all applicable export control and sanctions requirements is solely the responsibility of the Member. Any violation of this section constitutes grounds for immediate suspension or termination of membership.</p>
+  </div>
+</section>
+
+<!-- Section 5 -->
+<section id="section-5">
+  <h2>5. Property, Storage, and Damage</h2>
+
+  <div class="subsection" id="s5-1">
+    <h3>5.1 Damage, Cleaning, and Performance</h3>
+    <p>Each Member shall maintain the Kzoo Makers facilities and equipment in accordance with Kzoo Makers rules and SOP (Standard Operating Procedure). Any damage to Kzoo Makers' facilities and/or equipment must be reported to staff immediately. Any Member that damages Kzoo Makers' facilities and/or equipment will be responsible for the cost of such repair if the damage was the result of such member's carelessness and/or failure to follow SOP. Additionally, a Member shall be responsible for the cost of repair if the damage was the result of the carelessness and/or failure to follow SOP by any guest of a member.</p>
+  </div>
+
+  <div class="subsection" id="s5-2">
+    <h3>5.2 Storage Space</h3>
+    <p>A limited number of general storage spaces are available to rent, at Kzoo Makers, for an additional charge. A Member shall be responsible for securing all items stored in general storage and Kzoo Makers shall have no liability for any loss or damage that a Member may experience when storing items or materials in any such storage space.</p>
+  </div>
+
+  <div class="subsection" id="s5-3">
+    <h3>5.3 Storage Labeling, Duration, and Abandonment</h3>
+    <p>All items stored at Kzoo Makers must be clearly labeled with the Member's name and the date placed into storage, in accordance with posted rules or SOPs. Storage privileges are limited, may be modified or revoked at any time, and do not guarantee long-term or exclusive use of any space. Property left unlabeled, stored outside approved areas, stored beyond permitted time limits, or remaining after membership lapse, suspension, termination, or written notice to vacate shall be deemed abandoned. Abandoned property may be removed, relocated, disposed of, recycled, donated, or destroyed at Kzoo Makers' sole discretion without compensation or liability to the Member or Guest.</p>
+  </div>
+
+  <div class="subsection" id="s5-4">
+    <h3>5.4 No Bailment or Custodial Relationship</h3>
+    <p>Member acknowledges and agrees that no bailment, custodial, or safekeeping relationship is created by the presence, use, or storage of any property, materials, projects, tools, or equipment at the Kzoo Makers facility, whether stored in general storage, work areas, lockers, shelves, or elsewhere. All such property remains at the sole risk of the Member or Guest, and Kzoo Makers assumes no duty of care, control, supervision, or responsibility for such property except as expressly required by law.</p>
+  </div>
+
+  <div class="subsection" id="s5-5">
+    <h3>5.5 Personal Property</h3>
+    <p>Kzoo Makers is at no time responsible for the acts, omissions and/or property of any Member (whether such property is owned or in the custody of such Member).</p>
+  </div>
+</section>
+
+<!-- Section 6 -->
+<section id="section-6">
+  <h2>6. Consulting, Assistance, and No Professional Responsibility</h2>
+
+  <div class="subsection" id="s6-1">
+    <h3>6.1 Consulting and Assistance</h3>
+    <p>The Kzoo Makers staff is available for general consultation or assistance regarding a Member's project and/or the Kzoo Makers' equipment and facilities. For an additional fee (discussed between members) a Member may make arrangements for more extensive consultation and/or assistance with a specific project.</p>
+  </div>
+
+  <div class="subsection" id="s6-2">
+    <h3>6.2 No Design, Engineering, or Project Responsibility</h3>
+    <p>Any extended consultation and/or assistance will be provided in a commercially reasonable manner; however, Kzoo Makers shall not have control over, a charge of, or responsibility for the design, engineering, methods, techniques, sequences or procedures in connection with a Member's project.</p>
+  </div>
+</section>
+
+<!-- Section 7 -->
+<section id="section-7">
+  <h2>7. Access Control and Security</h2>
+
+  <div class="subsection" id="s7-1">
+    <h3>7.1 Keys, Keyfobs, and Access Control</h3>
+    <p>Any keys, keyfobs, access cards, or electronic credentials issued to a Member remain the property of Kzoo Makers and are issued solely for the Member's personal use. Members shall not lend, share, duplicate, transfer, or permit use of access credentials by any other person.</p>
+  </div>
+
+  <div class="subsection" id="s7-2">
+    <h3>7.2 Reporting Loss or Compromise</h3>
+    <p>Loss, theft, or compromise of access credentials must be reported to Kzoo Makers immediately. Kzoo Makers reserves the right to deactivate, revoke, or modify access credentials at any time. Members may be held financially responsible for replacement costs, unauthorized access, damage, theft, or losses resulting from misuse, sharing, or failure to timely report lost or compromised access credentials. If your keyfob is lost or stolen, email contact@kzoomakers.org.</p>
+  </div>
+</section>
+
+<!-- Section 8 -->
+<section id="section-8">
+  <h2>8. Membership Terms and Administration</h2>
+
+  <div class="subsection" id="s8-1">
+    <h3>8.1 Membership Levels and Access</h3>
+    <p>Membership constitutes a base cost of entry providing general facility access as determined by Kzoo Makers and is uniform among Members within the same membership category. Membership does not guarantee access to all equipment, tools, zones, areas, programs, activities, or privileges. Kzoo Makers reserves the right, in its sole discretion, to establish, modify, or eliminate additional membership tiers, access levels, endorsements, certifications, zones, tools, programs, or activities, which may require additional fees, training, approval, or conditions. The creation or modification of such additional access or fees shall not entitle any Member to a refund, credit, or reduction of base membership fees.</p>
+  </div>
+
+  <div class="subsection" id="s8-2">
+    <h3>8.2 Assignment and Non-Transferability</h3>
+    <p>Membership to Kzoo Makers is personal to the Member and may not be transferred at any time to another person.</p>
+  </div>
+
+  <div class="subsection" id="s8-3">
+    <h3>8.3 Payments of Dues</h3>
+    <p>Membership dues are due as stated on the issued invoice. Payment is required by the due date specified on the invoice, which may be based on the invoice issuance date. Late payment may be accepted at the discretion of Kzoo Makers; however, Members may not operate any tools or equipment, or access restricted areas, until all outstanding dues and charges have been paid in full.</p>
+    <p>Failure to timely pay dues constitutes a violation of this Agreement and may result in suspension of access, restriction of privileges, or termination of membership in accordance with this Agreement.</p>
+  </div>
+
+  <div class="subsection" id="s8-4">
+    <h3>8.4 Refunds and Non-Refundability</h3>
+    <p>All membership fees, dues, class fees, safety training fees, storage fees, and any other charges paid to Kzoo Makers are non-refundable to the fullest extent permitted by law. Membership fees are not prorated for partial months, periods of nonuse, suspension, termination (with or without cause), or facility closure. No refunds or credits shall be issued for unused time, loss of access, equipment unavailability, or changes to services or facilities, except where expressly required by applicable law.</p>
+  </div>
+</section>
+
+<!-- Section 9 -->
+<section id="section-9">
+  <h2>9. Termination, Cancellation, and Access Changes</h2>
+
+  <div class="subsection" id="s9-1">
+    <h3>9.1 Termination of Membership</h3>
+    <p>Kzoo Makers reserves the right, in its sole discretion, to suspend or terminate a Member's membership at any time, with or without cause, and with or without prior notice. Termination may occur for, but is not limited to, violations of this Agreement, SOPs, safety rules, nonpayment of fees, conduct deemed unsafe, disruptive, or inconsistent with the mission or operation of Kzoo Makers, or for any other reason deemed appropriate by Kzoo Makers staff or directors. Termination of membership does not relieve Member of any outstanding payment obligations and does not entitle Member to any refund of fees.</p>
+  </div>
+
+  <div class="subsection" id="s9-2">
+    <h3>9.2 Cancellation by Member</h3>
+    <p>A Member may cancel membership by providing at least fourteen (14) days' written notice prior to the start of the next billing cycle. Upon proper notice, recurring billing will cease and facility access will terminate at the end of the current billing cycle. If a member wants to suspend or downgrade membership, we oblige requests on a case-by-case basis, and make every effort to reasonably accommodate these requests.</p>
+  </div>
+
+  <div class="subsection" id="s9-3">
+    <h3>9.3 Suspension, Restriction, or Modification of Access</h3>
+    <p>Member acknowledges and agrees that any suspension, restriction, limitation, modification, or partial shutdown of access to the facility, equipment, tools, programs, services, hours, or privileges&mdash;whether temporary or permanent, and whether applied to an individual Member or generally&mdash;shall not constitute a breach of this Agreement.</p>
+    <p>Such actions shall not give rise to any claim for damages, credits, offsets, refunds, fee reductions, or other compensation of any kind, except where expressly required by applicable law.</p>
+  </div>
+
+  <div class="subsection" id="s9-4">
+    <h3>9.4 Vacating the Facility</h3>
+    <p>In the event a Member fails to maintain his/her membership in good standing, such Member must vacate the Kzoo Makers facility and remove all of such Member's materials from the Kzoo Makers facility within 7 days of written notice from Kzoo Makers.</p>
+  </div>
+</section>
+
+<!-- Section 10 -->
+<section id="section-10">
+  <h2>10. Intellectual Property and Confidentiality</h2>
+
+  <div class="subsection" id="s10-1">
+    <h3>10.1 Ownership of Member Materials</h3>
+    <p>All ideas, designs, inventions, works of authorship, prototypes, data, and other materials created, developed, or brought into the Kzoo Makers facility by a Member or Guest ("Member Materials") shall remain the sole property of the Member or Guest, as applicable. Kzoo Makers does not claim any ownership interest in Member Materials.</p>
+  </div>
+
+  <div class="subsection" id="s10-2">
+    <h3>10.2 No Confidentiality Guarantee</h3>
+    <p>Member acknowledges and agrees that Kzoo Makers is a shared, open, collaborative environment and that Kzoo Makers does not and cannot guarantee the confidentiality, secrecy, or exclusivity of any Member Materials, projects, or information. Kzoo Makers shall have no duty to protect, monitor, or enforce the intellectual property rights of any Member or Guest. Member assumes all risk associated with the disclosure, observation, or use of Member Materials by others and agrees that Kzoo Makers shall not be liable for any loss, theft, misappropriation, or infringement of intellectual property occurring within or in connection with use of the facility.</p>
+  </div>
+
+  <div class="subsection" id="s10-3">
+    <h3>10.3 No Partnership or Fiduciary Relationship</h3>
+    <p>Nothing in this Agreement shall be construed as creating any partnership, joint venture, agency, or fiduciary relationship between Kzoo Makers and any Member or Guest.</p>
+  </div>
+</section>
+
+</main>
+</div>
+
+<a href="#top" class="back-to-top" title="Back to top" aria-label="Back to top">&uarr;</a>
+
+<footer>
+  Kzoo Makers Membership Handbook &mdash; All rights reserved.
+</footer>
+
+</body>
+</html>
+
