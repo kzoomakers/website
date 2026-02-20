@@ -61,6 +61,10 @@
         {
           "label": "Sitemap",
           "href": "sitemap.html"
+        },
+        {
+          "label": "Member Handbook",
+          "href": "handbook.html"
         }
       ]
     },
