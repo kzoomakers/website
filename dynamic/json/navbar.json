@@ -168,6 +168,10 @@
         {
           "label": "Cameras",
           "href": "https://cameras.kzoomakers.net/"
+        },
+        {
+          "label": "Handbook",
+          "href": "https://kzoomakers.org/handbook.html"
         }
       ]
     }
