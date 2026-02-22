@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kzoo Makers Standard Operating Procedures</title>
+  <style>
+    :root {
+      --primary: #1a3a5c;
+      --primary-light: #2a5a8c;
+      --accent: #e8913a;
+      --accent-light: #f4a84e;
+      --bg: #fafbfc;
+      --sidebar-bg: #f0f2f5;
+      --text: #2c3e50;
+      --text-light: #5a6a7a;
+      --border: #dce1e8;
+      --card-bg: #ffffff;
+      --section-bg: #f7f9fb;
+      --warning: #d4a017;
+      --warning-bg: #fef9e7;
+      --warning-border: #f0d060;
+      --danger: #c0392b;
+      --danger-bg: #fdecea;
+      --danger-border: #e74c3c;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 24px;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.7;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    header {
+      background: url('images/history/2024_workshop.webp') top center/cover no-repeat;
+      color: #fff;
+      padding: 48px 32px 40px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(26,58,92,0.78), rgba(42,90,140,0.72));
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    #header-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    header h1 {
+      font-size: 2.4rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 2;
+    }
+
+    header p {
+      font-size: 1rem;
+      opacity: 0.88;
+      max-width: 720px;
+      margin: 0 auto;
+      line-height: 1.6;
+      position: relative;
+      z-index: 2;
+    }
+
+    .layout {
+      display: flex;
+      max-width: 1320px;
+      margin: 0 auto;
+      gap: 0;
+    }
+
+    nav.toc {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      width: 320px;
+      min-width: 320px;
+      overflow-y: auto;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      padding: 28px 0;
+      font-size: 0.88rem;
+    }
+
+    nav.toc::-webkit-scrollbar { width: 5px; }
+    nav.toc::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    nav.toc h2 {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-light);
+      padding: 0 24px;
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+
+    nav.toc ol {
+      list-style: none;
+      padding: 0;
+    }
+
+    nav.toc > ol > li {
+      margin-bottom: 2px;
+    }
+
+    nav.toc > ol > li > a {
+      display: block;
+      padding: 8px 24px;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.88rem;
+      border-left: 3px solid transparent;
+      transition: all 0.15s ease;
+    }
+
+    nav.toc > ol > li > a:hover {
+      background: rgba(26,58,92,0.06);
+      border-left-color: var(--accent);
+      color: var(--primary-light);
+    }
+
+    nav.toc > ol > li > ol {
+      list-style: none;
+      padding: 0;
+    }
+
+    nav.toc > ol > li > ol > li > a {
+      display: block;
+      padding: 4px 24px 4px 40px;
+      color: var(--text-light);
+      text-decoration: none;
+      font-size: 0.82rem;
+      transition: all 0.15s ease;
+      border-left: 3px solid transparent;
+    }
+
+    nav.toc > ol > li > ol > li > a:hover {
+      color: var(--primary);
+      background: rgba(26,58,92,0.04);
+      border-left-color: var(--accent-light);
+    }
+
+    main {
+      flex: 1;
+      min-width: 0;
+      padding: 40px 48px 80px;
+    }
+
+    .preamble {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin-bottom: 40px;
+      font-size: 0.92rem;
+      color: var(--text-light);
+      line-height: 1.65;
+    }
+
+    .wip-banner {
+      background: var(--warning-bg);
+      border: 1px solid var(--warning-border);
+      border-left: 4px solid var(--warning);
+      border-radius: 8px;
+      padding: 18px 24px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #7a6109;
+    }
+
+    .wip-banner .wip-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    section {
+      margin-bottom: 48px;
+    }
+
+    section > h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--accent);
+      margin-bottom: 24px;
+      letter-spacing: -0.01em;
+    }
+
+    .subsection {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px 28px;
+      margin-bottom: 16px;
+      transition: box-shadow 0.2s ease;
+    }
+
+    .subsection:hover {
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    .subsection:target {
+      box-shadow: 0 0 0 2px var(--accent), 0 4px 16px rgba(232,145,58,0.15);
+    }
+
+    .subsection h3 {
+      font-weight: 700;
+      color: var(--primary-light);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      font-size: 0.92rem;
+    }
+
+    .subsection p {
+      font-size: 0.93rem;
+      line-height: 1.75;
+      color: var(--text);
+    }
+
+    .subsection p + p {
+      margin-top: 12px;
+    }
+
+    .subsection ul {
+      margin: 10px 0 10px 20px;
+      font-size: 0.93rem;
+      color: var(--text);
+    }
+
+    .subsection ul li {
+      margin-bottom: 6px;
+      line-height: 1.6;
+    }
+
+    .tool-notice {
+      background: var(--danger-bg);
+      border: 1px solid var(--danger-border);
+      border-radius: 6px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--danger);
+      line-height: 1.6;
+    }
+
+    .tool-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .tool-meta .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--section-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .tool-meta .badge .badge-label {
+      color: var(--text-light);
+      font-weight: 400;
+    }
+
+    .back-to-top {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      transition: transform 0.2s, background 0.2s;
+      text-decoration: none;
+    }
+
+    .back-to-top:hover {
+      background: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    footer {
+      text-align: center;
+      padding: 32px;
+      font-size: 0.82rem;
+      color: var(--text-light);
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 900px) {
+      .layout { flex-direction: column; }
+      nav.toc {
+        position: relative;
+        width: 100%;
+        min-width: unset;
+        height: auto;
+        max-height: 50vh;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+      main { padding: 28px 20px 60px; }
+      header h1 { font-size: 1.8rem; }
+      .tool-meta { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<header id="top">
+  <canvas id="header-canvas"></canvas>
+  <h1>Standard Operating Procedures</h1>
+  <p>Equipment-specific safety rules, operating guidelines, and required procedures for Kzoo Makers tools and machinery. All members must review and follow these SOPs before using any equipment.</p>
+</header>
+
+<div class="layout">
+
+<nav class="toc">
+  <h2>Tools &amp; Equipment</h2>
+  <ol>
+    <li>
+      <a href="#woodshop">Woodshop</a>
+      <ol>
+        <li><a href="#jointer">Jointer</a></li>
+      </ol>
+    </li>
+  </ol>
+</nav>
+
+<main>
+
+<div class="wip-banner">
+  <span class="wip-icon">&#9888;</span>
+  <span>This document is a work in progress. Sections will be added and updated as SOPs are developed for additional tools and equipment.</span>
+</div>
+
+<div class="preamble">
+  These Standard Operating Procedures (SOPs) supplement the <a href="handbook.html">Kzoo Makers Membership Handbook</a> and are binding upon all Members and Guests. Each tool section includes access requirements, required PPE, and safety rules that must be followed at all times. Failure to follow SOPs may result in suspension of equipment privileges or termination of membership.
+</div>
+
+<!-- ============================================================ -->
+<!-- Woodshop                                                      -->
+<!-- ============================================================ -->
+<section id="woodshop">
+  <h2>Woodshop</h2>
+
+  <div class="subsection" id="jointer">
+    <h3>Jointer Safety and Operation</h3>
+
+    <div class="tool-notice">
+      NOTICE: Rules and guidelines listed on this page are only reminders. Persons must read safety manual, machine manual, and be trained by PPM Wood-shop Captain.
+    </div>
+
+    <div class="tool-meta">
+      <span class="badge"><span class="badge-label">Access:</span> Safety orientation required</span>
+      <span class="badge"><span class="badge-label">PPE:</span> Eye protection, hearing protection</span>
+    </div>
+
+    <p><strong>Safety Rules</strong></p>
+    <ul>
+      <li>Safety glasses and hearing protection are required.</li>
+      <li>Before turning on the machine, make adjustments for depth of cut and position of the fence.</li>
+      <li>Do not adjust the out-feed table or remove the guard without Wood-shop Captain's approval.</li>
+      <li>The maximum cut for jointing an edge is 1/8" and for a flat surface (face) it is 1/16".</li>
+      <li>Stock must be at least 12" long and at least 3/8" thick unless a special feather board is used.</li>
+      <li>Feed the work piece so the knives will cut "with the grain."</li>
+      <li><strong>DO NOT PLANE END GRAIN!</strong></li>
+      <li>Inspect the wood before sending through the jointer. Use only new stock that is free of knots, splits, cracks and fasteners.</li>
+      <li>Keep your hands away from the cutter-head even though the guard is in position. Maintain at least a 6" margin of safety!</li>
+      <li>Use a push stick or push block when planing a flat surface (face).</li>
+      <li>Do not apply pressure directly over the knives with your hand.</li>
+      <li>The jointer knives must be sharp. Dull knives will vibrate the stock and may cause kickbacks.</li>
+    </ul>
+  </div>
+
+</section>
+
+</main>
+</div>
+
+<a href="#top" class="back-to-top" title="Back to top" aria-label="Back to top">&uarr;</a>
+
+<footer>
+  Kzoo Makers Standard Operating Procedures &mdash; All rights reserved.
+</footer>
+
+<script>
+(function() {
+  const canvas = document.getElementById('header-canvas');
+  const ctx = canvas.getContext('2d');
+  const headerEl = document.getElementById('top');
+
+  function sizeCanvas() {
+    canvas.width = headerEl.offsetWidth;
+    canvas.height = headerEl.offsetHeight;
+  }
+  sizeCanvas();
+
+  let particlesArray;
+
+  let mouse = {
+    x: null,
+    y: null,
+    radius: (canvas.height / 80) * (canvas.width / 80)
+  };
+
+  window.addEventListener('mousemove', function(event) {
+    const rect = headerEl.getBoundingClientRect();
+    mouse.x = event.clientX - rect.left;
+    mouse.y = event.clientY - rect.top;
+  });
+
+  headerEl.addEventListener('mouseleave', function() {
+    mouse.x = null;
+    mouse.y = null;
+  });
+
+  class Particle {
+    constructor(x, y, directionX, directionY, size, color) {
+      this.x = x;
+      this.y = y;
+      this.directionX = directionX;
+      this.directionY = directionY;
+      this.size = size;
+      this.color = color;
+    }
+
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+      ctx.fillStyle = '#00d4ff';
+      ctx.fill();
+    }
+
+    update() {
+      if (this.x > canvas.width || this.x < 0) {
+        this.directionX = -this.directionX;
+      }
+      if (this.y > canvas.height || this.y < 0) {
+        this.directionY = -this.directionY;
+      }
+
+      if (mouse.x != null && mouse.y != null) {
+        let dx = mouse.x - this.x;
+        let dy = mouse.y - this.y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < mouse.radius + this.size) {
+          if (mouse.x < this.x && this.x < canvas.width - this.size * 10) {
+            this.x += 10;
+          }
+          if (mouse.x > this.x && this.x > this.size * 10) {
+            this.x -= 10;
+          }
+          if (mouse.y < this.y && this.y < canvas.height - this.size * 10) {
+            this.y += 10;
+          }
+          if (mouse.y > this.y && this.y > this.size * 10) {
+            this.y -= 10;
+          }
+        }
+      }
+      this.x += this.directionX;
+      this.y += this.directionY;
+      this.draw();
+    }
+  }
+
+  function connect() {
+    let opacityValue = 1;
+    for (let a = 0; a < particlesArray.length; a++) {
+      for (let b = a; b < particlesArray.length; b++) {
+        let distance =
+          (particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x) +
+          (particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y);
+        if (distance < (canvas.width / 7) * (canvas.height / 7)) {
+          opacityValue = 1 - distance / 20000;
+          ctx.strokeStyle = 'rgba(0, 212, 255, ' + opacityValue + ')';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+          ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  function init() {
+    particlesArray = [];
+    let numberOfParticles = (canvas.height * canvas.width) / 9000;
+    for (let i = 0; i < numberOfParticles; i++) {
+      let size = (Math.random() * 5) + 1;
+      let x = Math.random() * (canvas.width - size * 4) + size * 2;
+      let y = Math.random() * (canvas.height - size * 4) + size * 2;
+      let directionX = (Math.random() * 0.8) - 0.4;
+      let directionY = (Math.random() * 0.8) - 0.4;
+      let color = '#00d4ff';
+      particlesArray.push(new Particle(x, y, directionX, directionY, size, color));
+    }
+  }
+
+  function animate() {
+    requestAnimationFrame(animate);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let i = 0; i < particlesArray.length; i++) {
+      particlesArray[i].update();
+    }
+    connect();
+  }
+
+  init();
+  animate();
+
+  window.addEventListener('resize', function() {
+    sizeCanvas();
+    mouse.radius = (canvas.height / 80) * (canvas.width / 80);
+    init();
+  });
+})();
+</script>
+</body>
+</html>
