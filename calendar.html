@@ -505,10 +505,11 @@ Start Call To Action
 
 <!-- Calendar Display (uses ical/ ES module library for RFC 5545 parsing) -->
 <script type="module">
-  import { parse, expandAllEvents } from './ical/index.js';
+  import { parse, expandAllEvents, serialize, buildCalendar } from './ical/index.js';
 
-  let allEvents = [];
-  let currentView = 'list';
+  let allEvents       = [];
+  let currentView     = 'list';
+  let parsedCalendar  = null;
 
   // Format date for display
   function formatDate(date) {
@@ -590,12 +591,13 @@ Start Call To Action
         const eventId = `event-${event.start.getTime()}-${index}`;
 
         eventDataMap.set(eventId, {
-          title: event.title,
-          start: event.start,
-          end: event.end,
+          title:       event.title,
+          start:       event.start,
+          end:         event.end,
           description: event.description,
-          location: event.location,
-          isAllDay: event.isAllDay
+          location:    event.location,
+          isAllDay:    event.isAllDay,
+          vevent:      event.vevent,
         });
 
         html += `
@@ -748,10 +750,10 @@ Start Call To Action
 
   // Convert a library expanded-event record to a plain display object
   function toDisplayEvent({ start, vevent }, tzReg) {
-    const durationMs = vevent.duration(tzReg) ?? 0;
-    const end        = new Date(start.getTime() + durationMs);
+    const durationMs  = vevent.duration(tzReg) ?? 0;
+    const end         = new Date(start.getTime() + durationMs);
     const dtstartProp = vevent.dtstartProp;
-    const isAllDay   = dtstartProp ? !dtstartProp.value.includes('T') : false;
+    const isAllDay    = dtstartProp ? !dtstartProp.value.includes('T') : false;
 
     return {
       title:       vevent.summary     || 'Untitled Event',
@@ -760,6 +762,7 @@ Start Call To Action
       description: vevent.description || '',
       location:    vevent.location    || '',
       isAllDay,
+      vevent,  // keep reference so addToCalendar can build a series ICS
     };
   }
 
@@ -773,6 +776,7 @@ Start Call To Action
 
       const icsText = await response.text();
       const { calendar, tzRegistry } = parse(icsText);
+      parsedCalendar = calendar;
 
       // Expand over a wide window so search can reach all events
       const windowStart = new Date(2000, 0, 1);
@@ -839,11 +843,43 @@ Start Call To Action
     return `${year}${month}${day}T${hours}${minutes}${seconds}`;
   }
 
-  // Add to calendar - generates and downloads a single-event ICS file
+  // Add to calendar - downloads a single-occurrence ICS, or the full series for recurring events
   function addToCalendar(eventId) {
     const event = eventDataMap.get(eventId);
     if (!event) return;
 
+    // For recurring events, serialize the full series using the library
+    if (event.vevent?.isRecurring && parsedCalendar) {
+      const uid = event.vevent.uid;
+
+      // Collect master event + any RECURRENCE-ID overrides sharing the same UID
+      const seriesRaw = parsedCalendar.events
+        .filter(e => e.uid === uid)
+        .map(e => e._raw);
+
+      // Include the VTIMEZONE block if DTSTART has a TZID
+      const tzid = event.vevent.dtstartProp?.param('TZID');
+      const tzRaw = tzid
+        ? parsedCalendar.timezones.filter(tz => tz.tzid === tzid).map(tz => tz._raw)
+        : [];
+
+      const calRaw    = buildCalendar([...tzRaw, ...seriesRaw], { prodid: '-//Kzoo Makers//Calendar//EN' });
+      const icsContent = serialize(calRaw);
+
+      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href     = URL.createObjectURL(blob);
+      link.download = `${event.title.replace(/[^a-z0-9]/gi, '_')}_series.ics`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+
+      showNotification('📅 Calendar series downloaded!');
+      return;
+    }
+
+    // Single (non-recurring) event — build a minimal ICS by hand
     const startDate = formatICSDate(event.start, event.isAllDay);
     const endDate   = formatICSDate(event.end,   event.isAllDay);
     const now       = formatICSDate(new Date());
