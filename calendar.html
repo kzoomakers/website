@@ -727,18 +727,22 @@ Start Call To Action
     const searchTerm = getSearchParameter();
     if (searchTerm) searchInput.value = searchTerm;
 
+    let searchDebounce = null;
     searchInput.addEventListener('input', (e) => {
-      const term = e.target.value.toLowerCase().trim();
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(() => {
+        const term = e.target.value.toLowerCase().trim();
 
-      if (term) {
-        window.history.pushState({ search: term }, '', `${window.location.pathname}?search=${encodeURIComponent(term)}`);
-        const filtered = filterEventsBySearch(allEvents, term);
-        displayEvents(filtered);
-        console.log(`Searching for: "${term}" - Found ${filtered.length} matching events`);
-      } else {
-        window.history.pushState({}, '', window.location.pathname);
-        clearFilter();
-      }
+        if (term) {
+          window.history.pushState({ search: term }, '', `${window.location.pathname}?search=${encodeURIComponent(term)}`);
+          const filtered = filterEventsBySearch(allEvents, term);
+          displayEvents(filtered);
+          console.log(`Searching for: "${term}" - Found ${filtered.length} matching events`);
+        } else {
+          window.history.pushState({}, '', window.location.pathname);
+          clearFilter();
+        }
+      }, 1500);
     });
   }
 
