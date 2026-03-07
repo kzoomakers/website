@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RFC 5545 iCal Client - Verification Demo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    :root {
+      --bg:        #0f1117;
+      --bg2:       #1a1d27;
+      --bg3:       #222536;
+      --border:    #2e3248;
+      --accent:    #6366f1;
+      --accent2:   #818cf8;
+      --success:   #22c55e;
+      --warn:      #f59e0b;
+      --error:     #ef4444;
+      --text:      #e2e8f0;
+      --muted:     #64748b;
+      --code:      #a5b4fc;
+      --radius:    8px;
+      --font:      'Inter', system-ui, sans-serif;
+      --mono:      'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    header {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent2);
+    }
+
+    header .tag {
+      background: var(--accent);
+      color: white;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      height: calc(100vh - 57px);
+      overflow: hidden;
+    }
+
+    /* ---- Sidebar ---- */
+    .sidebar {
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .sidebar h2 {
+      margin: 0 0 8px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .load-section { display: flex; flex-direction: column; gap: 8px; }
+
+    .load-section input[type="text"],
+    .load-section input[type="date"],
+    .load-section textarea {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      padding: 8px 10px;
+      font-family: var(--mono);
+      font-size: 12px;
+      resize: vertical;
+    }
+
+    .load-section textarea { min-height: 100px; }
+
+    .load-section input[type="text"]:focus,
+    .load-section textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    button:hover { background: var(--accent2); }
+    button.secondary {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    button.secondary:hover { border-color: var(--accent); }
+    button.danger { background: var(--error); }
+    button.success { background: var(--success); color: #000; }
+
+    .tab-bar {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+
+    .tab-bar button {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      border-radius: 0;
+      color: var(--muted);
+      padding: 10px 16px;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .tab-bar button.active {
+      color: var(--accent2);
+      border-bottom-color: var(--accent);
+    }
+
+    .tab-bar button:hover { color: var(--text); }
+
+    /* ---- Main content ---- */
+    .main {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel {
+      display: none;
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .panel.active { display: block; }
+
+    /* ---- Stats bar ---- */
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .stat-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 16px;
+      min-width: 100px;
+    }
+
+    .stat-card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .stat-card .value { font-size: 22px; font-weight: 700; color: var(--accent2); }
+
+    /* ---- Component tree ---- */
+    .tree { font-family: var(--mono); font-size: 12px; }
+
+    .tree-node {
+      margin-left: 16px;
+    }
+
+    .tree-comp-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+
+    .tree-comp-header:hover { background: var(--bg3); }
+
+    .tree-comp-name { color: var(--accent2); font-weight: 600; }
+    .tree-comp-count { color: var(--muted); font-size: 11px; }
+    .tree-chevron { color: var(--muted); font-size: 10px; transition: transform 0.1s; }
+    .tree-chevron.open { transform: rotate(90deg); }
+
+    .tree-props { display: none; margin-left: 12px; }
+    .tree-props.open { display: block; }
+
+    .tree-prop {
+      display: flex;
+      gap: 6px;
+      padding: 1px 0;
+      border-bottom: 1px solid transparent;
+    }
+
+    .tree-prop:hover { border-bottom-color: var(--border); }
+
+    .prop-name  { color: var(--code); min-width: 140px; }
+    .prop-param { color: var(--warn); font-size: 11px; }
+    .prop-value { color: var(--text); word-break: break-all; }
+
+    /* ---- Event table ---- */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th {
+      text-align: left;
+      padding: 8px 12px;
+      background: var(--bg2);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+    }
+
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tr:hover td { background: var(--bg2); }
+
+    td.mono { font-family: var(--mono); font-size: 12px; color: var(--code); }
+    td.muted { color: var(--muted); }
+    td.event-title { font-weight: 500; max-width: 260px; }
+    td.rrule { font-family: var(--mono); font-size: 11px; color: var(--warn); }
+
+    /* ---- Recurrence expander ---- */
+    .expand-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+    }
+
+    .expand-controls label { color: var(--muted); font-size: 12px; }
+
+    .expand-controls input[type="date"],
+    .expand-controls select {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 6px 10px;
+      font-size: 13px;
+    }
+
+    .instance-list { display: flex; flex-direction: column; gap: 6px; }
+
+    .instance-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .instance-card.override { border-left: 3px solid var(--warn); }
+
+    .instance-date { font-family: var(--mono); font-size: 12px; color: var(--accent2); min-width: 200px; }
+    .instance-title { flex: 1; font-weight: 500; }
+    .instance-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .badge-override { background: rgba(245,158,11,0.2); color: var(--warn); }
+    .badge-normal   { background: rgba(99,102,241,0.2); color: var(--accent2); }
+
+    /* ---- Timezone inspector ---- */
+    .tz-controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .tz-controls select,
+    .tz-controls input[type="datetime-local"] {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 6px 10px;
+      font-size: 13px;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .tz-result {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+
+    .tz-result .row { display: flex; gap: 12px; margin-bottom: 6px; }
+    .tz-result .k { color: var(--muted); min-width: 160px; }
+    .tz-result .v { color: var(--accent2); }
+
+    /* ---- Round-trip test ---- */
+    .rt-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .rt-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .rt-panel-header {
+      padding: 8px 12px;
+      background: var(--bg3);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .rt-panel pre {
+      margin: 0;
+      padding: 12px;
+      font-family: var(--mono);
+      font-size: 11px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 300px;
+      overflow-y: auto;
+      color: var(--text);
+    }
+
+    .rt-diff-list { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+
+    .rt-diff-item {
+      background: var(--bg2);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .rt-diff-item.ok   { border-left: 3px solid var(--success); }
+    .rt-diff-item.fail { border-left: 3px solid var(--error); }
+
+    /* ---- Validation panel ---- */
+    .validation-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .validation-item {
+      display: flex;
+      gap: 12px;
+      padding: 10px 14px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .v-icon { font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+    .v-body { flex: 1; }
+    .v-msg  { font-weight: 500; }
+    .v-ctx  { font-size: 12px; color: var(--muted); font-family: var(--mono); margin-top: 2px; }
+    .v-sev-error  { color: var(--error); }
+    .v-sev-warn   { color: var(--warn); }
+    .v-sev-info   { color: var(--accent2); }
+
+    /* ---- Misc ---- */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+
+    .empty-state svg { margin-bottom: 12px; opacity: 0.4; }
+    .empty-state p { margin: 4px 0; }
+    .empty-state .big { font-size: 18px; color: var(--text); }
+
+    code {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--code);
+    }
+
+    .chip {
+      display: inline-block;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 2px 10px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .chip.blue  { border-color: var(--accent); color: var(--accent2); background: rgba(99,102,241,0.1); }
+    .chip.green { border-color: var(--success); color: var(--success); background: rgba(34,197,94,0.1); }
+    .chip.amber { border-color: var(--warn); color: var(--warn); background: rgba(245,158,11,0.1); }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      margin: 0 0 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .notice {
+      background: rgba(99,102,241,0.1);
+      border: 1px solid rgba(99,102,241,0.3);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--accent2);
+      margin-bottom: 12px;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 768px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { border-right: none; border-bottom: 1px solid var(--border); max-height: 240px; }
+      .rt-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>iCal RFC 5545 Client</h1>
+  <span class="tag">DEMO / VERIFY</span>
+  <span id="status-badge" style="margin-left:auto; color: var(--muted); font-size:12px;">No file loaded</span>
+</header>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div>
+      <h2>Load ICS</h2>
+      <div class="load-section">
+        <input type="text" id="url-input" placeholder="URL (e.g. /cal.ics)" value="/cal.ics">
+        <button id="btn-load-url">Fetch URL</button>
+
+        <div style="display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px;margin:2px 0">
+          <div style="flex:1;height:1px;background:var(--border)"></div> or
+          <div style="flex:1;height:1px;background:var(--border)"></div>
+        </div>
+
+        <label style="font-size:12px;color:var(--muted)">Upload .ics file</label>
+        <input type="file" id="file-input" accept=".ics,text/calendar"
+          style="color:var(--text);font-size:12px">
+
+        <div style="display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px;margin:2px 0">
+          <div style="flex:1;height:1px;background:var(--border)"></div> or
+          <div style="flex:1;height:1px;background:var(--border)"></div>
+        </div>
+
+        <label style="font-size:12px;color:var(--muted)">Paste ICS text</label>
+        <textarea id="paste-input" placeholder="BEGIN:VCALENDAR&#10;..."></textarea>
+        <button id="btn-parse-paste">Parse Pasted Text</button>
+      </div>
+    </div>
+
+    <div>
+      <h2>Summary</h2>
+      <div id="sidebar-summary" style="font-size:12px;color:var(--muted)">—</div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="tab-bar">
+      <button class="active" data-tab="events">Events</button>
+      <button data-tab="tree">Component Tree</button>
+      <button data-tab="recurrence">Recurrence</button>
+      <button data-tab="timezone">Timezones</button>
+      <button data-tab="roundtrip">Round-trip</button>
+      <button data-tab="validation">Validation</button>
+    </div>
+
+    <!-- EVENTS TAB -->
+    <div id="tab-events" class="panel active">
+      <div id="events-stats" class="stats-bar"></div>
+      <div id="events-table-wrap">
+        <div class="empty-state">
+          <p class="big">No calendar loaded</p>
+          <p>Fetch a URL, upload a .ics file, or paste ICS text in the sidebar.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TREE TAB -->
+    <div id="tab-tree" class="panel">
+      <div id="tree-container">
+        <div class="empty-state"><p class="big">No calendar loaded</p></div>
+      </div>
+    </div>
+
+    <!-- RECURRENCE TAB -->
+    <div id="tab-recurrence" class="panel">
+      <div class="expand-controls">
+        <div>
+          <label>Event (UID or Summary)</label><br>
+          <select id="rrule-event-select" style="min-width:260px">
+            <option value="">— Load a calendar first —</option>
+          </select>
+        </div>
+        <div>
+          <label>Window start</label><br>
+          <input type="date" id="rrule-start">
+        </div>
+        <div>
+          <label>Window end</label><br>
+          <input type="date" id="rrule-end">
+        </div>
+        <div style="align-self:flex-end">
+          <button id="btn-expand">Expand</button>
+        </div>
+      </div>
+      <div id="rrule-rule-display" class="notice" style="display:none"></div>
+      <div id="rrule-results">
+        <div class="empty-state"><p>Select a recurring event and click Expand.</p></div>
+      </div>
+    </div>
+
+    <!-- TIMEZONE TAB -->
+    <div id="tab-timezone" class="panel">
+      <div class="tz-controls">
+        <div>
+          <label style="font-size:12px;color:var(--muted)">TZID</label><br>
+          <select id="tz-select">
+            <option value="">— Load a calendar first —</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--muted)">Local datetime</label><br>
+          <input type="datetime-local" id="tz-datetime">
+        </div>
+        <div style="align-self:flex-end">
+          <button id="btn-tz-resolve">Resolve</button>
+        </div>
+      </div>
+      <div id="tz-transitions-wrap">
+        <div class="empty-state"><p>Load a calendar with VTIMEZONE data.</p></div>
+      </div>
+      <div id="tz-result-wrap" style="margin-top:16px"></div>
+    </div>
+
+    <!-- ROUND-TRIP TAB -->
+    <div id="tab-roundtrip" class="panel">
+      <div style="margin-bottom:12px;display:flex;gap:8px">
+        <button id="btn-roundtrip">Run Round-trip Test</button>
+        <span style="font-size:12px;color:var(--muted);align-self:center">
+          Parse → Serialize → Re-parse → Compare
+        </span>
+      </div>
+      <div class="rt-grid">
+        <div class="rt-panel">
+          <div class="rt-panel-header">Original (first 4000 chars)</div>
+          <pre id="rt-original"></pre>
+        </div>
+        <div class="rt-panel">
+          <div class="rt-panel-header">Serialized output</div>
+          <pre id="rt-serialized"></pre>
+        </div>
+      </div>
+      <div id="rt-diff-results">
+        <div class="empty-state"><p>Load a calendar and run the test.</p></div>
+      </div>
+    </div>
+
+    <!-- VALIDATION TAB -->
+    <div id="tab-validation" class="panel">
+      <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center">
+        <button id="btn-validate">Run Validation</button>
+        <span id="v-summary" style="font-size:12px;color:var(--muted)"></span>
+      </div>
+      <div id="validation-results">
+        <div class="empty-state"><p>Load a calendar and run validation.</p></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+import { parse, serialize, expandEvent, expandAllEvents, buildRegistry }
+  from './ical/index.js';
+
+// ============================================================
+// State
+// ============================================================
+let state = {
+  raw:         null,
+  icsText:     null,
+  calendar:    null,
+  tzRegistry:  null,
+};
+
+// ============================================================
+// Tab switching
+// ============================================================
+document.querySelectorAll('.tab-bar button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('active');
+  });
+});
+
+// ============================================================
+// Load handlers
+// ============================================================
+document.getElementById('btn-load-url').addEventListener('click', async () => {
+  const url = document.getElementById('url-input').value.trim();
+  if (!url) return;
+  setStatus('<span class="loading"></span> Fetching…');
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const text = await resp.text();
+    loadICS(text);
+  } catch (e) {
+    setStatus(`<span style="color:var(--error)">Error: ${e.message}</span>`);
+  }
+});
+
+document.getElementById('file-input').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => loadICS(ev.target.result);
+  reader.readAsText(file);
+});
+
+document.getElementById('btn-parse-paste').addEventListener('click', () => {
+  const text = document.getElementById('paste-input').value.trim();
+  if (text) loadICS(text);
+});
+
+// ============================================================
+// Core: load and parse ICS text
+// ============================================================
+function loadICS(text) {
+  try {
+    const result = parse(text);
+    state.raw        = result.raw;
+    state.icsText    = text;
+    state.calendar   = result.calendar;
+    state.tzRegistry = result.tzRegistry;
+
+    setStatus(`<span style="color:var(--success)">✓ Parsed successfully</span>`);
+    renderAll();
+  } catch (e) {
+    setStatus(`<span style="color:var(--error)">Parse error: ${e.message}</span>`);
+    console.error(e);
+  }
+}
+
+function setStatus(html) {
+  document.getElementById('status-badge').innerHTML = html;
+}
+
+// ============================================================
+// Render everything after a load
+// ============================================================
+function renderAll() {
+  renderSummary();
+  renderEventsTab();
+  renderTreeTab();
+  populateRecurrenceSelect();
+  populateTimezoneSelect();
+  // clear lazy tabs
+  document.getElementById('rt-diff-results').innerHTML =
+    '<div class="empty-state"><p>Click "Run Round-trip Test" to start.</p></div>';
+  document.getElementById('validation-results').innerHTML =
+    '<div class="empty-state"><p>Click "Run Validation" to start.</p></div>';
+  document.getElementById('v-summary').textContent = '';
+}
+
+// ============================================================
+// Sidebar summary
+// ============================================================
+function renderSummary() {
+  const cal = state.calendar;
+  if (!cal) return;
+
+  const lines = [
+    `<b>PRODID:</b> ${esc(cal.prodid || '—')}`,
+    `<b>Version:</b> ${esc(cal.version || '—')}`,
+    `<b>Scale:</b> ${esc(cal.calscale || 'GREGORIAN')}`,
+    `<b>Name:</b> ${esc(cal.calname || '—')}`,
+    ``,
+    `<b>VEVENTs:</b> ${cal.events.length}`,
+    `<b>VTODOs:</b> ${cal.todos.length}`,
+    `<b>VJOURNALs:</b> ${cal.journals.length}`,
+    `<b>VTIMEZONEs:</b> ${cal.timezones.length}`,
+  ];
+  document.getElementById('sidebar-summary').innerHTML = lines.join('<br>');
+}
+
+// ============================================================
+// Events tab
+// ============================================================
+function renderEventsTab() {
+  const cal = state.calendar;
+  if (!cal) return;
+
+  const events   = cal.events;
+  const todos    = cal.todos;
+  const journals = cal.journals;
+
+  // Stats
+  const recurring = events.filter(e => e.isRecurring).length;
+  document.getElementById('events-stats').innerHTML = `
+    <div class="stat-card"><div class="label">Events</div><div class="value">${events.length}</div></div>
+    <div class="stat-card"><div class="label">Recurring</div><div class="value">${recurring}</div></div>
+    <div class="stat-card"><div class="label">TODOs</div><div class="value">${todos.length}</div></div>
+    <div class="stat-card"><div class="label">Journals</div><div class="value">${journals.length}</div></div>
+    <div class="stat-card"><div class="label">Timezones</div><div class="value">${cal.timezones.length}</div></div>
+  `;
+
+  if (events.length === 0) {
+    document.getElementById('events-table-wrap').innerHTML =
+      '<div class="empty-state"><p class="big">No VEVENT components found.</p></div>';
+    return;
+  }
+
+  const rows = events.map(ev => {
+    const tzReg  = state.tzRegistry;
+    const start  = ev.dtstart(tzReg);
+    const end    = ev.dtend(tzReg);
+    const dtprop = ev.dtstartProp;
+    const isDate = dtprop ? parseDateOrDTIsDate(dtprop) : false;
+
+    const rrules = ev.rrules;
+    const exdates = ev.exdates;
+    const tzid = dtprop ? dtprop.param('TZID') : null;
+
+    return `<tr>
+      <td class="event-title">${esc(ev.summary || '(no summary)')}</td>
+      <td class="mono">${start ? fmtDate(start, isDate) : '<span class="muted">—</span>'}</td>
+      <td class="mono">${end   ? fmtDate(end,   isDate) : (ev.prop('DURATION')?.value ? '<span class="chip amber">'+esc(ev.prop('DURATION').value)+'</span>' : '<span class="muted">—</span>')}</td>
+      <td>${tzid ? `<span class="chip blue">${esc(tzid)}</span>` : '<span class="muted">floating</span>'}</td>
+      <td class="rrule">${ev.props('RRULE').map(p => esc(p.value)).join('<br>')}</td>
+      <td class="muted">${exdates.length ? exdates.length + ' excl.' : ''}</td>
+      <td class="muted">${esc(ev.uid || '').slice(0, 20)}…</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('events-table-wrap').innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Summary</th>
+          <th>DTSTART</th>
+          <th>DTEND / DURATION</th>
+          <th>TZID</th>
+          <th>RRULE</th>
+          <th>EXDATE</th>
+          <th>UID</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function parseDateOrDTIsDate(prop) {
+  if (!prop) return false;
+  if (prop.param('VALUE') === 'DATE') return true;
+  return !/T/.test(prop.value);
+}
+
+// ============================================================
+// Component tree tab
+// ============================================================
+function renderTreeTab() {
+  const raw = state.raw;
+  if (!raw) return;
+  const container = document.getElementById('tree-container');
+  container.innerHTML = '';
+  container.className = 'tree';
+  container.appendChild(buildTreeNode(raw, 0));
+}
+
+function buildTreeNode(comp, depth) {
+  const wrap = document.createElement('div');
+  wrap.className = 'tree-node';
+
+  const propCount = Object.values(comp.properties)
+                          .reduce((s, arr) => s + arr.length, 0);
+  const childCount = comp.children.length;
+
+  const header = document.createElement('div');
+  header.className = 'tree-comp-header';
+  header.innerHTML = `
+    <span class="tree-chevron">▶</span>
+    <span class="tree-comp-name">${comp.name}</span>
+    <span class="tree-comp-count">${propCount} prop${propCount!==1?'s':''}, ${childCount} child${childCount!==1?'ren':''}</span>
+  `;
+
+  const body = document.createElement('div');
+  body.className = 'tree-props';
+
+  // Properties
+  for (const [pName, pArr] of Object.entries(comp.properties)) {
+    for (const prop of pArr) {
+      const paramStr = Object.entries(prop.params || {})
+        .map(([k, v]) => `<span class="prop-param">;${k}=${v.join(',')}</span>`)
+        .join('');
+      const row = document.createElement('div');
+      row.className = 'tree-prop';
+      row.innerHTML = `<span class="prop-name">${esc(prop.name)}${paramStr}</span><span class="prop-value">${esc(prop.value)}</span>`;
+      body.appendChild(row);
+    }
+  }
+
+  // Children recursively
+  for (const child of comp.children) {
+    body.appendChild(buildTreeNode(child, depth + 1));
+  }
+
+  // Toggle
+  header.addEventListener('click', () => {
+    const chevron = header.querySelector('.tree-chevron');
+    const open = body.classList.toggle('open');
+    chevron.classList.toggle('open', open);
+  });
+
+  wrap.appendChild(header);
+  wrap.appendChild(body);
+  return wrap;
+}
+
+// ============================================================
+// Recurrence tab
+// ============================================================
+function populateRecurrenceSelect() {
+  const sel = document.getElementById('rrule-event-select');
+  sel.innerHTML = '';
+
+  const events = (state.calendar?.events || []).filter(e => e.isRecurring);
+  if (events.length === 0) {
+    sel.innerHTML = '<option value="">No recurring events found</option>';
+    return;
+  }
+
+  for (let i = 0; i < events.length; i++) {
+    const ev  = events[i];
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = `${ev.summary || '(no summary)'}  [${ev.props('RRULE')[0]?.value || 'RDATE'}]`;
+    sel.appendChild(opt);
+  }
+
+  // Default window: today ± 6 months
+  const today = new Date();
+  document.getElementById('rrule-start').value = isoDate(today);
+  const sixMonths = new Date(today);
+  sixMonths.setMonth(today.getMonth() + 6);
+  document.getElementById('rrule-end').value = isoDate(sixMonths);
+}
+
+document.getElementById('btn-expand').addEventListener('click', () => {
+  const sel    = document.getElementById('rrule-event-select');
+  const idx    = parseInt(sel.value, 10);
+  if (isNaN(idx)) return;
+
+  const events   = (state.calendar?.events || []).filter(e => e.isRecurring);
+  const vevent   = events[idx];
+  if (!vevent) return;
+
+  const startVal = document.getElementById('rrule-start').value;
+  const endVal   = document.getElementById('rrule-end').value;
+  const wStart   = startVal ? new Date(startVal + 'T00:00:00') : new Date();
+  const wEnd     = endVal   ? new Date(endVal   + 'T23:59:59') : new Date(Date.now() + 180*86400000);
+
+  // Show the RRULE
+  const rruleVals = vevent.props('RRULE').map(p => p.value);
+  const display   = document.getElementById('rrule-rule-display');
+  display.style.display = 'block';
+  display.innerHTML = rruleVals.map(r => `<code>RRULE:${esc(r)}</code>`).join('<br>');
+
+  const tzReg    = state.tzRegistry;
+  const expanded = expandEvent(vevent, wStart, wEnd, tzReg, 500);
+
+  const container = document.getElementById('rrule-results');
+  if (expanded.length === 0) {
+    container.innerHTML = '<div class="empty-state"><p>No instances found in the given window.</p></div>';
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="section-title">${expanded.length} instance${expanded.length!==1?'s':''} in window</div>
+    <div class="instance-list">
+      ${expanded.map((d, i) => `
+        <div class="instance-card">
+          <div class="instance-date">${fmtDateFull(d)}</div>
+          <div class="instance-title">${esc(vevent.summary || '—')}</div>
+          <span class="instance-badge badge-normal">#${i+1}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+});
+
+// ============================================================
+// Timezone tab
+// ============================================================
+function populateTimezoneSelect() {
+  const sel  = document.getElementById('tz-select');
+  const tzs  = state.calendar?.timezones || [];
+
+  sel.innerHTML = '';
+  if (tzs.length === 0) {
+    sel.innerHTML = '<option value="">No VTIMEZONE in this calendar</option>';
+    renderTZTransitions(null);
+    return;
+  }
+
+  for (const tz of tzs) {
+    const opt = document.createElement('option');
+    opt.value  = tz.tzid;
+    opt.textContent = tz.tzid;
+    sel.appendChild(opt);
+  }
+
+  // Default datetime
+  const now = new Date();
+  const pad  = n => String(n).padStart(2,'0');
+  document.getElementById('tz-datetime').value =
+    `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+  sel.addEventListener('change', () => renderTZTransitions(sel.value));
+  renderTZTransitions(tzs[0]?.tzid || null);
+}
+
+function renderTZTransitions(tzid) {
+  const wrap = document.getElementById('tz-transitions-wrap');
+  if (!tzid || !state.calendar) {
+    wrap.innerHTML = '<div class="empty-state"><p>No timezone selected.</p></div>';
+    return;
+  }
+
+  const tz = state.calendar.timezones.find(t => t.tzid === tzid);
+  if (!tz) { wrap.innerHTML = ''; return; }
+
+  const obs = tz.observances;
+  if (obs.length === 0) {
+    wrap.innerHTML = '<div class="empty-state"><p>No observances found.</p></div>';
+    return;
+  }
+
+  const rows = obs.map(o => {
+    const start = o.dtstart();
+    return `<tr>
+      <td><span class="chip ${o.kind === 'DAYLIGHT' ? 'amber' : 'blue'}">${o.kind}</span></td>
+      <td class="muted">${o.tzname || '—'}</td>
+      <td class="mono">${start ? start.toISOString().slice(0,19) : '—'}</td>
+      <td class="mono">${offsetStr(o.tzOffsetFrom)}</td>
+      <td class="mono">${offsetStr(o.tzOffsetTo)}</td>
+      <td class="rrule">${o.rrules.map(r => esc(rruleToStr(r))).join('<br>') || '—'}</td>
+    </tr>`;
+  }).join('');
+
+  wrap.innerHTML = `
+    <div class="section-title">Observances for <code>${esc(tzid)}</code></div>
+    <table>
+      <thead>
+        <tr><th>Kind</th><th>Name</th><th>DTSTART</th><th>Offset From</th><th>Offset To</th><th>RRULE</th></tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+document.getElementById('btn-tz-resolve').addEventListener('click', () => {
+  const tzid  = document.getElementById('tz-select').value;
+  const dtVal = document.getElementById('tz-datetime').value;
+  const wrap  = document.getElementById('tz-result-wrap');
+
+  if (!tzid || !dtVal || !state.tzRegistry) {
+    wrap.innerHTML = '';
+    return;
+  }
+
+  const [datePart, timePart] = dtVal.split('T');
+  const [Y, Mo, D]           = datePart.split('-').map(Number);
+  const [H, Mi]              = (timePart || '00:00').split(':').map(Number);
+
+  const localDT = { year: Y, month: Mo, day: D, hour: H, minute: Mi, second: 0,
+                    utc: false, floating: true, tzid };
+  const offsetMin = state.tzRegistry.offsetAt(tzid, localDT);
+  const utcDate   = state.tzRegistry.toUTC(localDT, tzid);
+
+  wrap.innerHTML = `
+    <div class="section-title">Resolved offset for <code>${esc(tzid)}</code></div>
+    <div class="tz-result">
+      <div class="row"><span class="k">Input local time</span><span class="v">${esc(dtVal)}</span></div>
+      <div class="row"><span class="k">UTC Offset</span><span class="v">${offsetStr(offsetMin)}</span></div>
+      <div class="row"><span class="k">Equivalent UTC</span><span class="v">${utcDate.toISOString()}</span></div>
+    </div>
+  `;
+});
+
+// ============================================================
+// Round-trip tab
+// ============================================================
+document.getElementById('btn-roundtrip').addEventListener('click', () => {
+  if (!state.raw || !state.icsText) return;
+
+  const origText   = state.icsText;
+  const serialized = serialize(state.raw);
+
+  document.getElementById('rt-original').textContent   = origText.slice(0, 4000);
+  document.getElementById('rt-serialized').textContent = serialized.slice(0, 4000);
+
+  // Re-parse serialized output
+  let reparsed;
+  try {
+    reparsed = parse(serialized);
+  } catch (e) {
+    document.getElementById('rt-diff-results').innerHTML =
+      `<div class="rt-diff-item fail">Re-parse failed: ${esc(e.message)}</div>`;
+    return;
+  }
+
+  const origCal = state.calendar;
+  const newCal  = reparsed.calendar;
+
+  const checks = [];
+
+  // Check property counts per component type
+  const checkCount = (name, origCount, newCount) => {
+    const ok = origCount === newCount;
+    checks.push({ ok, label: name,
+      detail: ok ? `Both have ${origCount}` : `Original: ${origCount}, Re-parsed: ${newCount}` });
+  };
+
+  checkCount('VEVENT count',    origCal.events.length,   newCal.events.length);
+  checkCount('VTODO count',     origCal.todos.length,    newCal.todos.length);
+  checkCount('VTIMEZONE count', origCal.timezones.length,newCal.timezones.length);
+  checkCount('VJOURNAL count',  origCal.journals.length, newCal.journals.length);
+
+  // Check PRODID
+  const prodOk = origCal.prodid === newCal.prodid;
+  checks.push({ ok: prodOk, label: 'PRODID',
+    detail: prodOk ? `"${origCal.prodid}"` : `"${origCal.prodid}" vs "${newCal.prodid}"` });
+
+  // Check that all event UIDs survived
+  const origUIDs = new Set(origCal.events.map(e => e.uid));
+  const newUIDs  = new Set(newCal.events.map(e => e.uid));
+  const uidOk    = [...origUIDs].every(u => newUIDs.has(u)) && origUIDs.size === newUIDs.size;
+  checks.push({ ok: uidOk, label: 'VEVENT UIDs preserved',
+    detail: uidOk ? `All ${origUIDs.size} UIDs match` : `Some UIDs lost or changed` });
+
+  // Check SUMMARY values
+  const origSummaries = origCal.events.map(e => e.uid + '|' + e.summary).sort();
+  const newSummaries  = newCal.events.map(e => e.uid + '|' + e.summary).sort();
+  const summOk = JSON.stringify(origSummaries) === JSON.stringify(newSummaries);
+  checks.push({ ok: summOk, label: 'SUMMARY values preserved', detail: summOk ? 'All match' : 'Mismatches detected' });
+
+  // Check RRULE values
+  const origRRules = origCal.events.flatMap(e => e.props('RRULE').map(p => e.uid+'|'+p.value)).sort();
+  const newRRules  = newCal.events.flatMap(e => e.props('RRULE').map(p => e.uid+'|'+p.value)).sort();
+  const rrOk = JSON.stringify(origRRules) === JSON.stringify(newRRules);
+  checks.push({ ok: rrOk, label: 'RRULE values preserved', detail: rrOk ? 'All match' : 'Mismatches detected' });
+
+  const passed = checks.filter(c => c.ok).length;
+  const failed = checks.filter(c => !c.ok).length;
+
+  document.getElementById('rt-diff-results').innerHTML = `
+    <div class="section-title">
+      Results: <span style="color:var(--success)">${passed} passed</span>
+      ${failed > 0 ? `/ <span style="color:var(--error)">${failed} failed</span>` : ''}
+    </div>
+    <div class="rt-diff-list">
+      ${checks.map(c => `
+        <div class="rt-diff-item ${c.ok ? 'ok' : 'fail'}">
+          <span style="color:${c.ok ? 'var(--success)' : 'var(--error)'};margin-right:8px">${c.ok ? '✓' : '✗'}</span>
+          <b>${esc(c.label)}</b> — <span class="muted">${esc(c.detail)}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+});
+
+// ============================================================
+// Validation tab
+// ============================================================
+document.getElementById('btn-validate').addEventListener('click', () => {
+  if (!state.calendar) return;
+
+  const issues = validate(state.calendar, state.raw);
+  const errors = issues.filter(i => i.sev === 'error');
+  const warns  = issues.filter(i => i.sev === 'warn');
+  const infos  = issues.filter(i => i.sev === 'info');
+
+  document.getElementById('v-summary').innerHTML =
+    `<span style="color:var(--error)">${errors.length} errors</span> / ` +
+    `<span style="color:var(--warn)">${warns.length} warnings</span> / ` +
+    `<span style="color:var(--accent2)">${infos.length} info</span>`;
+
+  if (issues.length === 0) {
+    document.getElementById('validation-results').innerHTML =
+      '<div class="empty-state"><p class="big" style="color:var(--success)">✓ No issues found.</p></div>';
+    return;
+  }
+
+  document.getElementById('validation-results').innerHTML = `
+    <div class="validation-list">
+      ${issues.map(issue => `
+        <div class="validation-item">
+          <span class="v-icon v-sev-${issue.sev}">${issue.sev === 'error' ? '✗' : issue.sev === 'warn' ? '⚠' : 'ℹ'}</span>
+          <div class="v-body">
+            <div class="v-msg">${esc(issue.message)}</div>
+            ${issue.context ? `<div class="v-ctx">${esc(issue.context)}</div>` : ''}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+});
+
+// ============================================================
+// Validation logic
+// ============================================================
+function validate(calendar, raw) {
+  const issues = [];
+  const add = (sev, message, context = '') => issues.push({ sev, message, context });
+
+  // VCALENDAR required props
+  if (!calendar.prodid)  add('error', 'VCALENDAR missing required property: PRODID');
+  if (!calendar.version) add('error', 'VCALENDAR missing required property: VERSION');
+  if (calendar.version && calendar.version !== '2.0')
+    add('warn', `VCALENDAR VERSION is "${calendar.version}", expected "2.0"`);
+
+  // Each VEVENT
+  for (const ev of calendar.events) {
+    const ctx = `VEVENT UID=${ev.uid || '(none)'}`;
+
+    // Required: UID, DTSTAMP, DTSTART
+    if (!ev.uid)     add('error', 'VEVENT missing required property: UID', ctx);
+    if (!ev.dtstamp) add('error', 'VEVENT missing required property: DTSTAMP', ctx);
+    if (!ev.dtstartProp) add('error', 'VEVENT missing required property: DTSTART', ctx);
+
+    // DTEND/DURATION mutual exclusion
+    const hasDtend    = !!ev.prop('DTEND');
+    const hasDuration = !!ev.prop('DURATION');
+    if (hasDtend && hasDuration)
+      add('error', 'VEVENT has both DTEND and DURATION (RFC §3.6.1 forbids both)', ctx);
+
+    // All-day: DTSTART must be DATE
+    const dtstartProp = ev.dtstartProp;
+    const dtendProp   = ev.prop('DTEND');
+    if (dtstartProp && dtendProp) {
+      const startIsDate = parseDateOrDTIsDate(dtstartProp);
+      const endIsDate   = parseDateOrDTIsDate(dtendProp);
+      if (startIsDate !== endIsDate)
+        add('error', 'VEVENT DTSTART and DTEND must have same value type (DATE vs DATE-TIME)', ctx);
+    }
+
+    // RRULE + UNTIL vs COUNT mutual exclusion
+    for (const rrule of ev.rrules) {
+      if (rrule.until && rrule.count != null)
+        add('error', 'RRULE has both UNTIL and COUNT (RFC §3.3.10 allows only one)', ctx);
+    }
+
+    // RECURRENCE-ID without UID
+    if (ev.recurrenceIdProp && !ev.uid)
+      add('error', 'VEVENT with RECURRENCE-ID must have UID', ctx);
+  }
+
+  // VTODO required: UID, DTSTAMP
+  for (const todo of calendar.todos) {
+    const ctx = `VTODO UID=${todo.uid || '(none)'}`;
+    if (!todo.uid)     add('error', 'VTODO missing required property: UID', ctx);
+    if (!todo.dtstamp) add('error', 'VTODO missing required property: DTSTAMP', ctx);
+  }
+
+  // VTIMEZONE: each must have TZID and at least one STANDARD or DAYLIGHT
+  for (const tz of calendar.timezones) {
+    const ctx = `VTIMEZONE TZID=${tz.tzid || '(none)'}`;
+    if (!tz.tzid)
+      add('error', 'VTIMEZONE missing required property: TZID', ctx);
+    if (tz.standard.length === 0 && tz.daylight.length === 0)
+      add('error', 'VTIMEZONE must have at least one STANDARD or DAYLIGHT component', ctx);
+  }
+
+  // VALARM required: ACTION, TRIGGER
+  for (const ev of calendar.events) {
+    for (const alarm of ev.alarms) {
+      const ctx = `VALARM in VEVENT "${ev.summary || ev.uid}"`;
+      if (!alarm.action)  add('error', 'VALARM missing required property: ACTION', ctx);
+      if (!alarm.trigger) add('error', 'VALARM missing required property: TRIGGER', ctx);
+    }
+  }
+
+  // Informational
+  const recurCount = calendar.events.filter(e => e.isRecurring).length;
+  if (recurCount > 0)
+    add('info', `${recurCount} recurring VEVENT(s) found with RRULE or RDATE`);
+
+  const exdateCount = calendar.events.filter(e => e.exdates.length > 0).length;
+  if (exdateCount > 0)
+    add('info', `${exdateCount} VEVENT(s) have EXDATE exclusions`);
+
+  const overrideCount = calendar.events.filter(e => e.recurrenceIdProp).length;
+  if (overrideCount > 0)
+    add('info', `${overrideCount} RECURRENCE-ID override VEVENT(s) found`);
+
+  return issues;
+}
+
+// ============================================================
+// Helpers
+// ============================================================
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function fmtDate(d, isAllDay) {
+  if (!d) return '—';
+  if (isAllDay) return d.toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+  return d.toLocaleString('en-US', {
+    year:'numeric', month:'short', day:'numeric',
+    hour:'numeric', minute:'2-digit', hour12:true,
+  });
+}
+
+function fmtDateFull(d) {
+  return d.toLocaleString('en-US', {
+    weekday:'short', year:'numeric', month:'short', day:'numeric',
+    hour:'numeric', minute:'2-digit', hour12:true,
+  });
+}
+
+function isoDate(d) {
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+
+function offsetStr(mins) {
+  if (mins == null) return '—';
+  const sign = mins >= 0 ? '+' : '-';
+  const abs  = Math.abs(mins);
+  const h    = Math.floor(abs / 60);
+  const m    = abs % 60;
+  return `${sign}${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+}
+
+function rruleToStr(r) {
+  const parts = [`FREQ=${r.freq}`];
+  if (r.until) parts.push('UNTIL=…');
+  if (r.count)     parts.push(`COUNT=${r.count}`);
+  if (r.interval !== 1) parts.push(`INTERVAL=${r.interval}`);
+  if (r.byday)    parts.push(`BYDAY=${r.byday.map(b=>(b.nth??'')+b.day).join(',')}`);
+  if (r.bymonth)  parts.push(`BYMONTH=${r.bymonth.join(',')}`);
+  if (r.bymonthday) parts.push(`BYMONTHDAY=${r.bymonthday.join(',')}`);
+  return parts.join(';');
+}
+</script>
+</body>
+</html>
