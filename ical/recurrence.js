@@ -132,9 +132,34 @@ function expandBY(rule, seed, dtstart, wkst) {
   // Start with the seed
   let set = [new Date(seed)];
 
-  // BYMONTH – filter/expand
+  // After BYMONTH expands in YEARLY context, BYDAY/BYMONTHDAY should operate
+  // within each named month (monthly scope), not across the whole year.
+  let dayScope = freq;
+
+  // BYMONTH
+  // RFC §3.3.10 table: EXPAND for YEARLY, LIMIT for all other frequencies.
   if (rule.bymonth) {
-    set = set.filter(d => rule.bymonth.includes(d.getMonth() + 1));
+    if (freq === 'YEARLY') {
+      // Expand: generate one seed per specified month, preserving time and
+      // day-of-month (clamped to the target month's length).
+      const expanded = [];
+      for (const d of set) {
+        for (const mo of rule.bymonth) {
+          const origDay  = d.getDate();
+          const daysInMo = new Date(d.getFullYear(), mo, 0).getDate();
+          expanded.push(new Date(
+            d.getFullYear(), mo - 1, Math.min(origDay, daysInMo),
+            d.getHours(), d.getMinutes(), d.getSeconds(), 0
+          ));
+        }
+      }
+      set = dedup(expanded.sort((a, b) => a.getTime() - b.getTime()));
+      // Now that months are fixed, BYDAY/BYMONTHDAY act per-month.
+      dayScope = 'MONTHLY';
+    } else {
+      // Limit: keep only seeds whose month is in the list.
+      set = set.filter(d => rule.bymonth.includes(d.getMonth() + 1));
+    }
     if (set.length === 0) return [];
   }
 
@@ -150,15 +175,15 @@ function expandBY(rule, seed, dtstart, wkst) {
     if (set.length === 0) return [];
   }
 
-  // BYMONTHDAY
+  // BYMONTHDAY – use dayScope so post-BYMONTH expansion stays per-month
   if (rule.bymonthday) {
-    set = expandByMonthDay(set, rule.bymonthday, freq);
+    set = expandByMonthDay(set, rule.bymonthday);
     if (set.length === 0) return [];
   }
 
-  // BYDAY
+  // BYDAY – use dayScope for correct YEARLY vs MONTHLY expansion
   if (rule.byday) {
-    set = expandByDay(set, rule.byday, freq, wkst, dtstart);
+    set = expandByDay(set, rule.byday, dayScope, wkst, dtstart);
     if (set.length === 0) return [];
   }
 
@@ -223,24 +248,19 @@ function expandByYearDay(set, byyearday) {
   return result;
 }
 
-function expandByMonthDay(set, bymonthday, freq) {
+// Note: `freq` parameter removed — callers now pass `dayScope` so that
+// BYMONTH-constrained YEARLY rules are already narrowed to per-month.
+function expandByMonthDay(set, bymonthday) {
   const result = [];
   for (const d of set) {
-    // For each month in the set, expand by day-of-month
-    const months = freq === 'YEARLY'
-      ? [...new Set(set.map(x => x.getMonth() + 1))]
-      : [d.getMonth() + 1];
-
-    for (const mo of months) {
-      const year  = d.getFullYear();
-      const dim   = new Date(year, mo, 0).getDate(); // days in month
-      for (const mday of bymonthday) {
-        const actual = mday > 0 ? mday : dim + mday + 1;
-        if (actual < 1 || actual > dim) continue;
-        const nd = new Date(year, mo - 1, actual,
-                            d.getHours(), d.getMinutes(), d.getSeconds(), 0);
-        result.push(nd);
-      }
+    const year = d.getFullYear();
+    const mo   = d.getMonth() + 1;
+    const dim  = new Date(year, mo, 0).getDate(); // days in this month
+    for (const mday of bymonthday) {
+      const actual = mday > 0 ? mday : dim + mday + 1;
+      if (actual < 1 || actual > dim) continue;
+      result.push(new Date(year, mo - 1, actual,
+                           d.getHours(), d.getMinutes(), d.getSeconds(), 0));
     }
   }
   return dedup(result);
