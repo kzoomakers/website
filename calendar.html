@@ -726,7 +726,33 @@ Start Call To Action
       } else if (freq === 'WEEKLY') {
         currentDate.setDate(currentDate.getDate() + (7 * interval));
       } else if (freq === 'MONTHLY') {
-        currentDate.setMonth(currentDate.getMonth() + interval);
+        if (byday && byday.length > 0 && byday[0].nth !== null) {
+          const curMonth = currentDate.getMonth();
+          const curYear = currentDate.getFullYear();
+          const totalMonths = curYear * 12 + curMonth + interval;
+          const nextYear = Math.floor(totalMonths / 12);
+          const nextMonth = totalMonths % 12;
+          const rule = byday[0];
+          const dayNum = getDayNum(rule.day);
+
+          let targetDay;
+          if (rule.nth > 0) {
+            const firstOfMonth = new Date(nextYear, nextMonth, 1);
+            const firstDow = firstOfMonth.getDay();
+            const daysUntil = (dayNum - firstDow + 7) % 7;
+            targetDay = 1 + daysUntil + (rule.nth - 1) * 7;
+          } else {
+            const lastOfMonth = new Date(nextYear, nextMonth + 1, 0);
+            const lastDow = lastOfMonth.getDay();
+            const daysFromEnd = (lastDow - dayNum + 7) % 7;
+            targetDay = lastOfMonth.getDate() - daysFromEnd + (rule.nth + 1) * 7;
+          }
+
+          currentDate = new Date(nextYear, nextMonth, targetDay,
+              startDate.getHours(), startDate.getMinutes(), startDate.getSeconds());
+        } else {
+          currentDate.setMonth(currentDate.getMonth() + interval);
+        }
       } else if (freq === 'YEARLY') {
         currentDate.setFullYear(currentDate.getFullYear() + interval);
       } else {
