@@ -328,6 +328,74 @@
       background-repeat: no-repeat;
       background-position: center;
     }
+
+    .btn-print {
+      background-color: #6c757d;
+      color: white;
+      font-weight: bold;
+    }
+
+    .btn-print:hover {
+      background-color: #5a6268;
+    }
+
+    @media print {
+      /* Hide everything except the events list */
+      header, footer, .single-page-header, .call-to-action,
+      .calendar-controls, #calendar-iframe-container,
+      .purge-button, [style*="purge"] {
+        display: none !important;
+      }
+
+      /* Remove section padding/margins that waste paper space */
+      #calendar.section {
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      /* Print header above the event list */
+      #events-list-container::before {
+        content: "Kzoo Makers — Upcoming Events";
+        display: block;
+        font-size: 22pt;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 16pt;
+      }
+
+      /* Keep cards readable but compact */
+      .event-card {
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+        break-inside: avoid;
+        page-break-inside: avoid;
+        margin-bottom: 12pt !important;
+      }
+
+      .event-card:hover {
+        transform: none !important;
+      }
+
+      /* Hide per-card action buttons */
+      .share-button {
+        display: none !important;
+      }
+
+      /* Month headers */
+      .month-header {
+        background-color: #47424C !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        break-after: avoid;
+        page-break-after: avoid;
+      }
+
+      /* Avoid orphaned month headers */
+      .month-section {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+    }
   </style>
 
 </head>
@@ -394,6 +462,7 @@ Start Calendar Section
     <!-- Calendar Controls -->
     <div class="calendar-controls">
       <button id="toggle-view-btn" class="btn-toggle" onclick="toggleCalendarView()">Switch to Calendar View</button>
+      <button class="btn-print" onclick="window.print()">🖨️ Print</button>
        <div style="margin-top: 15px; margin-bottom: 15px;">
          <input type="text" id="search-input" placeholder="Search events by title or description..." style="padding: 10px; width: 100%; max-width: 500px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;" />
        </div>
