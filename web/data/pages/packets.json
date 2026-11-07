@@ -3,6 +3,8 @@
   "props": {
    "title": "Packets - Kzoo Makers",
    "description": "",
+   "bare": false,
+   "inline": [],
    "bodyClass": "meetups-page",
    "refresh": "",
    "css": "",
@@ -14,14 +16,14 @@
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-172",
+    "id": "HtmlSection-199",
     "html": "<section class=\"page-title-section\" style=\"background-image: url(images/slider/slider-bg-0.webp);\">\n    <div class=\"container\">\n      <div class=\"row\">\n        <div class=\"col-md-12\">\n        </div>\n      </div>\n    </div>\n  </section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-173",
+    "id": "HtmlSection-200",
     "html": "<section class=\"section\">\n    <div class=\"container\">\n      <div class=\"row\">\n        <div class=\"col-lg-8 mx-auto\">\n          <div class=\"content\">\n            <h2>Form Packets</h2>\n\t    <p>Select a form packet you wish to fill out.</p>\n            \n            <div class=\"meetups-card-container mt-5\">\n              <div class=\"meetup-card\">\n                <span class=\"meetup-card-glow\"></span>\n                <div class=\"meetup-card-content\">\n                  <h2>Visitor Packet</h2>\n\t\t  <p>All visitors must fill this out in the presense of the member who is sponsoring their visit</p>\n                  <a href=\"https://sign.kzoomakers.org/d/2ihpx2TZUg2bXj\" class=\"btn btn-main\">Fill out form</a>\n                </div>\n              </div>\n\n              <div class=\"meetup-card\">\n                <span class=\"meetup-card-glow\"></span>\n                <div class=\"meetup-card-content\">\n                  <h2>Membership Packet</h2>\n\t\t  <p>All members must fill this out in order to activate their membership.</p>\n                  <a href=\"https://sign.kzoomakers.org/d/BB86i9zY2r4gPY\" class=\"btn btn-main\">Fill out form</a>\n                </div>\n              </div>\n            </div>\n          </div>\n        </div>\n      </div>\n    </div>\n  </section>"
    }
   }

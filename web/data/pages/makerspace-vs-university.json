@@ -3,6 +3,8 @@
   "props": {
    "title": "Kzoo Makers vs University Makerspaces - WMU & KVCC Comparison",
    "description": "Compare Kzoo Makers with WMU and KVCC university makerspaces. Understand the differences between community and academic makerspaces in Kalamazoo for public access and real fabrication.",
+   "bare": false,
+   "inline": [],
    "bodyClass": "",
    "refresh": "",
    "css": "\n    .comparison-card {\n      background: white;\n      border-radius: 8px;\n      padding: 30px;\n      margin-bottom: 30px;\n      box-shadow: 0 2px 15px rgba(0,0,0,0.1);\n    }\n    .comparison-card h3 {\n      color: #47424C;\n      margin-bottom: 15px;\n    }\n    .feature-list {\n      list-style: none;\n      padding: 0;\n    }\n    .feature-list li {\n      padding: 10px 0;\n      border-bottom: 1px solid #e0e0e0;\n    }\n    .feature-list li:before {\n      content: \"✓\";\n      color: #8490ff;\n      font-weight: bold;\n      margin-right: 10px;\n    }\n    .feature-list.no-feature li:before {\n      content: \"✗\";\n      color: #ff6b6b;\n    }\n    .vs-badge {\n      background: #8490ff;\n      color: white;\n      padding: 5px 15px;\n      border-radius: 20px;\n      font-weight: 600;\n      display: inline-block;\n      margin: 10px 0;\n    }\n    .alert-box {\n      background: #fff3cd;\n      border-left: 4px solid #ffc107;\n      padding: 20px;\n      margin: 20px 0;\n      border-radius: 4px;\n    }\n    .alert-box h4 {\n      color: #856404;\n      margin-bottom: 10px;\n    }\n    .comparison-table {\n      overflow-x: auto;\n      margin: 30px 0;\n    }\n    .comparison-table table {\n      width: 100%;\n      border-collapse: collapse;\n      background: white;\n      box-shadow: 0 2px 10px rgba(0,0,0,0.1);\n    }\n    .comparison-table th {\n      background: #47424C;\n      color: white;\n      padding: 15px;\n      text-align: left;\n      font-weight: 600;\n    }\n    .comparison-table td {\n      padding: 12px 15px;\n      border-bottom: 1px solid #e0e0e0;\n    }\n    .comparison-table .highlight {\n      background: #fff9e6;\n      font-weight: 600;\n      color: #000;\n    }\n  ",
@@ -14,10 +16,12 @@
   {
    "type": "PageHeader",
    "props": {
-    "id": "PageHeader-112",
+    "id": "PageHeader-139",
     "title": "Kzoo Makers vs University Makerspaces",
     "tag": "h2",
     "crumb": "vs Universities",
+    "subtitle": "",
+    "subtitleTag": "h5",
     "trail": [
      {
       "label": "Comparison",
@@ -29,70 +33,70 @@
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-113",
+    "id": "HtmlSection-140",
     "html": "<section class=\"about-shot-info section-sm\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<div class=\"title text-center\">\n\t\t\t\t\t<h2>Community Makerspace vs Academic Makerspaces</h2>\n\t\t\t\t\t<p>University makerspaces have advanced equipment, but they're closed systems designed for students and coursework. This comparison explains the fundamental differences in access, purpose, and capabilities.</p>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-114",
+    "id": "HtmlSection-141",
     "html": "<section class=\"section bg-gray\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<div class=\"alert-box\">\n\t\t\t\t\t<h4>⚠️ The Most Important Difference</h4>\n\t\t\t\t\t<p><strong>University makerspaces (WMU, KVCC) are NOT open to the public.</strong> They are exclusively for enrolled students and faculty. If you're not currently taking classes, you cannot access these facilities.</p>\n\t\t\t\t\t<p>Kzoo Makers is the only full-spectrum makerspace in Kalamazoo that the general public can join and use.</p>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-115",
+    "id": "HtmlSection-142",
     "html": "<section class=\"section\">\n\t<div class=\"container\">\n\t\t<div class=\"row\">\n\t\t\t<div class=\"col-lg-6 mb-4\">\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h3>🏛️ Kzoo Makers</h3>\n\t\t\t\t\t<span class=\"vs-badge\">Community Makerspace</span>\n\t\t\t\t\t<p class=\"mt-3\"><strong>Who Can Use It:</strong> Anyone in the public (membership required)</p>\n\t\t\t\t\t<ul class=\"feature-list\">\n\t\t\t\t\t\t<li>Open to all ages and backgrounds</li>\n\t\t\t\t\t\t<li>No enrollment or coursework required</li>\n\t\t\t\t\t\t<li>Flexible membership tiers</li>\n\t\t\t\t\t\t<li>Evenings and weekends available</li>\n\t\t\t\t\t\t<li>56 hours a week of access for trained members</li>\n\t\t\t\t\t\t<li>Commercial/entrepreneurial use allowed</li>\n\t\t\t\t\t\t<li>Volunteer-run, community-driven</li>\n\t\t\t\t\t\t<li>Peer mentorship model</li>\n\t\t\t\t\t</ul>\n\t\t\t\t\t<p class=\"mt-3\"><strong>Purpose:</strong> Real-world making, fabrication, entrepreneurship, skill development</p>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<div class=\"col-lg-6 mb-4\">\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h3>🎓 University Makerspaces</h3>\n\t\t\t\t\t<span class=\"vs-badge\">WMU &amp; KVCC</span>\n\t\t\t\t\t<p class=\"mt-3\"><strong>Who Can Use It:</strong> Enrolled students and faculty only</p>\n\t\t\t\t\t<ul class=\"feature-list no-feature\">\n\t\t\t\t\t\t<li>Closed to the general public</li>\n\t\t\t\t\t\t<li>Must be enrolled in courses</li>\n\t\t\t\t\t\t<li>Cost included in tuition</li>\n\t\t\t\t\t\t<li>Academic hours only (no evenings/weekends)</li>\n\t\t\t\t\t\t<li>Semester-bound access</li>\n\t\t\t\t\t\t<li>Academic use only (no commercial)</li>\n\t\t\t\t\t\t<li>Faculty/staff supervision required</li>\n\t\t\t\t\t\t<li>Course-based training</li>\n\t\t\t\t\t</ul>\n\t\t\t\t\t<p class=\"mt-3\"><strong>Purpose:</strong> Academic coursework, curriculum support, educational demonstrations</p>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-116",
+    "id": "HtmlSection-143",
     "html": "<section class=\"section bg-gray\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-12\">\n\t\t\t\t<h3 class=\"text-center mb-4\">Side-by-Side Comparison</h3>\n\t\t\t\t<div class=\"comparison-table\">\n\t\t\t\t\t<table>\n\t\t\t\t\t\t<thead>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<th>Feature</th>\n\t\t\t\t\t\t\t\t<th class=\"highlight\">Kzoo Makers</th>\n\t\t\t\t\t\t\t\t<th>WMU Makerspaces</th>\n\t\t\t\t\t\t\t\t<th>KVCC Labs</th>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t</thead>\n\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Public Access</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Yes (membership)</td>\n\t\t\t\t\t\t\t\t<td>❌ Students/faculty only</td>\n\t\t\t\t\t\t\t\t<td>❌ Students only</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Enrollment Required</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">❌ No</td>\n\t\t\t\t\t\t\t\t<td>✅ Must be WMU student</td>\n\t\t\t\t\t\t\t\t<td>✅ Must be KVCC student</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Cost</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">$5-$60/month</td>\n\t\t\t\t\t\t\t\t<td>Included in tuition ($$$)</td>\n\t\t\t\t\t\t\t\t<td>Included in tuition ($$)</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Hours</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">Evenings/weekends + 56 hours/week</td>\n\t\t\t\t\t\t\t\t<td>Academic/library hours only</td>\n\t\t\t\t\t\t\t\t<td>Academic schedule only</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Access Duration</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">Ongoing (as long as member)</td>\n\t\t\t\t\t\t\t\t<td>Semester-bound</td>\n\t\t\t\t\t\t\t\t<td>Semester-bound</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Wood Shop</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Full shop</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t\t<td>❌ (program-specific only)</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Metal Shop / Welding</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ MIG/TIG, grinders, fabrication</td>\n\t\t\t\t\t\t\t\t<td>❌ (except specific programs)</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Program-only</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>CNC Routing</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Full-size CNC</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Department-specific</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Program-only</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Laser Cutting</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Industrial laser</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Program-only</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>3D Printing</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Hands-on access</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Limited / phased out</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Program-only</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Electronics</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Full benches, soldering</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Engineering labs only</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Program-only</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Textiles / Sewing</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Commercial Use</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Explicitly supported</td>\n\t\t\t\t\t\t\t\t<td>❌ Academic only</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Program-dependent</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Training Model</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">Mandatory safety, peer mentorship</td>\n\t\t\t\t\t\t\t\t<td>Course-based</td>\n\t\t\t\t\t\t\t\t<td>Course-based</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Staffing</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">Volunteer-run</td>\n\t\t\t\t\t\t\t\t<td>Library staff / faculty</td>\n\t\t\t\t\t\t\t\t<td>Instructors only</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Drop-In Use</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Yes (after training)</td>\n\t\t\t\t\t\t\t\t<td>❌ Course-scheduled</td>\n\t\t\t\t\t\t\t\t<td>❌ Course-scheduled</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t</tbody>\n\t\t\t\t\t</table>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-117",
+    "id": "HtmlSection-144",
     "html": "<section class=\"section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<h3 class=\"text-center mb-4\">Understanding the Fundamental Difference</h3>\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h4>Why University Makerspaces Are Closed Systems</h4>\n\t\t\t\t\t<p>University makerspaces exist to support academic programs and coursework. They are:</p>\n\t\t\t\t\t<ul>\n\t\t\t\t\t\t<li><strong>Curriculum-bound:</strong> Tools and access are tied to specific courses and programs</li>\n\t\t\t\t\t\t<li><strong>Liability-restricted:</strong> Only students and faculty covered by university insurance</li>\n\t\t\t\t\t\t<li><strong>Schedule-limited:</strong> Operate during academic hours and semesters</li>\n\t\t\t\t\t\t<li><strong>Department-specific:</strong> Many tools are restricted to specific majors or programs</li>\n\t\t\t\t\t\t<li><strong>Academically-focused:</strong> Designed for educational outcomes, not real-world fabrication</li>\n\t\t\t\t\t</ul>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h4>Why Kzoo Makers Is an Open System</h4>\n\t\t\t\t\t<p>Kzoo Makers exists to serve the community and support real-world making. We are:</p>\n\t\t\t\t\t<ul>\n\t\t\t\t\t\t<li><strong>Public-access:</strong> Anyone can join regardless of educational status</li>\n\t\t\t\t\t\t<li><strong>Project-driven:</strong> Tools are available for any legitimate project</li>\n\t\t\t\t\t\t<li><strong>Flexible-schedule:</strong> Open evenings, weekends, and 56 hours a week for trained members</li>\n\t\t\t\t\t\t<li><strong>Full-spectrum:</strong> All tools available to all trained members</li>\n\t\t\t\t\t\t<li><strong>Real-world focused:</strong> Supports entrepreneurship, prototyping, and fabrication</li>\n\t\t\t\t\t</ul>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-118",
+    "id": "HtmlSection-145",
     "html": "<section class=\"section bg-gray\">\n\t<div class=\"container\">\n\t\t<div class=\"row\">\n\t\t\t<div class=\"col-lg-6 mb-4\">\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h4>WMU Makerspaces</h4>\n\t\t\t\t\t<p><strong>Locations:</strong> Zhang Legacy Collections Center (library), various academic departments</p>\n\t\t\t\t\t<p><strong>Access:</strong> WMU students and faculty only</p>\n\t\t\t\t\t<p><strong>Equipment:</strong></p>\n\t\t\t\t\t<ul>\n\t\t\t\t\t\t<li>Limited 3D printing (being phased out)</li>\n\t\t\t\t\t\t<li>Some department-specific CNC</li>\n\t\t\t\t\t\t<li>Engineering labs (major-restricted)</li>\n\t\t\t\t\t\t<li>Digital media tools</li>\n\t\t\t\t\t</ul>\n\t\t\t\t\t<p><strong>Notable Limitations:</strong></p>\n\t\t\t\t\t<ul class=\"feature-list no-feature\">\n\t\t\t\t\t\t<li>No public access</li>\n\t\t\t\t\t\t<li>No wood shop</li>\n\t\t\t\t\t\t<li>No general metal shop</li>\n\t\t\t\t\t\t<li>No laser cutting (general access)</li>\n\t\t\t\t\t\t<li>Academic hours only</li>\n\t\t\t\t\t</ul>\n\t\t\t\t\t<a href=\"/makerspace-vs-wmu\" class=\"btn btn-main btn-sm mt-3\">Detailed WMU Comparison</a>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<div class=\"col-lg-6 mb-4\">\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h4>KVCC Labs</h4>\n\t\t\t\t\t<p><strong>Locations:</strong> Various campus buildings, program-specific</p>\n\t\t\t\t\t<p><strong>Access:</strong> KVCC students enrolled in specific programs</p>\n\t\t\t\t\t<p><strong>Equipment:</strong></p>\n\t\t\t\t\t<ul>\n\t\t\t\t\t\t<li>Welding labs (welding program only)</li>\n\t\t\t\t\t\t<li>CNC equipment (manufacturing program)</li>\n\t\t\t\t\t\t<li>3D printing (program-specific)</li>\n\t\t\t\t\t\t<li>New Media lab (digital focus)</li>\n\t\t\t\t\t</ul>\n\t\t\t\t\t<p><strong>Notable Limitations:</strong></p>\n\t\t\t\t\t<ul class=\"feature-list no-feature\">\n\t\t\t\t\t\t<li>No public access</li>\n\t\t\t\t\t\t<li>Program-enrollment required</li>\n\t\t\t\t\t\t<li>No general wood shop</li>\n\t\t\t\t\t\t<li>Course-scheduled access only</li>\n\t\t\t\t\t\t<li>Academic calendar bound</li>\n\t\t\t\t\t</ul>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-119",
+    "id": "HtmlSection-146",
     "html": "<section class=\"section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<h3 class=\"text-center mb-4\">Which Option Is Right for You?</h3>\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h4>Choose University Makerspaces If:</h4>\n\t\t\t\t\t<ul class=\"feature-list\">\n\t\t\t\t\t\t<li>You are currently enrolled as a student at WMU or KVCC</li>\n\t\t\t\t\t\t<li>You need tools for coursework or class projects</li>\n\t\t\t\t\t\t<li>You want equipment access included in your tuition</li>\n\t\t\t\t\t\t<li>You're comfortable with academic schedules and restrictions</li>\n\t\t\t\t\t</ul>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h4>Choose Kzoo Makers If:</h4>\n\t\t\t\t\t<ul class=\"feature-list\">\n\t\t\t\t\t\t<li>You are NOT a current student (or want access beyond coursework)</li>\n\t\t\t\t\t\t<li>You need wood shop, metal shop, or welding access</li>\n\t\t\t\t\t\t<li>You want hands-on control of professional tools</li>\n\t\t\t\t\t\t<li>You need flexible hours (evenings, weekends, 56 hours/week)</li>\n\t\t\t\t\t\t<li>You're working on business, entrepreneurial, or personal projects</li>\n\t\t\t\t\t\t<li>You want ongoing access, not semester-bound</li>\n\t\t\t\t\t\t<li>You value community and peer mentorship</li>\n\t\t\t\t\t</ul>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-120",
+    "id": "HtmlSection-147",
     "html": "<section class=\"section bg-gray\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<div class=\"comparison-card text-center\">\n\t\t\t\t\t<h3>The Bottom Line</h3>\n\t\t\t\t\t<p class=\"lead\">If you're a student at WMU or KVCC, take advantage of the makerspaces available to you through your tuition. They're valuable resources for coursework.</p>\n\t\t\t\t\t<p class=\"lead\">If you're NOT a student—or if you need tools beyond what universities offer—Kzoo Makers is your only option for full-spectrum fabrication access in Kalamazoo.</p>\n\t\t\t\t\t<p class=\"mt-4\"><strong>We're the only public makerspace with wood, metal, CNC, laser, and welding under one roof.</strong></p>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-121",
+    "id": "HtmlSection-148",
     "html": "<section class=\"section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<h3 class=\"text-center mb-4\">Common Questions</h3>\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h5>Can I access WMU or KVCC makerspaces if I'm not a student?</h5>\n\t\t\t\t\t<p>No. University makerspaces are exclusively for enrolled students and faculty. There is no public access or guest membership option.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h5>Can I take a class at KVCC just to access their makerspace?</h5>\n\t\t\t\t\t<p>Technically yes, but you'd need to enroll in a specific program (like welding or manufacturing), pay tuition, and access would be limited to course schedules. For most people, a Kzoo Makers membership is more practical and affordable.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h5>I'm a WMU student. Should I join Kzoo Makers too?</h5>\n\t\t\t\t\t<p>Many WMU students do! Kzoo Makers offers tools WMU doesn't have (wood shop, metal shop, laser cutter) and provides access beyond academic hours and semesters. It's a great complement to university resources.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h5>Do university makerspaces have better equipment?</h5>\n\t\t\t\t\t<p>Not necessarily. While universities may have specialized equipment for specific programs, Kzoo Makers offers a broader range of fabrication tools under one roof with hands-on access. Universities often restrict advanced equipment to specific majors or courses.</p>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-122",
+    "id": "HtmlSection-149",
     "html": "<section class=\"call-to-action section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-xl-6 col-lg-8 text-center\">\n\t\t\t\t<h2>Ready for Public Access to Real Tools?</h2>\n\t\t\t\t<p>Join the only full-spectrum community makerspace in Kalamazoo.</p>\n\t\t\t\t<a href=\"/pricing\" class=\"btn btn-main\">See Membership Options</a>\n\t\t\t\t<a href=\"/tour-form-redirect\" class=\"btn btn-main\">Schedule a Tour</a>\n\t\t\t</div>\n\t\t</div> <!-- End row -->\n\t</div> <!-- End container -->\n</section>"
    }
   }

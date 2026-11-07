@@ -3,6 +3,8 @@
   "props": {
    "title": "Kzoo Makers vs Library Makerspaces - Kalamazoo Comparison",
    "description": "Compare Kzoo Makers with Kalamazoo Public Library Idea Lab and Portage District Library makerspaces. Understand the differences in tools, access, and capabilities for your making needs.",
+   "bare": false,
+   "inline": [],
    "bodyClass": "",
    "refresh": "",
    "css": "\n    .comparison-card {\n      background: white;\n      border-radius: 8px;\n      padding: 30px;\n      margin-bottom: 30px;\n      box-shadow: 0 2px 15px rgba(0,0,0,0.1);\n    }\n    .comparison-card h3 {\n      color: #47424C;\n      margin-bottom: 15px;\n    }\n    .feature-list {\n      list-style: none;\n      padding: 0;\n    }\n    .feature-list li {\n      padding: 10px 0;\n      border-bottom: 1px solid #e0e0e0;\n    }\n    .feature-list li:before {\n      content: \"✓\";\n      color: #8490ff;\n      font-weight: bold;\n      margin-right: 10px;\n    }\n    .feature-list.no-feature li:before {\n      content: \"✗\";\n      color: #ff6b6b;\n    }\n    .vs-badge {\n      background: #8490ff;\n      color: white;\n      padding: 5px 15px;\n      border-radius: 20px;\n      font-weight: 600;\n      display: inline-block;\n      margin: 10px 0;\n    }\n    .comparison-table {\n      overflow-x: auto;\n      margin: 30px 0;\n    }\n    .comparison-table table {\n      width: 100%;\n      border-collapse: collapse;\n      background: white;\n      box-shadow: 0 2px 10px rgba(0,0,0,0.1);\n    }\n    .comparison-table th {\n      background: #47424C;\n      color: white;\n      padding: 15px;\n      text-align: left;\n      font-weight: 600;\n    }\n    .comparison-table td {\n      padding: 12px 15px;\n      border-bottom: 1px solid #e0e0e0;\n    }\n    .comparison-table .highlight {\n      background: #fff9e6;\n      font-weight: 600;\n      color: #000;\n    }\n  ",
@@ -14,10 +16,12 @@
   {
    "type": "PageHeader",
    "props": {
-    "id": "PageHeader-103",
+    "id": "PageHeader-130",
     "title": "Kzoo Makers vs Library Makerspaces",
     "tag": "h2",
     "crumb": "vs Libraries",
+    "subtitle": "",
+    "subtitleTag": "h5",
     "trail": [
      {
       "label": "Comparison",
@@ -29,56 +33,56 @@
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-104",
+    "id": "HtmlSection-131",
     "html": "<section class=\"about-shot-info section-sm\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<div class=\"title text-center\">\n\t\t\t\t\t<h2>Community Makerspace vs Library Makerspaces</h2>\n\t\t\t\t\t<p>Both Kzoo Makers and library makerspaces serve the public, but they're designed for very different types of making. This comparison helps you understand which space fits your project needs.</p>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-105",
+    "id": "HtmlSection-132",
     "html": "<section class=\"section bg-gray\">\n\t<div class=\"container\">\n\t\t<div class=\"row\">\n\t\t\t<div class=\"col-lg-6 mb-4\">\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h3>🏛️ Kzoo Makers</h3>\n\t\t\t\t\t<span class=\"vs-badge\">Community Makerspace</span>\n\t\t\t\t\t<p class=\"mt-3\"><strong>Best for:</strong> Serious makers, entrepreneurs, fabrication projects, learning advanced skills</p>\n\t\t\t\t\t<ul class=\"feature-list\">\n\t\t\t\t\t\t<li>Full wood shop with table saws, jointers, planers</li>\n\t\t\t\t\t\t<li>Metal shop with MIG/TIG welding, grinders</li>\n\t\t\t\t\t\t<li>Industrial laser cutter (large format)</li>\n\t\t\t\t\t\t<li>Full-size CNC router</li>\n\t\t\t\t\t\t<li>Hands-on tool access after training</li>\n\t\t\t\t\t\t<li>56 hours a week of access for trained members</li>\n\t\t\t\t\t\t<li>Commercial/entrepreneurial use allowed</li>\n\t\t\t\t\t\t<li>Peer mentorship and community</li>\n\t\t\t\t\t</ul>\n\t\t\t\t\t<p class=\"mt-3\"><strong>Cost:</strong> $5-$60/month membership</p>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<div class=\"col-lg-6 mb-4\">\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h3>📚 Library Makerspaces</h3>\n\t\t\t\t\t<span class=\"vs-badge\">KPL Idea Lab &amp; Portage Library</span>\n\t\t\t\t\t<p class=\"mt-3\"><strong>Best for:</strong> Beginners, crafts, light prototyping, learning basics</p>\n\t\t\t\t\t<ul class=\"feature-list\">\n\t\t\t\t\t\t<li>Desktop 3D printers (staff-operated)</li>\n\t\t\t\t\t\t<li>Desktop laser cutter (Portage only)</li>\n\t\t\t\t\t\t<li>Sewing machines (Portage)</li>\n\t\t\t\t\t\t<li>Adobe Creative Suite access</li>\n\t\t\t\t\t\t<li>Button makers, vinyl cutters</li>\n\t\t\t\t\t\t<li>Staff guidance and supervision</li>\n\t\t\t\t\t\t<li>Limited hours (library schedule)</li>\n\t\t\t\t\t\t<li>Free to use</li>\n\t\t\t\t\t</ul>\n\t\t\t\t\t<ul class=\"feature-list no-feature mt-3\">\n\t\t\t\t\t\t<li>No wood shop</li>\n\t\t\t\t\t\t<li>No metal shop or welding</li>\n\t\t\t\t\t\t<li>No heavy fabrication</li>\n\t\t\t\t\t\t<li>No commercial use</li>\n\t\t\t\t\t</ul>\n\t\t\t\t\t<p class=\"mt-3\"><strong>Cost:</strong> Free</p>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-106",
+    "id": "HtmlSection-133",
     "html": "<section class=\"section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-12\">\n\t\t\t\t<h3 class=\"text-center mb-4\">Side-by-Side Comparison</h3>\n\t\t\t\t<div class=\"comparison-table\">\n\t\t\t\t\t<table>\n\t\t\t\t\t\t<thead>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<th>Feature</th>\n\t\t\t\t\t\t\t\t<th class=\"highlight\">Kzoo Makers</th>\n\t\t\t\t\t\t\t\t<th>KPL Idea Lab</th>\n\t\t\t\t\t\t\t\t<th>Portage Library</th>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t</thead>\n\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Access</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">Membership required</td>\n\t\t\t\t\t\t\t\t<td>Free, public</td>\n\t\t\t\t\t\t\t\t<td>Free, public</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Cost</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">$5-$60/month</td>\n\t\t\t\t\t\t\t\t<td>Free</td>\n\t\t\t\t\t\t\t\t<td>Free</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Hours</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">Evenings/weekends + 56 hours/week for trained</td>\n\t\t\t\t\t\t\t\t<td>Mon-Sat, limited hours</td>\n\t\t\t\t\t\t\t\t<td>Library hours (longer than KPL)</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Tool Access</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">Hands-on after safety training</td>\n\t\t\t\t\t\t\t\t<td>Staff-operated or supervised</td>\n\t\t\t\t\t\t\t\t<td>Staff-operated or supervised</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Wood Shop</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Full shop (table saw, jointer, planer, etc.)</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Metal Shop</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ MIG/TIG welding, grinders, fabrication</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Laser Cutting</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Industrial 100W (24\"x36\" bed)</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t\t<td>✅ Desktop laser (smaller)</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>CNC Router</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Full-size (4'x8' capable)</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Desktop CNC (limited)</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>3D Printing</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Multiple printers, hands-on</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Staff-operated only</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Staff-operated only</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Electronics Lab</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Full benches, soldering, oscilloscopes</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Limited tools</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Limited tools</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Textiles/Sewing</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Sewing machines, sergers</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t\t<td>✅ Sewing machines</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Digital Media</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">⚠️ Limited</td>\n\t\t\t\t\t\t\t\t<td>✅ Full Adobe Suite</td>\n\t\t\t\t\t\t\t\t<td>✅ Design PCs</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Commercial Use</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Explicitly supported</td>\n\t\t\t\t\t\t\t\t<td>❌ Not allowed</td>\n\t\t\t\t\t\t\t\t<td>❌ Not allowed</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Heavy/Noisy Work</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Yes</td>\n\t\t\t\t\t\t\t\t<td>❌ Library environment</td>\n\t\t\t\t\t\t\t\t<td>❌ Library environment</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Project Storage</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Member storage available</td>\n\t\t\t\t\t\t\t\t<td>❌ Limited</td>\n\t\t\t\t\t\t\t\t<td>❌ Limited</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Training Model</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">Mandatory safety, peer mentorship</td>\n\t\t\t\t\t\t\t\t<td>Informal staff guidance</td>\n\t\t\t\t\t\t\t\t<td>Optional orientations</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t</tbody>\n\t\t\t\t\t</table>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-107",
+    "id": "HtmlSection-134",
     "html": "<section class=\"section bg-gray\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<h3 class=\"text-center mb-4\">Which Space is Right for Your Project?</h3>\n\t\t\t\t<div class=\"row\">\n\t\t\t\t\t<div class=\"col-md-6 mb-4\">\n\t\t\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t\t\t<h4>Choose Kzoo Makers If You Need:</h4>\n\t\t\t\t\t\t\t<ul class=\"feature-list\">\n\t\t\t\t\t\t\t\t<li>Wood or metal fabrication</li>\n\t\t\t\t\t\t\t\t<li>Welding or heavy metalwork</li>\n\t\t\t\t\t\t\t\t<li>Large-format laser cutting</li>\n\t\t\t\t\t\t\t\t<li>Full-size CNC routing</li>\n\t\t\t\t\t\t\t\t<li>Hands-on tool control</li>\n\t\t\t\t\t\t\t\t<li>56 hours a week of access to equipment</li>\n\t\t\t\t\t\t\t\t<li>Commercial/business projects</li>\n\t\t\t\t\t\t\t\t<li>Long-term project storage</li>\n\t\t\t\t\t\t\t\t<li>Advanced skill development</li>\n\t\t\t\t\t\t\t\t<li>Maker community and mentorship</li>\n\t\t\t\t\t\t\t</ul>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class=\"col-md-6 mb-4\">\n\t\t\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t\t\t<h4>Choose Library Makerspaces If You Need:</h4>\n\t\t\t\t\t\t\t<ul class=\"feature-list\">\n\t\t\t\t\t\t\t\t<li>Free access (no membership)</li>\n\t\t\t\t\t\t\t\t<li>Beginner-friendly environment</li>\n\t\t\t\t\t\t\t\t<li>Staff-guided projects</li>\n\t\t\t\t\t\t\t\t<li>Light crafting or prototyping</li>\n\t\t\t\t\t\t\t\t<li>Adobe Creative Suite access</li>\n\t\t\t\t\t\t\t\t<li>Small 3D prints (staff-operated)</li>\n\t\t\t\t\t\t\t\t<li>Sewing projects (Portage)</li>\n\t\t\t\t\t\t\t\t<li>No commitment required</li>\n\t\t\t\t\t\t\t\t<li>Daytime availability</li>\n\t\t\t\t\t\t\t\t<li>Personal/hobby projects only</li>\n\t\t\t\t\t\t\t</ul>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-108",
+    "id": "HtmlSection-135",
     "html": "<section class=\"section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<h3 class=\"text-center mb-4\">Real Project Examples</h3>\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h4>Projects You Can Do at Kzoo Makers (But Not Libraries):</h4>\n\t\t\t\t\t<ul>\n\t\t\t\t\t\t<li>Build custom furniture with hardwood</li>\n\t\t\t\t\t\t<li>Fabricate metal brackets or frames</li>\n\t\t\t\t\t\t<li>Weld a steel sculpture or bike rack</li>\n\t\t\t\t\t\t<li>Cut large plywood sheets on CNC router</li>\n\t\t\t\t\t\t<li>Laser engrave production runs for your business</li>\n\t\t\t\t\t\t<li>Prototype product designs with metal and wood</li>\n\t\t\t\t\t\t<li>Repair or modify automotive parts</li>\n\t\t\t\t\t\t<li>Create large-scale art installations</li>\n\t\t\t\t\t</ul>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"comparison-card mt-4\">\n\t\t\t\t\t<h4>Projects You Can Do at Library Makerspaces:</h4>\n\t\t\t\t\t<ul>\n\t\t\t\t\t\t<li>Print small 3D models (with staff help)</li>\n\t\t\t\t\t\t<li>Create vinyl decals or stickers</li>\n\t\t\t\t\t\t<li>Design graphics with Adobe Suite</li>\n\t\t\t\t\t\t<li>Make custom buttons or badges</li>\n\t\t\t\t\t\t<li>Sew simple fabric projects (Portage)</li>\n\t\t\t\t\t\t<li>Small laser cuts on desktop laser (Portage)</li>\n\t\t\t\t\t\t<li>Learn basic digital design skills</li>\n\t\t\t\t\t</ul>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-109",
+    "id": "HtmlSection-136",
     "html": "<section class=\"section bg-gray\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<div class=\"comparison-card text-center\">\n\t\t\t\t\t<h3>The Bottom Line</h3>\n\t\t\t\t\t<p class=\"lead\">Library makerspaces are excellent for beginners, crafters, and those exploring making without commitment. They're free, friendly, and perfect for light projects.</p>\n\t\t\t\t\t<p class=\"lead\">Kzoo Makers is for serious makers who need professional-grade tools, hands-on access, and the freedom to tackle real fabrication projects—from furniture to metal sculpture to business prototypes.</p>\n\t\t\t\t\t<p class=\"mt-4\"><strong>Both have value. The question is: what do you want to make?</strong></p>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-110",
+    "id": "HtmlSection-137",
     "html": "<section class=\"section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<h3 class=\"text-center mb-4\">Common Questions</h3>\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h5>Can I use library makerspaces for business projects?</h5>\n\t\t\t\t\t<p>No. Library makerspaces are for personal, educational, and hobby use only. Commercial use is not permitted.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h5>Can I use Kzoo Makers tools myself, or is it staff-operated?</h5>\n\t\t\t\t\t<p>After completing safety training, you have hands-on access to all tools. You operate the equipment yourself with peer support available.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h5>Which is better for learning?</h5>\n\t\t\t\t\t<p>Library makerspaces are great for introductory exposure. Kzoo Makers is better for developing real skills through hands-on practice and peer mentorship.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h5>Can I start at the library and move to Kzoo Makers later?</h5>\n\t\t\t\t\t<p>Absolutely! Many members start by exploring making at libraries, then join Kzoo Makers when they're ready for more advanced tools and projects.</p>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-111",
+    "id": "HtmlSection-138",
     "html": "<section class=\"call-to-action section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-xl-6 col-lg-8 text-center\">\n\t\t\t\t<h2>Ready for Full-Spectrum Making?</h2>\n\t\t\t\t<p>Join Kzoo Makers and get hands-on access to professional fabrication tools.</p>\n\t\t\t\t<a href=\"/pricing\" class=\"btn btn-main\">See Membership Options</a>\n\t\t\t\t<a href=\"/tour-form-redirect\" class=\"btn btn-main\">Schedule a Tour</a>\n\t\t\t</div>\n\t\t</div> <!-- End row -->\n\t</div> <!-- End container -->\n</section>"
    }
   }

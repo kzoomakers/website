@@ -107,3 +107,9 @@ export function Footer() {
     </footer>
   );
 }
+
+// Site theme. Rendered per page (not in the root layout) so "standalone" pages can opt out.
+// `precedence` makes React 19 hoist these into <head> (and into Puck's iframe) in this order.
+const THEME = ["/plugins/themefisher-font/style.css", "/plugins/bootstrap/bootstrap.min.css", "/plugins/lightbox2/css/lightbox.min.css",
+  "/plugins/animate/animate.css", "/plugins/slick/slick.css", "/css/style.css"];
+export const ThemeCss = () => <>{THEME.map((h) => <link key={h} rel="stylesheet" href={h} precedence="theme" />)}</>;

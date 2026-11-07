@@ -3,6 +3,8 @@
   "props": {
    "title": "Kzoo Makers Blog",
    "description": "Kzoo Makers blog - Read about maker projects, community events, and DIY tutorials from our Kalamazoo makerspace. Learn about woodworking, metalworking, laser cutting, and more.",
+   "bare": false,
+   "inline": [],
    "bodyClass": "blog-page",
    "refresh": "",
    "css": "",
@@ -22,6 +24,8 @@
     "title": "Blogs",
     "tag": "h2",
     "crumb": "Blogs",
+    "subtitle": "",
+    "subtitleTag": "h5",
     "trail": []
    }
   },

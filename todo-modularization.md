@@ -162,7 +162,10 @@ Faithful-check routine before every deploy:
 ### Phase 1.5: Bulk migration (done early on `poc`, so every page is editable now)
 - [x] `web/scripts/migrate.mjs`: 86 of 105 legacy pages → Puck JSON in `web/data/pages/` (re-runnable; never overwrites hand-built `about`). Header → `PageHeader` (with breadcrumb trail), counters → `Counters`, every other `<section>` → `HtmlSection` (raw HTML, edited in a textarea). Per-page head CSS, extra stylesheets/scripts, `<body class>` and meta-refresh redirects are kept as page settings.
 - [x] `web/scripts/diffall.sh` + `shotdiff.mjs`: old-vs-new screenshot diff for every page (needs legacy site on :8080 and `npm run dev`). Result after fixes: nearly all pages are <1% different. Known noise: pages with the filterizr gallery (screenshot catches the animation mid-frame, e.g. `s-*-shop-*`, `meetup-*`, `sitemap`), and redirect pages (browser leaves the page).
-- [ ] Skipped, need custom components: `index` (home), `calendar`, `handbook`, `history`, `how-to`, `sop`, `single-post`, `woodshop-inventory`, `tools-we-are-seeking-donations-kalamazoo`, `ical-demo`; junk not migrated: demo*, calendar2, contact-new, index-text, onepage-*.
+- [x] Inline-script pages migrated too (home, calendar, handbook, history, how-to, sop, single-post, both inventory pages; 95 pages total). Mechanism: root settings **Page scripts** (inline JS, run after site scripts; `DOMContentLoaded` listeners fire immediately), **Standalone page** (handbook/sop: no site chrome/theme/scripts), theme CSS now rendered per page instead of in the root layout. Scripts don't run inside the editor (only on the public page).
+- [ ] Not migrated (junk, **ask owner before deleting the files**): `demo`, `demo1`, `demo3`, `calendar2`, `contact-new`, `index-text`, `onepage-slider`, `onepage-text`, `ical-demo`, `contact copy`.
+- [ ] Calendar/inventory/home animations are only verified by static screenshot; click-test month grid, filters, print, "add whole series", inventory search/sort.
+- [ ] Inline scripts are raw JS in a textbox: fine behind auth, but move calendar/inventory/hero logic into real components in Phase 4 so editors never touch JS.
 - [ ] `HtmlSection` is the escape hatch, NOT the goal: promote repeated patterns (`about-2` text sections, `portfolio` galleries, pricing, bg-gray cards) into real components so editors get WYSIWYG fields instead of an HTML box. Phase 1 order by usage: classless text sections (112), `about-2` (71), `portfolio` (37), `bg-gray` (38), `call-to-action` (13).
 - [ ] Redirect pages (discord/forms/tour) should become a real redirects table in Phase 2.
 
@@ -183,8 +186,8 @@ Faithful-check routine before every deploy:
 - [ ] Keep legacy static site reachable for rollback for 2 weeks.
 
 ## Open questions for owner
-- Who gets editor accounts? (drives auth choice)
-- MySQL vs Postgres on Aiven? (recommend Postgres)
-- Is `cal.ics` fed from Google Calendar or hand-maintained?
-- OK to delete the `.bak` / demo / duplicate pages listed above?
-- Uploads: Fly volume (simple) or S3-compatible bucket (survives machine loss)?
+- Who gets editor accounts? (drives auth choice) - not sure be flexible
+- MySQL vs Postgres on Aiven? (recommend Postgres) - yes postgres
+- Is `cal.ics` fed from Google Calendar or hand-maintained? - yes google cal
+- OK to delete the `.bak` / demo / duplicate pages listed above? - yes
+- Uploads: Fly volume (simple) or S3-compatible bucket (survives machine loss)? i will prably use rustfs a s3 compatible

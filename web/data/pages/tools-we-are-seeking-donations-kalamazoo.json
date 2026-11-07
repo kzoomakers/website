@@ -1,0 +1,57 @@
+{
+ "root": {
+  "props": {
+   "title": "Donate to Kalamazoo Nonprofit Makerspace | Tax-Deductible Tool Donations",
+   "description": "Support our Kalamazoo nonprofit makerspace with tax-deductible donations. Donate tools, equipment, and supplies to help our community makerspace serve Southwest Michigan. Your nonprofit donation makes a difference in Kalamazoo.",
+   "bare": false,
+   "inline": [
+    {
+     "code": "\n  // Initialize the donation inventory table with tool data\n  document.addEventListener('DOMContentLoaded', function() {\n    const inventory = new DonationInventoryTable({\n      jsonPath: 'dynamic/json/inventory-donations-needed.json',\n      tableId: 'inventoryTable',\n      searchInputId: 'searchInput',\n      statsConfig: {\n        totalItems: 'total-items',\n        totalQuantity: 'total-quantity',\n        typeCounts: 'type-counts-container'\n      },\n      columns: ['description', 'type'],\n      columnHeaders: {\n        description: 'Item We Need',\n        type: 'Category'\n      },\n      onLoad: function(data) {\n        console.log('Tools we need loaded:', data.length, 'items');\n      }\n    });\n  });\n"
+    }
+   ],
+   "bodyClass": "",
+   "refresh": "",
+   "css": "",
+   "styles": [
+    {
+     "href": "css/inventory.css"
+    },
+    {
+     "href": "css/donations.css"
+    }
+   ],
+   "scripts": [
+    {
+     "src": "dynamic/js/inventory-donations.js"
+    }
+   ]
+  }
+ },
+ "content": [
+  {
+   "type": "PageHeader",
+   "props": {
+    "id": "PageHeader-401",
+    "title": "Donate to Our Kalamazoo Nonprofit Makerspace",
+    "tag": "h1",
+    "crumb": "Donate to Nonprofit",
+    "subtitle": "",
+    "subtitleTag": "h5",
+    "trail": [
+     {
+      "label": "Support Us",
+      "href": "/"
+     }
+    ]
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-402",
+    "html": "<section class=\"inventory-section\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center mb-5\">\n      <div class=\"col-lg-8\">\n        <div class=\"title text-center\">\n          <h2>Support Our Kalamazoo Nonprofit with Your Donation</h2>\n          <p class=\"lead\">Your donation to our Kalamazoo nonprofit makerspace empowers the community. When you donate tools and equipment to our nonprofit organization, you're investing in education, innovation, and opportunity for all of Southwest Michigan.</p>\n          <div class=\"border\"></div>\n        </div>\n      </div>\n    </div>\n\n    <!-- Why Donate Section -->\n    <div class=\"row justify-content-center mb-5\">\n      <div class=\"col-lg-10\">\n        <div class=\"donation-info-section\">\n          <h3>Why Donate to Kalamazoo Makerspace Nonprofit?</h3>\n          <p>As a registered 501(c)(3) nonprofit organization in Kalamazoo, we rely on generous donations from our community. Your nonprofit donation helps us:</p>\n          <ul class=\"donation-benefits\">\n            <li><strong>Serve the Kalamazoo Community:</strong> Your donation supports free workshops, educational programs, and community access to tools</li>\n            <li><strong>Tax-Deductible Giving:</strong> All donations to our Kalamazoo nonprofit are tax-deductible to the fullest extent of the law</li>\n            <li><strong>Build Local Capacity:</strong> Donate equipment that empowers makers, entrepreneurs, and students throughout Southwest Michigan</li>\n            <li><strong>Create Lasting Impact:</strong> One donated tool can enable hundreds of projects and skill-building opportunities</li>\n          </ul>\n          \n          <h3>How to Donate to Our Nonprofit in Kalamazoo</h3>\n          <p>Donating to our Kalamazoo nonprofit makerspace is easy! We accept tool donations, equipment donations, and supply donations from individuals and businesses throughout Michigan. Whether you're in Kalamazoo, Battle Creek, Portage, or anywhere in Southwest Michigan, your nonprofit donation makes a difference.</p>\n          <p><strong><a href=\"/contact\">Contact us today to arrange your tax-deductible donation!</a></strong></p>\n          \n          <h3>Tools &amp; Equipment We Need for Our Nonprofit</h3>\n          <p>Browse our current donation needs below. We're seeking donations of hand tools, power tools, electronics, and workshop equipment to support our nonprofit mission in Kalamazoo.</p>\n          <div class=\"border\"></div>\n        </div>\n      </div>\n    </div>\n\n    <div class=\"row\">\n      <div class=\"col-12\">\n        <div class=\"inventory-stats\">\n          <div class=\"stat-card\">\n            <div class=\"stat-number\" id=\"total-quantity\">0</div>\n            <div class=\"stat-label\">Donation Items Needed</div>\n          </div>\n        </div>\n        \n        <!-- Category Filters -->\n        <div id=\"category-filters\"></div>\n        \n        <!-- Search Box -->\n        <div id=\"search-box-container\"></div>\n        \n        <!-- Donation Table -->\n        <div id=\"inventoryTable\"></div>\n      </div>\n    </div>\n  </div>\n</section>"
+   }
+  }
+ ],
+ "zones": {}
+}

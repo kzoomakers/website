@@ -3,6 +3,8 @@
   "props": {
    "title": "Makerspace Comparison - Kzoo Makers vs Libraries & Universities",
    "description": "Compare Kzoo Makers with university and library makerspaces in Kalamazoo. See the differences in access, tools, training, and capabilities between community, academic, and library makerspaces.",
+   "bare": false,
+   "inline": [],
    "bodyClass": "",
    "refresh": "",
    "css": "\n    .comparison-table {\n      overflow-x: auto;\n      margin: 30px 0;\n    }\n    .comparison-table table {\n      width: 100%;\n      border-collapse: collapse;\n      background: white;\n      box-shadow: 0 2px 10px rgba(0,0,0,0.1);\n    }\n    .comparison-table th {\n      background: #47424C;\n      color: white;\n      padding: 15px;\n      text-align: left;\n      font-weight: 600;\n    }\n    .comparison-table td {\n      padding: 12px 15px;\n      border-bottom: 1px solid #e0e0e0;\n    }\n    .comparison-table tr:hover {\n      background: #f5f5f5;\n    }\n    .comparison-table .highlight {\n      background: #fff9e6;\n      font-weight: 600;\n      color: #000;\n    }\n    .comparison-card {\n      background: white;\n      border-radius: 8px;\n      padding: 30px;\n      margin-bottom: 30px;\n      box-shadow: 0 2px 15px rgba(0,0,0,0.1);\n      transition: transform 0.3s ease;\n    }\n    .comparison-card:hover {\n      transform: translateY(-5px);\n    }\n    .comparison-card h3 {\n      color: #47424C;\n      margin-bottom: 15px;\n    }\n    .comparison-card .btn {\n      margin-top: 15px;\n    }\n    .feature-icon {\n      font-size: 24px;\n      margin-right: 10px;\n      color: #8490ff;\n    }\n    .advantage-list {\n      list-style: none;\n      padding: 0;\n    }\n    .advantage-list li {\n      padding: 10px 0;\n      border-bottom: 1px solid #e0e0e0;\n    }\n    .advantage-list li:before {\n      content: \"✓\";\n      color: #8490ff;\n      font-weight: bold;\n      margin-right: 10px;\n    }\n  ",
@@ -14,59 +16,61 @@
   {
    "type": "PageHeader",
    "props": {
-    "id": "PageHeader-11",
+    "id": "PageHeader-15",
     "title": "Makerspace Comparison",
     "tag": "h2",
     "crumb": "Comparison",
+    "subtitle": "",
+    "subtitleTag": "h5",
     "trail": []
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-12",
+    "id": "HtmlSection-16",
     "html": "<section class=\"about-shot-info section-sm\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<div class=\"title text-center\">\n\t\t\t\t\t<h2>Understanding Makerspace Options in Kalamazoo</h2>\n\t\t\t\t\t<p>Kalamazoo has several makerspaces, but they serve very different purposes. This comparison helps you understand which space fits your needs—whether you're a hobbyist, entrepreneur, student, or just curious about making.</p>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-13",
+    "id": "HtmlSection-17",
     "html": "<section class=\"section bg-gray\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<h3 class=\"mb-4\">The Three Types of Makerspaces</h3>\n\t\t\t\t<div class=\"row\">\n\t\t\t\t\t<div class=\"col-md-4 mb-4\">\n\t\t\t\t\t\t<div class=\"comparison-card text-center\">\n\t\t\t\t\t\t\t<span class=\"feature-icon\">🏛️</span>\n\t\t\t\t\t\t\t<h4>Community Makerspace</h4>\n\t\t\t\t\t\t\t<p><strong>Kzoo Makers</strong></p>\n\t\t\t\t\t\t\t<p>Public access, full-spectrum tools, membership-based, hands-on control</p>\n\t\t\t\t\t\t\t<a href=\"/why-kzoo-makers\" class=\"btn btn-main btn-sm\">Learn More</a>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class=\"col-md-4 mb-4\">\n\t\t\t\t\t\t<div class=\"comparison-card text-center\">\n\t\t\t\t\t\t\t<span class=\"feature-icon\">🎓</span>\n\t\t\t\t\t\t\t<h4>University Makerspaces</h4>\n\t\t\t\t\t\t\t<p><strong>WMU &amp; KVCC</strong></p>\n\t\t\t\t\t\t\t<p>Students only, curriculum-bound, academic hours, course-based access</p>\n\t\t\t\t\t\t\t<a href=\"/makerspace-vs-university\" class=\"btn btn-main btn-sm\">Compare</a>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class=\"col-md-4 mb-4\">\n\t\t\t\t\t\t<div class=\"comparison-card text-center\">\n\t\t\t\t\t\t\t<span class=\"feature-icon\">📚</span>\n\t\t\t\t\t\t\t<h4>Library Makerspaces</h4>\n\t\t\t\t\t\t\t<p><strong>KPL &amp; Portage</strong></p>\n\t\t\t\t\t\t\t<p>Free access, beginner-friendly, staff-operated tools, limited hours</p>\n\t\t\t\t\t\t\t<a href=\"/makerspace-vs-library\" class=\"btn btn-main btn-sm\">Compare</a>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-14",
+    "id": "HtmlSection-18",
     "html": "<section class=\"section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-12\">\n\t\t\t\t<h3 class=\"text-center mb-4\">Detailed Feature Comparison</h3>\n\t\t\t\t<div class=\"comparison-table\">\n\t\t\t\t\t<table>\n\t\t\t\t\t\t<thead>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<th>Feature</th>\n\t\t\t\t\t\t\t\t<th class=\"highlight\">Kzoo Makers</th>\n\t\t\t\t\t\t\t\t<th>WMU Makerspaces</th>\n\t\t\t\t\t\t\t\t<th>KVCC Labs</th>\n\t\t\t\t\t\t\t\t<th>KPL Idea Lab</th>\n\t\t\t\t\t\t\t\t<th>Portage Library</th>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t</thead>\n\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Public Access</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Yes (membership)</td>\n\t\t\t\t\t\t\t\t<td>❌ Students only</td>\n\t\t\t\t\t\t\t\t<td>❌ Students only</td>\n\t\t\t\t\t\t\t\t<td>✅ Yes (free)</td>\n\t\t\t\t\t\t\t\t<td>✅ Yes (free)</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Cost</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">$5-$60/month</td>\n\t\t\t\t\t\t\t\t<td>Included in tuition</td>\n\t\t\t\t\t\t\t\t<td>Included in tuition</td>\n\t\t\t\t\t\t\t\t<td>Free</td>\n\t\t\t\t\t\t\t\t<td>Free</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Hours</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">General Member Access: 10AM-Midnght Mon,Tue,Thu,Sat</td>\n\t\t\t\t\t\t\t\t<td>Academic hours only</td>\n\t\t\t\t\t\t\t\t<td>Academic schedule</td>\n\t\t\t\t\t\t\t\t<td>Limited (Mon-Sat)</td>\n\t\t\t\t\t\t\t\t<td>Library hours</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Wood Shop</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Full shop</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t\t<td>❌ Program-specific</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Metal Shop / Welding</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ MIG/TIG, fabrication</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Program-only</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>CNC Routing</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Full-size CNC</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Department-specific</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Program-only</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Desktop CNC</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Laser Cutting</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Industrial laser</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Program-only</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t\t<td>✅ Desktop laser</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>3D Printing</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Hands-on</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Limited</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Program-only</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Staff-operated</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Staff-operated</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Electronics</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Full benches</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Engineering labs</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Program-only</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Limited</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Limited</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Textiles / Sewing</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t\t<td>✅</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Hands-On Access</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Direct tool use</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Course-based</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Course-based</td>\n\t\t\t\t\t\t\t\t<td>❌ Staff-mediated</td>\n\t\t\t\t\t\t\t\t<td>❌ Staff-mediated</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Heavy Fabrication</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Yes</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Controlled</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t\t<td>❌</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t</tbody>\n\t\t\t\t\t</table>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-15",
+    "id": "HtmlSection-19",
     "html": "<section class=\"section bg-gray\">\n\t<div class=\"container\">\n\t\t<div class=\"row\">\n\t\t\t<div class=\"col-lg-4 mb-4\">\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h3>Where Kzoo Makers Wins</h3>\n\t\t\t\t\t<ul class=\"advantage-list\">\n\t\t\t\t\t\t<li>Only place with wood + metal + CNC + laser under one roof</li>\n\t\t\t\t\t\t<li>Hands-on access, not staff-operated</li>\n\t\t\t\t\t\t<li>Supports entrepreneurs and real fabrication</li>\n\t\t\t\t\t\t<li>Community-driven peer mentorship</li>\n\t\t\t\t\t\t<li>Flexible membership vs semester-bound</li>\n\t\t\t\t\t\t<li>56 hours a week of access for trained members</li>\n\t\t\t\t\t</ul>\n\t\t\t\t\t<a href=\"/why-kzoo-makers\" class=\"btn btn-main\">Why Choose Us</a>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<div class=\"col-lg-4 mb-4\">\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h3>Where Libraries Win</h3>\n\t\t\t\t\t<ul class=\"advantage-list\">\n\t\t\t\t\t\t<li>Zero cost to use</li>\n\t\t\t\t\t\t<li>Beginner-friendly environment</li>\n\t\t\t\t\t\t<li>No commitment required</li>\n\t\t\t\t\t\t<li>Great for crafts and light prototyping</li>\n\t\t\t\t\t\t<li>Staff guidance available</li>\n\t\t\t\t\t</ul>\n\t\t\t\t\t<a href=\"/makerspace-vs-library\" class=\"btn btn-main\">Library Comparison</a>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<div class=\"col-lg-4 mb-4\">\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h3>Where Universities Win</h3>\n\t\t\t\t\t<ul class=\"advantage-list\">\n\t\t\t\t\t\t<li>Advanced equipment (if you're a student)</li>\n\t\t\t\t\t\t<li>Deep integration with coursework</li>\n\t\t\t\t\t\t<li>Academic supervision</li>\n\t\t\t\t\t\t<li>Specialized department tools</li>\n\t\t\t\t\t</ul>\n\t\t\t\t\t<a href=\"/makerspace-vs-university\" class=\"btn btn-main\">University Comparison</a>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-16",
+    "id": "HtmlSection-20",
     "html": "<section class=\"section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<div class=\"comparison-card text-center\">\n\t\t\t\t\t<h3>The Bottom Line</h3>\n\t\t\t\t\t<p class=\"lead\">Unlike university or library makerspaces, Kzoo Makers is a public, nonprofit workshop offering full access to woodworking, metalworking, CNC, laser cutting, and fabrication tools for real projects—not just demonstrations or coursework.</p>\n\t\t\t\t\t<p>We're the only place in Kalamazoo where the general public can access professional-grade fabrication equipment with hands-on control, flexible hours, and a community of makers ready to help you succeed.</p>\n\t\t\t\t\t<div class=\"mt-4\">\n\t\t\t\t\t\t<a href=\"/pricing\" class=\"btn btn-main\">See Membership Options</a>\n\t\t\t\t\t\t<a href=\"/tour-form-redirect\" class=\"btn btn-main\">Schedule a Tour</a>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-17",
+    "id": "HtmlSection-21",
     "html": "<section class=\"section bg-gray\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<h3 class=\"text-center mb-4\">Detailed Comparisons</h3>\n\t\t\t\t<div class=\"row\">\n\t\t\t\t\t<div class=\"col-md-6 mb-3\">\n\t\t\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t\t\t<h4>🆚 Kzoo Makers vs Library Makerspaces</h4>\n\t\t\t\t\t\t\t<p>Compare our full-spectrum workshop with KPL Idea Lab and Portage District Library makerspaces.</p>\n\t\t\t\t\t\t\t<a href=\"/makerspace-vs-library\" class=\"btn btn-main btn-sm\">Read Comparison</a>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class=\"col-md-6 mb-3\">\n\t\t\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t\t\t<h4>🆚 Kzoo Makers vs University Labs</h4>\n\t\t\t\t\t\t\t<p>See how we differ from WMU and KVCC academic makerspaces and labs.</p>\n\t\t\t\t\t\t\t<a href=\"/makerspace-vs-university\" class=\"btn btn-main btn-sm\">Read Comparison</a>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class=\"col-md-6 mb-3\">\n\t\t\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t\t\t<h4>🆚 Kzoo Makers vs WMU Makerspace</h4>\n\t\t\t\t\t\t\t<p>Specific comparison with Western Michigan University's makerspace facilities.</p>\n\t\t\t\t\t\t\t<a href=\"/makerspace-vs-wmu\" class=\"btn btn-main btn-sm\">Read Comparison</a>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class=\"col-md-6 mb-3\">\n\t\t\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t\t\t<h4>✨ Why Choose Kzoo Makers</h4>\n\t\t\t\t\t\t\t<p>Learn what makes Kzoo Makers the best choice for serious makers and entrepreneurs.</p>\n\t\t\t\t\t\t\t<a href=\"/why-kzoo-makers\" class=\"btn btn-main btn-sm\">Learn More</a>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-18",
+    "id": "HtmlSection-22",
     "html": "<section class=\"call-to-action section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-xl-6 col-lg-8 text-center\">\n\t\t\t\t<h2>Ready to Make Something Real?</h2>\n\t\t\t\t<p>Join the only full-spectrum community makerspace in Kalamazoo.</p>\n\t\t\t\t<a href=\"/pricing\" class=\"btn btn-main\">See Pricing</a>\n\t\t\t\t<a href=\"/tour-form-redirect\" class=\"btn btn-main\">Schedule a Tour</a>\n\t\t\t</div>\n\t\t</div> <!-- End row -->\n\t</div> <!-- End container -->\n</section>"
    }
   }

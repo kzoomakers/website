@@ -3,6 +3,8 @@
   "props": {
    "title": "Artist Studio Membership & Fabrication Space | Kalamazoo Makerspace",
    "description": "Looking for fabrication space or artist studio membership in Kalamazoo? Join Kalamazoo Makerspace for shared workshop access to wood, metal, laser, 3D printing, and open creative work areas.",
+   "bare": false,
+   "inline": [],
    "bodyClass": "",
    "refresh": "",
    "css": "",
@@ -14,45 +16,47 @@
   {
    "type": "PageHeader",
    "props": {
-    "id": "PageHeader-197",
+    "id": "PageHeader-224",
     "title": "Artist Studio Membership & Fabrication Space",
     "tag": "h1",
     "crumb": "Artist Studio Membership",
+    "subtitle": "",
+    "subtitleTag": "h5",
     "trail": []
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-198",
+    "id": "HtmlSection-225",
     "html": "<section class=\"about-2 section\" id=\"artist-studio-overview\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<div class=\"title text-center\">\n\t\t\t\t\t<h2>Fabrication Space &amp; Artist Membership in Kalamazoo, MI</h2>\n\t\t\t\t\t<p><strong>Searching for an artist studio or fabrication space in Kalamazoo, but not ready for a full private lease?</strong></p>\n\t\t\t\t\t<p>Kalamazoo Makerspace offers membership-based access to a shared, tool-rich environment instead of four bare walls. Think of it as a fabrication lab and open studio rolled into one: areas for <a href=\"/wood-shop\">woodworking</a>, a <a href=\"/metal-shop\">metal shop with welding</a>, a <a href=\"/laser-shop\">laser shop</a>, a <a href=\"/3d-printing\">3D printing lab</a>, and plenty of open shared workshop tables where artists, designers, and fabricators work side by side.</p>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\n\t\t<div class=\"row mt-5\">\n\t\t\t<div class=\"col-md-6 mb-4\">\n\t\t\t\t<h3>Why Artists Choose a Makerspace Over a Private Studio</h3>\n\t\t\t\t<ul class=\"checklist\">\n\t\t\t\t\t<li>You want <strong>fabrication tools</strong> you could never fit or afford in a solo studio: welders, saws, CNC, laser, 3D printers, and more.</li>\n\t\t\t\t\t<li>You like the idea of <strong>open shared workshop space</strong> where you meet other makers, not working alone behind a door.</li>\n\t\t\t\t\t<li>Your work blends mediums: sculpture, furniture, kinetic art, installations, functional art, or design prototypes.</li>\n\t\t\t\t\t<li>You prefer a <strong>membership model</strong> to a long commercial lease with utilities and build-out costs.</li>\n\t\t\t\t\t<li>You value learning new techniques from a community that includes engineers, woodworkers, coders, and fellow artists.</li>\n\t\t\t\t</ul>\n\t\t\t</div>\n\t\t\t<div class=\"col-md-6 mb-4\">\n\t\t\t\t<h3>What You Get With Artist Studio Membership</h3>\n\t\t\t\t<ul class=\"checklist\">\n\t\t\t\t\t<li>Access to a community <a href=\"/wood-shop\">wood shop</a> for building frames, furniture, sculptures, and installations.</li>\n\t\t\t\t\t<li>Use of the <a href=\"/metal-shop\">metal shop &amp; welding area</a> for armatures, brackets, kinetic work, and public art structures.</li>\n\t\t\t\t\t<li>Digital fabrication in the <a href=\"/3d-printing\">3D printing lab</a> and <a href=\"/laser-shop\">industrial laser cutter</a> for patterns, stencils, signage, and mixed-media pieces.</li>\n\t\t\t\t\t<li>Open shared tables and benches throughout the space for layout, assembly, painting prep, and project staging.</li>\n\t\t\t\t\t<li>Access to the <a href=\"/meeting-space\">meeting space</a> for critiques, small shows, classes, or artist-led workshops.</li>\n\t\t\t\t\t<li>A volunteer-run, nonprofit <a href=\"/about\">maker community</a> that understands experimentation, iteration, and “works in progress.”</li>\n\t\t\t\t</ul>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-199",
+    "id": "HtmlSection-226",
     "html": "<section class=\"section\" style=\"background:#f9f9f9;\" id=\"fabrication-space-details\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center\">\n      <div class=\"col-lg-8\">\n        <div class=\"title text-center\">\n          <h2>Shared Fabrication Space for Artists, Makers, and Designers</h2>\n          <div class=\"border\"></div>\n          <p>Instead of one narrow “art studio,” Kalamazoo Makerspace gives you a whole ecosystem of workshops. You can rough-cut lumber in the wood shop, weld steel in the metal shop, laser-cut panels, and 3D print components—then bring everything together on open benches in our shared workshop areas.</p>\n        </div>\n      </div>\n    </div>\n    <div class=\"row mt-4\">\n      <div class=\"col-md-4 mb-4\">\n        <h3>Wood &amp; Mixed-Media Work</h3>\n        <ul class=\"checklist\">\n          <li>Use the <a href=\"/wood-shop\">wood shop</a> for sculpture bases, frames, boxes, and installations.</li>\n          <li>Combine plywood, hardwoods, and found materials with CNC and traditional tools.</li>\n          <li>Prep large panels and structures that don’t fit in a bedroom studio.</li>\n        </ul>\n      </div>\n      <div class=\"col-md-4 mb-4\">\n        <h3>Metal &amp; Structural Fabrication</h3>\n        <ul class=\"checklist\">\n          <li>Build frames, mounts, and armatures in the <a href=\"/metal-shop\">metal shop &amp; welding area</a>.</li>\n          <li>Create brackets, stands, and supports for wall pieces and freestanding work.</li>\n          <li>Experiment with mixed metal-and-wood constructions.</li>\n        </ul>\n      </div>\n      <div class=\"col-md-4 mb-4\">\n        <h3>Digital &amp; Experimental Processes</h3>\n        <ul class=\"checklist\">\n          <li>Cut patterns, stencils, and inlays with the <a href=\"/laser-shop\">industrial laser cutter</a>.</li>\n          <li>Prototype forms and maquettes in the <a href=\"/3d-printing\">3D printing lab</a>.</li>\n          <li>Blend code, light, movement, and fabrication for interactive pieces.</li>\n        </ul>\n      </div>\n    </div>\n  </div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-200",
+    "id": "HtmlSection-227",
     "html": "<section class=\"about-2 section\" id=\"artist-membership-how-it-works\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<div class=\"title text-center\">\n\t\t\t\t\t<h2>How Artist Studio Membership Works</h2>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\n\t\t<div class=\"row mt-4\">\n\t\t\t<div class=\"col-lg-12\">\n\t\t\t\t<ol>\n\t\t\t\t\t<li><strong>Schedule a tour.</strong> Come see the open shared workshop spaces, tool zones, and typical in-progress projects. Ask us directly how your work might fit the space.</li>\n\t\t\t\t\t<li><strong>Choose a membership level.</strong> Explore options on our <a href=\"/pricing\">pricing page</a> and pick what matches how often you plan to build.</li>\n\t\t\t\t\t<li><strong>Complete orientation and safety training.</strong> Different areas—<a href=\"/wood-shop\">wood</a>, <a href=\"/metal-shop\">metal</a>, <a href=\"/laser-shop\">laser</a>, <a href=\"/3d-printing\">3D printing</a>—have their own expectations.</li>\n\t\t\t\t\t<li><strong>Bring materials and start fabricating.</strong> You supply consumables and artwork materials; we provide the shared tools, infrastructure, and community.</li>\n\t\t\t\t\t<li><strong>Plug into the community.</strong> Join meetups, events, and informal work nights via our <a href=\"/calendar\">calendar</a> and <a href=\"/meetups\">meetups</a>. Your “studio neighbors” might be woodworkers, engineers, or other artists.</li>\n\t\t\t\t</ol>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-201",
+    "id": "HtmlSection-228",
     "html": "<section class=\"call-to-action section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-xl-6 col-lg-8 text-center\">\n\t\t\t\t<h2>Tour the Fabrication Space</h2>\n\t\t\t\t<p>Before you sign a lease on a private studio, see what a membership-based fabrication space feels like. You might find everything you need already lives under one roof.</p>\n\t\t\t\t<a href=\"/tour-form-redirect\" class=\"btn btn-main\">Schedule a Tour</a>\n\t\t\t\t<a href=\"/pricing\" class=\"btn btn-main\">View Membership Options</a>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-202",
+    "id": "HtmlSection-229",
     "html": "<section class=\"section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-8\">\n\t\t\t\t<div class=\"title text-center\">\n\t\t\t\t\t<h2>Artist Studio &amp; Fabrication Space FAQ</h2>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t\t<div class=\"row mt-4\">\n\t\t\t<div class=\"col-lg-10 mx-auto\">\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>Is this a private studio or shared workshop?</h4>\n\t\t\t\t\t<p>We are a shared makerspace with open workshop areas, not a set of closed private studios. You’ll work alongside other makers in common spaces, similar to a fabrication lab or co-working shop for physical projects.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>What kinds of artists use the space?</h4>\n\t\t\t\t\t<p>Members include woodworkers, metal sculptors, furniture makers, kinetic artists, product designers, tinkerers, and people who blend art with engineering. If your work involves building, fabricating, or prototyping, you’ll likely find a fit here.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>Can I leave projects in the space?</h4>\n\t\t\t\t\t<p>In-progress work is often staged in designated areas, but long-term storage is limited and always subject to space, safety, and current policies. During your tour, ask how storage works for the kinds of projects you build.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>Can I sell or show the work I make here?</h4>\n\t\t\t\t\t<p>Yes. Many members create work for personal use, commissions, or small businesses. From time to time, members also host classes, demos, or small showcases using our <a href=\"/meeting-space\">meeting space</a>. Exact opportunities vary over time.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>How noisy or messy can my work be?</h4>\n\t\t\t\t\t<p>Our wood and metal shops are built for loud, dusty, and dirty fabrication within safety rules. Finishing, detail work, and quieter processes can often happen at open benches or in common areas. On your tour, we can walk through where your specific process would fit.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>How do I see more of what’s possible?</h4>\n\t\t\t\t\t<p>Start with our main <a href=\"/\">homepage</a>, learn more <a href=\"/about\">about us</a>, and explore the focused pages for the <a href=\"/wood-shop\">wood shop</a>, <a href=\"/metal-shop\">metal shop</a>, <a href=\"/3d-printing\">3D printing lab</a>, and <a href=\"/laser-shop\">laser shop</a>. You can also browse <a href=\"/portfolio\">sample projects</a> to see what other members have built.</p>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   }

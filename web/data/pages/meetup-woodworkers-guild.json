@@ -3,6 +3,8 @@
   "props": {
    "title": "Woodworkers Guild of SW Michigan | Kalamazoo Makerspace",
    "description": "Woodworkers Guild of SW Michigan meets monthly at Kalamazoo Makerspace. Hobbyist and professional woodworkers gather to share skills, discuss projects, and learn new woodworking techniques.",
+   "bare": false,
+   "inline": [],
    "bodyClass": "",
    "refresh": "",
    "css": "",
@@ -14,31 +16,33 @@
   {
    "type": "PageHeader",
    "props": {
-    "id": "PageHeader-153",
+    "id": "PageHeader-180",
     "title": "Woodworkers Guild of SW Michigan",
     "tag": "h1",
     "crumb": "Woodworkers Guild",
+    "subtitle": "Monthly meetup hosted at Kalamazoo Makerspace",
+    "subtitleTag": "h5",
     "trail": []
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-154",
+    "id": "HtmlSection-181",
     "html": "<section class=\"portfolio section-sm\" id=\"woodworkers-gallery\">\n  <div class=\"container\">\n    <div class=\"row\">\n      <div class=\"col-lg-12\">\n        <div class=\"row\">\n          <div class=\"col-12\">\n            <div class=\"filtr-container\">\n\n              <div class=\"col-md-3 col-sm-6 col-xs-6 filtr-item\" data-category=\"all\">\n                <div class=\"portfolio-block\">\n                  <img class=\"img-fluid\" src=\"/images/wood-shop/woodguild_2-1.webp\" alt=\"Placeholder image for woodworkers guild project gallery\">\n                  <div class=\"caption\">\n                    <a class=\"search-icon\" href=\"images/wood-shop/woodguild_2-1.webp\" data-lightbox=\"woodworkers\">\n                      <i class=\"tf-ion-ios-search-strong\"></i>\n                    </a>\n                    <h4><a href=\"#\">Guild Projects Gallery</a></h4>\n                  </div>\n                </div>\n              </div>\n\n              <div class=\"col-md-3 col-sm-6 col-xs-6 filtr-item\" data-category=\"all\">\n                <div class=\"portfolio-block\">\n                  <img class=\"img-fluid\" src=\"/images/wood-shop/woodguild_912.webp\" alt=\"Placeholder image of woodworking hand tools and benches\">\n                  <div class=\"caption\">\n                    <a class=\"search-icon\" href=\"images/wood-shop/woodguild_912.webp\" data-lightbox=\"woodworkers\">\n                      <i class=\"tf-ion-ios-search-strong\"></i>\n                    </a>\n                    <h4><a href=\"#\">Hand Tool and Power Tool Work</a></h4>\n                  </div>\n                </div>\n              </div>\n\n              <div class=\"col-md-3 col-sm-6 col-xs-6 filtr-item\" data-category=\"all\">\n                <div class=\"portfolio-block\">\n                  <img class=\"img-fluid\" src=\"/images/wood-shop/woodguild_img_9113-1.webp\" alt=\"Placeholder image of furniture and woodworking projects\">\n                  <div class=\"caption\">\n                    <a class=\"search-icon\" href=\"images/wood-shop/woodguild_img_9113-1.webp\" data-lightbox=\"woodworkers\">\n                      <i class=\"tf-ion-ios-search-strong\"></i>\n                    </a>\n                    <h4><a href=\"#\">Furniture and Fine Woodworking</a></h4>\n                  </div>\n                </div>\n              </div>\n\n              <div class=\"col-md-3 col-sm-6 col-xs-6 filtr-item\" data-category=\"all\">\n                <div class=\"portfolio-block\">\n                  <img class=\"img-fluid\" src=\"/images/wood-shop/woodguild_img_9129.webp\" alt=\"Placeholder image of guild members collaborating in the woodshop\">\n                  <div class=\"caption\">\n                    <a class=\"search-icon\" href=\"images/wood-shop/woodguild_img_9129.webp\" data-lightbox=\"woodworkers\">\n                      <i class=\"tf-ion-ios-search-strong\"></i>\n                    </a>\n                    <h4><a href=\"#\">Community and Collaboration</a></h4>\n                  </div>\n                </div>\n              </div>\n\n            </div>\n          </div>\n        </div>\n      </div> <!-- /end col-lg-12 -->\n    </div> <!-- end row -->\n  </div> <!-- end container -->\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-155",
+    "id": "HtmlSection-182",
     "html": "<section class=\"about-2 section\" id=\"woodworkers-details\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center\">\n      <div class=\"col-lg-10\">\n        <div class=\"title text-center\">\n          <h2>About the Woodworkers Guild of SW Michigan</h2>\n          <p>Kalamazoo graciously hosts the Woodworkers Guild of SW Michigan, a group of hobbyist and professional woodworkers of diverse woodworking interests that meet monthly to share knowledge and craftsmanship skills that cover many facets of woodworking.</p>\n          <p>Meetings cover a wide range of woodworking topics, often including demonstrations or discussions about members’ projects and troubleshooting.</p>\n          <div class=\"border\"></div>\n        </div>\n      </div>\n    </div>\n\n    <div class=\"row mt-5\">\n      <div class=\"col-md-6 mb-4\">\n        <h3>Attend A Meeting</h3>\n        <p>Meetings are held on the <strong>second Tuesday of every month at 7:00 pm.</strong></p>\n        <p>We meet at the <strong>Kalamazoo Makerspace</strong>:</p>\n        <p>1102 E Michigan Ave<br>Kalamazoo, MI 49048</p>\n        <a href=\"/calendar?search=woodworkers guild\" class=\"btn btn-main mt-3\">View Calendar</a>\n        <a href=\"https://woodguild.org/\" class=\"btn btn-main mt-3\">View Our Website</a>\n        \n      </div>\n      <div class=\"col-md-6 mb-4\">\n        <h3>What We Do</h3>\n        <p>Our usual meeting space is the Kzoo Makers Space in south central Kalamazoo, but we occasionally meet at other shops. Meeting topics vary widely, often involving demonstrations from guild members or professionals in the community. Members are also encouraged to bring and discuss projects, or ask for input/help on works-in-progress.</p>\n      </div>\n    </div>\n\n    <div class=\"row mt-4\">\n      <div class=\"col-lg-12\">\n        <h3>History</h3>\n        <p>The organization was started in the spring of 1984. The father of a student at Western Michigan University approached his instructor, Gil Hutchings, stating that he wanted to improve his woodworking skills and was hoping Gil could give instructions once a month. There were a few students, Ray Creager and another that had an interest also. These men invited friends, who also invited friends, some undergraduate students and some alum. It grew to about 20 members who met at the woodworking lab in Kohrman Hall at WMU. Officers were elected, dues were collected, and some instructional VCR tapes purchased to be lent out to members. There were about 60 members as of the 2015-2016 season.</p>\n      </div>\n    </div>\n\n  </div>\n</section>"
    }
   },
   {
    "type": "HtmlSection",
    "props": {
-    "id": "HtmlSection-156",
+    "id": "HtmlSection-183",
     "html": "<section class=\"section\" style=\"background: #f9f9f9;\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center align-items-center mb-5\">\n      <div class=\"col-lg-4 col-md-5 mb-4 mb-md-0 text-center\">\n        <img src=\"/images/wood-shop/woodwoman.webp\" alt=\"Woodworking tools illustration\" class=\"img-fluid\" style=\"max-width: 300px;\">\n      </div>\n      <div class=\"col-lg-6 col-md-7\">\n        <div class=\"title\">\n          <h2>Visit the Makerspace and the Guild</h2>\n          <p>Curious about the woodshop or the Woodworkers Guild of SW Michigan? Schedule a tour to see the space, meet members, and learn how the guild and makerspace work together to support woodworking in our community.</p>\n          <div class=\"border\"></div>\n          <div class=\"col-lg-10 text-center\">\n            <a href=\"/tour-form-redirect\" class=\"btn btn-main mt-20\">Schedule a Tour</a>\n            <a href=\"/pricing\" class=\"btn btn-main mt-20 ml-2\">View Membership Options</a>\n            <a href=\"/calendar\" class=\"btn btn-main mt-20 ml-2\">View Calendar</a>\n          </div>\n        </div>\n      </div>\n    </div>\n  </div>\n</section>"
    }
   }

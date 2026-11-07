@@ -18,15 +18,17 @@ export default async function Page({ params }: P) {
   const data = await getPage(slugOf((await params).path));
   if (!data) notFound();
   const bodyClass = ((data.root?.props as any)?.bodyClass ?? "").replace(/[^\w\- ]/g, "");
-  const refresh = (data.root?.props as any)?.refresh;
+  const rp: any = data.root?.props ?? {};
+  const bare = !!rp.bare;
+  const refresh = rp.refresh;
   return (
     <>
       {refresh && <meta httpEquiv="refresh" content={refresh} />}
       {/* Inline script runs during parse, so the body class is set before first paint (no flash). */}
       {bodyClass && <script dangerouslySetInnerHTML={{ __html: `document.body.className+=" ${bodyClass}"` }} />}
-      <div id="preloader"><div className="preloader"><span /><span /><span /><span /><span /><span /></div></div>
+      {!bare && <div id="preloader"><div className="preloader"><span /><span /><span /><span /><span /><span /></div></div>}
       <Render config={config} data={data as any} />
-      <LegacyScripts extra={((data.root?.props as any)?.scripts ?? []).map((x: any) => x.src)} />
+      <LegacyScripts bare={bare} extra={(rp.scripts ?? []).map((x: any) => x.src)} inline={(rp.inline ?? []).map((x: any) => x.code)} />
     </>
   );
 }

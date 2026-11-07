@@ -1,5 +1,5 @@
 import type { Config } from "@puckeditor/core";
-import { Navbar, Footer, Counters } from "@/components/chrome";
+import { Navbar, Footer, Counters, ThemeCss } from "@/components/chrome";
 
 // Markup below mirrors the legacy HTML class-for-class so css/style.css applies unchanged.
 const url = (h = "") => (/^(https?:|#|\/|mailto:)/.test(h) ? h : "/" + h);
@@ -26,7 +26,7 @@ function SectionTitle({ title, text }: { title: string; text?: string }) {
 }
 
 export type Props = {
-  PageHeader: { title: string; tag: "h1" | "h2"; crumb: string; trail: { label: string; href: string }[] };
+  PageHeader: { title: string; tag: "h1" | "h2"; crumb: string; subtitle: string; subtitleTag: "h5" | "p"; trail: { label: string; href: string }[] };
   HtmlSection: { html: string };
   TwoColumnText: { heading: string; body: string; buttons: { label: string; href: string }[]; image: string; imageAlt: string };
   VideoEmbed: { title: string; youtubeUrl: string; height: number };
@@ -37,21 +37,26 @@ export type Props = {
   CallToAction: { heading: string; text: string; buttons: { label: string; href: string }[] };
 };
 
-export type RootProps = { title: string; description: string; bodyClass: string; refresh: string; css: string; styles: { href: string }[]; scripts: { src: string }[] };
+export type RootProps = { title: string; description: string; bare: boolean; inline: { code: string }[]; bodyClass: string; refresh: string; css: string; styles: { href: string }[]; scripts: { src: string }[] };
 
 export const config: Config<Props, RootProps> = {
   root: {
     fields: {
       title: { type: "text" }, description: { type: "textarea" },
+      bare: { type: "radio", label: "Standalone page (no site header/footer/legacy scripts)", options: [{ label: "No", value: false }, { label: "Yes", value: true }] },
+      inline: { type: "array", label: "Page scripts (advanced; run after the page loads)", arrayFields: { code: { type: "textarea" } }, getItemSummary: (i: any) => (i.code || "").slice(0, 40) },
       bodyClass: { type: "text", label: "Body class (advanced)" },
       refresh: { type: "text", label: "Auto-redirect, e.g. 3;url=https://example.com (blank = none)" },
       css: { type: "textarea", label: "Page CSS (advanced)" },
       styles: { type: "array", label: "Extra stylesheets", arrayFields: { href: { type: "text" } }, getItemSummary: (i: any) => i.href },
       scripts: { type: "array", label: "Extra scripts (advanced)", arrayFields: { src: { type: "text" } }, getItemSummary: (i: any) => i.src },
     },
-    defaultProps: { title: "Kzoo Makers", description: "", bodyClass: "", refresh: "", css: "", styles: [], scripts: [] },
-    render: ({ children, css, styles }) => (
+    defaultProps: { title: "Kzoo Makers", description: "", bare: false, inline: [], bodyClass: "", refresh: "", css: "", styles: [], scripts: [] },
+    render: ({ children, css, styles, bare }) => bare ? (
+      <>{css && <style dangerouslySetInnerHTML={{ __html: css }} />}{children}</>
+    ) : (
       <>
+        <ThemeCss />
         {styles?.map((s) => <link key={s.href} rel="stylesheet" href={s.href} />)}
         {css && <style dangerouslySetInnerHTML={{ __html: css }} />}
         <Navbar />
@@ -63,14 +68,17 @@ export const config: Config<Props, RootProps> = {
   components: {
     PageHeader: {
       fields: { title: { type: "text" }, crumb: { type: "text", label: "Breadcrumb text (defaults to title)" },
+        subtitle: { type: "text", label: "Subtitle (optional)" },
+        subtitleTag: { type: "radio", label: "Subtitle style", options: [{ label: "Heading (h5)", value: "h5" }, { label: "Light paragraph", value: "p" }] },
         trail: { type: "array", label: "Breadcrumb links between Home and this page", arrayFields: { label: { type: "text" }, href: { type: "text" } }, getItemSummary: (i: any) => i.label }, tag: { type: "radio", label: "Heading level", options: [{ label: "H1", value: "h1" }, { label: "H2", value: "h2" }] } },
-      defaultProps: { title: "Page title", crumb: "", trail: [], tag: "h1" },
-      render: ({ title, crumb, trail, tag }) => {
+      defaultProps: { title: "Page title", crumb: "", subtitle: "", subtitleTag: "h5", trail: [], tag: "h1" },
+      render: ({ title, crumb, subtitle, subtitleTag, trail, tag }) => {
         const T = tag || "h2";
         return (
         <section className="single-page-header">
           <div className="container"><div className="row"><div className="col-md-12">
             <T>{title}</T>
+            {subtitle && (subtitleTag === "p" ? <p className="text-light">{subtitle}</p> : <h5>{subtitle}</h5>)}
             <ol className="breadcrumb header-bradcrumb justify-content-center">
               <li className="breadcrumb-item"><a href="/" className="text-white">Home</a></li>
               {trail?.map((t, i) => <li key={i} className="breadcrumb-item"><a href={url(t.href)} className="text-white">{t.label}</a></li>)}

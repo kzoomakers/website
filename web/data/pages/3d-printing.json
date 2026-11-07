@@ -3,6 +3,8 @@
   "props": {
    "title": "3D Printing Lab - 3D Printers, Training & Prototyping | Kalamazoo Makerspace",
    "description": "Explore the 3D printing lab at Kalamazoo Makerspace. Learn how to 3D print, get hands-on training, and prototype parts using our FDM printers and a community of makers.",
+   "bare": false,
+   "inline": [],
    "bodyClass": "",
    "refresh": "",
    "css": "",
@@ -18,6 +20,8 @@
     "title": "3D Printing Lab",
     "tag": "h1",
     "crumb": "3D Printing Lab",
+    "subtitle": "",
+    "subtitleTag": "h5",
     "trail": []
    }
   },
