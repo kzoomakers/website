@@ -1,0 +1,33 @@
+{
+  "counters": [
+    {
+      "id": "members",
+      "icon": "tf-ion-ios-people",
+      "count": 81,
+      "label": "Members",
+      "columnClass": "col-md-3 col-sm-6 col-xs-6"
+    },
+    {
+      "id": "tools",
+      "icon": "tf-ion-hammer",
+      "count": 3711,
+      "label": "Tools",
+      "columnClass": "col-md-3 col-sm-6 col-xs-6"
+    },
+    {
+      "id": "equipment",
+      "icon": "tf-ion-gear-a",
+      "count": 51,
+      "label": "Pieces of Equipment",
+      "columnClass": "col-md-3 col-sm-6 col-xs-6"
+    },
+    {
+      "id": "employees",
+      "icon": "tf-ion-social-usd-outline",
+      "count": 0,
+      "label": "Employees",
+      "columnClass": "col-md-3 col-sm-6 col-xs-6",
+      "killBorder": true
+    }
+  ]
+}

@@ -1,0 +1,180 @@
+{
+  "logo": {
+    "default": "images/logo.png",
+    "white": "images/logo-white.png",
+    "alt": "logo",
+    "href": "index.html"
+  },
+  "menuItems": [
+    {
+      "id": "homepage",
+      "label": "Homepage",
+      "type": "link",
+      "href": "index.html"
+    },
+    {
+      "id": "news",
+      "label": "News",
+      "type": "link",
+      "href": "news.html"
+    },
+    {
+      "id": "events",
+      "label": "Events",
+      "type": "dropdown",
+      "icon": "tf-ion-chevron-down",
+      "items": [
+
+        {
+          "label": "Calendar",
+          "href": "calendar.html"
+        },
+        {
+          "label": "Meetups",
+          "href": "meetups.html"
+        }
+      ]
+    },
+    {
+      "id": "learnmore",
+      "label": "Learn More",
+      "type": "dropdown",
+      "icon": "tf-ion-chevron-down",
+      "items": [
+        {
+          "label": "About Us",
+          "href": "about.html"
+        },
+        {
+          "label": "Pricing",
+          "href": "pricing.html"
+        },
+        {
+          "label": "The Team",
+          "href": "team.html"
+        },
+        {
+          "label": "Maker Philosophy",
+          "href": "what_is_a_makerspace.html"
+        },
+        {
+          "label": "History",
+          "href": "history.html"
+        },
+        {
+          "label": "How To / Guides",
+          "href": "how-to.html"
+        },
+        {
+          "label": "Why join us?",
+          "href": "why-kzoo-makers.html"
+        }
+      ]
+    },
+    {
+      "id": "offerings",
+      "label": "Explore Us",
+      "type": "dropdown",
+      "icon": "tf-ion-chevron-down",
+      "items": [
+        {
+          "label": "Woodshop",
+          "href": "wood-shop.html"
+        },
+        {
+          "label": "Metal Shop",
+          "href": "metal-shop.html"
+        },
+        {
+          "label": "Laser Shop",
+          "href": "laser-shop.html"
+        },
+        {
+          "label": "3D Printing",
+          "href": "3d-printing.html"
+        },
+        {
+          "label": "Craft Room",
+          "href": "craft-room-kalamazoo.html"
+        },
+        {
+          "label": "Meeting Space",
+          "href": "meeting-space.html"
+        }
+      ]
+    },
+    {
+      "id": "reachout",
+      "label": "Reach Out",
+      "type": "dropdown",
+      "icon": "tf-ion-chevron-down",
+      "items": [
+        {
+          "label": "Contact Us",
+          "href": "contact.html"
+        },
+        {
+          "label": "Discord Chat",
+          "href": "discord-redirect.html"
+        },
+        {
+          "label": "Schedule Tour",
+          "href": "https://docs.google.com/forms/d/e/1FAIpQLSekvaWfF6zHaQ50nkNLbj131irosv6RQnRCT0qzNWXDnn2y3Q/viewform"
+        },
+        {
+          "label": "Share a Flyer",
+          "href": "posters.html"
+        },
+        {
+          "label": "Donate Tools",
+          "href": "tools-we-are-seeking-donations-kalamazoo.html"
+        }
+      ]
+    },
+    {
+      "id": "otherspaces",
+      "label": "Other",
+      "type": "dropdown",
+      "icon": "tf-ion-chevron-down",
+      "items": [
+        {
+          "label": "Kalamazoo Makerspaces",
+          "href": "comparison.html"
+        },
+        {
+          "label": "Michigan Makerspaces",
+          "href": "other-makerspaces.html"
+        }
+      ]
+    },
+    {
+      "id": "members",
+      "label": "Members",
+      "type": "dropdown", 
+      "icon": "tf-ion-chevron-down",
+      "items": [
+        {
+          "label": "Request Training",
+          "href": "https://booking.kzoomakers.org/training_bookings"
+        },
+        {
+          "label": "Wiki",
+          "href": "https://wiki.kzoomakers.net/"
+        },
+        {
+          "label": "Cloud Storage",
+          "href": "https://files.kzoomakers.net/"
+        },
+        {
+          "label": "Cameras",
+          "href": "https://cameras.kzoomakers.net/"
+        },
+        {
+          "label": "Handbook",
+          "href": "https://kzoomakers.org/handbook.html"
+        }
+      ]
+    }
+  ]
+}
+

@@ -1,0 +1,131 @@
+{
+  "root": {
+    "props": {
+      "title": "About Kzoo Makers",
+      "description": "Learn about Kzoo Makers - Kalamazoo's community-driven 501(c)(3) nonprofit makerspace. Discover our volunteer-run workshop, meet our board members, and see how we support makers with tools, equipment, and collaborative workspace in Michigan."
+    }
+  },
+  "content": [
+    {
+      "type": "PageHeader",
+      "props": {
+        "id": "PageHeader-0",
+        "title": "About Us"
+      }
+    },
+    {
+      "type": "TwoColumnText",
+      "props": {
+        "id": "TwoColumnText-1",
+        "heading": "How our makerspace works",
+        "body": "We're a combination of a club and a library: a place where you don’t borrow books, but access to equipment and the community.\n\nWe’re a 501(c)(3) Domestic Nonprofit Corporation, run off donated equipment and volunteer support. We don't have million dollar endowments. Every dollar goes into keeping the lights on and the tools spinning.\n\nWhat makes this place extraordinary isn’t infrastructure — it’s people. Everything runs on volunteer power: the tours, the cleaning, the restocking, the mentoring. Even our board and president work shoulder to shoulder with everyone else.\n\nWe seek any who want to make or build and share their experiments or ideas.",
+        "buttons": [
+          {
+            "label": "About Maker Culture",
+            "href": "what_is_a_makerspace.html"
+          },
+          {
+            "label": "Meet The Team",
+            "href": "team.html"
+          }
+        ],
+        "image": "images/clipart/gear.webp",
+        "imageAlt": ""
+      }
+    },
+    {
+      "type": "VideoEmbed",
+      "props": {
+        "id": "VideoEmbed-2",
+        "title": "Our Promo Video",
+        "youtubeUrl": "https://www.youtube.com/embed/7gz8L4Wt1oU",
+        "height": 360
+      }
+    },
+    {
+      "type": "Statement",
+      "props": {
+        "id": "Statement-3",
+        "text": "A place where curiosity meets craftsmanship\nfor every maker to turn ideas into impact, together."
+      }
+    },
+    {
+      "type": "Gallery",
+      "props": {
+        "id": "Gallery-4",
+        "title": "Sneak Peak Gallery",
+        "text": "See how we make ideas happen. From late-night solder sessions to spontaneous art-meets-engineering builds, our makerspace is a playground for curiosity. No two days look the same—3D printers hum beside laser cutters, paint splatters near code on whiteboards, and laughter blends with the sound of power tools. This gallery isn’t just photos—it’s a glimpse of what it feels like to create, collaborate, and occasionally break things (intentionally). Step inside our world of prototypes, passion projects, and pure creative chaos.",
+        "images": [
+          {
+            "src": "images/company/gallery-1.png",
+            "alt": ""
+          },
+          {
+            "src": "images/company/gallery-2.png",
+            "alt": ""
+          },
+          {
+            "src": "images/company/gallery-3.png",
+            "alt": ""
+          },
+          {
+            "src": "images/company/gallery-4.png",
+            "alt": ""
+          },
+          {
+            "src": "images/company/gallery-5.jpg",
+            "alt": ""
+          },
+          {
+            "src": "images/company/gallery-6.jpg",
+            "alt": ""
+          },
+          {
+            "src": "images/company/gallery-7.jpg",
+            "alt": ""
+          },
+          {
+            "src": "images/company/gallery-8.jpg",
+            "alt": ""
+          }
+        ]
+      }
+    },
+    {
+      "type": "ImageCta",
+      "props": {
+        "id": "ImageCta-5",
+        "heading": "Meet Our Board of Directors",
+        "text": "The Board sets the vision, sustainability, and growth of this non-profit. They manage finances, safety policies, insurance and other business related operations required for sustainability, working to ensure the space remains available, innovative, and collaborative.",
+        "buttonLabel": "View Board of Directors",
+        "buttonHref": "board.html",
+        "bgImage": "images/about/emptyboardroom.jpg"
+      }
+    },
+    {
+      "type": "Counters",
+      "props": {
+        "id": "Counters-6"
+      }
+    },
+    {
+      "type": "CallToAction",
+      "props": {
+        "id": "CallToAction-7",
+        "heading": "Let's Create Something Together",
+        "text": "A tour is free, but making your own creation is priceless.",
+        "buttons": [
+          {
+            "label": "See pricing",
+            "href": "pricing.html"
+          },
+          {
+            "label": "Schedule a tour",
+            "href": "tour-form-redirect.html"
+          }
+        ]
+      }
+    }
+  ],
+  "zones": {}
+}
