@@ -3,6 +3,7 @@ import { Render } from "@puckeditor/core/rsc";
 import { config } from "@/lib/puck-config";
 import { fillAddress } from "@/lib/hours";
 import { getBoard, getHours, getGuided, getMenu, getPage, slugOf } from "@/lib/store";
+import { listPosts } from "@/lib/blog";
 import { siteTree } from "@/lib/sitemap";
 import LegacyScripts from "@/components/legacy-scripts";
 
@@ -30,7 +31,7 @@ export default async function Page({ params }: P) {
       {/* Inline script runs during parse, so the body class is set before first paint (no flash). */}
       {bodyClass && <script dangerouslySetInnerHTML={{ __html: `document.body.className+=" ${bodyClass}"` }} />}
       {!bare && <div id="preloader"><div className="preloader"><span /><span /><span /><span /><span /><span /></div></div>}
-      <Render config={config} data={data as any} metadata={{ sitemap: slugOf((await params).path) === "sitemap" ? (await siteTree()).tree : undefined, menu: await getMenu(), board: await getBoard(), guided: { [slugOf((await params).path)]: fillAddress(await getGuided(slugOf((await params).path)), address) } }} />
+      <Render config={config} data={data as any} metadata={{ sitemap: slugOf((await params).path) === "sitemap" ? (await siteTree()).tree : undefined, menu: await getMenu(), board: await getBoard(), posts: slugOf((await params).path) === "index" ? (await listPosts({ limit: 3, light: true })).map((p) => ({ slug: p.slug, title: p.title, excerpt: p.excerpt, image: p.image, date: p.publish_at ?? p.updated_at })) : undefined, guided: { [slugOf((await params).path)]: fillAddress(await getGuided(slugOf((await params).path)), address) } }} />
       <LegacyScripts bare={bare} extra={(rp.scripts ?? []).map((x: any) => x.src)} inline={(rp.inline ?? []).map((x: any) => x.code)} />
     </>
   );

@@ -4,6 +4,8 @@ import { Counters } from "./chrome";
 import { DragCarousel } from "./drag-carousel";
 import { GuideBrowser } from "./guide-browser";
 import { DonationNeeds } from "./donation-needs";
+import { ReviewForm } from "./review-form";
+import { ContactForm } from "./contact-form";
 
 const url = (h = "") => (/^(https?:|#|\/|mailto:|tel:)/.test(h) ? h : "/" + h);
 const paras = (t = "") => t.split(/\n\s*\n/).filter(Boolean);
@@ -259,6 +261,7 @@ function Contact({ d }: { d: any }) {
           </div>
         ))}
       </div></div></section>
+      <ContactForm kind="contact" />
       <div className="google-map"><div id="map_canvas" className="map_canvas" data-latitude={d.lat} data-longitude={d.lng} data-marker="images/marker.png" data-marker-name={d.marker} /></div>
     </>
   );
@@ -508,7 +511,8 @@ function Home({ d, part }: { d: any; part?: string }) {
                       {list.map((r: any, i: number) => (
                         <div className="review-card" key={i}>
                           <div className="d-flex align-items-center mb-3">
-                            <img src={url(r.photo)} alt={r.name} className="review-avatar me-3" />
+                            {r.photo ? <img src={url(r.photo)} alt={r.name} className="review-avatar me-3" />
+                              : <span className="review-avatar me-3 d-inline-flex align-items-center justify-content-center fw-bold text-white" aria-hidden style={{ background: "#6c63ff", flex: "none" }}>{(r.name || "?")[0].toUpperCase()}</span>}
                             <div><p className="fw-semibold text-white mb-0">{r.name}</p><p className="small text-gray-500 mb-0">{r.role}</p></div>
                           </div>
                           <div className="stars mb-2">★★★★★</div>
@@ -522,6 +526,7 @@ function Home({ d, part }: { d: any; part?: string }) {
             </div>
           ))}
         </div>
+        <ReviewForm />
       </div></section>
     );
   }

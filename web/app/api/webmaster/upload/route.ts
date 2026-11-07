@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import sharp from "sharp";
 import { randomUUID } from "crypto";
-import { editingAllowed } from "@/lib/guard";
+import { actor, editingAllowed } from "@/lib/guard";
+import { registerMedia } from "@/lib/media";
 import { s3 } from "@/lib/s3";
 
 const TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" };
@@ -24,5 +25,7 @@ export async function POST(req: Request) {
     body = await (form.get("avatar") ? img.resize(240, 240, { fit: "cover" }) : img.resize({ width: 2000, withoutEnlargement: true })).toBuffer();
   }
   await store.client.send(new PutObjectCommand({ Bucket: store.bucket, Key: key, Body: body, ContentType: file.type }));
+  // Everything but avatars shows up in the media library; a library failure must not lose the upload.
+  if (!form.get("avatar")) await registerMedia(key, file.name, file.type, body.length, await actor()).catch(() => {});
   return NextResponse.json({ url: `/uploads/${key}` });
 }

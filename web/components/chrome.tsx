@@ -1,4 +1,5 @@
 import { AdminLink } from "./admin-link";
+import { AccountLink } from "./account-link";
 import navbar from "@/data/globals/navbar.json";
 import footer from "@/data/globals/footer.json";
 import counters from "@/data/globals/counters.json";
@@ -39,6 +40,7 @@ export function Navbar({ menu }: { menu: Item[] }) {
           <div className="collapse navbar-collapse" id="navigation">
             <ul className="navbar-nav ml-auto text-center">
               {menu.map((m, i) => <Menu key={i} item={m} id={`navbarDropdown${i}`} top />)}
+              <AccountLink />
             </ul>
           </div>
         </nav>

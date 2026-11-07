@@ -1,0 +1,8 @@
+{
+ "root": { "props": { "title": "Contact the Board", "description": "Send a message to the Kzoo Makers board of directors.", "bare": false, "inline": [], "bodyClass": "", "refresh": "", "css": "", "styles": [], "scripts": [] } },
+ "content": [
+  { "type": "PageHeader", "props": { "id": "PageHeader-bc", "title": "Contact the Board", "tag": "h2", "crumb": "Contact the Board", "subtitle": "", "subtitleTag": "h5", "trail": [] } },
+  { "type": "ContactForm", "props": { "id": "ContactForm-bc", "kind": "board" } }
+ ],
+ "zones": {}
+}

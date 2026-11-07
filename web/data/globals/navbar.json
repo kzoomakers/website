@@ -172,7 +172,11 @@
         {
           "label": "Handbook",
           "href": "https://kzoomakers.org/handbook.html"
-        }
+        },
+    {
+     "label": "Contact the Board",
+     "href": "board-contact.html"
+    }
       ]
     }
   ]

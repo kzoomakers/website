@@ -158,6 +158,20 @@ async function upsert(email: string, name: string, lists: number[], status: stri
   for (const l of lists) await q("INSERT INTO mail_memberships VALUES ($1,$2) ON CONFLICT DO NOTHING", [s.id, l]);
   return s as { id: number; status: string; token: string };
 }
+/**
+ * A reader who just verified their email joins the "Registered users" list (created on first use). Existing status is never touched,
+ * so someone who unsubscribed (or bounced) stays unsubscribed; they simply appear on the list.
+ */
+export async function addRegistered(email: string, name: string, base: string) {
+  let id = (await q("SELECT data FROM settings WHERE key = 'mail:registered_list'"))[0]?.data?.id;
+  if (!id || !(await q("SELECT 1 FROM mail_lists WHERE id = $1", [id])).length) {
+    id = (await q("INSERT INTO mail_lists (name, description) VALUES ('Registered users', 'People who registered an account on the website') RETURNING id"))[0].id;
+    await q("INSERT INTO settings (key, data) VALUES ('mail:registered_list', $1) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data", [JSON.stringify({ id })]);
+  }
+  const s = await upsert(email, name, [id], "subscribed", "registration");
+  await q("UPDATE mail_subscribers SET confirmed_at = COALESCE(confirmed_at, now()) WHERE id = $1 AND status = 'subscribed'", [s.id]);
+  void welcome(s.token, base);
+}
 /** Admin add/edit of one person. Admin-added people skip the confirmation email. */
 const cleanTags = (t: unknown) => [...new Set((Array.isArray(t) ? t : String(t ?? "").split(",")).map((x) => String(x).trim().toLowerCase().slice(0, 40)).filter(Boolean))].slice(0, 20);
 export async function saveSubscriber(x: { id?: number; email: string; name?: string; status?: string; lists?: number[]; tags?: unknown }) {
@@ -384,7 +398,7 @@ const smtp = (c: MailCfg) => (tx?.url === c.smtpUrl ? tx : (tx = { url: c.smtpUr
 type Msg = { to: string; subject: string; html?: string; text?: string; from?: string; headers?: Record<string, string> };
 const fromHeader = (name: string, addr: string) => (name ? `${name.replace(/[<>"\r\n]/g, "")} <${addr}>` : addr);
 /** One send path: SMTP2GO's HTTP API when an SMTP2GO key is saved, otherwise plain SMTP. */
-async function send(m: Msg, c: MailCfg) {
+export async function send(m: Msg, c: MailCfg) {
   const from = m.from ?? fromHeader(c.fromName, c.from), headers = { ...(c.replyTo ? { "Reply-To": c.replyTo } : {}), ...m.headers };
   if (!c.smtp2goKey) return void (await smtp(c).sendMail({ from, to: m.to, subject: m.subject, html: m.html, text: m.text, headers }));
   const r = await fetch("https://api.smtp2go.com/v3/email/send", {

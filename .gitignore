@@ -9,3 +9,5 @@ node_modules/
 .DS_Store
 .local/
 web/data/config.json
+# blog backup: large, and holds author emails (this repo is public)
+web/data/import.json

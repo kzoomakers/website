@@ -69,7 +69,34 @@ const PATHS = [
 const HEART = "9,1 8,4 6,6 3,3 7,1 6,4 4,6 1,3 7,7 5,5 10,3 9,0 5,2 9,3 8,0 4,2 6,7 4,5 10,1 9,4 7,6 4,3 10,2 5,9 4,4 2,6 4,1 9,5 3,1 9,2 3,4 5,7 3,5 8,3 7,0 3,2 7,3 2,2 4,7 3,0 2,5 8,1 7,4 5,6 2,3 8,2 6,8 2,4 8,5 2,1 7,5 1,1 7,2 5,8 1,4 3,7 2,0 1,5 6,3 1,2 10,4 8,6 5,3 0,2 1,0 6,1 5,4 3,6 0,3 6,2 4,8 0,4 6,5 0,1"
   .split(" ").map((s) => s.split(",").map(Number));
 
+// Makerspace-positive "headlines" that emerge from the page as the chip powers up.
+const NEWS = [
+  ["MAKERS BUILD, LEARN AND LAUGH", "Neighbors gather round laser cutters and 3D printers as ideas become real things."],
+  ["BEGINNERS WELCOME", "No experience needed; members are glad to show newcomers the ropes."],
+  ["SCRAP BECOMES WONDER", "Broken gadgets get second lives at the community workbench."],
+  ["SHOP DOORS OPEN TO ALL", "Kalamazoo invited to make, mend and invent together."],
+];
+
 const PINS = Array.from({ length: 10 }, (_, i) => 11.69 * i);
+
+
+// Aged-newsprint backdrop, pure CSS (no image asset). shortcut: faux text is gradient stripes, swap for a real scan if wanted.
+const PAPER_CSS = `
+.chip-paper{position:relative;overflow:hidden;color:#2b2118;
+  background:radial-gradient(ellipse at 50% 45%,rgba(255,244,214,.55),transparent 65%),
+  radial-gradient(ellipse at center,#ecd6a4 40%,#d2ae72 80%,#a9814a 100%)}
+.chip-paper::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at center,transparent 55%,rgba(60,35,10,.45) 100%)}
+.paper-masthead{position:absolute;top:14px;left:0;right:0;text-align:center;opacity:.55;border-top:3px double #2b2118;border-bottom:3px double #2b2118;margin:0 4%;padding:4px 0}
+.paper-masthead span{display:block;font:900 clamp(18px,4.5vw,44px)/1.1 Georgia,'Times New Roman',serif;letter-spacing:.08em}
+.paper-masthead small{font:600 11px Georgia,serif;letter-spacing:.2em}
+.paper-grid{display:grid;gap:18px 28px;align-items:center;padding:78px 4% 24px;position:relative;z-index:1}
+@media(min-width:768px){.paper-grid{grid-template-columns:1fr minmax(0,520px) 1fr}}
+.paper-hl{border-top:2px solid #2b2118;padding-top:6px;text-align:left}
+.paper-hl h3{font:900 clamp(15px,2vw,24px)/1.1 Georgia,'Times New Roman',serif;margin:0 0 6px;color:#2b2118;letter-spacing:.02em}
+.paper-hl p{font:500 13px/1.35 Georgia,serif;margin:0;color:#3a2d20;column-rule:1px solid #2b2118}
+.paper-side{display:grid;gap:26px}
+`;
 
 export default function ChipAnimation({ label = "KZOO" }: { label?: string }) {
   const ref = useRef<SVGSVGElement>(null);
@@ -80,19 +107,25 @@ export default function ChipAnimation({ label = "KZOO" }: { label?: string }) {
     // @ts-expect-error animejs v3 ships no types
     import("animejs").then(({ default: anime }) => {
       const q = (s: string) => ref.current!.querySelectorAll(s);
+      const q2 = (s: string) => ref.current!.closest("section")!.querySelectorAll(s);
+      anime.set(q2(".paper-hl"), { opacity: 0 });
       tl = anime.timeline({ autoplay: false, loop: true, direction: "alternate", loopComplete: (i: any) => { i.pause(); timer = setTimeout(() => i.play(), 3000); } });
-      tl.add({ targets: q(".group path"), strokeDashoffset: [0, anime.setDashoffset], easing: "easeInOutSine", stroke: ["red", "green"], duration: 1500, delay: (_: any, i: number) => i * 50 })
-        .add({ targets: q("#chip-processor,#chip-heart,#chip-text"), scale: 5, translateY: -30, duration: 1500, delay: (_: any, i: number) => i * 250 });
+      tl.add({ targets: q(".group path"), strokeDashoffset: [0, anime.setDashoffset], easing: "easeInOutSine", stroke: ["#9c2a1a", "#2f5d50"], duration: 1500, delay: (_: any, i: number) => i * 50 })
+        .add({ targets: q("#chip-processor,#chip-heart,#chip-text"), scale: 5, translateY: -30, duration: 1500, delay: (_: any, i: number) => i * 250 })
+        .add({ targets: q2(".paper-hl"), opacity: [0, 1], translateY: [10, 0], duration: 1200, easing: "easeOutQuad", delay: (_: any, i: number) => i * 350 }, "-=600");
       tl.play();
     });
     return () => { clearTimeout(timer); tl?.pause(); };
   }, []);
 
   return (
-    <section className="section-sm" style={{ background: "#111" }}>
-      <div className="container text-center">
+    <section className="section-sm chip-paper">
+      <style>{PAPER_CSS}</style>
+      <div className="paper-masthead" aria-hidden="true"><span>THE KALAMAZOO GAZETTE</span><small>SUNDAY, JULY 4, 1926 · FIVE CENTS</small></div>
+            <div className="paper-grid">
+        <div className="paper-side">{NEWS.slice(0, 2).map(([h, b]) => <article className="paper-hl" key={h}><h3>{h}</h3><p>{b}</p></article>)}</div>
         <svg ref={ref} viewBox="0 0 1000 1000" style={{ width: "100%", maxWidth: 520, height: "auto" }} role="img" aria-label={label}>
-          <style>{`.group path{fill:none;stroke-width:4;stroke:#ed217c}.group path:nth-child(even){stroke:#1b998b}#chip-processor,#chip-heart,#chip-text{transform-origin:center}`}</style>
+          <style>{`.group path{fill:none;stroke-width:4;stroke:#9c2a1a}.group path:nth-child(even){stroke:#2f5d50}#chip-processor,#chip-heart,#chip-text{transform-origin:center}`}</style>
           <g className="group">{PATHS.map((d, i) => <path key={i} d={d} />)}</g>
           <g id="chip-processor">
             {PINS.map((o, i) => <g key={i} fill="#ffe14d">
@@ -107,6 +140,7 @@ export default function ChipAnimation({ label = "KZOO" }: { label?: string }) {
           </g>
           <text id="chip-text" transform="translate(465.63 564.28)" fontSize="25.02" fill="#fffd82" fontFamily="Orbitron, sans-serif" fontWeight="900" letterSpacing="0.01em">{label}</text>
         </svg>
+        <div className="paper-side">{NEWS.slice(2).map(([h, b]) => <article className="paper-hl" key={h}><h3>{h}</h3><p>{b}</p></article>)}</div>
       </div>
     </section>
   );

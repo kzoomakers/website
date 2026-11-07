@@ -2,6 +2,7 @@ import type { Config } from "@puckeditor/core";
 import ParentPicker from "@/components/parent-picker";
 import { ImageInput } from "@/components/image-field";
 import { GuidedPage } from "@/components/guided";
+import { ContactForm } from "@/components/contact-form";
 import ChipAnimation from "@/components/chip-animation";
 import { Navbar, Footer, Counters, ThemeCss } from "@/components/chrome";
 
@@ -34,8 +35,10 @@ export type Props = {
   PageHeader: { title: string; tag: "h1" | "h2"; crumb: string; subtitle: string; subtitleTag: "h5" | "p"; trail: { label: string; href: string }[] };
   HtmlSection: { html: string };
   BoardMembers: {};
+  LatestPosts: {};
   SiteMap: {};
   Guided: { kind: string; part?: string };
+  ContactForm: { kind: "contact" | "board"; heading: string };
   TwoColumnText: { heading: string; body: string; buttons: { label: string; href: string }[]; image: string; imageAlt: string };
   VideoEmbed: { title: string; youtubeUrl: string; height: number };
   Statement: { text: string };
@@ -128,6 +131,34 @@ export const config: Config<Props, RootProps> = {
         return <section className="section"><div className="container">{list(tree)}</div></section>;
       },
     },
+    // The newest published blog posts (page metadata), so the homepage stays in step with /blog.
+    LatestPosts: {
+      render: ({ puck }) => {
+        const posts: any[] = (puck?.metadata?.posts as any[]) ?? [];
+        return (
+          <section className="blog" id="blog"><div className="container">
+            <div className="row justify-content-center"><div className="col-xl-6 col-lg-8"><div className="title text-center">
+              <h2>Latest <span className="color">News</span></h2><div className="border" /><p>Stay updated with our latest projects and community events</p>
+            </div></div></div>
+            <div className="row">
+              {posts.map((p) => (
+                <article className="col-lg-4 col-md-6 mb-4" key={p.slug}><div className="post-item">
+                  {p.image && <div className="media-wrapper"><img loading="lazy" src={p.image} alt="" className="img-fluid" /></div>}
+                  <div className="content">
+                    <p className="post-date"><small>{new Date(p.date).toLocaleDateString("en-US", { dateStyle: "long" })}</small></p>
+                    <h3><a href={`/blog/${p.slug}`}>{p.title}</a></h3>
+                    <p>{p.excerpt}</p>
+                    <a className="btn btn-main" href={`/blog/${p.slug}`}>Read more</a>
+                  </div>
+                </div></article>
+              ))}
+              {!posts.length && <div className="col-12 text-center"><p>No posts yet. Check back soon!</p></div>}
+            </div>
+            <div className="row mt-4"><div className="col-12 text-center"><a href="/blog" className="btn btn-main">View All Posts</a></div></div>
+          </div></section>
+        );
+      },
+    },
     // Content comes from the Board admin screen (page metadata), not from the editor.
     BoardMembers: {
       render: ({ puck }) => {
@@ -152,6 +183,11 @@ export const config: Config<Props, RootProps> = {
       fields: { kind: { type: "text" }, part: { type: "text" } },
       defaultProps: { kind: "team", part: "" },
       render: ({ kind, part, puck }) => <GuidedPage kind={kind} part={part} data={(puck?.metadata?.guided as any)?.[kind]} />,
+    },
+    ContactForm: {
+      fields: { kind: { type: "radio", options: [{ label: "General (contact@)", value: "contact" }, { label: "Board (board@)", value: "board" }] }, heading: { type: "text", label: "Heading (blank = default)" } },
+      defaultProps: { kind: "contact", heading: "" },
+      render: ({ kind, heading }) => <ContactForm kind={kind} heading={heading} />,
     },
     TwoColumnText: {
       fields: {

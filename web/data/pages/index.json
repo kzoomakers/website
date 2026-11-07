@@ -20,11 +20,7 @@
           "href": "https://fonts.googleapis.com/css2?family=Caveat:wght@400..700&family=Emilys+Candy&family=Inter:wght@400;500;600;700&family=Permanent+Marker&display=swap"
         }
       ],
-      "scripts": [
-        {
-          "src": "js/blog.js"
-        }
-      ]
+      "scripts": []
     }
   },
   "content": [
@@ -95,10 +91,9 @@
       }
     },
     {
-      "type": "HtmlSection",
+      "type": "LatestPosts",
       "props": {
-        "id": "HtmlSection-115",
-        "html": "<section class=\"blog\" id=\"blog\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<!-- section title -->\n\t\t\t<div class=\"col-xl-6 col-lg-8\">\n\t\t\t\t<div class=\"title text-center\">\n\t\t\t\t\t<h2>Latest <span class=\"color\">News</span></h2>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t\t<p>Stay updated with our latest projects and community events</p>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<!-- /section title -->\n\t\t</div>\n\n\t\t<div class=\"row\" id=\"blog-posts-container\">\n\t\t\t<!-- Blog posts will be dynamically loaded here -->\n\t\t\t<div class=\"col-12 text-center\">\n\t\t\t\t<p>Loading latest posts...</p>\n\t\t\t</div>\n\t\t</div> <!-- end row -->\n\t\t\n\t\t<div class=\"row mt-4\">\n\t\t\t<div class=\"col-12 text-center\">\n\t\t\t\t<a href=\"/news\" class=\"btn btn-main\">View All Posts</a>\n\t\t\t</div>\n\t\t</div>\n\t</div> <!-- end container -->\n</section>"
+        "id": "LatestPosts-115"
       }
     },
     {
