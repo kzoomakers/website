@@ -1,0 +1,51 @@
+{
+ "root": {
+  "props": {
+   "title": "Kzoo Makers Pricing",
+   "description": "Kzoo Makers membership pricing - Affordable makerspace access in Kalamazoo, MI. Membership is just ($5/month), addon tools with Clean Side Tools ($20/month), or Everything Tools ($60/month). Access woodshop, metal shop, lasers, 3D printers, and more. Join our nonprofit maker community today.",
+   "bodyClass": "",
+   "refresh": "",
+   "css": "\n    /* Light gray text override for terms and conditions */\n    .terms-text {\n      color: #999999 !important;\n    }\n\n    /* Cyan color for normal price labels */\n    .normal-price-label {\n      color: #00FFFF !important;\n    }\n\n    /* Animated background for call-to-action section */\n    .call-to-action-2 {\n      position: relative;\n      overflow: hidden;\n      min-height: 210px;\n      background-image: url('images/call-to-action/source4.gif');\n      background-size: cover;\n      background-position: center;\n      background-repeat: no-repeat;\n    }\n\n    .call-to-action-2::before {\n      content: '';\n      position: absolute;\n      top: 0;\n      left: 0;\n      right: 0;\n      bottom: 0;\n      background-color: rgba(0, 0, 0.6, 0.8);\n      z-index: 0;\n    }\n    .call-to-action-2 .container {\n      position: relative;\n      z-index: 1;\n    }\n\n    .call-to-action-2 h2 {\n      position: relative;\n      z-index: 1;\n    }\n\n    /* Wormhole animated background for call-to-action section */\n    .call-to-action-wormhole {\n      position: relative;\n      overflow: hidden;\n      min-height: 300px;\n      background-image: url('images/call-to-action/wormhole.gif');\n      background-size: cover;\n      background-position: center;\n      background-repeat: no-repeat;\n    }\n\n    .call-to-action-wormhole::before {\n      content: '';\n      position: absolute;\n      top: 0;\n      left: 0;\n      right: 0;\n      bottom: 0;\n      background-color: rgba(0, 0, 0, 0.6);\n      z-index: 0;\n    }\n\n    .call-to-action-wormhole .container {\n      position: relative;\n      z-index: 1;\n    }\n\n    .call-to-action-wormhole h2,\n    .call-to-action-wormhole p {\n      position: relative;\n      z-index: 1;\n      color: white;\n    }\n  ",
+   "styles": [],
+   "scripts": [
+    {
+     "src": "js/pricing-special.js"
+    }
+   ]
+  }
+ },
+ "content": [
+  {
+   "type": "PageHeader",
+   "props": {
+    "id": "PageHeader-181",
+    "title": "Pricing",
+    "tag": "h2",
+    "crumb": "Pricing",
+    "trail": []
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-182",
+    "html": "<section class=\"call-to-action-2 section\" id=\"about\" style=\"padding: 40px 0;\">\n\t<div class=\"container\">\n\t\t<div class=\"row\">\n\t\t\t<div class=\"col-md-12 text-center\">\n\t\t\t\t<h2 id=\"about-heading\" style=\"color: white;\">A place where curiosity meets craftsmanship <br>for every maker to turn ideas into impact, together.</h2>\n\t\t\t</div>\n\t\t</div> \t\t<!-- End row -->\n\t</div>   \t<!-- End container -->\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-183",
+    "html": "<section class=\"pricing-table\" id=\"pricing\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center align-items-center\">\n\t\t\t<!-- section title -->\n\t\t\t<div class=\"col-xl-12 col-lg-12 col-md-12 text-center\">\n\t\t\t\t<div class=\"title title-white\">\n\t\t\t\t\t<h2>Membership Prices</h2>\n\t\t\t\t\t<p>As a non-profit, members fund nearly 100% of our expenses. We rely on your support!</p>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<!-- /section title -->\n\t\t</div>\n\t\t<div class=\"row\">\n\t\t\t<!-- single pricing table -->\n\t\t\t<div class=\"col-lg-4 col-md-6 \">\n\t\t\t\t<div class=\"pricing-item\">\n\n\t\t\t\t\t<!-- plan name & value -->\n\t\t\t\t\t<div class=\"price-title\">\n\t\t\t\t\t\t<h3>Kzoo Makers Membership</h3>\n\t\t\t\t\t\t<strong class=\"value\">$5<sub>/month</sub></strong><sup style=\"font-size: 2em; color: #ff6b6b; font-weight: bold;\">*</sup>\n\t\t\t\t\t\t<p>Collaborative Workspaces<br>Come Hangout and Make!</p>\n\t\t\t\t\t</div>\n\t\t\t\t\t<!-- /plan name & value -->\n\n\t\t\t\t\t<!-- plan description -->\n\t\t\t\t\t<ul>\n \t\t\t\t\t\t<li><i class=\"tf-ion-ios-arrow-forward\"></i> Community of Makers</li>\n\t\t\t\t\t\t<li><i class=\"tf-ion-ios-arrow-forward\"></i> Collaborative Workspace</li>\n\t\t\t\t\t\t<li><i class=\"tf-ion-ios-arrow-forward\"></i> Your Own Small Tools</li>\n\t\t\t\t\t\t<li><i class=\"tf-ion-ios-arrow-forward\"></i> Coffee Machine and Fridge</li>\n\t\t\t\t\t\t<li><i class=\"tf-ion-ios-arrow-forward\"></i> WIFI</li>\n\t\t\t\t\t</ul>\n\t\t\t\t\t<!-- /plan description -->\n\n\t\t\t\t\t<!-- signup button -->\n\t\t\t\t\t<a class=\"btn btn-main\" href=\"/tour-form-redirect\">Signup</a>\n\t\t\t\t\t<!-- /signup button -->\n\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<!-- end single pricing table -->\n\n\t\t\t<!-- single pricing table -->\n\t\t\t<div class=\"col-lg-4 col-md-6\">\n\t\t\t\t<div class=\"pricing-item\">\n\n\t\t\t\t\t<!-- plan name & value -->\n\t\t\t\t\t<div class=\"price-title\">\n\t\t\t\t\t\t<h3>Clean Side Tools</h3>\n\t\t\t\t\t\t<span class=\"normal-price-label\">Normally $45/m</span>\n\t\t\t\t\t\t<span class=\"offer-badge\">Limited Time Price!</span>\n\t\t\t\t\t\t<strong class=\"value\">$20<sub>/month</sub></strong><sup style=\"font-size: 2em; color: #ff6b6b; font-weight: bold;\">*</sup>\n\t\t\t\t\t\t<p>Clean Side Area Tools<br><span class=\"badge badge-warning\" style=\"font-size: 0.9em; margin-top: 5px;\">A Membership is Required</span></p>\n\t\t\t\t\t</div>\n\t\t\t\t\t<!-- /plan name & value -->\n\n\t\t\t\t\t<!-- plan description -->\n\t\t\t\t\t<ul>\n\t\t\t\t\t\t<li><i class=\"tf-ion-ios-arrow-forward\"></i> Clean Side Area Tools</li>\n\t\t\t\t\t\t<li><i class=\"tf-ion-ios-arrow-forward\"></i> Laser Cutters and Engravers</li>\n\t\t\t\t\t\t<li><i class=\"tf-ion-ios-arrow-forward\"></i> 3D Printers</li>\n\t\t\t\t\t\t<li><i class=\"tf-ion-ios-arrow-forward\"></i> Craft and Fabrics</li>\n\t\t\t\t\t\t<li><i class=\"tf-ion-ios-arrow-forward\"></i> Storage Options</li>\n\t\t\t\t\t</ul>\n\t\t\t\t\t<!-- /plan description -->\n\n\t\t\t\t\t<!-- signup button -->\n\t\t\t\t\t<a class=\"btn btn-main\" href=\"/tour-form-redirect\">Signup</a>\n\t\t\t\t\t<!-- /signup button -->\n\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<!-- end single pricing table -->\n\n\t\t\t<!-- single pricing table -->\n\t\t\t<div class=\"col-lg-4 col-md-6  \">\n\t\t\t\t<div class=\"pricing-item\">\n\n\t\t\t\t\t<!-- plan name & value -->\n\t\t\t\t\t<div class=\"price-title\">\n\t\t\t\t\t\t<h3>Everything Tools</h3>\n\t\t\t\t\t\t<span class=\"normal-price-label\">Normally $85/m</span>\n\t\t\t\t\t\t<span class=\"offer-badge\">Limited Time Price!</span>\n\t\t\t\t\t\t<strong class=\"value\">$60<sub>/month</sub></strong><sup style=\"font-size: 2em; color: #ff6b6b; font-weight: bold;\">*</sup>\n\t\t\t\t\t\t<p>The Whole Shebang!<br>Clean Side, Plus Dust and Chips Tools!<br><span class=\"badge badge-warning\" style=\"font-size: 0.9em; margin-top: 5px;\">A Membership is Required</span></p>\n\t\t\t\t\t</div>\n\t\t\t\t\t<!-- /plan name & value -->\n\n\t\t\t\t\t<!-- plan description -->\n\t\t\t\t\t<ul>\n\t\t\t\t\t\t<li><i class=\"tf-ion-ios-arrow-forward\"></i><strong> Woodshop Tools</strong></li>\n\t\t\t\t\t\t<li><i class=\"tf-ion-ios-arrow-forward\"></i><strong> Metalshop Equipment</strong></li>\n\t\t\t\t\t\t<li><i class=\"tf-ion-ios-arrow-forward\"></i> Clean Side Area Tools</li>\n\t\t\t\t\t\t<li><i class=\"tf-ion-ios-arrow-forward\"></i> Laser Cutters and Engravers</li>\n\t\t\t\t\t\t<li><i class=\"tf-ion-ios-arrow-forward\"></i> 3D Printers</li>\n\t\t\t\t\t\t<li><i class=\"tf-ion-ios-arrow-forward\"></i> Craft and Fabrics</li>\n\t\t\t\t\t\t<li><i class=\"tf-ion-ios-arrow-forward\"></i> Storage Options</li>\n\t\t\t\t\t</ul>\n\t\t\t\t\t<!-- /plan description -->\n\n\t\t\t\t\t<!-- signup button -->\n\t\t\t\t\t<a class=\"btn btn-main\" href=\"/tour-form-redirect\">Signup</a>\n\t\t\t\t\t<!-- /signup button -->\n\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<!-- end single pricing table -->\n   <div class=\"col-12\">\n<p class=\"text-center px-3 terms-text\" style=\"margin-top: 30px;\">\n  <span style=\"font-size: 2em; color: #ff6b6b; font-weight: bold;\">*</span>\n  Completion of a tour and orientation and agreement to the &gt;membership policy and <a href=\"https://kzoomakers.org/handbook.html\">handbook</a> are required prior to becoming a member.\n</p>\n\n   </div>\n\n\n\t\t</div> <!-- End row -->\n\t</div> <!-- End container -->\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-184",
+    "html": "<section class=\"call-to-action-wormhole section\">\n\t<div class=\"container\">\n\t\t<div class=\"row\">\n\t\t\t<div class=\"col-md-12 text-center\">\n\t\t\t\t<h2>Ready to Join Our Maker Community?</h2>\n\t\t\t\t<p>Start creating, learning, and collaborating with fellow makers today!</p>\n\t\t\t\t<a href=\"/tour-form-redirect\" class=\"btn btn-main\">Get Started</a>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  }
+ ],
+ "zones": {}
+}

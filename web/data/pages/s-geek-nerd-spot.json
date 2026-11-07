@@ -1,0 +1,68 @@
+{
+ "root": {
+  "props": {
+   "title": "Geek & Nerd Spot in Kalamazoo | Kalamazoo Makerspace",
+   "description": "Looking for a geek or nerd spot in Kalamazoo? Discover Kalamazoo Makerspace, a nonprofit makerspace where about 80 geeks, nerds, makers, crafters, engineers, programmers, and artists build projects, share tools, and hang out.",
+   "bodyClass": "",
+   "refresh": "",
+   "css": "",
+   "styles": [],
+   "scripts": []
+  }
+ },
+ "content": [
+  {
+   "type": "PageHeader",
+   "props": {
+    "id": "PageHeader-220",
+    "title": "Geek & Nerd Spot in Kalamazoo",
+    "tag": "h1",
+    "crumb": "Geek & Nerd Spot",
+    "trail": []
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-221",
+    "html": "<section class=\"about-2 section\" id=\"geek-nerd-overview\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<div class=\"title text-center\">\n\t\t\t\t\t<h2>Looking for a geek or nerd spot in Kalamazoo?</h2>\n\t\t\t\t\t<p><strong>You just found the real‑world version of your favorite Discord server.</strong></p>\n\t\t\t\t\t<p>Kalamazoo Makerspace is a nonprofit, community‑run makerspace tucked into an industrial park on the north side of town. We have about <strong>80 members</strong> — geeks, nerds, makers, crafters, engineers, programmers, and artists — who like to build stuff, tinker with tools, and yes, <strong>argue about Star Wars timelines</strong> while the laser cutter is running.</p>\n\t\t\t\t\t<p>If you’ve ever wished there was a place in Kalamazoo where people actually <em>make</em> things instead of just talking about them online, this is it.</p>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\n\t\t<div class=\"row mt-5\">\n\t\t\t<div class=\"col-md-6 mb-4\">\n\t\t\t\t<h3>What is a makerspace, in geek terms?</h3>\n\t\t\t\t<ul class=\"checklist\">\n\t\t\t\t\t<li>A giant, real‑life <strong>tool library</strong> where you don’t have to own every machine yourself.</li>\n\t\t\t\t\t<li>A cross‑over episode between <strong>wood shop, metal shop, electronics lab, and art studio</strong>.</li>\n\t\t\t\t\t<li>A place where side‑quests (fixing, modding, 3D printing, crafting) are normal, not weird.</li>\n\t\t\t\t\t<li>A community that’s totally fine with you asking “dumb” questions while you learn.</li>\n\t\t\t\t\t<li>A low‑pressure way to meet other geeks and nerds <strong>offline</strong> while actually building something.</li>\n\t\t\t\t</ul>\n\t\t\t</div>\n\t\t\t<div class=\"col-md-6 mb-4\">\n\t\t\t\t<h3>Who hangs out at Kalamazoo Makerspace?</h3>\n\t\t\t\t<ul class=\"checklist\">\n\t\t\t\t\t<li><strong>Programmers &amp; electronics nerds</strong> soldering boards, wiring robots, and debugging code.</li>\n\t\t\t\t\t<li><strong>Cosplayers &amp; prop makers</strong> laser‑cutting armor, 3D printing helmets, and painting blasters.</li>\n\t\t\t\t\t<li><strong>Woodworkers &amp; metalworkers</strong> building furniture, shop fixtures, and wild one‑off projects.</li>\n\t\t\t\t\t<li><strong>Artists &amp; crafters</strong> doing fiber arts, mixed media, signage, and custom gifts.</li>\n\t\t\t\t\t<li>People who can quote <strong>Star Wars, Star Trek, Marvel, anime, or classic sci‑fi paperbacks</strong> while they work.</li>\n\t\t\t\t</ul>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-222",
+    "html": "<section class=\"section\" style=\"background:#f9f9f9;\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center\">\n      <div class=\"col-lg-8\">\n        <div class=\"title text-center\">\n          <h2>Explore the Geeky Corners of the Makerspace</h2>\n          <p>All the “major areas” live under one roof. Click around to see what’s inside each space.</p>\n          <div class=\"border\"></div>\n        </div>\n      </div>\n    </div>\n    <div class=\"row text-center mt-4\">\n      <div class=\"col-md-4 mb-3\">\n        <a href=\"/wood-shop\" class=\"btn btn-main btn-sm d-block\">Wood Shop</a>\n      </div>\n      <div class=\"col-md-4 mb-3\">\n        <a href=\"/metal-shop\" class=\"btn btn-main btn-sm d-block\">Metal Shop &amp; Welding</a>\n      </div>\n      <div class=\"col-md-4 mb-3\">\n        <a href=\"/laser-shop\" class=\"btn btn-main btn-sm d-block\">Laser Shop</a>\n      </div>\n      <div class=\"col-md-4 mb-3\">\n        <a href=\"/3d-printing\" class=\"btn btn-main btn-sm d-block\">3D Printing Lab</a>\n      </div>\n      <div class=\"col-md-4 mb-3\">\n        <a href=\"/s-electronics-lab-kalamazoo\" class=\"btn btn-main btn-sm d-block\">Electronics Lab</a>\n      </div>\n      <div class=\"col-md-4 mb-3\">\n        <a href=\"/meetup-fiber-arts\" class=\"btn btn-main btn-sm d-block\">Fiber Arts &amp; Crafting</a>\n      </div>\n      <div class=\"col-md-4 mb-3\">\n        <a href=\"/meeting-space\" class=\"btn btn-main btn-sm d-block\">Meeting &amp; Hangout Space</a>\n      </div>\n      <div class=\"col-md-4 mb-3\">\n        <a href=\"/s-tech-workshop-space\" class=\"btn btn-main btn-sm d-block\">Tech Workshop Space</a>\n      </div>\n      <div class=\"col-md-4 mb-3\">\n        <a href=\"/s-coworking-space-kalamazoo\" class=\"btn btn-main btn-sm d-block\">Coworking &amp; Laptop Nook</a>\n      </div>\n      <div class=\"col-md-4 mb-3\">\n        <a href=\"/pricing\" class=\"btn btn-main btn-sm d-block\">Membership Options</a>\n      </div>\n      <div class=\"col-md-4 mb-3\">\n        <a href=\"/calendar\" class=\"btn btn-main btn-sm d-block\">Events &amp; Meetups Calendar</a>\n      </div>\n      <div class=\"col-md-4 mb-3\">\n        <a href=\"/meetups\" class=\"btn btn-main btn-sm d-block\">Regular Meetups</a>\n      </div>\n    </div>\n  </div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-223",
+    "html": "<section class=\"about-2 section\" id=\"geek-nerd-comparison\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-8\">\n\t\t\t\t<div class=\"title text-center\">\n\t\t\t\t\t<h2>More Than Just Another Geek Hangout</h2>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t\t<div class=\"row mt-4\">\n\t\t\t<div class=\"col-md-6 mb-4\">\n\t\t\t\t<h3>Typical “Geek Spot”</h3>\n\t\t\t\t<ul class=\"checklist\">\n\t\t\t\t\t<li>Fluorescent‑lit back room with a couple of tables.</li>\n\t\t\t\t\t<li>Maybe board games, maybe laptops, but no serious tools.</li>\n\t\t\t\t\t<li>Lots of talk about projects that never quite get built.</li>\n\t\t\t\t\t<li>You’re done once the store closes or the meetup ends.</li>\n\t\t\t\t</ul>\n\t\t\t</div>\n\t\t\t<div class=\"col-md-6 mb-4\">\n\t\t\t\t<h3>Kalamazoo Makerspace Version</h3>\n\t\t\t\t<ul class=\"checklist\">\n\t\t\t\t\t<li><strong>Full shops</strong> for woodworking, metalworking, welding, 3D printing, laser cutting, and electronics.</li>\n\t\t\t\t\t<li>A community that actually <strong>shows you how to use the tools</strong> safely.</li>\n\t\t\t\t\t<li>People who will reality‑check your wild idea and then help you figure out how to build it anyway.</li>\n\t\t\t\t\t<li>Membership‑based access so you can keep coming back, iterating, and leveling up your skills.</li>\n\t\t\t\t</ul>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-224",
+    "html": "<section class=\"section\" style=\"background:#f9f9f9;\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-8\">\n\t\t\t\t<div class=\"title text-center\">\n\t\t\t\t\t<h2>How to Plug In as a Geek or Nerd in Kalamazoo</h2>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t\t<div class=\"row mt-4\">\n\t\t\t<div class=\"col-lg-10 mx-auto\">\n\t\t\t\t<ol>\n\t\t\t\t\t<li><strong>Skim the main site.</strong> Check out our <a href=\"/\">homepage</a>, learn more <a href=\"/about\">about us</a>, and see what tools we have in each shop area.</li>\n\t\t\t\t\t<li><strong>Schedule a tour.</strong> Use the <a href=\"/tour-form-redirect\">tour sign‑up form</a> to get matched with a volunteer who can walk you through the space and answer questions.</li>\n\t\t\t\t\t<li><strong>Pick a first project.</strong> It doesn’t have to be epic — 3D print a gadget, laser‑cut a sign, fix something broken, or build a simple cosplay prop.</li>\n\t\t\t\t\t<li><strong>Join the community.</strong> Our <a href=\"/pricing\">membership</a> keeps the lights on and the tools maintained so geeks and nerds across Kalamazoo always have a place to build.</li>\n\t\t\t\t\t<li><strong>Show up regularly.</strong> Hang out at <a href=\"/meetups\">meetups</a>, hop into community projects, and become “one of the regulars” who helps others get started.</li>\n\t\t\t\t</ol>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-225",
+    "html": "<section class=\"call-to-action section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-xl-6 col-lg-8 text-center\">\n\t\t\t\t<h2>Ready to Check Out Your New Geek Spot?</h2>\n\t\t\t\t<p>If the idea of a real‑life makerspace full of geeks, nerds, makers, and Star Wars fans sounds like your crowd, don't just bookmark this page — <strong>come see it</strong>.</p>\n\t\t\t\t<a href=\"/tour-form-redirect\" class=\"btn btn-main\">Schedule a Tour</a>\n\t\t\t\t<a href=\"/pricing\" class=\"btn btn-main\">View Membership Options</a>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-226",
+    "html": "<section class=\"section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-8\">\n\t\t\t\t<div class=\"title text-center\">\n\t\t\t\t\t<h2>Geek &amp; Nerd Spot FAQ</h2>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t\t<div class=\"row mt-4\">\n\t\t\t<div class=\"col-lg-10 mx-auto\">\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>Do I have to be an “expert” to join?</h4>\n\t\t\t\t\t<p>No. A lot of our members came in as beginners. We care far more about curiosity and respect for safety than about your resume. If you’re willing to learn and be patient with the tools, you’ll fit right in.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>I’m more into coding and electronics than big shop tools. Is this still for me?</h4>\n\t\t\t\t\t<p>Yes. We have an <a href=\"/s-electronics-lab-kalamazoo\">electronics lab</a>, members who write code, and groups like the <a href=\"/meetups\">Linux and tech meetups</a> that meet at the space. Plenty of our “shop” people also dabble in software and microcontrollers.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>Is Kalamazoo Makerspace the only makerspace around here?</h4>\n\t\t\t\t\t<p>We’re one of the main community makerspaces serving the Kalamazoo area. If you’re curious about how makerspaces work in general, we also maintain a page on <a href=\"/other-makerspaces\">other makerspaces</a> for extra context and inspiration.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>Can I just visit once to see what it’s like?</h4>\n\t\t\t\t\t<p>Yes. The best first step is to <a href=\"/tour-form-redirect\">schedule a tour</a>, or stop by during a posted meetup or event from our <a href=\"/calendar\">calendar</a>. You’ll get to walk through the shops, meet members, and see projects in progress.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>What if I don’t have a specific project yet?</h4>\n\t\t\t\t\t<p>That’s normal. Come anyway. Seeing what 80+ geeks, nerds, makers, and artists are building tends to light up your own ideas quickly.</p>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  }
+ ],
+ "zones": {}
+}

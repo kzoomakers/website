@@ -1,0 +1,101 @@
+{
+ "root": {
+  "props": {
+   "title": "Kzoo Makers vs WMU Makerspace - Western Michigan University Comparison",
+   "description": "Compare Kzoo Makers with Western Michigan University (WMU) makerspace. Understand access differences, tool availability, and which option serves the public in Kalamazoo.",
+   "bodyClass": "",
+   "refresh": "",
+   "css": "\n    .comparison-card {\n      background: white;\n      border-radius: 8px;\n      padding: 30px;\n      margin-bottom: 30px;\n      box-shadow: 0 2px 15px rgba(0,0,0,0.1);\n    }\n    .comparison-card h3, .comparison-card h4 {\n      color: #47424C;\n      margin-bottom: 15px;\n    }\n    .feature-list {\n      list-style: none;\n      padding: 0;\n    }\n    .feature-list li {\n      padding: 10px 0;\n      border-bottom: 1px solid #e0e0e0;\n    }\n    .feature-list li:before {\n      content: \"✓\";\n      color: #8490ff;\n      font-weight: bold;\n      margin-right: 10px;\n    }\n    .feature-list.no-feature li:before {\n      content: \"✗\";\n      color: #ff6b6b;\n    }\n    .vs-badge {\n      background: #8490ff;\n      color: white;\n      padding: 5px 15px;\n      border-radius: 20px;\n      font-weight: 600;\n      display: inline-block;\n      margin: 10px 0;\n    }\n    .alert-box {\n      background: #fff3cd;\n      border-left: 4px solid #ffc107;\n      padding: 20px;\n      margin: 20px 0;\n      border-radius: 4px;\n    }\n    .alert-box h4 {\n      color: #856404;\n      margin-bottom: 10px;\n    }\n    .comparison-table {\n      overflow-x: auto;\n      margin: 30px 0;\n    }\n    .comparison-table table {\n      width: 100%;\n      border-collapse: collapse;\n      background: white;\n      box-shadow: 0 2px 10px rgba(0,0,0,0.1);\n    }\n    .comparison-table th {\n      background: #47424C;\n      color: white;\n      padding: 15px;\n      text-align: left;\n      font-weight: 600;\n    }\n    .comparison-table td {\n      padding: 12px 15px;\n      border-bottom: 1px solid #e0e0e0;\n    }\n    .comparison-table .highlight {\n      background: #fff9e6;\n      font-weight: 600;\n      color: #000;\n    }\n  ",
+   "styles": [],
+   "scripts": []
+  }
+ },
+ "content": [
+  {
+   "type": "PageHeader",
+   "props": {
+    "id": "PageHeader-123",
+    "title": "Kzoo Makers vs WMU Makerspace",
+    "tag": "h2",
+    "crumb": "vs WMU",
+    "trail": [
+     {
+      "label": "Comparison",
+      "href": "/comparison"
+     }
+    ]
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-124",
+    "html": "<section class=\"about-shot-info section-sm\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<div class=\"title text-center\">\n\t\t\t\t\t<h2>Community Makerspace vs WMU Makerspace</h2>\n\t\t\t\t\t<p>Western Michigan University has makerspace facilities, but they're exclusively for students and faculty. This comparison explains what's available at WMU and how Kzoo Makers serves the broader Kalamazoo community.</p>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-125",
+    "html": "<section class=\"section bg-gray\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<div class=\"alert-box\">\n\t\t\t\t\t<h4>⚠️ Access Restriction</h4>\n\t\t\t\t\t<p><strong>WMU makerspaces are NOT open to the public.</strong> You must be a currently enrolled WMU student or faculty member to access these facilities. There is no community membership or guest access option.</p>\n\t\t\t\t\t<p>If you're not affiliated with WMU, Kzoo Makers is your only option for makerspace access in Kalamazoo.</p>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-126",
+    "html": "<section class=\"section\">\n\t<div class=\"container\">\n\t\t<div class=\"row\">\n\t\t\t<div class=\"col-lg-6 mb-4\">\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h3>🏛️ Kzoo Makers</h3>\n\t\t\t\t\t<span class=\"vs-badge\">Community Makerspace</span>\n\t\t\t\t\t<p><strong>Who Can Access:</strong> Anyone (membership required)</p>\n\t\t\t\t\t<h5 class=\"mt-4\">Available Tools:</h5>\n\t\t\t\t\t<ul class=\"feature-list\">\n\t\t\t\t\t\t<li>Full wood shop (table saw, jointer, planer, etc.)</li>\n\t\t\t\t\t\t<li>Metal shop with MIG/TIG welding</li>\n\t\t\t\t\t\t<li>Industrial laser cutter (100W, 24\"x36\")</li>\n\t\t\t\t\t\t<li>Full-size CNC router (4'x8' capable)</li>\n\t\t\t\t\t\t<li>Multiple 3D printers (hands-on)</li>\n\t\t\t\t\t\t<li>Electronics lab with soldering stations</li>\n\t\t\t\t\t\t<li>Textiles and sewing area</li>\n\t\t\t\t\t</ul>\n\t\t\t\t\t<h5 class=\"mt-4\">Access Details:</h5>\n\t\t\t\t\t<ul class=\"feature-list\">\n\t\t\t\t\t\t<li>Evenings and weekends</li>\n\t\t\t\t\t\t<li>56 hours a week of access for trained members</li>\n\t\t\t\t\t\t<li>Hands-on tool use after training</li>\n\t\t\t\t\t\t<li>Commercial use allowed</li>\n\t\t\t\t\t\t<li>Ongoing membership (not semester-bound)</li>\n\t\t\t\t\t</ul>\n\t\t\t\t\t<p class=\"mt-3\"><strong>Cost:</strong> $5-$60/month</p>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<div class=\"col-lg-6 mb-4\">\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h3>🎓 WMU Makerspace</h3>\n\t\t\t\t\t<span class=\"vs-badge\">Zhang Legacy Collections Center</span>\n\t\t\t\t\t<p class=\"mt-3\"><strong>Location:</strong> WMU Libraries, West Campus</p>\n\t\t\t\t\t<p><strong>Who Can Access:</strong> WMU students and faculty only</p>\n\t\t\t\t\t<h5 class=\"mt-4\">Available Tools:</h5>\n\t\t\t\t\t<ul class=\"feature-list\">\n\t\t\t\t\t\t<li>Limited 3D printing (being phased out)</li>\n\t\t\t\t\t\t<li>Digital media workstations</li>\n\t\t\t\t\t\t<li>Some department-specific equipment</li>\n\t\t\t\t\t</ul>\n\t\t\t\t\t<ul class=\"feature-list no-feature mt-3\">\n\t\t\t\t\t\t<li>No wood shop</li>\n\t\t\t\t\t\t<li>No metal shop or welding</li>\n\t\t\t\t\t\t<li>No laser cutting (general access)</li>\n\t\t\t\t\t\t<li>No general CNC access</li>\n\t\t\t\t\t\t<li>No textiles/sewing</li>\n\t\t\t\t\t</ul>\n\t\t\t\t\t<h5 class=\"mt-4\">Access Details:</h5>\n\t\t\t\t\t<ul class=\"feature-list no-feature\">\n\t\t\t\t\t\t<li>Academic/library hours only</li>\n\t\t\t\t\t\t<li>No evening or weekend access</li>\n\t\t\t\t\t\t<li>Staff-supervised or course-based</li>\n\t\t\t\t\t\t<li>Academic use only (no commercial)</li>\n\t\t\t\t\t\t<li>Semester-bound access</li>\n\t\t\t\t\t</ul>\n\t\t\t\t\t<p class=\"mt-3\"><strong>Cost:</strong> Included in tuition</p>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-127",
+    "html": "<section class=\"section bg-gray\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-12\">\n\t\t\t\t<h3 class=\"text-center mb-4\">Detailed Feature Comparison</h3>\n\t\t\t\t<div class=\"comparison-table\">\n\t\t\t\t\t<table>\n\t\t\t\t\t\t<thead>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<th>Feature</th>\n\t\t\t\t\t\t\t\t<th class=\"highlight\">Kzoo Makers</th>\n\t\t\t\t\t\t\t\t<th>WMU Makerspace</th>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t</thead>\n\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Public Access</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Yes (membership)</td>\n\t\t\t\t\t\t\t\t<td>❌ Students/faculty only</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>WMU Enrollment Required</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">❌ No</td>\n\t\t\t\t\t\t\t\t<td>✅ Yes</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Cost for Non-Students</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">$5-$60/month</td>\n\t\t\t\t\t\t\t\t<td>Not available to non-students</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Hours</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">Evenings/weekends + 56 hours/week</td>\n\t\t\t\t\t\t\t\t<td>Library hours only (daytime)</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Access Duration</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">Ongoing (as long as member)</td>\n\t\t\t\t\t\t\t\t<td>Semester-bound</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Wood Shop</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Full shop with all major tools</td>\n\t\t\t\t\t\t\t\t<td>❌ None</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Metal Shop / Welding</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ MIG/TIG welding, grinders, fabrication</td>\n\t\t\t\t\t\t\t\t<td>❌ None (except specific engineering programs)</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Laser Cutting</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Industrial 100W laser</td>\n\t\t\t\t\t\t\t\t<td>❌ Not available for general use</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>CNC Router</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Full-size (4'x8' capable)</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Department-specific only</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>3D Printing</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Multiple printers, hands-on access</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Limited, being phased out</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Electronics Lab</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Full benches, soldering, oscilloscopes</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Engineering labs only (major-restricted)</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Textiles / Sewing</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Sewing machines, sergers</td>\n\t\t\t\t\t\t\t\t<td>❌ None</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Tool Access Model</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">Hands-on after safety training</td>\n\t\t\t\t\t\t\t\t<td>Staff-supervised or course-based</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Commercial Use</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Explicitly supported</td>\n\t\t\t\t\t\t\t\t<td>❌ Academic use only</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Project Storage</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">✅ Member storage available</td>\n\t\t\t\t\t\t\t\t<td>⚠️ Limited</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td><strong>Community</strong></td>\n\t\t\t\t\t\t\t\t<td class=\"highlight\">Diverse makers, peer mentorship</td>\n\t\t\t\t\t\t\t\t<td>Student-focused, academic</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t</tbody>\n\t\t\t\t\t</table>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-128",
+    "html": "<section class=\"section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<h3 class=\"text-center mb-4\">Understanding WMU's Makerspace Facilities</h3>\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h4>Zhang Legacy Collections Center Makerspace</h4>\n\t\t\t\t\t<p>WMU's primary makerspace is located in the Zhang Legacy Collections Center (part of WMU Libraries). It was designed to support academic research and coursework.</p>\n\t\t\t\t\t<p><strong>What's Available:</strong></p>\n\t\t\t\t\t<ul>\n\t\t\t\t\t\t<li>Limited 3D printing capabilities (being reduced)</li>\n\t\t\t\t\t\t<li>Digital media workstations</li>\n\t\t\t\t\t\t<li>Some scanning and digitization equipment</li>\n\t\t\t\t\t\t<li>Study and collaboration spaces</li>\n\t\t\t\t\t</ul>\n\t\t\t\t\t<p><strong>What's NOT Available:</strong></p>\n\t\t\t\t\t<ul>\n\t\t\t\t\t\t<li>No wood shop or woodworking tools</li>\n\t\t\t\t\t\t<li>No metal fabrication or welding</li>\n\t\t\t\t\t\t<li>No laser cutting for general use</li>\n\t\t\t\t\t\t<li>No general-access CNC equipment</li>\n\t\t\t\t\t\t<li>No heavy fabrication capabilities</li>\n\t\t\t\t\t</ul>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h4>Department-Specific Labs</h4>\n\t\t\t\t\t<p>WMU has additional equipment in various academic departments (Engineering, Art, etc.), but these are:</p>\n\t\t\t\t\t<ul>\n\t\t\t\t\t\t<li><strong>Major-restricted:</strong> Only available to students in specific programs</li>\n\t\t\t\t\t\t<li><strong>Course-bound:</strong> Access tied to enrollment in particular classes</li>\n\t\t\t\t\t\t<li><strong>Supervised:</strong> Faculty or staff supervision required</li>\n\t\t\t\t\t\t<li><strong>Not centralized:</strong> Scattered across campus in different buildings</li>\n\t\t\t\t\t</ul>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-129",
+    "html": "<section class=\"section bg-gray\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<h3 class=\"text-center mb-4\">Which Option Is Right for You?</h3>\n\t\t\t\t<div class=\"row\">\n\t\t\t\t\t<div class=\"col-md-6 mb-4\">\n\t\t\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t\t\t<h4>Choose WMU Makerspace If:</h4>\n\t\t\t\t\t\t\t<ul class=\"feature-list\">\n\t\t\t\t\t\t\t\t<li>You are currently enrolled at WMU</li>\n\t\t\t\t\t\t\t\t<li>You need tools for coursework</li>\n\t\t\t\t\t\t\t\t<li>You want access included in tuition</li>\n\t\t\t\t\t\t\t\t<li>You only need digital media or light 3D printing</li>\n\t\t\t\t\t\t\t\t<li>You're comfortable with library hours</li>\n\t\t\t\t\t\t\t</ul>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class=\"col-md-6 mb-4\">\n\t\t\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t\t\t<h4>Choose Kzoo Makers If:</h4>\n\t\t\t\t\t\t\t<ul class=\"feature-list\">\n\t\t\t\t\t\t\t\t<li>You are NOT a WMU student</li>\n\t\t\t\t\t\t\t\t<li>You need wood shop or metal shop access</li>\n\t\t\t\t\t\t\t\t<li>You want to weld or do metal fabrication</li>\n\t\t\t\t\t\t\t\t<li>You need laser cutting or CNC routing</li>\n\t\t\t\t\t\t\t\t<li>You want hands-on tool control</li>\n\t\t\t\t\t\t\t\t<li>You need evening or weekend access</li>\n\t\t\t\t\t\t\t\t<li>You're working on business or personal projects</li>\n\t\t\t\t\t\t\t\t<li>You want ongoing access beyond semesters</li>\n\t\t\t\t\t\t\t</ul>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-130",
+    "html": "<section class=\"section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h3>For WMU Students: Why Join Both?</h3>\n\t\t\t\t\t<p>Many WMU students are members of Kzoo Makers because we offer tools and access that WMU doesn't provide:</p>\n\t\t\t\t\t<div class=\"row mt-4\">\n\t\t\t\t\t\t<div class=\"col-md-6\">\n\t\t\t\t\t\t\t<h5>Tools WMU Doesn't Have:</h5>\n\t\t\t\t\t\t\t<ul>\n\t\t\t\t\t\t\t\t<li>Full wood shop</li>\n\t\t\t\t\t\t\t\t<li>Metal shop and welding</li>\n\t\t\t\t\t\t\t\t<li>Industrial laser cutter</li>\n\t\t\t\t\t\t\t\t<li>General-access CNC router</li>\n\t\t\t\t\t\t\t\t<li>Textiles and sewing</li>\n\t\t\t\t\t\t\t</ul>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class=\"col-md-6\">\n\t\t\t\t\t\t\t<h5>Access WMU Can't Provide:</h5>\n\t\t\t\t\t\t\t<ul>\n\t\t\t\t\t\t\t\t<li>Evening and weekend hours</li>\n\t\t\t\t\t\t\t\t<li>56 hours a week of access for trained members</li>\n\t\t\t\t\t\t\t\t<li>Hands-on tool control</li>\n\t\t\t\t\t\t\t\t<li>Access during breaks and summer</li>\n\t\t\t\t\t\t\t\t<li>Commercial project support</li>\n\t\t\t\t\t\t\t</ul>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t\t<p class=\"mt-4\"><strong>Student Discount:</strong> Kzoo Makers offers student membership rates. Use WMU resources for coursework and Kzoo Makers for everything else.</p>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-131",
+    "html": "<section class=\"section bg-gray\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<div class=\"comparison-card text-center\">\n\t\t\t\t\t<h3>The Bottom Line</h3>\n\t\t\t\t\t<p class=\"lead\">WMU's makerspace serves students for academic purposes with limited equipment and library hours.</p>\n\t\t\t\t\t<p class=\"lead\">Kzoo Makers serves the entire Kalamazoo community with professional fabrication tools, hands-on access, and flexible hours.</p>\n\t\t\t\t\t<p class=\"mt-4\"><strong>If you're not a WMU student, Kzoo Makers is your only option.</strong></p>\n\t\t\t\t\t<p><strong>If you ARE a WMU student, Kzoo Makers gives you access to tools and hours WMU can't provide.</strong></p>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-132",
+    "html": "<section class=\"section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<h3 class=\"text-center mb-4\">Common Questions</h3>\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h5>Can I access WMU's makerspace if I'm not a student?</h5>\n\t\t\t\t\t<p>No. WMU makerspaces are exclusively for enrolled students and faculty. There is no public access, guest pass, or community membership option.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h5>Does WMU have a wood shop or metal shop?</h5>\n\t\t\t\t\t<p>Not for general student use. Some specialized programs may have restricted equipment, but there's no general-access wood or metal shop like Kzoo Makers offers.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h5>Can WMU students use Kzoo Makers?</h5>\n\t\t\t\t\t<p>Absolutely! Many WMU students join Kzoo Makers to access tools WMU doesn't have and to work on projects outside of academic hours. We offer student membership rates.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h5>Is WMU's makerspace open on weekends?</h5>\n\t\t\t\t\t<p>Generally no. WMU makerspaces follow library hours, which are primarily weekday daytime hours. Kzoo Makers is open evenings and weekends with 56 hours a week of access for trained members.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"comparison-card\">\n\t\t\t\t\t<h5>Can I use WMU's makerspace for my business?</h5>\n\t\t\t\t\t<p>No. WMU facilities are for academic use only. Commercial or business projects are not permitted. Kzoo Makers explicitly supports entrepreneurial and commercial use.</p>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-133",
+    "html": "<section class=\"call-to-action section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-xl-6 col-lg-8 text-center\">\n\t\t\t\t<h2>Ready for Real Fabrication Access?</h2>\n\t\t\t\t<p>Join Kzoo Makers—the only public makerspace with wood, metal, laser, and CNC in Kalamazoo.</p>\n\t\t\t\t<a href=\"/pricing\" class=\"btn btn-main\">See Membership Options</a>\n\t\t\t\t<a href=\"/tour-form-redirect\" class=\"btn btn-main\">Schedule a Tour</a>\n\t\t\t</div>\n\t\t</div> <!-- End row -->\n\t</div> <!-- End container -->\n</section>"
+   }
+  }
+ ],
+ "zones": {}
+}

@@ -1,0 +1,40 @@
+{
+ "root": {
+  "props": {
+   "title": "Contact Kzoo Makers",
+   "description": "Contact Kzoo Makers - Visit us at 1102 E. Michigan Ave, Kalamazoo, MI 49048. Call (269) 270-3141 or email contact@kzoomakers.org. Open Mon, Tue, Thur, Sat. Schedule a tour of our community makerspace today.",
+   "bodyClass": "",
+   "refresh": "",
+   "css": "\n    .contact-us {\n      background-color: #f8f9fa;\n      padding: 60px 0;\n    }\n    \n    .contact-card {\n      border-radius: 8px;\n      transition: transform 0.3s ease, box-shadow 0.3s ease;\n    }\n    \n    .contact-card:hover {\n      transform: translateY(-5px);\n      box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;\n    }\n    \n    .map-section {\n      background-color: #ffffff;\n    }\n    \n    .google-map iframe {\n      border-radius: 8px;\n      box-shadow: 0 4px 15px rgba(0,0,0,0.1);\n    }\n  ",
+   "styles": [],
+   "scripts": []
+  }
+ },
+ "content": [
+  {
+   "type": "PageHeader",
+   "props": {
+    "id": "PageHeader-19",
+    "title": "Contact Us",
+    "tag": "h2",
+    "crumb": "Contact Us",
+    "trail": []
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-20",
+    "html": "<section class=\"contact-us\" id=\"contact\">\n \t<div class=\"container\">\n \t\t<div class=\"row\">\n \t\t\t<!-- Our Address Card -->\n \t\t\t<div class=\"col-lg-4 col-md-6 mb-4\">\n \t\t\t\t<a href=\"https://www.google.com/maps/search/?api=1&amp;query=1102+E.+Michigan+Ave,+Kalamazoo,+MI+49048,+USA&amp;query_place_id=ChIJxdAlJiSdF4gRnnWlUmlDmsk\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"text-decoration: none; color: inherit;\">\n \t\t\t\t\t<div class=\"contact-card text-center p-5 bg-white shadow-sm h-100\">\n \t\t\t\t\t\t<div class=\"contact-icon mb-4\">\n \t\t\t\t\t\t\t<i class=\"tf-ion-ios-location\" style=\"font-size: 60px; color: #f9b234; border: 2px dashed #f9b234; border-radius: 50%; padding: 20px; width: 100px; height: 100px; display: inline-flex; align-items: center; justify-content: center;\"></i>\n \t\t\t\t\t\t</div>\n \t\t\t\t\t\t<h3 class=\"mb-3\" style=\"color: #6c757d; font-weight: 600;\">Locate Us</h3>\n \t\t\t\t\t\t<div class=\"btn btn-main\" href=\"https://www.google.com/maps/search/?api=1&amp;query=1102+E.+Michigan+Ave,+Kalamazoo,+MI+49048+USA&amp;query_place_id=ChIJxdAlJiSdF4gRnnWlUmlDmsk\"> Map</div>\n\t\t\t\t\t\t<h6 class=\"mb-3\" style=\"color: #6c757d; font-weight: 600;\"><br>1102 E. Michigan Ave, Kalamazoo, MI 49048, USA</h6>\n \t\t\t\t\t\t<div id=\"hours-contact-card\">\n \t\t\t\t\t\t\t<!-- Hours will be dynamically loaded by hours.js -->\n \t\t\t\t\t\t\t<p style=\"color: #666;\">Loading hours...</p>\n \t\t\t\t\t\t</div>\n \t\t\t\t\t</div>\n \t\t\t\t</a>\n \t\t\t</div>\n\n\t\t\t<!-- Get A Tour Card -->\n \t\t\t<div class=\"col-lg-4 col-md-6 mb-4\">\n \t\t\t\t<a href=\"/tour-form-redirect\" style=\"text-decoration: none; color: inherit;\">\n \t\t\t\t\t<div class=\"contact-card text-center p-5 bg-white shadow-sm h-100\">\n \t\t\t\t\t\t<div class=\"contact-icon mb-4\">\n \t\t\t\t\t\t\t<i class=\"tf-ion-ios-people\" style=\"font-size: 60px; color: #f9b234; border: 2px dashed #f9b234; border-radius: 50%; padding: 20px; width: 100px; height: 100px; display: inline-flex; align-items: center; justify-content: center;\"></i>\n \t\t\t\t\t\t</div>\n\t\t\t\t\t\t<h3 class=\"mb-3\" style=\"color: #6c757d; font-weight: 600;\">Visit Us</h3>\n\t\t\t\t\t\t<div class=\"btn btn-main\" href=\"/tour-form-redirect\">Get A Tour</div>\n\t\t\t\t\t\t<h6 class=\"mb-3\" style=\"color: #6c757d; font-weight: 600;\"><br>A member will show you the space</h6>\n\t\t\t\t\t\t<h6 class=\"mb-3\" style=\"color: #6c757d; font-weight: 600;\"><br><i>Doors locked outside of event times!</i></h6>\n \t\t\t\t\t</div>\n \t\t\t\t</a>\n \t\t\t</div>\n\n\t\t\t<!-- Chat Card -->\n \t\t\t<div class=\"col-lg-4 col-md-6 mb-4\">\n \t\t\t\t<a href=\"/discord-redirect\" style=\"text-decoration: none; color: inherit;\">\n \t\t\t\t\t<div class=\"contact-card text-center p-5 bg-white shadow-sm h-100\">\n \t\t\t\t\t\t<div class=\"contact-icon mb-4\">\n \t\t\t\t\t\t\t<i class=\"tf-ion-ios-chatboxes\" style=\"font-size: 60px; color: #f9b234; border: 2px dashed #f9b234; border-radius: 50%; padding: 20px; width: 100px; height: 100px; display: inline-flex; align-items: center; justify-content: center;\"></i>\n \t\t\t\t\t\t</div>\n\t\t\t\t\t\t<h3 class=\"mb-3\" style=\"color: #6c757d; font-weight: 600;\">Discord Us</h3>\n\t\t\t\t\t\t<h6 class=\"mb-3\" style=\"color: #6c757d; font-weight: 600;\"></h6>\n\t\t\t\t\t\t<div class=\"btn btn-main\" href=\"/discord-redirect\">Discord Invite</div>\n\t\t\t\t\t\t<h6 class=\"mb-3\" style=\"color: #6c757d; font-weight: 600;\"><br>Chat with members on our Discord</h6>\n\t\t\t\t\t\t<h6 class=\"mb-3\" style=\"color: #6c757d; font-weight: 600;\"><br><i>Discord is a free app members use to coordinate and share</i></h6>\n \t\t\t\t\t</div>\n \t\t\t\t</a>\n \t\t\t</div>\n\n \t\t\t<!-- Email Us Card -->\n \t\t\t<div class=\"col-lg-4 col-md-6 mb-4\">\n \t\t\t\t<a href=\"mailto:contact@kzoomakers.org\" style=\"text-decoration: none; color: inherit;\">\n \t\t\t\t\t<div class=\"contact-card text-center p-5 bg-white shadow-sm h-100\">\n \t\t\t\t\t\t<div class=\"contact-icon mb-4\">\n \t\t\t\t\t\t\t<i class=\"tf-ion-ios-email\" style=\"font-size: 60px; color: #f9b234; border: 2px dashed #f9b234; border-radius: 50%; padding: 20px; width: 100px; height: 100px; display: inline-flex; align-items: center; justify-content: center;\"></i>\n \t\t\t\t\t\t</div>\n \t\t\t\t\t\t<h3 class=\"mb-3\" style=\"color: #6c757d; font-weight: 600;\">Email Us</h3>\n \t\t\t\t\t\t<div class=\"btn btn-main\" href=\"mailto:contact@kzoomakers.org\">contact@kzoomakers.org</div>\n\t\t\t\t\t\t<h6 class=\"mb-3\" style=\"color: #6c757d; font-weight: 600;\"><br>Better in writting?</h6>\n\t\t\t\t\t\t<h6 class=\"mb-3\" style=\"color: #6c757d; font-weight: 600;\"><br><i>Messages regularly checked by admin volunteers</i></h6>\n \t\t\t\t\t</div>\n \t\t\t\t</a>\n \t\t\t</div>\n\n \t\t\t<!-- Call Us Card -->\n \t\t\t<div class=\"col-lg-4 col-md-6 mb-4\">\n \t\t\t\t<a href=\"tel:+12692703141\" style=\"text-decoration: none; color: inherit;\">\n \t\t\t\t\t<div class=\"contact-card text-center p-5 bg-white shadow-sm h-100\">\n \t\t\t\t\t\t<div class=\"contact-icon mb-4\">\n \t\t\t\t\t\t\t<i class=\"tf-ion-ios-telephone\" style=\"font-size: 60px; color: #f9b234; border: 2px dashed #f9b234; border-radius: 50%; padding: 20px; width: 100px; height: 100px; display: inline-flex; align-items: center; justify-content: center;\"></i>\n \t\t\t\t\t\t</div>\n \t\t\t\t\t\t<h3 class=\"mb-3\" style=\"color: #6c757d; font-weight: 600;\">Call Us</h3>\n \t\t\t\t\t\t<div class=\"btn btn-main\" href=\"tel:+12692703141\">tel: (269) 270-3141</div>\n\t\t\t\t\t\t<h6 class=\"mb-3\" style=\"color: #6c757d; font-weight: 600;\"><br>The worst way to get hold of us</h6>\n\t\t\t\t\t\t<h6 class=\"mb-3\" style=\"color: #6c757d; font-weight: 600;\"><br><i>Volunteer operated, messages checked irregularly</i></h6>\n \t\t\t\t\t</div>\n \t\t\t\t</a>\n \t\t\t</div>\n \t\t</div>\n \t</div> <!-- end container -->\n </section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-21",
+    "html": "<div class=\"google-map\">\n <div id=\"map_canvas\" class=\"map_canvas\" data-latitude=\"42.2955873\" data-longitude=\"-85.566348\" data-marker=\"images/marker.png\" data-marker-name=\"Kzoo Makers\"></div>\n</div>"
+   }
+  }
+ ],
+ "zones": {}
+}

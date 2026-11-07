@@ -1,0 +1,59 @@
+{
+ "root": {
+  "props": {
+   "title": "Router Safety Guide & Training | Kalamazoo Makerspace",
+   "description": "Learn router safety at Kalamazoo Makerspace. Complete safety guide, training materials, and certification requirements for using routers safely in our wood shop.",
+   "bodyClass": "",
+   "refresh": "",
+   "css": "\n    .pdf-container {\n      width: 100%;\n      height: 800px;\n      border: 1px solid #ddd;\n      margin: 20px 0;\n    }\n    @media (max-width: 768px) {\n      .pdf-container {\n        height: 500px;\n      }\n    }\n  ",
+   "styles": [],
+   "scripts": []
+  }
+ },
+ "content": [
+  {
+   "type": "PageHeader",
+   "props": {
+    "id": "PageHeader-37",
+    "title": "Router Safety Guide",
+    "tag": "h1",
+    "crumb": "Router Safety",
+    "trail": [
+     {
+      "label": "Wood Shop",
+      "href": "/wood-shop"
+     }
+    ]
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-38",
+    "html": "<section class=\"about-2 section\" id=\"router-safety\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center\">\n      <div class=\"col-lg-10\">\n        <div class=\"title text-center\">\n          <h2>Router Safety Training</h2>\n          <p><strong>Essential safety training for all wood shop members.</strong></p>\n          <p>Routers are versatile and powerful tools that can perform a wide variety of woodworking operations, from edge profiling to joinery. However, they require proper training, respect, and careful handling. This guide covers the essential safety procedures, proper techniques, and certification requirements for using routers at Kalamazoo Makerspace.</p>\n          <div class=\"border\"></div>\n        </div>\n      </div>\n    </div>\n\n    <div class=\"row mt-5\">\n      <div class=\"col-md-6 mb-4\">\n        <h3>Why Router Safety Matters</h3>\n        <ul class=\"checklist\">\n          <li><b>Prevent serious injuries</b> – Routers spin at extremely high speeds and can cause severe cuts and injuries if used improperly.</li>\n          <li><b>Protect yourself and others</b> – Safe operation keeps everyone in the shop safe.</li>\n          <li><b>Maintain equipment</b> – Proper use extends the life of our tools and bits.</li>\n          <li><b>Build confidence</b> – Understanding safety allows you to work with confidence.</li>\n          <li><b>Meet insurance requirements</b> – Certification ensures compliance with safety standards.</li>\n        </ul>\n      </div>\n      <div class=\"col-md-6 mb-4\">\n        <h3>Before You Begin</h3>\n        <p>All members must complete router safety training before using the equipment. Training includes:</p>\n        <ul class=\"checklist\">\n          <li>Review of the safety manual and exam</li>\n          <li>Hands-on demonstration with a qualified trainer</li>\n          <li>Understanding of router types and proper bit installation</li>\n          <li>Proper feed direction and workpiece control</li>\n          <li>Emergency procedures and first aid locations</li>\n          <li>Passing the safety exam with 100% accuracy</li>\n        </ul>\n        <p>After certification, you can use routers independently during staffed hours.</p>\n      </div>\n    </div>\n  </div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-39",
+    "html": "<section class=\"section\" style=\"background: #f9f9f9;\" id=\"safety-manual\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center\">\n      <div class=\"col-lg-10\">\n        <div class=\"title text-center\">\n          <h2>Router Safety Manual &amp; Exam</h2>\n          <p>Review the complete safety manual below. You must pass the exam with 100% before using routers.</p>\n          <div class=\"border\"></div>\n        </div>\n      </div>\n    </div>\n    <div class=\"row mt-4\">\n      <div class=\"col-lg-12\">\n        <div class=\"pdf-container\">\n          <iframe src=\"/pdfjs/web/viewer.html?file=../../pdfs/routing-safe-and-sound.pdf\" width=\"100%\" height=\"100%\" style=\"border: none;\">\n          </iframe>\n        </div>\n        <div class=\"text-center mt-3\">\n          <a href=\"pdfs/routing-safe-and-sound.pdf\" class=\"btn btn-main\" download=\"\">\n            <i class=\"tf-ion-android-download\"></i> Download PDF\n          </a>\n        </div>\n      </div>\n    </div>\n  </div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-40",
+    "html": "<section class=\"section\" id=\"safety-rules\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center\">\n      <div class=\"col-lg-10\">\n        <div class=\"title text-center\">\n          <h2>Essential Safety Rules</h2>\n          <div class=\"border\"></div>\n        </div>\n      </div>\n    </div>\n    <div class=\"row mt-4\">\n      <div class=\"col-md-6 mb-4\">\n        <h3>Personal Safety</h3>\n        <ul class=\"checklist\">\n          <li><b>Always wear safety glasses</b> – Required at all times in the wood shop.</li>\n          <li><b>Use hearing protection</b> – Routers are extremely loud and can damage hearing.</li>\n          <li><b>No loose clothing or jewelry</b> – Tie back long hair and remove dangling items.</li>\n          <li><b>Wear closed-toe shoes</b> – Protect your feet from falling materials.</li>\n          <li><b>Stay alert and focused</b> – Never use routers when tired or distracted.</li>\n          <li><b>No drugs or alcohol</b> – Zero tolerance policy for impaired operation.</li>\n        </ul>\n      </div>\n      <div class=\"col-md-6 mb-4\">\n        <h3>Operational Safety</h3>\n        <ul class=\"checklist\">\n          <li><b>Secure the workpiece</b> – Always clamp or secure material before routing.</li>\n          <li><b>Check bit installation</b> – Ensure bits are properly installed and tightened.</li>\n          <li><b>Feed in correct direction</b> – Always feed against the rotation of the bit.</li>\n          <li><b>Use proper depth</b> – Make multiple shallow passes rather than one deep cut.</li>\n          <li><b>Keep hands clear</b> – Maintain safe distance from the bit at all times.</li>\n          <li><b>Wait for full stop</b> – Let the router stop completely before setting it down.</li>\n        </ul>\n      </div>\n    </div>\n    <div class=\"row mt-4\">\n      <div class=\"col-lg-10 mx-auto\">\n        <h3>Before Each Use</h3>\n        <ol>\n          <li><strong>Inspect the router</strong> – Check for damage, loose parts, and proper cord condition.</li>\n          <li><strong>Check the bit</strong> – Ensure the bit is sharp, undamaged, and properly installed in the collet.</li>\n          <li><strong>Secure the workpiece</strong> – Clamp material firmly to prevent movement during routing.</li>\n          <li><strong>Adjust bit depth</strong> – Set appropriate depth for the operation, making multiple passes if needed.</li>\n          <li><strong>Clear the area</strong> – Remove debris and ensure adequate workspace.</li>\n          <li><strong>Test run</strong> – Turn on the router briefly to ensure smooth operation before engaging material.</li>\n        </ol>\n      </div>\n    </div>\n  </div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-41",
+    "html": "<section class=\"section\" style=\"background: #f9f9f9;\" id=\"certification\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center\">\n      <div class=\"col-lg-8\">\n        <div class=\"title text-center\">\n          <h2>Getting Certified</h2>\n          <div class=\"border\"></div>\n        </div>\n      </div>\n    </div>\n    <div class=\"row mt-4\">\n      <div class=\"col-lg-10 mx-auto\">\n        <h3>Certification Process</h3>\n        <ol>\n          <li><strong>Review the safety manual</strong> – Read the complete PDF document above carefully.</li>\n          <li><strong>Schedule hands-on training</strong> – Contact a wood shop trainer to arrange practical training.</li>\n          <li><strong>Demonstrate competency</strong> – Show proper setup, operation, and safety procedures.</li>\n        </ol>\n        \n        <div class=\"mt-5 text-center\">\n          <h4>Ready to Get Started?</h4>\n          <p>Contact our wood shop coordinators to schedule your router safety training.</p>\n          <div class=\"mt-3\">\n            <a href=\"/contact\" class=\"btn btn-main mt-10 ml-2\">Contact Us</a>\n            <a href=\"/wood-shop\" class=\"btn btn-main mt-10 ml-2\">Wood Shop Info</a>\n            <a href=\"/pricing\" class=\"btn btn-transparent mt-10 ml-2\">Membership Options</a>\n          </div>\n        </div>\n      </div>\n    </div>\n  </div>\n</section>"
+   }
+  }
+ ],
+ "zones": {}
+}

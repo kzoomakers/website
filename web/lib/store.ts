@@ -6,14 +6,16 @@ import type { Data } from "@puckeditor/core";
 const DIR = path.join(process.cwd(), "data", "pages");
 
 // Slugs come from URLs, so whitelist chars: blocks path traversal like "../".
+const SLUG_OK = /^[a-z0-9][a-z0-9_\-\/]*$/i;
 const clean = (slug: string) => {
-  if (!/^[a-z0-9][a-z0-9_\-\/]*$/i.test(slug)) throw new Error("bad slug");
+  if (!SLUG_OK.test(slug)) throw new Error("bad slug");
   return encodeURIComponent(slug) + ".json";
 };
 
 export const slugOf = (segs?: string[]) => (segs?.length ? segs.join("/") : "index");
 
 export async function getPage(slug: string): Promise<Data | null> {
+  if (!SLUG_OK.test(slug)) return null; // public URLs with odd characters are just "not found"
   try {
     return JSON.parse(await fs.readFile(path.join(DIR, clean(slug)), "utf8"));
   } catch (e: any) {

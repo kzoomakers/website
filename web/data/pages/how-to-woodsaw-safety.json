@@ -1,0 +1,66 @@
+{
+ "root": {
+  "props": {
+   "title": "Table Saw Safety Guide & Training | Kalamazoo Makerspace",
+   "description": "Learn table saw safety at Kalamazoo Makerspace. Complete safety guide, training materials, and certification requirements for using the table saw safely in our wood shop.",
+   "bodyClass": "",
+   "refresh": "",
+   "css": "\n    .pdf-container {\n      width: 100%;\n      height: 800px;\n      border: 1px solid #ddd;\n      margin: 20px 0;\n    }\n    @media (max-width: 768px) {\n      .pdf-container {\n        height: 500px;\n      }\n    }\n  ",
+   "styles": [],
+   "scripts": []
+  }
+ },
+ "content": [
+  {
+   "type": "PageHeader",
+   "props": {
+    "id": "PageHeader-78",
+    "title": "Table Saw Safety Guide",
+    "tag": "h1",
+    "crumb": "Table Saw Safety",
+    "trail": [
+     {
+      "label": "Wood Shop",
+      "href": "/wood-shop"
+     }
+    ]
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-79",
+    "html": "<section class=\"about-2 section\" id=\"tablesaw-safety\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center\">\n      <div class=\"col-lg-10\">\n        <div class=\"title text-center\">\n          <h2>Table Saw Safety Training</h2>\n          <p><strong>Essential safety training for all wood shop members.</strong></p>\n          <p>The table saw is one of the most versatile and powerful tools in the wood shop, but it requires proper training and respect. This guide covers the essential safety procedures, proper techniques, and certification requirements for using the table saw at Kalamazoo Makerspace.</p>\n          <div class=\"border\"></div>\n        </div>\n      </div>\n    </div>\n\n    <div class=\"row mt-5\">\n      <div class=\"col-md-6 mb-4\">\n        <h3>Why Table Saw Safety Matters</h3>\n        <ul class=\"checklist\">\n          <li><b>Prevent serious injuries</b> – Table saws can cause severe cuts and amputations if used improperly.</li>\n          <li><b>Protect yourself and others</b> – Safe operation keeps everyone in the shop safe.</li>\n          <li><b>Maintain equipment</b> – Proper use extends the life of our tools.</li>\n          <li><b>Build confidence</b> – Understanding safety allows you to work with confidence.</li>\n          <li><b>Meet insurance requirements</b> – Certification ensures compliance with safety standards.</li>\n        </ul>\n      </div>\n      <div class=\"col-md-6 mb-4\">\n        <h3>Before You Begin</h3>\n        <p>All members must complete table saw safety training before using the equipment. Training includes:</p>\n        <ul class=\"checklist\">\n          <li>Review of the safety manual and exam</li>\n          <li>Hands-on demonstration with a qualified trainer</li>\n          <li>Understanding of all safety features and guards</li>\n          <li>Proper use of push sticks and other safety devices</li>\n          <li>Emergency procedures and first aid locations</li>\n          <li>Passing the safety exam with 100% accuracy</li>\n        </ul>\n        <p>After certification, you can use the table saw independently during staffed hours.</p>\n      </div>\n    </div>\n  </div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-80",
+    "html": "<section class=\"section\" style=\"background: #f9f9f9;\" id=\"safety-manual\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center\">\n      <div class=\"col-lg-10\">\n        <div class=\"title text-center\">\n          <h2>Table Saw Safety Manual &amp; Exam</h2>\n          <p>Review the complete safety manual below. You must pass the exam with 100% before using the table saw.</p>\n          <div class=\"border\"></div>\n        </div>\n      </div>\n    </div>\n    <div class=\"row mt-4\">\n      <div class=\"col-lg-12\">\n        <div class=\"pdf-container\">\n          <iframe src=\"/pdfjs/web/viewer.html?file=../../pdfs/BWW_Table_Saw_Safety_%26_Exam_V1.3_CAO_19OCT2020.pdf\" width=\"100%\" height=\"100%\" style=\"border: none;\">\n          </iframe>\n        </div>\n        <div class=\"text-center mt-3\">\n          <a href=\"pdfs/BWW_Table_Saw_Safety_&amp;_Exam_V1.3_CAO_19OCT2020.pdf\" class=\"btn btn-main\" download=\"\">\n            <i class=\"tf-ion-android-download\"></i> Download PDF\n          </a>\n        </div>\n      </div>\n    </div>\n  </div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-81",
+    "html": "<section class=\"section\" id=\"safety-rules\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center\">\n      <div class=\"col-lg-10\">\n        <div class=\"title text-center\">\n          <h2>Essential Safety Rules</h2>\n          <div class=\"border\"></div>\n        </div>\n      </div>\n    </div>\n    <div class=\"row mt-4\">\n      <div class=\"col-md-6 mb-4\">\n        <h3>Personal Safety</h3>\n        <ul class=\"checklist\">\n          <li><b>Always wear safety glasses</b> – Required at all times in the wood shop.</li>\n          <li><b>Use hearing protection</b> – Table saws are loud and can damage hearing.</li>\n          <li><b>No loose clothing or jewelry</b> – Tie back long hair and remove dangling items.</li>\n          <li><b>Wear closed-toe shoes</b> – Protect your feet from falling materials.</li>\n          <li><b>Stay alert and focused</b> – Never use the table saw when tired or distracted.</li>\n          <li><b>No drugs or alcohol</b> – Zero tolerance policy for impaired operation.</li>\n        </ul>\n      </div>\n      <div class=\"col-md-6 mb-4\">\n        <h3>Operational Safety</h3>\n        <ul class=\"checklist\">\n          <li><b>Use the blade guard</b> – Keep guards in place whenever possible.</li>\n          <li><b>Stand to the side</b> – Never stand directly behind the blade.</li>\n          <li><b>Use push sticks</b> – Keep hands at least 6 inches from the blade.</li>\n          <li><b>Support long pieces</b> – Use outfeed tables or roller stands.</li>\n          <li><b>One cut at a time</b> – Never cut multiple pieces simultaneously.</li>\n          <li><b>Wait for full stop</b> – Let the blade stop completely before reaching near it.</li>\n        </ul>\n      </div>\n    </div>\n    <div class=\"row mt-4\">\n      <div class=\"col-lg-10 mx-auto\">\n        <h3>Before Each Use</h3>\n        <ol>\n          <li><strong>Inspect the blade</strong> – Check for damage, proper installation, and sharpness.</li>\n          <li><strong>Check safety features</strong> – Ensure guards, splitter, and anti-kickback pawls are functioning.</li>\n          <li><strong>Clear the area</strong> – Remove debris and ensure adequate workspace.</li>\n          <li><strong>Adjust blade height</strong> – Set blade to extend 1/4 inch above the workpiece.</li>\n          <li><strong>Set the fence</strong> – Ensure fence is parallel to the blade and locked securely.</li>\n          <li><strong>Test run</strong> – Turn on the saw briefly to ensure smooth operation before cutting.</li>\n        </ol>\n      </div>\n    </div>\n  </div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-82",
+    "html": "<section class=\"section\" style=\"background: #f9f9f9;\" id=\"certification\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center\">\n      <div class=\"col-lg-8\">\n        <div class=\"title text-center\">\n          <h2>Getting Certified</h2>\n          <div class=\"border\"></div>\n        </div>\n      </div>\n    </div>\n    <div class=\"row mt-4\">\n      <div class=\"col-lg-10 mx-auto\">\n        <h3>Certification Process</h3>\n        <ol>\n          <li><strong>Review the safety manual</strong> – Read the complete PDF document above carefully.</li>\n          <li><strong>Take the written exam</strong> – Complete the exam at the end of the manual. You must score 100%.</li>\n          <li><strong>Schedule hands-on training</strong> – Contact a wood shop trainer to arrange practical training.</li>\n          <li><strong>Demonstrate competency</strong> – Show proper setup, operation, and safety procedures.</li>\n          <li><strong>Receive certification</strong> – Once approved, you'll be authorized to use the table saw independently.</li>\n        </ol>\n        \n        <div class=\"mt-5 text-center\">\n          <h4>Ready to Get Started?</h4>\n          <p>Contact our wood shop coordinators to schedule your table saw safety training.</p>\n          <div class=\"mt-3\">\n            <a href=\"/contact\" class=\"btn btn-main mt-10 ml-2\">Contact Us</a>\n            <a href=\"/wood-shop\" class=\"btn btn-main mt-10 ml-2\">Wood Shop Info</a>\n            <a href=\"/pricing\" class=\"btn btn-transparent mt-10 ml-2\">Membership Options</a>\n          </div>\n        </div>\n      </div>\n    </div>\n  </div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-83",
+    "html": "<section class=\"section\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center\">\n      <div class=\"col-lg-8\">\n        <div class=\"title text-center\">\n          <h2>Table Saw Safety FAQ</h2>\n          <div class=\"border\"></div>\n        </div>\n      </div>\n    </div>\n    <div class=\"row mt-4\">\n      <div class=\"col-lg-10 mx-auto\">\n        <div class=\"mb-4\">\n          <h4>Do I need to be certified to use the table saw?</h4>\n          <p>Yes. All members must complete the safety training and pass the exam with 100% before using the table saw. This is required for insurance and safety reasons.</p>\n        </div>\n        <div class=\"mb-4\">\n          <h4>How long does certification take?</h4>\n          <p>The written exam takes about 30 minutes to review and complete. Hands-on training typically takes 30-45 minutes with a trainer. You can complete the written portion on your own time.</p>\n        </div>\n        <div class=\"mb-4\">\n          <h4>What if I fail the exam?</h4>\n          <p>You can retake the exam after reviewing the material again. We want everyone to succeed and use the equipment safely.</p>\n        </div>\n        <div class=\"mb-4\">\n          <h4>Does certification expire?</h4>\n          <p>Certifications are reviewed annually. You may need to complete a refresher course if there are significant changes to equipment or procedures.</p>\n        </div>\n        <div class=\"mb-4\">\n          <h4>Can I use the table saw if I'm already certified elsewhere?</h4>\n          <p>You still need to complete our specific training to understand our equipment and procedures. However, your experience will make the process quick and straightforward.</p>\n        </div>\n        <div class=\"mb-4\">\n          <h4>What other wood shop equipment requires certification?</h4>\n          <p>Check our <a href=\"/wood-shop\">wood shop page</a> for information about other equipment and training requirements.</p>\n        </div>\n      </div>\n    </div>\n  </div>\n</section>"
+   }
+  }
+ ],
+ "zones": {}
+}

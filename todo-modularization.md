@@ -159,6 +159,13 @@ Faithful-check routine before every deploy:
 - [ ] Pages UI (`/edit`): list, **create** (choose template), **duplicate**, **delete** (soft-delete + confirm), publish/unpublish, change slug (auto-redirect).
 - [ ] Protect core pages (home, 404, contact) from deletion.
 
+### Phase 1.5: Bulk migration (done early on `poc`, so every page is editable now)
+- [x] `web/scripts/migrate.mjs`: 86 of 105 legacy pages → Puck JSON in `web/data/pages/` (re-runnable; never overwrites hand-built `about`). Header → `PageHeader` (with breadcrumb trail), counters → `Counters`, every other `<section>` → `HtmlSection` (raw HTML, edited in a textarea). Per-page head CSS, extra stylesheets/scripts, `<body class>` and meta-refresh redirects are kept as page settings.
+- [x] `web/scripts/diffall.sh` + `shotdiff.mjs`: old-vs-new screenshot diff for every page (needs legacy site on :8080 and `npm run dev`). Result after fixes: nearly all pages are <1% different. Known noise: pages with the filterizr gallery (screenshot catches the animation mid-frame, e.g. `s-*-shop-*`, `meetup-*`, `sitemap`), and redirect pages (browser leaves the page).
+- [ ] Skipped, need custom components: `index` (home), `calendar`, `handbook`, `history`, `how-to`, `sop`, `single-post`, `woodshop-inventory`, `tools-we-are-seeking-donations-kalamazoo`, `ical-demo`; junk not migrated: demo*, calendar2, contact-new, index-text, onepage-*.
+- [ ] `HtmlSection` is the escape hatch, NOT the goal: promote repeated patterns (`about-2` text sections, `portfolio` galleries, pricing, bg-gray cards) into real components so editors get WYSIWYG fields instead of an HTML box. Phase 1 order by usage: classless text sections (112), `about-2` (71), `portfolio` (37), `bg-gray` (38), `call-to-action` (13).
+- [ ] Redirect pages (discord/forms/tour) should become a real redirects table in Phase 2.
+
 ### Phase 3: Content migration
 - [ ] Script: parse each legacy `.html` `<section>` → Puck component JSON (cheerio). Hand-fix leftovers.
 - [ ] Collapse templated families (`s-makerspace-*` etc.) into a template component + per-city data.

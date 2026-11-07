@@ -26,7 +26,8 @@ function SectionTitle({ title, text }: { title: string; text?: string }) {
 }
 
 export type Props = {
-  PageHeader: { title: string };
+  PageHeader: { title: string; tag: "h1" | "h2"; crumb: string; trail: { label: string; href: string }[] };
+  HtmlSection: { html: string };
   TwoColumnText: { heading: string; body: string; buttons: { label: string; href: string }[]; image: string; imageAlt: string };
   VideoEmbed: { title: string; youtubeUrl: string; height: number };
   Statement: { text: string };
@@ -36,12 +37,23 @@ export type Props = {
   CallToAction: { heading: string; text: string; buttons: { label: string; href: string }[] };
 };
 
-export const config: Config<Props, { title: string; description: string }> = {
+export type RootProps = { title: string; description: string; bodyClass: string; refresh: string; css: string; styles: { href: string }[]; scripts: { src: string }[] };
+
+export const config: Config<Props, RootProps> = {
   root: {
-    fields: { title: { type: "text" }, description: { type: "textarea" } },
-    defaultProps: { title: "Kzoo Makers", description: "" },
-    render: ({ children }) => (
+    fields: {
+      title: { type: "text" }, description: { type: "textarea" },
+      bodyClass: { type: "text", label: "Body class (advanced)" },
+      refresh: { type: "text", label: "Auto-redirect, e.g. 3;url=https://example.com (blank = none)" },
+      css: { type: "textarea", label: "Page CSS (advanced)" },
+      styles: { type: "array", label: "Extra stylesheets", arrayFields: { href: { type: "text" } }, getItemSummary: (i: any) => i.href },
+      scripts: { type: "array", label: "Extra scripts (advanced)", arrayFields: { src: { type: "text" } }, getItemSummary: (i: any) => i.src },
+    },
+    defaultProps: { title: "Kzoo Makers", description: "", bodyClass: "", refresh: "", css: "", styles: [], scripts: [] },
+    render: ({ children, css, styles }) => (
       <>
+        {styles?.map((s) => <link key={s.href} rel="stylesheet" href={s.href} />)}
+        {css && <style dangerouslySetInnerHTML={{ __html: css }} />}
         <Navbar />
         {children}
         <Footer />
@@ -50,19 +62,31 @@ export const config: Config<Props, { title: string; description: string }> = {
   },
   components: {
     PageHeader: {
-      fields: { title: { type: "text" } },
-      defaultProps: { title: "Page title" },
-      render: ({ title }) => (
+      fields: { title: { type: "text" }, crumb: { type: "text", label: "Breadcrumb text (defaults to title)" },
+        trail: { type: "array", label: "Breadcrumb links between Home and this page", arrayFields: { label: { type: "text" }, href: { type: "text" } }, getItemSummary: (i: any) => i.label }, tag: { type: "radio", label: "Heading level", options: [{ label: "H1", value: "h1" }, { label: "H2", value: "h2" }] } },
+      defaultProps: { title: "Page title", crumb: "", trail: [], tag: "h1" },
+      render: ({ title, crumb, trail, tag }) => {
+        const T = tag || "h2";
+        return (
         <section className="single-page-header">
           <div className="container"><div className="row"><div className="col-md-12">
-            <h2>{title}</h2>
+            <T>{title}</T>
             <ol className="breadcrumb header-bradcrumb justify-content-center">
               <li className="breadcrumb-item"><a href="/" className="text-white">Home</a></li>
-              <li className="breadcrumb-item active" aria-current="page">{title}</li>
+              {trail?.map((t, i) => <li key={i} className="breadcrumb-item"><a href={url(t.href)} className="text-white">{t.label}</a></li>)}
+              <li className="breadcrumb-item active" aria-current="page">{crumb || title}</li>
             </ol>
           </div></div></div>
         </section>
-      ),
+        );
+      },
+    },
+    // Escape hatch for migrated pages: raw section markup, edited as HTML. Promote to real components over time.
+    // Trusted input only: editors are authenticated admins (Phase 2); never feed it user-submitted content.
+    HtmlSection: {
+      fields: { html: { type: "textarea", label: "HTML" } },
+      defaultProps: { html: "<section class=\"section\"><div class=\"container\"><p>New section</p></div></section>" },
+      render: ({ html }) => <div dangerouslySetInnerHTML={{ __html: html }} />,
     },
     TwoColumnText: {
       fields: {
