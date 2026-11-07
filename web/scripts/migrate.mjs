@@ -1,3 +1,5 @@
+// HISTORICAL: one-time converter used to create data/pages/*.json from the old static site. The legacy ../*.html
+// files were deleted from the repo; to re-run, check them out from the commit before the cleanup (git log -- '*.html').
 // Legacy ../*.html -> data/pages/<slug>.json (Puck Data). Re-runnable; never overwrites hand-built pages.
 // Usage: node scripts/migrate.mjs            (all pages)
 import { load } from "cheerio";
