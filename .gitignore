@@ -1,0 +1,9 @@
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+ca.pem
+node_modules/
+.next/
+.DS_Store
