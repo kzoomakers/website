@@ -1,6 +1,8 @@
 import type { Config } from "@puckeditor/core";
+import ParentPicker from "@/components/parent-picker";
 import { ImageInput } from "@/components/image-field";
 import { GuidedPage } from "@/components/guided";
+import ChipAnimation from "@/components/chip-animation";
 import { Navbar, Footer, Counters, ThemeCss } from "@/components/chrome";
 
 // Markup below mirrors the legacy HTML class-for-class so css/style.css applies unchanged.
@@ -32,6 +34,7 @@ export type Props = {
   PageHeader: { title: string; tag: "h1" | "h2"; crumb: string; subtitle: string; subtitleTag: "h5" | "p"; trail: { label: string; href: string }[] };
   HtmlSection: { html: string };
   BoardMembers: {};
+  SiteMap: {};
   Guided: { kind: string; part?: string };
   TwoColumnText: { heading: string; body: string; buttons: { label: string; href: string }[]; image: string; imageAlt: string };
   VideoEmbed: { title: string; youtubeUrl: string; height: number };
@@ -39,14 +42,16 @@ export type Props = {
   Gallery: { title: string; text: string; images: { src: string; alt: string }[] };
   ImageCta: { heading: string; text: string; buttonLabel: string; buttonHref: string; bgImage: string };
   Counters: {};
+  ChipAnimation: { label: string };
   CallToAction: { heading: string; text: string; buttons: { label: string; href: string }[] };
 };
 
-export type RootProps = { title: string; description: string; bare: boolean; inline: { code: string }[]; bodyClass: string; refresh: string; css: string; styles: { href: string }[]; scripts: { src: string }[] };
+export type RootProps = { parent: string; title: string; description: string; bare: boolean; inline: { code: string }[]; bodyClass: string; refresh: string; css: string; styles: { href: string }[]; scripts: { src: string }[] };
 
 export const config: Config<Props, RootProps> = {
   root: {
     fields: {
+      parent: { type: "custom", label: "Where in the sitemap (only for pages not in the menu)", render: ({ value, onChange }: any) => <ParentPicker value={value} onChange={onChange} /> },
       title: { type: "text" }, description: { type: "textarea" },
       bare: { type: "radio", label: "Standalone page (no site header/footer/legacy scripts)", options: [{ label: "No", value: false }, { label: "Yes", value: true }] },
       inline: { type: "array", label: "Page scripts (advanced; run after the page loads)", arrayFields: { code: { type: "textarea" } }, getItemSummary: (i: any) => (i.code || "").slice(0, 40) },
@@ -56,7 +61,7 @@ export const config: Config<Props, RootProps> = {
       styles: { type: "array", label: "Extra stylesheets", arrayFields: { href: { type: "text" } }, getItemSummary: (i: any) => i.href },
       scripts: { type: "array", label: "Extra scripts (advanced)", arrayFields: { src: { type: "text" } }, getItemSummary: (i: any) => i.src },
     },
-    defaultProps: { title: "Kzoo Makers", description: "", bare: false, inline: [], bodyClass: "", refresh: "", css: "", styles: [], scripts: [] },
+    defaultProps: { parent: "", title: "Kzoo Makers", description: "", bare: false, inline: [], bodyClass: "", refresh: "", css: "", styles: [], scripts: [] },
     render: ({ children, css, styles, bare, puck }) => bare ? (
       <>{css && <style dangerouslySetInnerHTML={{ __html: css }} />}{children}</>
     ) : (
@@ -96,10 +101,32 @@ export const config: Config<Props, RootProps> = {
     },
     // Escape hatch for migrated pages: raw section markup, edited as HTML. Promote to real components over time.
     // Trusted input only: editors are authenticated admins (Phase 2); never feed it user-submitted content.
+    ChipAnimation: {
+      fields: { label: { type: "text", label: "Chip text" } },
+      defaultProps: { label: "KZOO" },
+      render: ({ label }) => <ChipAnimation label={label} />,
+    },
     HtmlSection: {
       fields: { html: { type: "textarea", label: "HTML" } },
       defaultProps: { html: "<section class=\"section\"><div class=\"container\"><p>New section</p></div></section>" },
       render: ({ html }) => <div dangerouslySetInnerHTML={{ __html: html }} />,
+    },
+    // Generated from the menu + pages (page metadata); not editable.
+    SiteMap: {
+      render: ({ puck }) => {
+        const tree: any[] = (puck?.metadata?.sitemap as any) ?? [];
+        const list = (ns: any[]): React.ReactNode => (
+          <ul className="list-unstyled" style={{ paddingLeft: 0 }}>
+            {ns.map((n, i) => (
+              <li key={i} style={{ marginBottom: 4 }}>
+                {n.slug ? <a href={n.slug === "index" ? "/" : "/" + n.slug}>{n.label}</a> : <strong>{n.label}</strong>}
+                {n.children.length > 0 && <div style={{ marginLeft: 18 }}>{list(n.children)}</div>}
+              </li>
+            ))}
+          </ul>
+        );
+        return <section className="section"><div className="container">{list(tree)}</div></section>;
+      },
     },
     // Content comes from the Board admin screen (page metadata), not from the editor.
     BoardMembers: {

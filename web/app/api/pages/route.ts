@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { deletedPages, deletePage, getPage, listPages, pageExists, pageHistory, pageRevision, restoreMenuFor, savePage } from "@/lib/store";
+import { siteTree } from "@/lib/sitemap";
 import { actor, editingAllowed } from "@/lib/guard";
 
 const off = () => new NextResponse("not found", { status: 404 });
@@ -8,6 +9,7 @@ export async function GET(req: Request) {
   if (!(await editingAllowed())) return off();
   const q = new URL(req.url).searchParams;
   if (q.has("deleted")) return NextResponse.json(await deletedPages());
+  if (q.has("tree")) return NextResponse.json((await siteTree()).tree);
   if (q.has("history")) return NextResponse.json(await pageHistory(q.get("history")!));
   if (q.has("rev")) {
     const r = await pageRevision(Number(q.get("rev")));

@@ -14,8 +14,12 @@ const LINKS: Item[] = [
       { href: "/webmaster/guided/other-makerspaces", icon: "🗺️", label: "Other makerspaces" },
       { icon: "🧭", label: "Explore Us", items: [{ href: "/webmaster/guided/laser-shop", icon: "🔥", label: "Laser shop" }, { href: "/webmaster/guided/wood-shop", icon: "🪵", label: "Wood shop" }, { href: "/webmaster/guided/metal-shop", icon: "🔩", label: "Metal shop" }, { href: "/webmaster/guided/3d-printing", icon: "🖨️", label: "3D printing" }, { href: "/webmaster/guided/craft-room-kalamazoo", icon: "🧵", label: "Craft room" }, { href: "/webmaster/guided/meeting-space", icon: "🤝", label: "Meeting space" }] }] },
   ] },
-  { href: "/webmaster/hours", icon: "🕙", label: "Hours & address" },
-  { href: "/webmaster/menu", icon: "☰", label: "Menu" },
+  { icon: "🛠️", label: "Site Config", items: [
+    { href: "/webmaster/hours", icon: "🕙", label: "Hours & address" },
+    { href: "/webmaster/menu", icon: "☰", label: "Menu" },
+    { href: "/webmaster/robots", icon: "🤖", label: "robots.txt" },
+  ] },
+  { href: "/mailadmin", icon: "✉️", label: "Mailing lists" },
   { href: "/webmaster/audit", icon: "🕘", label: "Audit log" },
   { href: "/webmaster/setup", icon: "⚙️", label: "Services" },
 ];

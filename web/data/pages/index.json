@@ -82,6 +82,13 @@
       }
     },
     {
+      "type": "ChipAnimation",
+      "props": {
+        "id": "ChipAnimation-1",
+        "label": "KZOO"
+      }
+    },
+    {
       "type": "Counters",
       "props": {
         "id": "Counters-114"
