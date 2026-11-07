@@ -133,12 +133,19 @@ Faithful-check routine before every deploy:
 ## Phases
 
 ### Phase 0: POC (this branch)
-- [ ] Scaffold Next.js in `app/` (or `/web`) alongside the legacy HTML; legacy untouched.
-- [ ] Install `@measured/puck` (check current package name in puckeditor/puck README).
-- [ ] Port theme: copy `css/`, `plugins/`, `images/` into `public/`; load in root layout; verify identical render of one page.
-- [ ] Components for ONE page (`about.html`): `PageHeader`, `TwoColumnText`, `ImageBlock`, `VideoEmbed`, `CallToAction`.
-- [ ] Add `Dockerfile`, `docker-compose.yml`, `scripts/dev-certs.sh` (see Local testing); POC may start on SQLite/JSON but move to compose Postgres before Phase 2; edit at `/edit/about`, view at `/about`.
-- [ ] Shared `Navbar`/`Footer` rendered from globals.
+- [x] Scaffold Next.js in `web/` alongside the legacy HTML; legacy untouched.
+- [x] Install Puck: package is now **`@puckeditor/core`** (0.24), not `@measured/puck`.
+- [x] Port theme (POC: `web/public/*` are **symlinks** to the legacy dirs; replace with real copies before Docker/Fly build); load in root layout; verify identical render of one page.
+- [x] Components for ONE page (`about.html`): `PageHeader`, `TwoColumnText`, `ImageBlock`, `VideoEmbed`, `CallToAction`.
+- [x] Persist to JSON files for the POC (`web/data/pages/`; `web/lib/store.ts` is the swap point for Postgres).
+- [ ] Add `Dockerfile`, `docker-compose.yml`, `scripts/dev-certs.sh` (see Local testing); move to compose Postgres before Phase 2; edit at `/edit/about`, view at `/about`.
+- [x] Shared `Navbar`/`Footer`/`Counters` rendered from `web/data/globals/*.json` (copies of `dynamic/json`).
+- **POC status / known gaps** (run: `cd web && npm install && npm run dev`, view `/about`, edit `/edit/about`; an unknown slug under `/edit/` creates a page):
+  - Side-by-side screenshot matched except button spacing (fixed). Counters show 0 until scrolled, same as legacy.
+  - Editor + write API return 404 when `NODE_ENV=production` (no auth yet, Phase 2). Do NOT deploy before auth exists.
+  - Legacy `js/script.js` is loaded after hydration and still fires GA/Heap/PostHog from localhost: gate by env before real use.
+  - Not yet done: nav active-link highlight, mobile dropdown tweaks from `navbar.js`, image upload field (images are URL text), globals editing, delete/list UI, rich text, `Dockerfile`/`docker-compose`, Google Maps script (contact page).
+  - Other `.html` links 301 to `/x` and 404 until those pages are migrated.
 - **Exit criteria:** side-by-side screenshot of `about.html` vs `/about` matches; edit + publish works.
 
 ### Phase 1: Component library
