@@ -7,3 +7,4 @@ ca.pem
 node_modules/
 .next/
 .DS_Store
+.local/

@@ -72,6 +72,64 @@ Browser ──> Fly.io app (Next.js, Node)  ──> Aiven (shared SQL)  : pages,
 - [ ] Generate `sitemap.xml` and `robots.txt` from DB pages.
 - [ ] `<title>`, meta description, OG tags editable per page (Puck `root` fields).
 
+## Local testing (Docker Compose, prod-like)
+Goal: same moving parts as Fly + Aiven, so "works locally" means "works deployed". Nothing here needs real secrets.
+
+| Prod | Local stand-in | Fidelity note |
+|---|---|---|
+| Aiven Postgres (TLS required, CA cert) | `postgres:<same major as Aiven>` with **SSL on** and a self-signed CA | App connects with `sslmode=verify-full` + `DATABASE_CA_CERT`, same code path as prod |
+| Fly machine + `/data` volume | App built from the **same `Dockerfile`** as prod, named volume at `/data` | Run `next start` standalone, not `next dev`, for the faithful check |
+| `release_command` migrations | one-shot `migrate` service that must finish before `app` starts | Same migration files as prod |
+| SMTP2GO HTTP API | stub (`SMTP2GO_API_URL` env override; stub logs the payload) | Real sends only from staging |
+| Fly TLS/proxy | none locally; test at `http://localhost:3000` | Cookie `secure` flag + Auth.js URL differ; verify on Fly staging |
+
+`.local/` (generated certs, volumes) is gitignored. Compose uses only `.env` values (copy `.env.example`).
+
+```yaml
+# docker-compose.yml  (to be added in Phase 0; no secrets, dev-only passwords)
+services:
+  db:
+    image: postgres:16            # match Aiven's major version
+    environment: { POSTGRES_USER: app, POSTGRES_PASSWORD: devonly, POSTGRES_DB: site }
+    command: >
+      postgres -c ssl=on -c ssl_cert_file=/certs/server.crt -c ssl_key_file=/certs/server.key
+    volumes: [ "./.local/certs:/certs:ro", "pgdata:/var/lib/postgresql/data" ]
+    healthcheck: { test: ["CMD-SHELL","pg_isready -U app -d site"], interval: 3s, retries: 20 }
+  migrate:
+    build: .
+    command: ["npm","run","db:migrate"]
+    env_file: .env
+    depends_on: { db: { condition: service_healthy } }
+  app:
+    build: .                      # same Dockerfile Fly uses
+    env_file: .env
+    ports: ["3000:3000"]
+    volumes: [ "uploads:/data/uploads", "./.local/certs/ca.crt:/certs/ca.crt:ro" ]
+    depends_on: { migrate: { condition: service_completed_successfully } }
+volumes: { pgdata: {}, uploads: {} }
+```
+
+Local `.env` values: `DATABASE_URL=postgres://app:devonly@db:5432/site?sslmode=verify-full`, `DATABASE_CA_CERT=/certs/ca.crt`, `AUTH_SECRET=<any random>`, `ADMIN_EMAILS=you@example.com`.
+
+One-time cert setup (script `scripts/dev-certs.sh`; server cert CN/SAN must be `db`; key file must be `chmod 600` and owned by uid 999 or Postgres refuses to start):
+```sh
+mkdir -p .local/certs && cd .local/certs
+openssl req -x509 -newkey rsa:2048 -nodes -days 365 -keyout ca.key -out ca.crt -subj "/CN=dev-ca"
+openssl req -newkey rsa:2048 -nodes -keyout server.key -out server.csr -subj "/CN=db"
+openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -days 365 \
+  -extfile <(echo "subjectAltName=DNS:db,DNS:localhost") -out server.crt
+chmod 600 server.key && sudo chown 999 server.key   # Linux; Docker Desktop on macOS usually OK without chown
+```
+
+Faithful-check routine before every deploy:
+- [ ] `docker compose up --build` from a clean `docker compose down -v` (proves migrations from zero).
+- [ ] Create, edit, publish, delete a page via `/edit`; restart the stack; content persists (DB volume) and uploaded image persists (`/data` volume).
+- [ ] Unauthenticated `/edit` and write APIs get 401/redirect.
+- [ ] Old `.html` URLs 301 correctly; `sitemap.xml` lists DB pages.
+- [ ] Playwright old-vs-new screenshot diff against the legacy static site (serve legacy with `python3 -m http.server` or an `nginx` compose service on :8080).
+- [ ] Contact form hits the stub and the payload looks right.
+- Not reproducible locally (verify on Fly staging): real Aiven allow-list/egress IP, Fly TLS + secure cookies, domain/DNS, real email delivery.
+
 ## Phases
 
 ### Phase 0: POC (this branch)
@@ -79,7 +137,7 @@ Browser ──> Fly.io app (Next.js, Node)  ──> Aiven (shared SQL)  : pages,
 - [ ] Install `@measured/puck` (check current package name in puckeditor/puck README).
 - [ ] Port theme: copy `css/`, `plugins/`, `images/` into `public/`; load in root layout; verify identical render of one page.
 - [ ] Components for ONE page (`about.html`): `PageHeader`, `TwoColumnText`, `ImageBlock`, `VideoEmbed`, `CallToAction`.
-- [ ] Persist to local SQLite/JSON for the POC; edit at `/edit/about`, view at `/about`.
+- [ ] Add `Dockerfile`, `docker-compose.yml`, `scripts/dev-certs.sh` (see Local testing); POC may start on SQLite/JSON but move to compose Postgres before Phase 2; edit at `/edit/about`, view at `/about`.
 - [ ] Shared `Navbar`/`Footer` rendered from globals.
 - **Exit criteria:** side-by-side screenshot of `about.html` vs `/about` matches; edit + publish works.
 
