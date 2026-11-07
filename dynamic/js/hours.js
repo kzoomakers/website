@@ -225,7 +225,8 @@
    * Load hours data from JSON
    */
   function loadHoursData() {
-    return fetch(CONFIG.jsonPath)
+    // /api/hours is the editable copy (Next app); the static JSON is the fallback for the legacy static site.
+    return fetch('/api/hours').then(r => r.ok ? r : fetch(CONFIG.jsonPath), () => fetch(CONFIG.jsonPath))
       .then(response => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);

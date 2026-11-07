@@ -7,7 +7,7 @@ import path from "path";
 const ROOT = path.resolve(import.meta.dirname, "../..");
 const OUT = path.resolve(import.meta.dirname, "../data/pages");
 const HAND_BUILT = new Set(["about"]);
-// Demos/junk (ask owner before deleting the files).
+// Demos/junk: files deleted from repo; kept so re-running migrate skips them.
 const SKIP = new Set(["ical-demo",
   "calendar2", "contact-new", "index-text", "onepage-slider", "onepage-text", "demo", "demo1", "demo3"]);
 

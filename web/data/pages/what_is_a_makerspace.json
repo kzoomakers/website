@@ -7,7 +7,7 @@
    "inline": [],
    "bodyClass": "",
    "refresh": "",
-   "css": "\n    .call-to-action-speakergals {\n      padding: 100px 0;\n      background-image: url(\"images/slider/speakergals2.jpg\");\n      background-size: cover;\n      background-position: center center;\n      color: #fff;\n      position: relative;\n    }\n    .call-to-action-speakergals::before {\n      content: \"\";\n      position: absolute;\n      inset: 0;\n      background-color: rgba(0, 0, 0, 0.6);\n      z-index: 0;\n    }\n    .call-to-action-speakergals .container {\n      position: relative;\n      z-index: 1;\n    }\n    .call-to-action-speakergals h2 {\n      line-height: 1.5;\n      color: white;\n    }\n    .call-to-action-speakergals p {\n      color: #fff;\n    }\n  ",
+   "css": "",
    "styles": [],
    "scripts": []
   }
@@ -26,31 +26,10 @@
    }
   },
   {
-   "type": "HtmlSection",
+   "type": "Guided",
    "props": {
-    "id": "HtmlSection-406",
-    "html": "<section class=\"about-shot-info section-sm\">\n\t<div class=\"container\">\n\t\t<div class=\"row\">\n\t\t\t<div class=\"col-lg-12 mt-20\">\n\t\t\t\t<p class=\"lead\">Makerspaces are learning spaces that foster creativity, tangible knowledge production, communal knowledge sharing, openness, and experimentation. While they have “traditionally” (from their brief two decade-ish history) been associated with digital fabrication tools like 3D printers and the products that utilize them, the radical ideas that grow and sustain makerspaces are not bound to any tool nor product. You do not need to understand nor use any particular tool to participate in a makerspace.</p>\n\t\t\t\t<p>A makerspace is an ongoing community project that grows according to member needs and desires, built upon the foundational ideals of openness, freedom of expression, and freedom of experimentation. Unlike classrooms or labs—modular learning spaces that necessarily become blank slates with every new use—makerspaces hold the tangible memories of their users over time. To participate in a makerspace is to participate in its ongoing co-creation.</p>\n\t\t\t\t<p>Makerspaces are difficult to define by design; they hold space for us to question our definitions. They encourage curiosity, joy, hands-on active learning, iteration, play, lateral thinking, reflection on the malleability and materiality of ideas, reflection on emotion and aesthetics, reflection on the material world and the material body, reflection on technology, and reflection on motivation. They exist in an “in-between” space at the intersection of art studios, computer labs, design studios, classrooms, science labs, hangout spaces, workshops, and performance spaces. Each makerspace does not have a clear definition so much as it has the tendencies of its communities. They resist the common ways we divide disciplines, schools, students, and ourselves. They encourage us to imagine ourselves, at least temporarily, as polymaths: potentially competent at writing prose and writing code, critical thinking and design thinking, community relationship building and 3D model building.</p>\n\t\t\t\t<p>At <strong>Kzoo Makers</strong> in <strong>Kalamazoo, Michigan</strong>, we therefore invite anyone who might want to participate in our makerspace to reach out and start a conversation with us. You do not need to have any idea of how you or your project might use a makerspace; you only need curiosity. We can help with the rest.</p>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
-   }
-  },
-  {
-   "type": "HtmlSection",
-   "props": {
-    "id": "HtmlSection-407",
-    "html": "<section id=\"come\" class=\"call-to-action-speakergals section\">\n\t<div class=\"container\">\n\t\t<div class=\"row\">\n\t\t\t<div class=\"col-md-12 text-center\">\n\t\t\t\t<h2>All Are Welcome</h2>\n\t\t\t\t<p class=\"lead mt-4\">We consider our space as a “zero barrier to entry” space, which means we welcome all and celebrate complete novices. We strongly encourage anyone who is curious about makerspaces but, for whatever reason, has trouble imagining themselves in a maker community, to come and explore Kzoo Makers here in Kalamazoo.</p>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
-   }
-  },
-  {
-   "type": "HtmlSection",
-   "props": {
-    "id": "HtmlSection-408",
-    "html": "<section class=\"about-shot-info section-sm bg-gray\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-xl-8 col-lg-10 text-center\">\n\t\t\t\t<p>Whether you’re a woodworker, a programmer, an artist, a tinkerer, or someone who just wants to see what it’s all about—you belong here. No experience required. No project in mind required. Just curiosity.</p>\n\t\t\t\t<a href=\"/tour-form-redirect\" class=\"btn btn-main mt-3\">Schedule a Tour</a>\n\t\t\t\t<a href=\"/about\" class=\"btn btn-main mt-3\">About Kzoo Makers</a>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
-   }
-  },
-  {
-   "type": "HtmlSection",
-   "props": {
-    "id": "HtmlSection-409",
-    "html": "<section class=\"call-to-action section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-xl-6 col-lg-8 text-center\">\n\t\t\t\t<h2>Let's Create Something Together</h2>\n\t\t\t\t<p>A tour is free, but making your own creation is priceless.</p>\n\t\t\t\t<a href=\"/pricing\" class=\"btn btn-main\">See pricing</a>\n\t\t\t\t<a href=\"/tour-form-redirect\" class=\"btn btn-main\">Schedule a tour</a>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+    "id": "Guided-1",
+    "kind": "what_is_a_makerspace"
    }
   }
  ],

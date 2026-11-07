@@ -1,0 +1,89 @@
+{
+ "galleryTitle": "",
+ "galleryText": "",
+ "slides": [],
+ "sections": [
+  {
+   "look": "Columns of text",
+   "background": "White",
+   "columns": "1",
+   "title": "",
+   "intro": "",
+   "image": "",
+   "items": [
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "",
+     "label": "",
+     "text": "Makerspaces are learning spaces that foster creativity, tangible knowledge production, communal knowledge sharing, openness, and experimentation. While they have “traditionally” (from their brief two decade-ish history) been associated with digital fabrication tools like 3D printers and the products that utilize them, the radical ideas that grow and sustain makerspaces are not bound to any tool nor product. You do not need to understand nor use any particular tool to participate in a makerspace.\n\nA makerspace is an ongoing community project that grows according to member needs and desires, built upon the foundational ideals of openness, freedom of expression, and freedom of experimentation. Unlike classrooms or labs—modular learning spaces that necessarily become blank slates with every new use—makerspaces hold the tangible memories of their users over time. To participate in a makerspace is to participate in its ongoing co-creation.\n\nMakerspaces are difficult to define by design; they hold space for us to question our definitions. They encourage curiosity, joy, hands-on active learning, iteration, play, lateral thinking, reflection on the malleability and materiality of ideas, reflection on emotion and aesthetics, reflection on the material world and the material body, reflection on technology, and reflection on motivation. They exist in an “in-between” space at the intersection of art studios, computer labs, design studios, classrooms, science labs, hangout spaces, workshops, and performance spaces. Each makerspace does not have a clear definition so much as it has the tendencies of its communities. They resist the common ways we divide disciplines, schools, students, and ourselves. They encourage us to imagine ourselves, at least temporarily, as polymaths: potentially competent at writing prose and writing code, critical thinking and design thinking, community relationship building and 3D model building.\n\nAt **Kzoo Makers** in **Kalamazoo, Michigan**, we therefore invite anyone who might want to participate in our makerspace to reach out and start a conversation with us. You do not need to have any idea of how you or your project might use a makerspace; you only need curiosity. We can help with the rest.",
+     "linkLabel": "",
+     "linkHref": ""
+    }
+   ],
+   "outro": "",
+   "buttons": []
+  },
+  {
+   "look": "Banner",
+   "background": "White",
+   "columns": "1",
+   "title": "All Are Welcome",
+   "intro": "We consider our space as a “zero barrier to entry” space, which means we welcome all and celebrate complete novices. We strongly encourage anyone who is curious about makerspaces but, for whatever reason, has trouble imagining themselves in a maker community, to come and explore Kzoo Makers here in Kalamazoo.",
+   "image": "images/slider/speakergals2.jpg",
+   "items": [],
+   "outro": "",
+   "buttons": []
+  },
+  {
+   "look": "Centered call-to-action",
+   "background": "Grey",
+   "columns": "1",
+   "title": "",
+   "intro": "",
+   "image": "",
+   "items": [
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "",
+     "label": "",
+     "text": "Whether you’re a woodworker, a programmer, an artist, a tinkerer, or someone who just wants to see what it’s all about—you belong here. No experience required. No project in mind required. Just curiosity.",
+     "linkLabel": "",
+     "linkHref": ""
+    }
+   ],
+   "outro": "",
+   "buttons": [
+    {
+     "label": "Schedule a Tour",
+     "href": "/tour-form-redirect"
+    },
+    {
+     "label": "About Kzoo Makers",
+     "href": "/about"
+    }
+   ]
+  },
+  {
+   "look": "Banner",
+   "background": "White",
+   "columns": "1",
+   "title": "Let's Create Something Together",
+   "intro": "A tour is free, but making your own creation is priceless.",
+   "image": "",
+   "items": [],
+   "outro": "",
+   "buttons": [
+    {
+     "label": "See pricing",
+     "href": "/pricing"
+    },
+    {
+     "label": "Schedule a tour",
+     "href": "/tour-form-redirect"
+    }
+   ]
+  }
+ ]
+}

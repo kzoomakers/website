@@ -1,10 +1,13 @@
 import type { Config } from "@puckeditor/core";
+import { ImageInput } from "@/components/image-field";
+import { GuidedPage } from "@/components/guided";
 import { Navbar, Footer, Counters, ThemeCss } from "@/components/chrome";
 
 // Markup below mirrors the legacy HTML class-for-class so css/style.css applies unchanged.
 const url = (h = "") => (/^(https?:|#|\/|mailto:)/.test(h) ? h : "/" + h);
 const paras = (t = "") => t.split(/\n\s*\n/).filter(Boolean);
 const lines = (t = "") => t.split("\n").flatMap((l, i) => (i ? [<br key={i} />, l] : [l]));
+const img = (label: string) => ({ type: "custom" as const, label, render: ({ value, onChange }: any) => <ImageInput value={value} onChange={onChange} /> });
 const buttons = { type: "array" as const, arrayFields: { label: { type: "text" as const }, href: { type: "text" as const } }, getItemSummary: (i: any) => i.label };
 
 function Buttons({ items }: { items?: { label: string; href: string }[] }) {
@@ -28,6 +31,8 @@ function SectionTitle({ title, text }: { title: string; text?: string }) {
 export type Props = {
   PageHeader: { title: string; tag: "h1" | "h2"; crumb: string; subtitle: string; subtitleTag: "h5" | "p"; trail: { label: string; href: string }[] };
   HtmlSection: { html: string };
+  BoardMembers: {};
+  Guided: { kind: string; part?: string };
   TwoColumnText: { heading: string; body: string; buttons: { label: string; href: string }[]; image: string; imageAlt: string };
   VideoEmbed: { title: string; youtubeUrl: string; height: number };
   Statement: { text: string };
@@ -52,14 +57,14 @@ export const config: Config<Props, RootProps> = {
       scripts: { type: "array", label: "Extra scripts (advanced)", arrayFields: { src: { type: "text" } }, getItemSummary: (i: any) => i.src },
     },
     defaultProps: { title: "Kzoo Makers", description: "", bare: false, inline: [], bodyClass: "", refresh: "", css: "", styles: [], scripts: [] },
-    render: ({ children, css, styles, bare }) => bare ? (
+    render: ({ children, css, styles, bare, puck }) => bare ? (
       <>{css && <style dangerouslySetInnerHTML={{ __html: css }} />}{children}</>
     ) : (
       <>
         <ThemeCss />
         {styles?.map((s) => <link key={s.href} rel="stylesheet" href={s.href} />)}
         {css && <style dangerouslySetInnerHTML={{ __html: css }} />}
-        <Navbar />
+        <Navbar menu={(puck?.metadata?.menu as any) ?? []} />
         {children}
         <Footer />
       </>
@@ -96,12 +101,37 @@ export const config: Config<Props, RootProps> = {
       defaultProps: { html: "<section class=\"section\"><div class=\"container\"><p>New section</p></div></section>" },
       render: ({ html }) => <div dangerouslySetInnerHTML={{ __html: html }} />,
     },
+    // Content comes from the Board admin screen (page metadata), not from the editor.
+    BoardMembers: {
+      render: ({ puck }) => {
+        const b: any = puck?.metadata?.board;
+        return !b ? <></> : (
+          <section className="team" id="team"><div className="container">
+            <SectionTitle title={b.title} text={b.intro} />
+            <div className="row">
+              {b.members.map((m: any, i: number) => (
+                <div className="col-lg-4 col-md-6" key={i}><div className="team-member text-center">
+                  <div className="member-photo">{m.photo && <img loading="lazy" className="img-fluid" src={url(m.photo)} alt={m.name} />}</div>
+                  <div className="member-content"><h3>{m.name}</h3><span>{m.role}</span>{paras(m.bio).map((t, j) => <p key={j}>{t}</p>)}</div>
+                </div></div>
+              ))}
+            </div>
+          </div></section>
+        );
+      },
+    },
+    // Content comes from the Guided admin screens (page metadata), not from the editor.
+    Guided: {
+      fields: { kind: { type: "text" }, part: { type: "text" } },
+      defaultProps: { kind: "team", part: "" },
+      render: ({ kind, part, puck }) => <GuidedPage kind={kind} part={part} data={(puck?.metadata?.guided as any)?.[kind]} />,
+    },
     TwoColumnText: {
       fields: {
         heading: { type: "text" },
         body: { type: "textarea", label: "Body (blank line = new paragraph)" },
         buttons,
-        image: { type: "text", label: "Image URL" },
+        image: img("Image"),
         imageAlt: { type: "text" },
       },
       defaultProps: { heading: "Heading", body: "Text", buttons: [], image: "", imageAlt: "" },
@@ -149,7 +179,7 @@ export const config: Config<Props, RootProps> = {
     Gallery: {
       fields: {
         title: { type: "text" }, text: { type: "textarea" },
-        images: { type: "array", arrayFields: { src: { type: "text" }, alt: { type: "text" } }, getItemSummary: (i: any) => i.src },
+        images: { type: "array", arrayFields: { src: img("Image"), alt: { type: "text" } }, getItemSummary: (i: any) => i.src },
       },
       defaultProps: { title: "Gallery", text: "", images: [] },
       render: ({ title, text, images }) => (
@@ -167,7 +197,7 @@ export const config: Config<Props, RootProps> = {
       ),
     },
     ImageCta: {
-      fields: { heading: { type: "text" }, text: { type: "textarea" }, buttonLabel: { type: "text" }, buttonHref: { type: "text" }, bgImage: { type: "text" } },
+      fields: { heading: { type: "text" }, text: { type: "textarea" }, buttonLabel: { type: "text" }, buttonHref: { type: "text" }, bgImage: img("Background image") },
       defaultProps: { heading: "Heading", text: "", buttonLabel: "Go", buttonHref: "/", bgImage: "" },
       render: ({ heading, text, buttonLabel, buttonHref, bgImage }) => (
         <section className="call-to-action-board section"

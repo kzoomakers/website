@@ -1,0 +1,81 @@
+{
+ "heroTitle": "How To Guides",
+ "heroText": "Browse our equipment guides and tutorials by category",
+ "heroImage": "images/slider/slider-bg-0.webp",
+ "categories": [
+  {
+   "name": "Woodworking",
+   "icon": "fa-hammer",
+   "articles": [
+    {
+     "title": "Table Saw Safety Guide",
+     "url": "how-to-woodsaw-safety.html",
+     "icon": "fa-triangle-exclamation"
+    },
+    {
+     "title": "Jointer Safety Guide",
+     "url": "how-to-use-a-jointer-safety.html",
+     "icon": "fa-triangle-exclamation"
+    },
+    {
+     "title": "Router Safety Guide",
+     "url": "how-to-routing-safe-and-sound.html",
+     "icon": "fa-shield-halved"
+    }
+   ]
+  },
+  {
+   "name": "Metalworking",
+   "icon": "fa-cog",
+   "articles": [
+    {
+     "title": "How to Use a Bridgeport Mill",
+     "url": "how-to-use-a-bridgeport-mill.html",
+     "icon": "fa-gears"
+    },
+    {
+     "title": "How to Use a Metal Lathe",
+     "url": "how-to-use-a-metal-lathe.html",
+     "icon": "fa-circle-notch"
+    }
+   ]
+  },
+  {
+   "name": "Laser Systems",
+   "icon": "fa-cube",
+   "articles": [
+    {
+     "title": "How to Use a Laser Cutter",
+     "url": "how-to-use-a-laser-cutter.html",
+     "icon": "fa-laser"
+    },
+    {
+     "title": "Laser Cutting: The Ultimate Guide",
+     "url": "laser-cutting-guide.html",
+     "icon": "fa-book"
+    }
+   ]
+  },
+  {
+   "name": "3D Printing",
+   "icon": "fa-print",
+   "articles": [
+    {
+     "title": "3D Printing Failures We See Every Week",
+     "url": "how-to-3d-print-failures-we-see-every-week.html",
+     "icon": "fa-triangle-exclamation"
+    },
+    {
+     "title": "Why Most Home 3D Printers Collect Dust",
+     "url": "how-to-why-most-3d-printers-sit-at-home-gathering-dust.html",
+     "icon": "fa-house"
+    },
+    {
+     "title": "What 3D Printing Is Bad At",
+     "url": "how-to-what-3d-printing-is-bad-at.html",
+     "icon": "fa-circle-xmark"
+    }
+   ]
+  }
+ ]
+}

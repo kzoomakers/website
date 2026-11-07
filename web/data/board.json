@@ -1,0 +1,36 @@
+{
+ "title": "The Board",
+ "intro": "The Board sets the vision, sustainability, and growth of this non-profit. They manage finances, safety policies, insurance and other business related operations required for sustainability, working to ensure the space remains available, innovative, and collaborative. We have a shared goal: to keep our makerspace thriving as a hub for creativity, learning, and hands-on experimentation.",
+ "members": [
+  {
+   "name": "Zach Enos",
+   "role": "President",
+   "bio": "Zach leads the makerspace with a steady balance of vision and pragmatism. As President, he guides the board and membership toward sustainable growth while ensuring that creativity, learning, and community remain at the heart of every decision. With a deep commitment to open collaboration and hands-on innovation, Zach sets the tone for an inclusive, forward-thinking maker culture.",
+   "photo": "/images/team/zach.png"
+  },
+  {
+   "name": "Ryan Rank",
+   "role": "Treasurer",
+   "bio": "Ryan is one of the true cornerstones of our organization. As treasurer, he not only oversees billing operations with precision and reliability but also brings a personal touch to nearly every tour and event—chances are, you've met him or benefited from his work in some way. His breadth of knowledge spans every corner of our operations, and his readiness to jump in and help turn an idea into something tangible is unmatched. Ryan embodies the spirit of collaboration and creativity that defines our community.",
+   "photo": "/images/team/ryan.png"
+  },
+  {
+   "name": "Jon Kelley",
+   "role": "Secretary",
+   "bio": "As Board Secretary and principal liaison with LARA, he ensures Kzoo Makers has accurate business notes and compliant with corporate governance — he blends creativity, engineering, and leadership in equal parts. A laser enthusiast and seasoned technologist with 23 years of experience, he manages the makerspace's network, web services, and technical infrastructure. His precision-crafted laser engravings mark his presence throughout the space.",
+   "photo": "/images/team/jonk.png"
+  },
+  {
+   "name": "Lynden",
+   "role": "Resident Board Member",
+   "bio": "Lynden's bench is often a hub of activity—his deep understanding of systems, from circuit design to Linux kernel nuances, makes him an indispensable mentor to makers of all experience levels. Whether troubleshooting a stubborn wiring issue or helping a new member configure their first Raspberry Pi, Lyndon brings the same patience, precision, and passion that have defined his many years of service to the board.",
+   "photo": "/images/team/lyndon.png"
+  },
+  {
+   "name": "Al Hollaway",
+   "role": "Resident Board Member",
+   "bio": "Al has been part of Kzoo Makers since the beginning. His journey started the day he discovered MAKE: magazine and thought, \"I want to do all these things.\" That moment sparked a lasting passion for hands-on creation, open collaboration, and community-driven innovation.\n\nHe was the first President of Kalamazoo Innovation Initiative (KII), the non-profit corporation behind Kzoo Makers and previously was Manager of Technical Resources at the Air Zoo. Al combines technical expertise with a vision for an inclusive maker community.",
+   "photo": "/images/team/alan.png"
+  }
+ ]
+}

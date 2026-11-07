@@ -1,0 +1,52 @@
+{
+ "cards": [
+  {
+   "title": "Locate Us",
+   "icon": "location",
+   "button": "Map",
+   "href": "https://www.google.com/maps/search/?api=1&query={addressQ}",
+   "line1": "{address}",
+   "line2": "",
+   "hours": "yes"
+  },
+  {
+   "title": "Visit Us",
+   "icon": "people",
+   "button": "Get A Tour",
+   "href": "/tour-form-redirect",
+   "line1": "A member will show you the space",
+   "line2": "Doors locked outside of event times!",
+   "hours": "no"
+  },
+  {
+   "title": "Discord Us",
+   "icon": "chatboxes",
+   "button": "Discord Invite",
+   "href": "/discord-redirect",
+   "line1": "Chat with members on our Discord",
+   "line2": "Discord is a free app members use to coordinate and share",
+   "hours": "no"
+  },
+  {
+   "title": "Email Us",
+   "icon": "email",
+   "button": "contact@kzoomakers.org",
+   "href": "mailto:contact@kzoomakers.org",
+   "line1": "Better in writting?",
+   "line2": "Messages regularly checked by admin volunteers",
+   "hours": "no"
+  },
+  {
+   "title": "Call Us",
+   "icon": "telephone",
+   "button": "tel: (269) 270-3141",
+   "href": "tel:+12692703141",
+   "line1": "The worst way to get hold of us",
+   "line2": "Volunteer operated, messages checked irregularly",
+   "hours": "no"
+  }
+ ],
+ "lat": "42.2955873",
+ "lng": "-85.566348",
+ "marker": "Kzoo Makers"
+}

@@ -1,14 +1,15 @@
 import { notFound } from "next/navigation";
-import { getPage, slugOf } from "@/lib/store";
+import { LOCKED, getMenu, getPage, slugOf } from "@/lib/store";
 import { editingAllowed } from "@/lib/guard";
 import Editor from "./editor";
 
 export const dynamic = "force-dynamic";
 
 export default async function EditPage({ params }: { params: Promise<{ path?: string[] }> }) {
-  if (!editingAllowed()) notFound();
+  if (!await editingAllowed()) notFound();
   const slug = slugOf((await params).path);
+  if (LOCKED.includes(slug)) notFound();
   // Unknown slug = creating a new page.
   const data = (await getPage(slug)) ?? { root: { props: { title: slug } }, content: [] };
-  return <Editor slug={slug} data={data} />;
+  return <Editor slug={slug} data={data} menu={await getMenu()} />;
 }

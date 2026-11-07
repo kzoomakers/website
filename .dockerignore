@@ -1,0 +1,7 @@
+.git
+**/node_modules
+web/.next
+*.bak
+*.backup-*
+*.html-bak
+.env*

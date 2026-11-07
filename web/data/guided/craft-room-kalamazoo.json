@@ -1,0 +1,160 @@
+{
+ "galleryTitle": "",
+ "galleryText": "",
+ "slides": [],
+ "sections": [
+  {
+   "look": "Columns of text",
+   "background": "White",
+   "title": "Kalamazoo's Community Craft Room",
+   "intro": "**Searching for \"craft room Kalamazoo\" or \"craft studio near me\"?** Kalamazoo Makerspace offers a bright, tool-filled fiber arts room where you can sew, tuft, embroider, Cricut, and create with other makers instead of paying hourly for a private studio.",
+   "columns": "2",
+   "items": [
+    {
+     "icon": "none",
+     "heading": "How Craft Room Access Works",
+     "text": "- **Membership-based access** gives you time to plan, iterate, and finish projects without hourly studio pressure.\n- **Orientation & tool checkouts** ensure everyone can safely use the sewing machines, Cricut, tufting gun, and shared tools.\n- **Bring your materials** (fabric, yarn, vinyl, notions) and pair them with our equipment, tables, and storage.\n- **Collaborate with Kalamazoo crafters** through weekly fiber arts meetups and pop-up workshops.\n- **Cross-shop perks** – need laser-cut applique templates or 3D printed buttons? Access other areas of the makerspace too."
+    },
+    {
+     "icon": "none",
+     "heading": "Best For",
+     "text": "- Sewists and quilters who need multiple machines and cutting space.\n- Cosplay makers mixing foam, fabric, Cricut vinyl, and embroidery.\n- Fiber artists experimenting with tufting, yarn dyeing, crochet, and weaving.\n- Small batch makers selling at Kalamazoo craft fairs or Etsy.\n- Meetup hosts seeking a reliable [creative event space](/meeting-space)."
+    }
+   ],
+   "buttons": []
+  },
+  {
+   "look": "Icon cards",
+   "background": "Grey",
+   "title": "Tools & Creative Amenities",
+   "intro": "",
+   "columns": "3",
+   "items": [
+    {
+     "icon": "palette",
+     "heading": "Sewing & Finishing",
+     "text": "Four sewing machines, a serger, irons, large cutting mats, and ergonomic tables keep garment sewing and quilting smooth."
+    },
+    {
+     "icon": "pencil",
+     "heading": "Digital Crafting",
+     "text": "Cricut station with heat press for vinyl, appliqué, stickers, and custom merch without investing in your own setup."
+    },
+    {
+     "icon": "idea",
+     "heading": "Fiber Arts Extras",
+     "text": "Embroidery / sewing combo machine, yarn swift and ball winder, rug tufting frame, yarn dyeing gear, and shared notions."
+    }
+   ],
+   "buttons": []
+  },
+  {
+   "look": "Columns of text",
+   "background": "White",
+   "title": "Crafting Community & Events in Kalamazoo",
+   "intro": "Kzoo Makers hosts the weekly [Fiber Arts Meetup](/meetup-fiber-arts) plus pop-up workshops covering sewing basics, Cricut design, yarn dyeing, and rug tufting. Beginners get friendly guidance, and experienced crafters gain collaborative momentum.",
+   "columns": "2",
+   "items": [
+    {
+     "icon": "none",
+     "heading": "What Happens in the Craft Room",
+     "text": "- Project nights for knitting, crochet, embroidery, and cross-stitch.\n- Cosplay and costume build sessions using foam plus textile tools.\n- Heat-transfer vinyl production for clubs, teams, and pop-up shops.\n- Rug tufting experiments and wall hangings.\n- Yarn dyeing, fiber prep, and spinning practice."
+    },
+    {
+     "icon": "none",
+     "heading": "Plan Your Visit",
+     "text": "- [Check the calendar](/calendar?search=fiber%20arts%20club) for fiber arts meetups and workshops.\n- [Schedule a tour](/tour-form-redirect) to see the craft room layout and storage.\n- [Review membership tiers](/pricing) for clean-side tool access.\n- Ask about reserving tables for your own craft meetup or club.\n- Bring friends! Community creativity helps ideas stick."
+    }
+   ],
+   "buttons": []
+  },
+  {
+   "look": "Columns of text",
+   "background": "Grey",
+   "title": "Craft Room Membership vs. Renting a Studio",
+   "intro": "",
+   "columns": "2",
+   "items": [
+    {
+     "icon": "none",
+     "heading": "If You Rent a Private Studio",
+     "text": "- **Separate studio bills** – Pay monthly for your own utilities, machines, and insurance.\n- **Solo workflow** – Collaboration is limited unless you constantly host guests.\n- **Full tool ownership** – Every specialty machine purchase and maintenance cost is on you.\n- **Narrow experimentation** – Trying new mediums means buying more gear or renting elsewhere."
+    },
+    {
+     "icon": "none",
+     "heading": "What Kalamazoo Makerspace Offers",
+     "text": "- **All-in membership** – Unlock the craft room, laser shop, [3D printing lab](/3d-printing), and more with one fee.\n- **Extended access** – Work during staffed hours, evenings, or weekends when inspiration hits.\n- **Creative community** – Tap into shared patterns, critiques, and accountability partners.\n- **Shared upgrades** – The nonprofit handles equipment additions and maintenance."
+    }
+   ],
+   "buttons": []
+  },
+  {
+   "look": "Centered call-to-action",
+   "background": "Grey",
+   "title": "",
+   "intro": "",
+   "columns": "1",
+   "items": [
+    {
+     "icon": "none",
+     "heading": "Ready to Dive into Kalamazoo Crafting?",
+     "text": "Use the craft room for personal projects, Etsy micro-production, or to host a meetup. Tours show the sewing stations, Cricut area, storage, and how the craft room connects to the larger makerspace."
+    }
+   ],
+   "buttons": [
+    {
+     "label": "Schedule a Tour",
+     "href": "/tour-form-redirect"
+    },
+    {
+     "label": "View Membership Options",
+     "href": "/pricing"
+    },
+    {
+     "label": "See Crafting Events",
+     "href": "/calendar?search=fiber%20arts%20club"
+    }
+   ]
+  },
+  {
+   "look": "Columns of text",
+   "background": "White",
+   "title": "Craft Room FAQ",
+   "intro": "",
+   "columns": "1",
+   "items": [
+    {
+     "icon": "none",
+     "heading": "Can I book the craft room for my group?",
+     "text": "Yes. Members can request recurring meetup times or one-off workshops. Reach out via the [contact page](/contact) with your crafting group details."
+    },
+    {
+     "icon": "none",
+     "heading": "Do I have to be an expert crafter?",
+     "text": "No. Many Kalamazoo residents come here to learn sewing, Cricut, or embroidery for the first time. Experienced members help you get comfortable with equipment."
+    },
+    {
+     "icon": "none",
+     "heading": "What supplies are included?",
+     "text": "Machines, tables, and shared notions (pins, rulers, scissors) are available. Bring your own fabric, yarn, HTV, thread, and specialty consumables."
+    },
+    {
+     "icon": "none",
+     "heading": "Is storage available?",
+     "text": "Short-term project storage is possible during active builds. Ask staff during your tour about lockable bins or leaving works-in-progress between sessions."
+    },
+    {
+     "icon": "none",
+     "heading": "How do I get trained on the machines?",
+     "text": "Orientation covers policies, then you can attend sewing machine 101 or Cricut basics. Approved volunteers sign off when you are ready for independent use."
+    },
+    {
+     "icon": "none",
+     "heading": "Can youth crafters participate?",
+     "text": "Yes, with a guardian and within posted age guidelines. Family memberships are available—contact us to plan youth-friendly crafting sessions."
+    }
+   ],
+   "buttons": []
+  }
+ ]
+}

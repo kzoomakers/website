@@ -1,0 +1,60 @@
+{
+ "heading": "How our makerspace works",
+ "body": "We're a combination of a club and a library: a place where you don’t borrow books, but access to equipment and the community.\n\nWe’re a 501(c)(3) Domestic Nonprofit Corporation, run off donated equipment and volunteer support. We don't have million dollar endowments. Every dollar goes into keeping the lights on and the tools spinning.\n\nWhat makes this place extraordinary isn’t infrastructure — it’s people. Everything runs on volunteer power: the tours, the cleaning, the restocking, the mentoring. Even our board and president work shoulder to shoulder with everyone else.\n\nWe seek any who want to make or build and share their experiments or ideas.",
+ "image": "images/clipart/gear.webp",
+ "imageAlt": "",
+ "btn1Label": "About Maker Culture",
+ "btn1Href": "what_is_a_makerspace.html",
+ "btn2Label": "Meet The Team",
+ "btn2Href": "team.html",
+ "videoTitle": "Our Promo Video",
+ "videoUrl": "https://www.youtube.com/embed/7gz8L4Wt1oU",
+ "statement": "A place where curiosity meets craftsmanship\nfor every maker to turn ideas into impact, together.",
+ "galleryTitle": "Sneak Peak Gallery",
+ "galleryText": "See how we make ideas happen. From late-night solder sessions to spontaneous art-meets-engineering builds, our makerspace is a playground for curiosity. No two days look the same—3D printers hum beside laser cutters, paint splatters near code on whiteboards, and laughter blends with the sound of power tools. This gallery isn’t just photos—it’s a glimpse of what it feels like to create, collaborate, and occasionally break things (intentionally). Step inside our world of prototypes, passion projects, and pure creative chaos.",
+ "images": [
+  {
+   "src": "images/company/gallery-1.png",
+   "alt": ""
+  },
+  {
+   "src": "images/company/gallery-2.png",
+   "alt": ""
+  },
+  {
+   "src": "images/company/gallery-3.png",
+   "alt": ""
+  },
+  {
+   "src": "images/company/gallery-4.png",
+   "alt": ""
+  },
+  {
+   "src": "images/company/gallery-5.jpg",
+   "alt": ""
+  },
+  {
+   "src": "images/company/gallery-6.jpg",
+   "alt": ""
+  },
+  {
+   "src": "images/company/gallery-7.jpg",
+   "alt": ""
+  },
+  {
+   "src": "images/company/gallery-8.jpg",
+   "alt": ""
+  }
+ ],
+ "boardTitle": "Meet Our Board of Directors",
+ "boardText": "The Board sets the vision, sustainability, and growth of this non-profit. They manage finances, safety policies, insurance and other business related operations required for sustainability, working to ensure the space remains available, innovative, and collaborative.",
+ "boardLabel": "View Board of Directors",
+ "boardHref": "board.html",
+ "boardImage": "images/about/emptyboardroom.jpg",
+ "ctaTitle": "Let's Create Something Together",
+ "ctaText": "A tour is free, but making your own creation is priceless.",
+ "cta1Label": "See pricing",
+ "cta1Href": "pricing.html",
+ "cta2Label": "Schedule a tour",
+ "cta2Href": "tour-form-redirect.html"
+}

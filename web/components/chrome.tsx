@@ -1,3 +1,4 @@
+import { AdminLink } from "./admin-link";
 import navbar from "@/data/globals/navbar.json";
 import footer from "@/data/globals/footer.json";
 import counters from "@/data/globals/counters.json";
@@ -6,21 +7,23 @@ import counters from "@/data/globals/counters.json";
 const url = (h: string) => (/^(https?:|#|\/|mailto:)/.test(h) ? h : "/" + h);
 const H = (html: string) => ({ __html: html });
 
-function Sub({ item, pid }: { item: any; pid: string }) {
-  const id = `dropdown${pid}${item.label.replace(/\W/g, "")}`;
+type Item = { label: string; href?: string; items?: Item[] };
+
+function Menu({ item, id, top }: { item: Item; id: string; top?: boolean }) {
+  if (!item.items?.length) return <li className={top ? "nav-item" : undefined}><a className={top ? "nav-link" : "dropdown-item"} href={url(item.href ?? "")}>{item.label}</a></li>;
   return (
-    <li className={`dropdown dropdown-submenu ${item.direction || "dropright"}`}>
-      <a className="dropdown-item dropdown-toggle" href="#!" id={id} role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        {item.label} <i className={item.icon} />
+    <li className={top ? "nav-item dropdown" : "dropdown dropdown-submenu dropright"}>
+      <a className={top ? "nav-link dropdown-toggle" : "dropdown-item dropdown-toggle"} href="#!" id={id} role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        {item.label} {top && <i className="tf-ion-chevron-down" />}
       </a>
       <ul className="dropdown-menu" aria-labelledby={id}>
-        {item.items.map((s: any) => s.type === "submenu" ? <Sub key={s.label} item={s} pid={id} /> : <li key={s.href}><a className="dropdown-item" href={url(s.href)}>{s.label}</a></li>)}
+        {item.items.map((s, i) => <Menu key={i} item={s} id={`${id}-${i}`} />)}
       </ul>
     </li>
   );
 }
 
-export function Navbar() {
+export function Navbar({ menu }: { menu: Item[] }) {
   return (
     <header className="navigation fixed-top">
       <div className="container">
@@ -35,20 +38,7 @@ export function Navbar() {
           <div id="menu-btn" className="close"><span className="text">MENU</span></div>
           <div className="collapse navbar-collapse" id="navigation">
             <ul className="navbar-nav ml-auto text-center">
-              {navbar.menuItems.map((m: any) =>
-                m.type === "dropdown" ? (
-                  <li key={m.id} className="nav-item dropdown">
-                    <a className="nav-link dropdown-toggle" href="#!" id={`navbarDropdown${m.id}`} role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      {m.label} <i className={m.icon} />
-                    </a>
-                    <ul className="dropdown-menu" aria-labelledby={`navbarDropdown${m.id}`}>
-                      {m.items.map((s: any) => s.type === "submenu" ? <Sub key={s.label} item={s} pid={m.id} /> : <li key={s.href}><a className="dropdown-item" href={url(s.href)}>{s.label}</a></li>)}
-                    </ul>
-                  </li>
-                ) : (
-                  <li key={m.id} className="nav-item"><a className="nav-link" href={url(m.href)}>{m.label}</a></li>
-                )
-              )}
+              {menu.map((m, i) => <Menu key={i} item={m} id={`navbarDropdown${i}`} top />)}
             </ul>
           </div>
         </nav>
@@ -103,6 +93,7 @@ export function Footer() {
       <div className="footer-bottom">
         <h5 dangerouslySetInnerHTML={H(footer.copyright.text)} />
         <h6>{footer.copyright.credit.text} <a href={footer.copyright.credit.link.href}>{footer.copyright.credit.link.label}</a></h6>
+        <AdminLink />
       </div>
     </footer>
   );

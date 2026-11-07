@@ -1,0 +1,78 @@
+{
+ "heroTitle": "Making History",
+ "slides": [
+  {
+   "caption": "Founding members of Kzoo Makers",
+   "image": "/images/history/founders.webp",
+   "alt": "Kzoo Makers Founders"
+  },
+  {
+   "caption": "Early 2017 Kalamazoo Makers Meetup Guild meeting",
+   "image": "/images/history/2017_1.jpg",
+   "alt": "Kzoo Makers 2017"
+  },
+  {
+   "caption": "Linux users hacking in 2019",
+   "image": "/images/history/kzoomakers_2019_2.jpg",
+   "alt": "Kzoo Makers 2019"
+  },
+  {
+   "caption": "Our bridgeport installed in 2021",
+   "image": "/images/history/2021_1.webp",
+   "alt": "Kzoo Makers 2021"
+  },
+  {
+   "caption": "We got a CNC mill - May 2022",
+   "image": "/images/history/2022-05-31.webp",
+   "alt": "Kzoo Makers 2022"
+  },
+  {
+   "caption": "Kalamazoo Makers thriving community in 2023",
+   "image": "/images/history/kalamazoo-makers-2023.jpg",
+   "alt": "Kzoo Makers 2023"
+  },
+  {
+   "caption": "Our Primary Workshop Area in 2024",
+   "image": "/images/history/2024_workshop.webp",
+   "alt": "Kzoo Makers Workshop 2024"
+  },
+  {
+   "caption": "Our Building at {street}",
+   "image": "/images/history/2024-kzoomakers.jpg",
+   "alt": "Kzoo Makers 2024"
+  },
+  {
+   "caption": "Front of {street}",
+   "image": "/images/history/kzoo-makers-front.jpg",
+   "alt": "Kzoo Makers Front"
+  },
+  {
+   "caption": "Cleaning the dog kennel smell out to convert to wood shop",
+   "image": "/images/history/peekstok-building-prep.jpg",
+   "alt": "Kennel"
+  }
+ ],
+ "sections": [
+  {
+   "title": "Kalamazoo Innovation Initiative (KII)",
+   "text": "The Kalamazoo Innovation Initiative (KII) is a 501(c)3 nonprofit that was formed in 2016 with the sole purpose to open a makerspace. Kevin Wixsom originally filed the paperwork to incorporate using a legal firm. Al Hollaway was the president, Amy Braat was the secretary, and Jason Preuss was the treasurer.\n\nKII was formed to support the creation and operation of a Maker Space in Kalamazoo. Dan Wilkins and Mike Cunningham found a building at 102 E Michigan Ave, Kalamazoo for the location of opening the space. Mike bought the building and planned to use the shop for diesel mechanic training, while Dan initially covered the lease until memebrship got to a point where the space could be self sustaining. We've been around ever since!\n\nWhile the pandemic era was difficult, Kzoo Makers adapted by shifting to appointment-based use, limiting capacity, and relying on the persistence of members who needed space, tools, and structure to continue their work. Those adjustments kept the doors open and the community intact. As restrictions eased, activity inside the space returned steadily, reaffirming the value of a hands-on environment where people can learn, build, and collaborate. The challenges of 2020–2021 ultimately underscored the resilience of the organization and the ongoing commitment of the people who sustain it.",
+   "style": "about-2"
+  },
+  {
+   "title": "The Makers Guild",
+   "text": "The Kalamazoo Maker Guild was started around 2014 by Kevin Wixsom as a Meetup group. Al shortly became a co-organizer of the group since he arranged the meetings being held at the Airzoo. The group met once a month and was a show and tell for grownups. The projects were wide ranging, from robots, to amateur rocketry, to arduinos, 3d printing, fiber arts and more.\n\nThe maker guild was a feeder group for the makerspace. At the beginning most of the personal memberships were people from the makers meetup guild. This was not unusual, as the GR makerspace followed the same trajectory of having a thriving maker group that lead into a maker space. It is important to note that the maker guild was not the makerspace and were separate entities.\n\nThere were other independent tech groups that were invited to use the space such as Kalamazoo Linux User Group, and Hacker Gals.",
+   "style": "about-2"
+  },
+  {
+   "title": "Kzoo Makers wasn't the first makerspace in Kalmazoo",
+   "text": "There have been attempts to start a makerspace in Kalamazoo. There was one called \"The Geek Group\" that moved to GR a few years ago. The official reason for the move was a property tax dispute. Eventually the Grand Rapids space was shut down due to further financial complications.\n\nXipherspace never really got going financially. They were a for-profit enterprise and were never able to really establish a community. They are one example of why we went about establishing a growing maker community before starting to think about having a space. The Kalamazoo Makers Guild (KMG) was that community.",
+   "style": "service-2"
+  }
+ ],
+ "tagline": "A place where curiosity meets craftsmanship \nfor every maker to turn ideas into impact, together.",
+ "tourTitle": "Want a tour?",
+ "tourText": "Tours are free and no pressure.\nWe like showing the space to new groups!",
+ "tourLabel": "Tour Sign Up",
+ "tourHref": "/tour-form-redirect",
+ "tourNote": "* Please allow a few days to get scheduled with a volunteer"
+}
