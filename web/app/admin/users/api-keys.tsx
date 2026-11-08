@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import { useEffect, useState } from "react";
 import { confirmDialog } from "@/components/dialog";
 
@@ -24,7 +25,7 @@ export default function ApiKeys({ canEdit }: { canEdit: boolean }) {
       <h1>API keys</h1>
       <p className="sub">Let another system use part of this site, with only the access you tick. A key is shown once, right after you make it.</p>
       <details style={{ margin: "0 0 16px" }}><summary>Setting up YAMNet</summary><p>Make a key with both chores boxes ticked, then paste it into YAMNet's Settings › System as <code>CHORES_API_KEY</code>, and put this site's address in <code>CHORES_API_URL</code>.</p></details>
-      {err && <p role="alert" style={{ color: "var(--bad)" }}>{err}</p>}
+      {err && <Notice kind="error">{err}</Notice>}
       {fresh && <div className="card" role="status"><strong>Copy this key now. It can't be shown again.</strong><br /><code style={{ wordBreak: "break-all", userSelect: "all" }}>{fresh}</code> <button onClick={() => navigator.clipboard?.writeText(fresh)}>Copy</button> <button onClick={() => setFresh("")}>Done</button></div>}
       {canEdit && (
         <form className="card" onSubmit={make} style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "end" }}>
@@ -33,7 +34,7 @@ export default function ApiKeys({ canEdit }: { canEdit: boolean }) {
             {Object.entries(scopes).map(([s, l]) => <label key={s} style={{ display: "block" }}><input type="checkbox" checked={f.scopes.includes(s)} onChange={(e) => setF({ ...f, scopes: e.target.checked ? [...f.scopes, s] : f.scopes.filter((x) => x !== s) })} /> {l}</label>)}
           </fieldset>
           <label>Lasts<select value={f.expires} onChange={(e) => setF({ ...f, expires: e.target.value })}>{EXPIRES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></label>
-          <button className="primary">Make key</button>
+          <button className="pri">Make key</button>
         </form>
       )}
       <div className="card">

@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import { useState } from "react";
 import { tours } from "../rpc";
 
@@ -26,7 +27,7 @@ export default function Notifications({ initial }: { initial: Data }) {
     <>
       <h1>Tour alerts</h1>
       <p className="sub">Choose who is told when things happen. A guide is always emailed about bookings on their own times; these lists add to that. Changes save as you make them.</p>
-      {msg && <p role="alert" style={{ color: "var(--bad)" }}>{msg}</p>}
+      {msg && <Notice kind="error">{msg}</Notice>}
 
       <h2>Email</h2>
       {events.map(([ev, name]) => (

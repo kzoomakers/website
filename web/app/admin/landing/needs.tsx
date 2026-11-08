@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -12,7 +13,7 @@ export default function Needs() {
   return (
     <section aria-labelledby="needs-h">
       <h2 id="needs-h">Needs your attention</h2>
-      {bad && <p className="err" role="alert">Couldn't check what's waiting. Reload to try again.</p>}
+      {bad && <Notice kind="error">Couldn't check what's waiting. Reload to try again.</Notice>}
       {!a && !bad && <p className="sub" role="status">Checking…</p>}
       {a && !items.length && <p className="sub">Nothing is waiting. New reviews, comments, members and held messages will show up here.</p>}
       <div className="needs">{items.map(([n, noun, href, why]) => <Link key={href} href={href} className="card"><b>{n}</b>{noun}{n === 1 ? "" : "s"} {why}</Link>)}</div>

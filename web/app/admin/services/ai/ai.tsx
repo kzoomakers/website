@@ -26,7 +26,7 @@ export default function Ai({ initial, canEdit }: { initial: View; canEdit: boole
       <h2>1. Services</h2>
       {v.providers.map((p) => (
         <section key={p.id} className="card" style={{ padding: 14, marginBottom: 12 }}>
-          <strong>{p.name}</strong> {p.hasKey ? <span className="tag">✓ token saved{p.viaMail ? " (from Postmaster settings)" : ""}</span> : <span className="tag">no token</span>}
+          <strong>{p.name}</strong> {p.hasKey ? <span className="tag">✓ token saved{p.viaMail ? " (from Email settings)" : ""}</span> : <span className="tag">no token</span>}
           {p.models.length > 0 && <span className="tag">{p.models.length} models found</span>}
           <p className="sub" style={{ margin: "6px 0" }}>Get a token at <a href={p.keysUrl} target="_blank" rel="noreferrer">{p.keysUrl.replace("https://", "")}</a>. It is stored encrypted and never shown again.</p>
           {canEdit && (

@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import { useEffect, useState } from "react";
 import { confirmDialog } from "@/components/dialog";
 import { chores } from "../rpc";
@@ -18,7 +19,7 @@ export default function Achievements() {
     <>
       <h1>Achievements</h1>
       <p className="sub">Set a goal on a chore, or on any chore, and whoever reaches it earns a title. Who has earned each is worked out from the hours log.</p>
-      {msg && <p role="alert" style={{ color: "var(--bad)" }}>{msg}</p>}
+      {msg && <Notice kind="error">{msg}</Notice>}
       <form className="card" onSubmit={save} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "end" }}>
         <label>Title<input value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} maxLength={40} placeholder="Porcelain Knight" required /></label>
         <label>Chore<select value={f.chore_id} onChange={(e) => setF({ ...f, chore_id: e.target.value })}><option value="">Any chore</option>{list.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
@@ -26,7 +27,7 @@ export default function Achievements() {
         <label>Goal<input type="number" min={1} step="any" value={f.goal} onChange={(e) => setF({ ...f, goal: e.target.value })} required style={{ width: 90 }} /></label>
         <label>Icon<input value={f.icon} onChange={(e) => setF({ ...f, icon: e.target.value })} maxLength={20} placeholder="🏅" style={{ width: 70 }} /></label>
         <label style={{ flex: "1 1 200px" }}>Note<input value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} maxLength={200} style={{ width: "100%" }} /></label>
-        <button className="primary">{f.id ? "Save" : "Add"}</button>
+        <button className="pri">{f.id ? "Save" : "Add"}</button>
         {f.id > 0 && <button type="button" onClick={() => setF(BLANK)}>Cancel</button>}
       </form>
       <div className="card">

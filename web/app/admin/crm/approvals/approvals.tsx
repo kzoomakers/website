@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import { useEffect, useState } from "react";
 import { alertDialog, promptDialog } from "@/components/dialog";
 import { crm } from "../rpc";
@@ -61,7 +62,7 @@ export default function Approvals({ initial, canEdit, open, compact }: { initial
       <div className="bar" role="tablist">
         {TABS.map(([t, l]) => <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? "pri" : ""} onClick={() => { setTab(t); setSel(null); }}>{l}{t !== "approved" ? ` (${counts[t]})` : ""}</button>)}
       </div>
-      {err && <p role="alert" style={{ color: "var(--bad)" }}>{err}</p>}
+      {err && <Notice kind="error">{err}</Notice>}
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         {list}
         {d && (

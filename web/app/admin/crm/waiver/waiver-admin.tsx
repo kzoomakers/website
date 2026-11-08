@@ -1,4 +1,5 @@
 "use client";
+import { useDirtyGuard } from "@/components/dirty-guard";
 import { useState } from "react";
 import { confirmDialog } from "@/components/dialog";
 import { Agreement, Changes } from "@/components/agreement";
@@ -17,6 +18,7 @@ const nextRev = (r: string) => r.replace(/(\d+)$/, (n) => String(Number(n) + 1))
 export default function WaiverAdmin({ initial, canEdit, ai }: { initial: V[]; canEdit: boolean; ai: boolean }) {
   const [vs, setVs] = useState(initial), [tab, setTab] = useState<"edit" | "versions" | "members">("edit"), cur = vs[0];
   const [d, setD] = useState({ revision: nextRev(cur.revision), title: cur.title, closing: cur.closing, sections: cur.sections.map((s) => ({ ...s })) as Section[], summary: "", mandatory: true });
+  useDirtyGuard(d, vs.length);
   const [msg, setMsg] = useState(""), [busy, setBusy] = useState(false), [thinking, setThinking] = useState(false);
   const [mem, setMem] = useState<M[] | null>(null), [mf, setMf] = useState({ q: "", version: "" });
   const changes = diffVersions(cur, d), set = (i: number, k: keyof Section, v: string) => setD({ ...d, sections: d.sections.map((s, j) => (j === i ? { ...s, [k]: v } : s)) });

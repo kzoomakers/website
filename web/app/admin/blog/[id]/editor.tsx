@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import { useDirtyGuard } from "@/components/dirty-guard";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -91,7 +92,7 @@ function Enhance({ tones, html, onClose, onApply }: { tones: { id: string; label
   return (
     <dialog ref={ref} aria-label="Enhance with AI" onCancel={(e) => { e.preventDefault(); if (!busy) onClose(); }} style={{ width: "min(900px, calc(100% - 32px))", border: 0, borderRadius: 14, padding: 20 }}>
       <h2 style={{ marginTop: 0 }}>{out ? "Preview" : "Click a personality for your post"}</h2>
-      {err && <p role="alert" className="sub">{err}</p>}
+      {err && <Notice kind="error">{err}</Notice>}
       {note && <p role="status" className="sub"><strong>{note}</strong></p>}
       <div className="bar">{tones.map((t) => <button key={t.id} type="button" disabled={!!busy} onClick={() => go(t.id)}>{busy === t.id ? "Writing…" : t.label}</button>)}</div>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 12 }}>

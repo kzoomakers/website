@@ -20,7 +20,7 @@ export default function Extras({ id, canEdit }: { id: number; canEdit: boolean }
       <div className="card" style={{ padding: 16 }}>
         {all.map((l) => <label key={l} style={{ display: "block", padding: "4px 0" }}><input type="checkbox" disabled={!canEdit} checked={held.includes(l)} onChange={() => toggle(l)} /> {l}{!d.plans.includes(l) && <span className="tag"> no longer on the Pricing page</span>}</label>)}
         {!all.length && <p className="sub">The Pricing page has no plans yet.</p>}
-        <p className="sub" style={{ margin: "8px 0 0" }}>Levels come from the plans on the Pricing page (Webmaster → Guided → Learn More → Pricing).</p>
+        <p className="sub" style={{ margin: "8px 0 0" }}>Levels come from the plans on the Pricing page (Website → Guided → Learn More → Pricing).</p>
       </div>
 
       <h2>Tool authorizations</h2>

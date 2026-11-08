@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import { confirmDialog, promptDialog } from "@/components/dialog";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -26,7 +27,7 @@ export function Emails({ s }: { s: State; reload: () => void }) {
       <h1>Emails <Link href="/admin/mail/email/new"><button className="pri">New email</button></Link></h1>
       <div className="mp-tabs">{TABS.map(([k, label]) => <button key={k} aria-current={status === k ? "true" : undefined} onClick={() => setStatus(k)}>{label} <small>({data?.counts[k] ?? 0})</small></button>)}</div>
       <p><input type="search" placeholder="Search emails" aria-label="Search emails" value={search} onChange={(e) => setSearch(e.target.value)} style={{ width: 260 }} /></p>
-      {msg && <p className="err" role="alert">{msg}</p>}
+      {msg && <Notice kind="error">{msg}</Notice>}
       <table className="mp-table">
         <thead><tr><th>Subject</th><th>Status</th><th>Lists</th><th>Opened</th><th>Clicked</th><th>Updated</th></tr></thead>
         <tbody>
@@ -167,7 +168,7 @@ export function SendStep({ id, s }: { id: number; s: State }) {
               {when_ === "later" && <input type="datetime-local" value={at} onChange={(e) => setAt(e.target.value)} style={{ width: "auto" }} />}</div>
           </div>
         </div>
-        {msg && <p className="err" role="alert">{msg}</p>}
+        {msg && <Notice kind="error">{msg}</Notice>}
         <div className="bar">
           <button disabled={busy} onClick={() => go(async () => { await rpc("saveCampaign", { campaign: settings }); setMsg("Saved."); })}>Save as draft</button>
           <button disabled={busy} onClick={() => go(async () => { const to = await promptDialog("Send a test to which address?"); if (!to) return; await rpc("saveCampaign", { campaign: settings }); await rpc("test", { id, to }); setMsg("Test sent to " + to); })}>Send test</button>

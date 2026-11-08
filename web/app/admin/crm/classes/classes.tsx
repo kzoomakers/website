@@ -1,4 +1,5 @@
 "use client";
+import { useDirtyGuard } from "@/components/dirty-guard";
 import { useCallback, useEffect, useState } from "react";
 import { alertDialog, confirmDialog } from "@/components/dialog";
 import { crm } from "../rpc";
@@ -14,6 +15,7 @@ const dt = (s: string) => new Date(s).toLocaleString([], { dateStyle: "medium", 
 /** Member class proposals waiting for a decision; approving creates the class (date, place, size and price can be adjusted first). */
 function Proposals({ canEdit, onChange }: { canEdit: boolean; onChange: () => void }) {
   const [rows, setRows] = useState<Proposal[]>([]), [minDays, setMin] = useState(45), [announce, setAnn] = useState(false), [open, setOpen] = useState(0), [e, setE] = useState<any>({}), [why, setWhy] = useState("");
+  useDirtyGuard([e, why], open);
   const load = useCallback(() => crm<{ rows: Proposal[] }>("proposals", { status: "pending" }).then((r) => setRows(r.rows), (x) => alertDialog(x.message)), []);
   useEffect(() => { load(); crm<{ minDays: number }>("classRules").then((r) => setMin(r.minDays)); }, [load]);
   const decide = (p: Proposal, action: "approve" | "decline") =>
@@ -58,6 +60,7 @@ function Proposals({ canEdit, onChange }: { canEdit: boolean; onChange: () => vo
 
 export default function Classes({ canEdit }: { canEdit: boolean }) {
   const [rows, setRows] = useState<Klass[]>([]), [f, setF] = useState<F | null>(null), [roster, setRoster] = useState<{ id: number; rows: any[] } | null>(null);
+  useDirtyGuard(f, f ? (f as any).id ?? "new" : "closed");
   const load = useCallback(() => crm<Klass[]>("classes").then(setRows, (e) => alertDialog(e.message)), []);
   useEffect(() => { load(); }, [load]);
   const when = (s: string) => new Date(s).toLocaleString([], { dateStyle: "medium", timeStyle: "short" });

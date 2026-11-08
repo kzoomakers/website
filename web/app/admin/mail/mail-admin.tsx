@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { pct, rpc, when, type Cfg, type State } from "./api";
@@ -70,7 +71,7 @@ function Lists({ s, reload }: Props) {
     <>
       <h1>Lists {!f && <button className="pri" onClick={() => setF({ name: "", description: "" })}>New list</button>}</h1>
       <p className="sub">Each list is independent. Send an email to one or several, and point signup forms at the lists they should fill.</p>
-      {msg && <p className="err" role="alert">{msg}</p>}
+      {msg && <Notice kind="error">{msg}</Notice>}
       {f && (
         <div className="card" style={{ padding: 14, marginBottom: 14, maxWidth: 560 }}>
           <label className="field"><span>Name</span><input value={f.name} autoFocus onChange={(e) => setF({ ...f, name: e.target.value })} /></label>

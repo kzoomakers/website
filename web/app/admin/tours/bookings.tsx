@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import { useState } from "react";
 import { confirmDialog } from "@/components/dialog";
 import type { Booking } from "@/lib/tours";
@@ -20,7 +21,7 @@ export default function Bookings({ initial }: { initial: Booking[] }) {
       <p className="sub">People who booked a tour on the website. Set what happened afterwards, message the visitor or leave private notes, or cancel a booking (the visitor is emailed).</p>
       <nav className="bar">
         <label><input type="checkbox" checked={past} onChange={(e) => load(e.target.checked)} /> Include past tours</label>
-        {msg && <span className="sub" role="alert" style={{ margin: 0 }}>{msg}</span>}
+        {msg && <Notice kind="error">{msg}</Notice>}
       </nav>
       <div className="card">
         {rows.map((b) => (

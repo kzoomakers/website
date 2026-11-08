@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import { confirmDialog, promptDialog } from "@/components/dialog";
 import { useCallback, useEffect, useState } from "react";
 import { rpc, type State } from "./api";
@@ -20,7 +21,7 @@ export default function Forms({ s }: { s: State; reload: () => void }) {
     return (
       <>
         <h1>{f.id ? "Edit form" : "New form"}</h1>
-        {msg && <p className="err" role="alert">{msg}</p>}
+        {msg && <Notice kind="error">{msg}</Notice>}
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,360px)", gap: 20, alignItems: "start" }}>
           <div className="card" style={{ padding: 16 }}>
             <label className="field"><span>Form name (only you see this)</span><input value={f.name} onChange={(e) => set({ name: e.target.value })} /></label>
@@ -53,7 +54,7 @@ export default function Forms({ s }: { s: State; reload: () => void }) {
     <>
       <h1>Signup forms <button className="pri" onClick={() => setF({ ...NEW, lists: s.lists[0] ? [s.lists[0].id] : [] })}>New form</button></h1>
       <p className="sub">Signup forms shown on the public website. A visitor who closes one won't see it again for 30 days.</p>
-      {msg && <p className="err" role="alert">{msg}</p>}
+      {msg && <Notice kind="error">{msg}</Notice>}
       <table className="mp-table">
         <thead><tr><th>Name</th><th>Type</th><th>Lists</th><th>Status</th></tr></thead>
         <tbody>

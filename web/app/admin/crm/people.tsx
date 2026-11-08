@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import DisableButton from "../disable-button";
@@ -17,7 +18,7 @@ export default function People({ initial, canEdit }: { initial: Person[]; canEdi
       <h1>People</h1>
       <p className="sub">Everyone who has registered on the site. Click a name for their details, emergency contacts and account actions.</p>
       <div className="bar"><input type="search" aria-label="Search people" placeholder="Search name, email, phone, card or QuickBooks ID" value={q} onChange={(e) => setQ(e.target.value)} style={{ minWidth: 320 }} /></div>
-      {err && <p role="alert" style={{ color: "var(--bad)" }}>{err}</p>}
+      {err && <Notice kind="error">{err}</Notice>}
       <div className="card">
         {rows.map((p) => (
           <div className="row" key={p.id}>

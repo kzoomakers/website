@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import { confirmDialog, promptDialog } from "@/components/dialog";
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -43,7 +44,7 @@ export default function Subscribers({ s, reload }: { s: State; reload: () => voi
     <>
       <h1>Subscribers <button className="pri" onClick={() => setEdit({ ...blank })}>New subscriber</button> <button onClick={() => setImp(!imp)}>Import</button>
         <button onClick={async () => { const { csv } = await rpc("exportSubscribers", { status, list: list || undefined, search }); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = "subscribers.csv"; a.click(); }}>Export</button></h1>
-      {msg && <p className="err" role="alert">{msg}</p>}
+      {msg && <Notice kind="error">{msg}</Notice>}
       {imp && (
         <div className="card" style={{ padding: 14, marginBottom: 14 }}>
           <b>Import subscribers</b>

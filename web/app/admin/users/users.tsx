@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import DisableButton from "../disable-button";
@@ -6,7 +7,7 @@ import { confirmDialog } from "@/components/dialog";
 
 type Level = "read" | "write";
 type Row = { id: number; email: string; name: string; perms: Record<string, Level>; founder: boolean; disabled: boolean };
-const COLS = [["webmaster", "Webmaster"], ["mail", "Postmaster"], ["blog", "Blog"], ["forms", "Forms"], ["crm", "CRM"], ["board", "Signed Docs"], ["tours", "Tours"], ["chores", "Chores"], ["admin", "Admin"]] as const;
+const COLS = [["webmaster", "Website"], ["mail", "Email"], ["blog", "Blog"], ["forms", "Forms"], ["crm", "CRM"], ["board", "Signatures"], ["tours", "Tours"], ["chores", "Chores"], ["admin", "Admin"]] as const;
 
 // Who can open each top-level admin page: none, view only, or view + change. Search finds ordinary site accounts to grant access to.
 export default function Users({ initial, canEdit }: { initial: Row[]; canEdit: boolean }) {
@@ -35,7 +36,7 @@ export default function Users({ initial, canEdit }: { initial: Row[]; canEdit: b
         <h1>Access</h1>
         <p className="sub">Click a name to open them in CRM. Choose who can open each admin page. <strong>View only</strong> lets someone look but not change; <strong>Can edit</strong> lets them change things. Admin + Can edit is a full administrator who can also grant access. Anyone who has registered on the site can be found below; the first person to register is made the founding administrator, whose access can never be changed. At least 3 administrators must always remain.</p>
         <div className="bar"><input type="search" aria-label="Search people" placeholder="Search by name or email" value={q} onChange={(e) => setQ(e.target.value)} style={{ minWidth: 280 }} /></div>
-        {err && <p role="alert" style={{ color: "var(--bad)" }}>{err}</p>}
+        {err && <Notice kind="error">{err}</Notice>}
         <div className="card" style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead><tr><th style={{ textAlign: "left", padding: "10px 8px" }}>Person</th>{COLS.map(([, l]) => <th key={l} style={{ textAlign: "left", padding: "10px 8px" }}>{l}</th>)}<th /></tr></thead>

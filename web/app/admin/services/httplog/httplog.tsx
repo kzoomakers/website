@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import { useCallback, useEffect, useState } from "react";
 
 type Row = { id: string; at: string; ip: string; user: string; method: string; host: string; path: string; query: string; ua: string; referer: string; status: number };
@@ -58,7 +59,7 @@ export default function HttpLog() {
         {active.map(([k, v]) => <button key={k} type="button" onClick={() => { setOffset(0); setF((x) => ({ ...x, [k]: "" })); }}>{FILTER_KEYS[k]}: {v} ✕</button>)}
         {applied && <button type="button" onClick={() => { setQ(""); setApplied(""); setOffset(0); }}>Search: {applied} ✕</button>}
       </div>}
-      {err && <p role="alert" style={{ color: "var(--bad)" }}>{err}</p>}
+      {err && <Notice kind="error">{err}</Notice>}
       {d && <>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, marginBottom: 16 }}>
           {cards.map(([l, v]) => <div className="card" key={l} style={{ padding: "10px 16px" }}><div className="sub" style={{ margin: 0 }}>{l}</div><strong style={{ fontSize: 22 }}>{v}</strong></div>)}

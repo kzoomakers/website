@@ -170,7 +170,7 @@ export async function saveTopic(x: any, who: string) {
   if (!TOPIC_OK.test(name) || RESERVED.includes(name)) throw new Error("Topic names are 1-64 letters, numbers, - or _ (and can't be a reserved word like 'docs').");
   if (!Number.isInteger(days) || days < 1 || days > MAX_RETENTION) throw new Error(`Keep messages for 1 to ${MAX_RETENTION} days.`);
   const f = [String(x.description ?? "").slice(0, 300), !!x.public_read, !!x.public_write];
-  if (x.existing) { if (!(await q("UPDATE ntfy_topics SET description=$2, public_read=public_read AND kind = 'shared' AND $3, public_write=public_write AND kind = 'shared' AND $4, retention_days=$5 WHERE name=$1 RETURNING 1", [name, ...f, days])).length) throw new Error("No such topic."); return; }
+  if (x.existing) { if (!(await q("UPDATE ntfy_topics SET description=$2, public_read=(kind = 'shared' AND $3), public_write=(kind = 'shared' AND $4), retention_days=$5 WHERE name=$1 RETURNING 1", [name, ...f, days])).length) throw new Error("No such topic."); return; }
   if (!(await q("INSERT INTO ntfy_topics (name, description, public_read, public_write, retention_days, created_by) VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT DO NOTHING RETURNING 1", [name, ...f, days, who])).length) throw new Error("That topic already exists.");
 }
 export async function deleteTopic(name: string) {

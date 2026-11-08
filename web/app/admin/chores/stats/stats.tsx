@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import { useEffect, useState } from "react";
 import { chores } from "../rpc";
 import { awardText, hrs, when } from "../format";
@@ -9,7 +10,7 @@ const vs = (now: number, before?: number) => (before === undefined ? "" : now ==
 export default function Stats() {
   const [s, setS] = useState<Record<string, any> | null>(null), [period, setPeriod] = useState("this_month"), [err, setErr] = useState("");
   useEffect(() => { chores("stats").then(setS, (e) => setErr(e.message)); }, []);
-  if (err) return <p role="alert" style={{ color: "var(--bad)" }}>{err}</p>;
+  if (err) return <Notice kind="error">{err}</Notice>;
   if (!s) return <p className="sub">Loading…</p>;
   const p = s[period], max = Math.max(0.1, ...p.timeline.map((t: any) => t.hours)), peak = Math.max(1, ...p.heat.flat());
   const tiles: [string, string, string][] = [["Hours", String(p.hours), vs(p.hours, p.before?.hours)], ["Shifts", String(p.sessions), vs(p.sessions, p.before?.sessions)], ["Volunteers", String(p.volunteers), vs(p.volunteers, p.before?.volunteers)],

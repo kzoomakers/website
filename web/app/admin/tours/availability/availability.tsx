@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import { useState } from "react";
 import { confirmDialog } from "@/components/dialog";
 import type { Block } from "@/lib/tours";
@@ -51,7 +52,7 @@ export default function Availability({ initial, email, name }: { initial: Block[
         <label><input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} /> Only mine</label>
         <label><input type="checkbox" checked={past} onChange={(e) => load(e.target.checked)} /> Include past blocks</label>
         {upcoming.length > 0 && <button className="danger" onClick={() => remove(upcoming, upcoming.length === 1 ? "this upcoming block" : `all ${upcoming.length} upcoming blocks shown`)}>{q || mine ? `Delete the ${upcoming.length} upcoming shown…` : "Delete all upcoming blocks…"}</button>}
-        {msg && <span className="sub" role="alert" style={{ margin: 0 }}>{msg}</span>}
+        {msg && <Notice kind="error">{msg}</Notice>}
       </nav>
       <div className="card">
         {shown.map((b) => (

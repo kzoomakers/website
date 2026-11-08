@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import { useState } from "react";
 import { confirmDialog } from "@/components/dialog";
 import type { Offer, WalkupRequest } from "@/lib/tours";
@@ -27,7 +28,7 @@ export default function Walkups({ initial, email, name }: { initial: WalkupReque
       <p className="sub">People who asked for a tour when no time was open. Click <b>Offer times</b>, add the dates and time blocks you could give a tour, and we email them the choices. When they pick one, it appears under Bookings. If none work, the request comes back here.</p>
       <nav className="bar">
         <label><input type="checkbox" checked={all} onChange={(e) => load(e.target.checked)} /> Include scheduled and dismissed</label>
-        {msg && <span className="sub" role="alert" style={{ margin: 0, color: "#b3261e" }}>{msg}</span>}
+        {msg && <Notice kind="error">{msg}</Notice>}
       </nav>
       <div className="card">
         {rows.map((r) => (

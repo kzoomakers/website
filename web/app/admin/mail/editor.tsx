@@ -144,7 +144,7 @@ function Item({ b, i, list, onChange, prefix }: { b: Block; i: number; list: Blo
             onDragEnd={() => { x.drag.current = null; x.setOver(null); }}>⠿</span>
           {rich && <>
             <button title="Bold" onClick={() => fmt("bold")}><b>B</b></button><button title="Italic" onClick={() => fmt("italic")}><i>I</i></button><button title="Underline" onClick={() => fmt("underline")}><u>U</u></button>
-            <button title="Link" onClick={() => { const u = prompt("Link address (https://…)"); if (u) fmt("createLink", u); }}>🔗</button><button title="Remove link" onClick={() => fmt("unlink")}>⛓‍💥</button>
+            <button title="Link" onClick={async () => { const sel = getSelection(), r = sel?.rangeCount ? sel.getRangeAt(0).cloneRange() : null, u = await promptDialog("Link address (https://…)", "https://", { ok: "Add link" }); if (u && r) { sel!.removeAllRanges(); sel!.addRange(r); fmt("createLink", u); } }}>🔗</button><button title="Remove link" onClick={() => fmt("unlink")}>⛓‍💥</button>
             <button title="Bullets" onClick={() => fmt("insertUnorderedList")}>•≡</button><button title="Numbers" onClick={() => fmt("insertOrderedList")}>1≡</button></>}
           {(b.t === "text" || b.t === "heading") && (["left", "center", "right"] as const).map((a) => <button key={a} title={"Align " + a} onClick={() => set({ ...b, align: a })}>{a === "left" ? "⇤" : a === "center" ? "↔" : "⇥"}</button>)}
           <button title="Move up" disabled={i === 0} onClick={() => go(i - 1)}>↑</button>

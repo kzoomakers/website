@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import { useEffect, useState } from "react";
 
 type Sum = { url: string; total: number; d7: number | null; d30: number | null; first_day: string; last_at: string | null };
@@ -14,7 +15,7 @@ export default function Links() {
     <>
       <h1>External links</h1>
       <p className="sub">Clicks on any link that leaves kzoomakers.org (Discord, partners, social…). New links appear here the first time someone clicks them. Daily counts are kept forever.</p>
-      {err && <p role="alert" style={{ color: "var(--bad)" }}>{err}</p>}
+      {err && <Notice kind="error">{err}</Notice>}
       {!rows && !err && <p>Loading…</p>}
       {rows && <div className="card">
         <div style={{ display: "grid", gridTemplateColumns: "1fr 70px 70px 70px 150px", gap: 10, padding: "6px 0", fontWeight: 600 }}><span>Link</span><span>Total</span><span>7 days</span><span>30 days</span><span>Last click</span></div>

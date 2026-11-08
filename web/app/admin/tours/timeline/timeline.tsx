@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { hue } from "@/lib/tours-fmt";
 import type { TimelineEvent } from "@/lib/tours";
@@ -27,7 +28,7 @@ export default function Timeline({ initial }: { initial: TimelineEvent[] }) {
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search names, guides, messages…" aria-label="Search" style={{ minWidth: 260 }} />
         {GROUPS.map(([g, l]) => <button key={g} type="button" className={groups.includes(g) ? "pri" : ""} aria-pressed={groups.includes(g)} onClick={() => toggle(g)}>{l}</button>)}
         <label><input type="checkbox" checked={live} onChange={(e) => setLive(e.target.checked)} /> Live</label>
-        {err && <span role="alert" className="sub" style={{ margin: 0, color: "var(--bad)" }}>{err}</span>}
+        {err && <Notice kind="error">{err}</Notice>}
       </div>
       <div style={{ position: "relative", marginLeft: 14, paddingLeft: 26, borderLeft: "2px solid var(--line)" }}>
         {rows.map((e) => {
