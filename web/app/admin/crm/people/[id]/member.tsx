@@ -62,7 +62,7 @@ export default function Member({ profile, contacts, canEdit }: { profile: Profil
           <div className="card" style={{ display: "grid", gap: 12, padding: 16 }}>
             <div><button disabled={busy} onClick={async () => { if (await confirmDialog(`Email a password reset link to ${profile.email}? Their current password stops working when they click it.`, { ok: "Send" })) run(() => call(p.id, "POST", { action: "sendReset" }), "Reset email sent."); }}>Send password reset email</button></div>
             <form style={{ display: "flex", gap: 8, flexWrap: "wrap" }} onSubmit={(e) => { e.preventDefault(); run(() => call(p.id, "POST", { action: "setPassword", password: pw }), "Password set. Tell them the new password.", () => setPw("")); }}>
-              <input type="text" autoComplete="off" minLength={10} required placeholder="New password (10+ characters)" value={pw} onChange={(e) => setPw(e.target.value)} style={{ minWidth: 260 }} />
+              <input type="password" autoComplete="new-password" minLength={10} required placeholder="New password (10+ characters)" value={pw} onChange={(e) => setPw(e.target.value)} style={{ minWidth: 260 }} />
               <button disabled={busy}>Set password</button>
             </form>
             <div><DisableButton id={p.id} name={p.name} disabled={p.disabled} onChange={(d, reason) => { setP({ ...p, disabled: d, disabled_reason: d ? reason : "" }); router.refresh(); }} /></div>
