@@ -1,4 +1,5 @@
 import { db } from "./db";
+import { skipped } from "./httplog-skip";
 
 // HTTP request log. One row per request, in a table partitioned by day (UTC) so that retention is a cheap DROP of the oldest partition
 // and every time-bounded query only touches the days it asks about. Rows are buffered in memory and written in batches.
@@ -95,6 +96,7 @@ async function flush() {
 
 /** Queues one request for the log. Never throws and never waits on the database. */
 export function record(row: Row) {
+  if (skipped(row.ip)) return;
   const s = st();
   if (s.buf.length >= 20000) s.buf.shift();
   s.buf.push(row);
