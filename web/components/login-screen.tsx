@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
+import PrivacyText from "./privacy-text";
 
 const post = (url: string, body: unknown) => fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
 const BGS = ["greetingskalamazoo", "dtown", "dtown2", "kalamazoo", "kalamazoo-background"].map((n) => `/images/login/${n}.png`);
@@ -12,7 +13,7 @@ const LOCK = "M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0
 const MAIL = "M3 4a2 2 0 00-2 2v.4l9 5.2 9-5.2V6a2 2 0 00-2-2H3zm16 4.7l-9 5.2-9-5.2V14a2 2 0 002 2h14a2 2 0 002-2V8.7z";
 
 /** Sign-in / registration for everyone (site accounts and admins). `denied` = signed in, but without access to the page asked for. */
-export default function LoginScreen({ next, expired, denied, notAdmin, google }: { next: string; expired: boolean; denied?: string; notAdmin?: boolean; google: boolean }) {
+export default function LoginScreen({ next, expired, denied, notAdmin, google, privacy }: { privacy: string; next: string; expired: boolean; denied?: string; notAdmin?: boolean; google: boolean }) {
   const [cur, setCur] = useState(-1), [email, setEmail] = useState(""), [name, setName] = useState(""), [pw, setPw] = useState(""), [reg, setReg] = useState(false), [flash, setFlash] = useState(!!notAdmin), [busy, setBusy] = useState(false), [sent, setSent] = useState(false);
   const [msg, setMsg] = useState(denied ? `${denied} doesn't have access to that page. Ask an admin to grant it, or sign in with a different account.` : expired ? "That link has expired or was already used. Request a new one." : "");
   // Start on a random photo, then fade to the next one every few seconds (reduced-motion users get one still photo).
@@ -53,6 +54,7 @@ export default function LoginScreen({ next, expired, denied, notAdmin, google }:
         {msg && <p className="lg-msg lg-bad" role="alert">{msg}</p>}
         {google && !sent && <button className="lg-btn lg-alt" type="button" onClick={() => signIn("google", { callbackUrl: next })}>Sign in with Google (admins)</button>}
         <p className="lg-note">Prefer no password? Leave it blank and we email you a link that works once. {reg ? <>Registering also adds you to our email updates list. Have an account? </> : <>Don't have an account? </>}<a href="#" onClick={(e) => { e.preventDefault(); setReg(!reg); setMsg(""); setSent(false); }}>{reg ? "Sign in" : "Register"}</a> · <a href="/">Back to the site</a></p>
+        <details className="lg-priv"><summary>Privacy statement</summary><PrivacyText text={privacy} /></details>
       </div>
     </main>
   );

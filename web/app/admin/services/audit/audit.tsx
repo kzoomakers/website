@@ -14,7 +14,7 @@ type Detail =
 
 // Plain-English headline for an audit entry.
 const VERB: Record<string, string> = { save: "Edited", revert: "Reverted", restore: "Restored", delete: "Deleted", import: "Initial version of", url: "Changed the link of", flush: "Flushed the cache of", create: "Created" };
-const AREA: Record<string, string> = { page: "a page", menu: "the menu", board: "the board page", calendar: "the calendar", hours: "the hours", robots: "robots.txt" };
+const AREA: Record<string, string> = { page: "a page", menu: "the menu", board: "the board page", calendar: "the calendar", hours: "the hours", robots: "robots.txt", privacy: "the privacy statement" };
 function headline(action: string) {
   const [area, second] = action.split(".");
   const verb = VERB[action.split(".").pop()!] ?? action;
@@ -25,7 +25,7 @@ function headline(action: string) {
 const menuLines = (m: any[], d = 0): string[] => m.flatMap((i) => [`${"  ".repeat(d)}${i.label}${i.href ? ` → ${i.href}` : ""}`, ...(i.items ? menuLines(i.items, d + 1) : [])]);
 function lines(family: string, d: any): string[] {
   if (family === "menu") return menuLines(d);
-  if (family === "robots") return d.text.split("\n");
+  if (family === "robots" || family === "privacy") return d.text.split("\n");
   if (family === "hours") return [`Open: ${d.schedule.openDays.join(", ")}`, `Time: ${d.schedule.openTime} - ${d.schedule.closeTime}`, `Closed message: ${d.schedule.closedMessage}`, `Closed today message: ${d.schedule.closedMessageToday}`, `Address: ${d.contact.address}`];
   if (family === "board") return [`Heading: ${d.title}`, `Intro: ${d.intro}`, ...d.members.map((m: any) => `${m.name} · ${m.role} · ${m.photo} · ${m.bio}`)];
   if (family === "calendar") return [`Calendar feed link: ${d.url}`];

@@ -65,6 +65,10 @@
         {
           "label": "Member Handbook",
           "href": "handbook.html"
+        },
+        {
+          "label": "Privacy",
+          "href": "/privacy"
         }
       ]
     },

@@ -25,3 +25,7 @@
 .lg-flash button{background:none;border:0;color:#fff;cursor:pointer;font-size:16px;opacity:.8}
 @keyframes lg-in{from{opacity:0;transform:translate(-50%,-12px)}}
 @media (prefers-reduced-motion:reduce){.lg-flash{animation:none}}
+.lg-priv{margin-top:16px;font-size:13px;text-align:left}
+.lg-priv summary{cursor:pointer;text-align:center;font-weight:600}
+.lg-priv[open]{max-height:40vh;overflow:auto;padding-right:6px}
+.lg-priv h2{font-size:15px;margin:14px 0 4px}.lg-priv p{margin:0 0 6px}.lg-priv ul{margin:0 0 6px;padding-left:20px}

@@ -4,6 +4,7 @@ import { db, LOCKED, CAL_DEFAULT } from "./db";
 import { guidedDef, withDefaults } from "./guided";
 import boardSeed from "@/data/board.json";
 import robotsSeed from "@/data/robots.json";
+import privacySeed from "@/data/privacy.json";
 import { seedHours, type Hours } from "./hours";
 import navbar from "@/data/globals/navbar.json";
 
@@ -122,7 +123,7 @@ export async function revertMenu(id: number, who: string) {
   return true;
 }
 
-const FAMILY = /^(menu|board|calendar|hours|robots|guided\.[^.]+)\./;
+const FAMILY = /^(menu|board|calendar|hours|robots|privacy|guided\.[^.]+)\./;
 export type AuditDetail =
   | { kind: "none" }
   | { kind: "page"; before: unknown; after: unknown; revertable: boolean; why: string; newer: number; subject: string; undo: "revert" | "restore"; slug: string; revId: number; prevId?: number }
@@ -153,7 +154,7 @@ export async function auditDetail(id: number): Promise<AuditDetail | null> {
   const prev = (await c.query("SELECT id, data FROM audit WHERE id < $1 AND data IS NOT NULL AND left(action, $3) = $2 ORDER BY id DESC LIMIT 1", [id, family + ".", family.length + 1])).rows[0];
   const newer = (await c.query("SELECT count(*)::int n FROM audit WHERE id > $1 AND data IS NOT NULL AND left(action, $3) = $2", [id, family + ".", family.length + 1])).rows[0].n;
   const same = prev && canon(prev.data) === canon(a.data);
-  const subject = family === "menu" ? "the site menu" : family === "board" ? "the board page" : family === "calendar" ? "the calendar link" : family === "hours" ? "the hours of operation" : family === "robots" ? "robots.txt" : `the ${guidedDef(family.slice(7))?.label ?? family.slice(7)} page`;
+  const subject = family === "menu" ? "the site menu" : family === "board" ? "the board page" : family === "calendar" ? "the calendar link" : family === "hours" ? "the hours of operation" : family === "robots" ? "robots.txt" : family === "privacy" ? "the privacy statement" : `the ${guidedDef(family.slice(7))?.label ?? family.slice(7)} page`;
   return { kind: "data", family, before: prev?.data ?? null, after: a.data, newer, subject, prevId: prev?.id, revertable: !!prev && !same,
     why: !prev ? "This is the first saved version, so there is nothing earlier to go back to." : same ? "This change did not alter anything." : "" };
 }
@@ -239,6 +240,18 @@ export async function saveRobots(text: string, who: string, action = "robots.sav
   await logAudit(who, action, target || "edited robots.txt", { text });
 }
 
+export async function getPrivacy(): Promise<string> {
+  if (!db()) return privacySeed.text;
+  const r = await (await conn()).query("SELECT data FROM settings WHERE key = 'privacy'");
+  return r.rows[0]?.data?.text ?? privacySeed.text;
+}
+
+export async function savePrivacy(text: string, who: string, action = "privacy.save", target = "") {
+  await (await conn()).query(
+    `INSERT INTO settings (key, data) VALUES ('privacy', $1) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data`, [JSON.stringify({ text })]);
+  await logAudit(who, action, target || "edited the privacy statement", { text });
+}
+
 export type Board = typeof boardSeed;
 
 export async function getBoard(): Promise<Board> {
@@ -274,6 +287,7 @@ export async function revertSetting(prefix: string, id: number, who: string) {
   if (prefix === "board") await saveBoard(r.rows[0].data, who, ...how);
   else if (prefix === "hours") await saveHours(r.rows[0].data, who, ...how);
   else if (prefix === "robots") await saveRobots(r.rows[0].data.text, who, ...how);
+  else if (prefix === "privacy") await savePrivacy(r.rows[0].data.text, who, ...how);
   else if (prefix === "calendar") await setCalUrl(r.rows[0].data.url, who, ...how);
   else await saveGuided(prefix.replace("guided.", ""), r.rows[0].data, who, ...how);
   return true;
