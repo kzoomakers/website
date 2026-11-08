@@ -42,7 +42,13 @@ export async function saveMailCfg(x: Partial<MailCfg>) {
   n.siteUrl = n.siteUrl.replace(/\/$/, "");
   await q("INSERT INTO settings (key, data) VALUES ('mail:config', $1) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data", [JSON.stringify(n)]);
 }
-export const baseUrl = async (req: Request) => (await getMailCfg().catch(() => EMPTY)).siteUrl || new URL(req.url).origin;
+// Emailed links must point at our own site, never at a Host header the requester chose: use the saved site URL (or SITE_URL); only a local dev server may fall back to the request.
+export const baseUrl = async (req: Request) => {
+  const u = (await getMailCfg().catch(() => EMPTY)).siteUrl || process.env.SITE_URL;
+  if (u) return u.replace(/\/+$/, "");
+  if (process.env.NODE_ENV === "production") throw new Error("The site address isn't set: an admin needs to save the Site URL in the mail Settings.");
+  return new URL(req.url).origin;
+};
 const EMAIL_OK = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/;
 
 // ---- database

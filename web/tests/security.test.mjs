@@ -42,3 +42,36 @@ test("blog HTML loses scripts but keeps formatting", () => {
   assert.match(out, /youtube\.com\/embed\/abc/);
   assert.equal(cleanHtml("Plain text <b>stays</b>"), "Plain text <b>stays</b>"); // not HTML: escaped at display
 });
+
+test("sanitizer is an allow-list: svg animate, style and unknown tags can't carry script", () => {
+  const out = cleanHtml('<p style="x">hi</p><svg><a><animate attributeName="href" values="javascript:alert(1)"/></a></svg><custom-tag onclick="x()">kept <b>text</b></custom-tag>');
+  assert.doesNotMatch(out, /svg|animate|javascript|style|custom-tag|onclick/i);
+  assert.match(out, /kept <b>text<\/b>/);
+});
+
+test("rate limiter allows `max` hits per window, then refuses", async () => {
+  const { hit } = await import("../lib/limit.ts");
+  const r = [1, 2, 3, 4].map(() => hit("t:" + Math.random().toString(), 3, 1000));
+  assert.deepEqual(r.slice(0, 3), [true, true, true]);
+  const k = "same";
+  assert.deepEqual([hit(k, 2, 1000), hit(k, 2, 1000), hit(k, 2, 1000)], [true, true, false]);
+});
+
+test("signer unlock cookie needs a secret and can't be forged", async () => {
+  const { unlockCookie, unlocked } = await import("../lib/sign-access.ts");
+  delete process.env.PII_CRYPTO_SECRET;
+  assert.throws(() => unlockCookie(1));
+  process.env.PII_CRYPTO_SECRET = "s1";
+  const c = unlockCookie(7);
+  assert.ok(unlocked(7, c.value));
+  assert.ok(!unlocked(8, c.value)); // another signer's id
+  assert.ok(!unlocked(7, c.value.replace(/.$/, (x) => (x === "0" ? "1" : "0")))); // tampered mac
+});
+
+test("api keys and the approval gate are enforced in code", async () => {
+  const { readFileSync } = await import("node:fs");
+  const k = readFileSync("lib/api-keys.ts", "utf8");
+  assert.match(k, /expires_at IS NULL OR expires_at > now\(\)/); // expired keys refused
+  assert.match(k, /k\.scopes\.includes\(scope\)/); // a key needs the scope
+  assert.match(readFileSync("lib/readers.ts", "utf8"), /approval === "approved" && u\.onboarding === "done"/); // members-only needs approval
+});

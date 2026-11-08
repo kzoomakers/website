@@ -65,7 +65,7 @@ export async function sendCode(token: string) {
   const f = await byToken(token);
   if (!f || !f.signer.verify_email || f.doc.status !== "open") throw new Error("This signing link can't be used.");
   const c = await conn(), code = String(randomInt(100000, 1000000));
-  if (!(await c.query("UPDATE sign_signers SET code_hash = $2, code_exp = now() + interval '10 minutes', tries = 0 WHERE id = $1 AND (code_exp IS NULL OR code_exp < now() + interval '9 minutes')", [f.signer.id, hashTok(code + ":" + f.signer.id)])).rowCount) throw new Error("A code was just sent. Please wait a minute before asking for another.");
+  if (!(await c.query("UPDATE sign_signers SET code_hash = $2, code_exp = now() + interval '10 minutes' WHERE id = $1 AND (code_exp IS NULL OR code_exp < now() + interval '9 minutes')", [f.signer.id, hashTok(code + ":" + f.signer.id)])).rowCount) throw new Error("A code was just sent. Please wait a minute before asking for another.");
   const cfg = await getMailCfg();
   if (!mailReady(cfg)) throw new Error("Email isn't set up, so a code can't be sent.");
   await send({ to: f.signer.email, subject: `Your signing code: ${code}`, text: `Your code to open "${f.doc.title}" is ${code}. It works for 10 minutes. If you didn't ask for it, ignore this email.`, html: `<p>Your code to open <strong>${esc(f.doc.title)}</strong> is <strong style="font-size:1.4em">${code}</strong>.</p><p><small>It works for 10 minutes. If you didn't ask for it, ignore this email.</small></p>` }, cfg);

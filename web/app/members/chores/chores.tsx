@@ -16,7 +16,7 @@ const TABS = [["todo", "To do"], ["hours", "Hours"], ["fame", "Achievements"], [
 export default function Chores() {
   const [tab, setTab] = useState("todo"), [period, setPeriod] = useState("this_month"), [msg, setMsg] = useState("");
   const [d, setD] = useState<{ chores: Chore[]; mine: Shift[]; hours: { name: string; hours: number; times: number }[] } | null>(null), [ach, setAch] = useState<any[] | null>(null), [stats, setStats] = useState<any>(null);
-  const [log, setLog] = useState<{ id: number; minutes: string } | null>(null);
+  const [fin, setFin] = useState<{ id: number; minutes: string } | null>(null), [log, setLog] = useState<{ id: number; minutes: string } | null>(null);
   const load = useCallback((p = period) => rpc("overview", { period: p }).then(setD, (e) => setMsg(e.message)), [period]);
   useEffect(() => { load(); }, [load]);
   useEffect(() => { if (tab === "fame" && !ach) rpc("achievements").then(setAch, (e) => setMsg(e.message)); if (tab === "stats" && !stats) rpc("stats").then(setStats, (e) => setMsg(e.message)); }, [tab]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -33,7 +33,8 @@ export default function Chores() {
         <>
           {d.mine.length > 0 && (
             <div className="card"><h2 style={{ marginTop: 0 }}>You're on</h2>
-              {d.mine.map((s) => <div key={s.id} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", padding: "4px 0" }}><strong>{s.chore}</strong><span className="tag">since {when(s.started_at)}</span><button className="primary" onClick={() => run(() => rpc("finish", { shift_id: s.id }))}>I'm done</button></div>)}
+              {d.mine.map((s) => <div key={s.id} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", padding: "4px 0" }}><strong>{s.chore}</strong><span className="tag">since {when(s.started_at)}</span><button className="primary" onClick={() => run(() => rpc("finish", { shift_id: s.id, minutes: fin?.id === s.id ? Number(fin.minutes) : undefined }).catch((e) => { if (/open over/.test(e.message)) setFin({ id: s.id, minutes: "60" }); throw e; }))}>I'm done</button>
+                {fin?.id === s.id && <label>Minutes it took<input type="number" min={1} max={960} value={fin.minutes} onChange={(e) => setFin({ id: s.id, minutes: e.target.value })} style={{ width: 90 }} /></label>}</div>)}
             </div>
           )}
           <div className="card">

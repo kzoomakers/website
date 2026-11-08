@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { currentMember } from "@/lib/readers";
+import { logAudit } from "@/lib/store";
 import * as c from "@/lib/chores";
 
 // Member-facing chores: POST { op, ... }, always as the signed-in member. Everyone sees the chores, hours, stats and achievements; you only start, finish and log your own time.
@@ -20,9 +21,10 @@ export async function POST(req: Request) {
         await c.finishShift(Number(a.shift_id), a.minutes === "" || a.minutes == null ? null : Number(a.minutes));
         break;
       }
-      case "log": await c.logTime(Number(a.chore_id), u.id, Number(a.minutes), a.date ? String(a.date) : undefined, "web", "", u.email); break;
+      case "log": await c.logTime(Number(a.chore_id), u.id, Number(a.minutes), undefined, "web", "", u.email); break;
       default: return new NextResponse("unknown op", { status: 400 });
     }
+    if (["start", "finish", "log"].includes(a.op)) await logAudit(u.email, "chore." + a.op, String(a.chore_id ?? a.shift_id ?? ""));
     return NextResponse.json({ ok: true });
   } catch (e: any) { return new NextResponse(e.message ?? "failed", { status: 400 }); }
 }

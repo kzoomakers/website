@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { COOKIE_NAME, currentVerified, requestLink, safeNext, setPassword } from "@/lib/readers";
 import { baseUrl } from "@/lib/mail";
+import { hashIp } from "@/lib/comments";
 
 // GET returns the signed-in reader (or null) so any page can show account state.
 export async function GET() {
@@ -13,7 +14,7 @@ export async function POST(req: Request) {
   const b = await req.json().catch(() => null);
   if (typeof b?.email !== "string") return new NextResponse("bad request", { status: 400 });
   try {
-    await requestLink(b.email, typeof b.name === "string" ? b.name : "", safeNext(b.next), await baseUrl(req), typeof b.password === "string" ? b.password : "");
+    await requestLink(b.email, typeof b.name === "string" ? b.name : "", safeNext(b.next), await baseUrl(req), hashIp(req));
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return new NextResponse(e.message, { status: 400 });
@@ -32,8 +33,10 @@ export async function PUT(req: Request) {
   if (!u) return new NextResponse("Sign in first.", { status: 401 });
   if (typeof b?.password !== "string") return new NextResponse("bad request", { status: 400 });
   try {
-    await setPassword(u.id, b.password, typeof b.current === "string" ? b.current : "");
-    return NextResponse.json({ ok: true });
+    const s = await setPassword(u.id, b.password, typeof b.current === "string" ? b.current : "");
+    const res = NextResponse.json({ ok: true });
+    res.cookies.set(COOKIE_NAME, s.cookie, { httpOnly: true, sameSite: "lax", secure: new URL(req.url).protocol === "https:", path: "/", maxAge: s.maxAge }); // the old cookie just stopped working
+    return res;
   } catch (e: any) {
     return new NextResponse(e.message, { status: 400 });
   }

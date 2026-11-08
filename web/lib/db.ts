@@ -71,6 +71,7 @@ export async function ensureSchema(pool: Pool) {
     first_name text NOT NULL, last_name text NOT NULL, phone text NOT NULL, relationship text NOT NULL, address text NOT NULL DEFAULT '', business_phone text NOT NULL DEFAULT '',
     created_at timestamptz NOT NULL DEFAULT now())`);
   await pool.query("CREATE INDEX IF NOT EXISTS emergency_contacts_user ON emergency_contacts (user_id)");
+  await pool.query("ALTER TABLE site_users ADD COLUMN IF NOT EXISTS session_version int NOT NULL DEFAULT 0");
   await pool.query("CREATE TABLE IF NOT EXISTS login_fails (email text NOT NULL, at timestamptz NOT NULL DEFAULT now())");
   await pool.query(`CREATE TABLE IF NOT EXISTS login_tokens (hash text PRIMARY KEY, user_id int NOT NULL REFERENCES site_users ON DELETE CASCADE, next text NOT NULL DEFAULT '/blog',
     expires_at timestamptz NOT NULL, created_at timestamptz NOT NULL DEFAULT now())`);

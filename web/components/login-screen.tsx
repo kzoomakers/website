@@ -26,7 +26,7 @@ export default function LoginScreen({ next, expired, denied, google }: { next: s
     e.preventDefault(); setBusy(true); setMsg("");
     // Sign in with a password if one was typed; otherwise (or when registering) email a link.
     const pwLogin = !reg && !!pw;
-    const r = await (pwLogin ? post("/api/blog/auth/password", { email, password: pw, next }) : post("/api/blog/auth", { email, name: reg ? name : "", password: reg ? pw : "", next })).catch(() => null);
+    const r = await (pwLogin ? post("/api/blog/auth/password", { email, password: pw, next }) : post("/api/blog/auth", { email, name: reg ? name : "", next })).catch(() => null);
     setBusy(false);
     if (r?.ok) { if (pwLogin) location.href = (await r.json()).next; else setSent(true); } else setMsg(r ? await r.text() : "Network error. Try again.");
   };
@@ -42,7 +42,7 @@ export default function LoginScreen({ next, expired, denied, google }: { next: s
           <form onSubmit={go}>
             <div className="lg-box"><input type="email" required autoComplete="email" aria-label="Email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} /><Icon d={MAIL} /></div>
             {reg && <div className="lg-box"><input required aria-label="Name" autoComplete="name" placeholder="Your name" maxLength={80} value={name} onChange={(e) => setName(e.target.value)} /><Icon d={USER} /></div>}
-            <div className="lg-box"><input type="password" minLength={reg ? 10 : undefined} autoComplete={reg ? "new-password" : "current-password"} aria-label="Password" placeholder={reg ? "Password (optional)" : "Password (or leave blank for an email link)"} value={pw} onChange={(e) => setPw(e.target.value)} /><Icon d={LOCK} /></div>
+            {!reg && <div className="lg-box"><input type="password" autoComplete="current-password" aria-label="Password" placeholder="Password (or leave blank for an email link)" value={pw} onChange={(e) => setPw(e.target.value)} /><Icon d={LOCK} /></div>}
             <button className="lg-btn" type="submit" disabled={busy}>{busy ? "Working…" : reg ? "Register" : pw ? "Sign in" : "Email me a sign-in link"}</button>
           </form>
         )}
