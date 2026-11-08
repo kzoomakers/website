@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { confirmDialog } from "@/components/dialog";
 import { ImagePick } from "../media-picker";
@@ -11,11 +11,12 @@ import type { Author, Cat, Post } from "@/lib/blog";
 const toLocal = (iso: string | null) => (iso ? new Date(Date.parse(iso) - new Date(iso).getTimezoneOffset() * 60000).toISOString().slice(0, 16) : "");
 const BLANK = { slug: "", title: "", excerpt: "", body: "", image: "", tags: [] as string[], status: "draft" as Post["status"], publish_at: null as string | null, author_id: null as number | null, category_ids: [] as number[] };
 
-export default function PostEditor({ initial, authors, categories, me }: { initial: Post | null; authors: Author[]; categories: Cat[]; me: number }) {
+export default function PostEditor({ initial, authors, categories, me, tones }: { initial: Post | null; authors: Author[]; categories: Cat[]; me: number; tones: { id: string; label: string }[] }) {
   const [p, setP] = useState<typeof BLANK & { id?: number }>(initial ?? { ...BLANK, author_id: me });
   const [tags, setTags] = useState((initial?.tags ?? []).join(", "));
   const [msg, setMsg] = useState("");
   const [saved, setSaved] = useState(0);
+  const [enh, setEnh] = useState(false), [ev, setEv] = useState(0); // ev remounts the editor so it picks up AI text
   const router = useRouter();
   const set = (x: Partial<typeof p>) => setP({ ...p, ...x });
   const save = async (status = p.status) => {
@@ -41,7 +42,8 @@ export default function PostEditor({ initial, authors, categories, me }: { initi
         <input aria-label="Title" placeholder="Title" value={p.title} onChange={(e) => set({ title: e.target.value })} />
         <input aria-label="URL slug" placeholder="URL slug (blank = from title)" value={p.slug} onChange={(e) => set({ slug: e.target.value })} />
         <textarea rows={2} aria-label="Excerpt" placeholder="Excerpt (shown in the list, RSS and search results)" value={p.excerpt} onChange={(e) => set({ excerpt: e.target.value })} />
-        <RichEditor key={p.id ?? "new"} value={p.body} onChange={(body) => set({ body })} />
+        {tones.length > 0 && <div><button type="button" disabled={!p.body.trim()} onClick={() => setEnh(true)}>✨ Enhance with AI</button></div>}
+        <RichEditor key={`${p.id ?? "new"}-${ev}`} value={p.body} onChange={(body) => set({ body })} />
         <ImagePick value={p.image} onChange={(image) => set({ image })} />
         <label>Author{" "}<select value={p.author_id ?? ""} onChange={(e) => set({ author_id: e.target.value ? Number(e.target.value) : null })}>
           <option value="">(none)</option>{authors.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></label>
@@ -54,6 +56,7 @@ export default function PostEditor({ initial, authors, categories, me }: { initi
           <input type="datetime-local" value={toLocal(p.publish_at)} onChange={(e) => set({ publish_at: e.target.value ? new Date(e.target.value).toISOString() : null })} />
         </label>
       </div>
+      {enh && <Enhance tones={tones} html={p.body} onClose={() => setEnh(false)} onApply={(body) => { set({ body }); setEv(ev + 1); setEnh(false); setMsg("AI rewrite applied. Read it over, then save."); }} />}
       <div className="bar" style={{ marginTop: 8 }}>
         <button onClick={() => save("draft")}>Save draft</button>
         <button className="pri" onClick={() => save("published")}>{p.status === "published" ? "Update" : "Publish"}</button>
@@ -64,5 +67,39 @@ export default function PostEditor({ initial, authors, categories, me }: { initi
         lines={(d) => [`Title: ${d.title}`, `Slug: ${d.slug}`, `Status: ${d.status} ${d.publish_at ?? ""}`, `Tags: ${d.tags.join(", ")}`, `Image: ${d.image}`, `Excerpt: ${d.excerpt}`, `Author: ${d.author_id ?? ""}`, `Categories: ${d.category_ids?.join(",")}`, ...d.body.replace(/></g, ">\n<").split("\n")]}
         onRevert={async (r) => { const x: Post = await r.json(); setP(x); setTags(x.tags.join(", ")); setMsg("Reverted."); }} />}
     </>
+  );
+}
+
+// Pick a personality, preview the AI's rewrite beside the original, then apply or go back. Nothing changes until Apply.
+function Enhance({ tones, html, onClose, onApply }: { tones: { id: string; label: string }[]; html: string; onClose: () => void; onApply: (html: string) => void }) {
+  const ref = useRef<HTMLDialogElement>(null);
+  const [busy, setBusy] = useState(""), [out, setOut] = useState(""), [note, setNote] = useState(""), [err, setErr] = useState("");
+  useEffect(() => { ref.current?.showModal(); }, []);
+  const go = async (tone: string) => {
+    setBusy(tone); setErr("");
+    try {
+      const r = await fetch("/api/webmaster/blog/enhance", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ tone, html }) });
+      if (!r.ok) throw new Error(await r.text());
+      const j = await r.json();
+      setOut(j.html); setNote(j.note);
+    } catch (e: any) { setErr(e.message); }
+    setBusy("");
+  };
+  const pane = { flex: "1 1 280px", maxHeight: "45vh", overflow: "auto", border: "1px solid #ddd", borderRadius: 8, padding: 10 } as const;
+  return (
+    <dialog ref={ref} aria-label="Enhance with AI" onCancel={(e) => { e.preventDefault(); if (!busy) onClose(); }} style={{ width: "min(900px, calc(100% - 32px))", border: 0, borderRadius: 14, padding: 20 }}>
+      <h2 style={{ marginTop: 0 }}>{out ? "Preview" : "Click a personality for your post"}</h2>
+      {err && <p role="alert" className="sub">{err}</p>}
+      {note && <p role="status" className="sub"><strong>{note}</strong></p>}
+      <div className="bar">{tones.map((t) => <button key={t.id} type="button" disabled={!!busy} onClick={() => go(t.id)}>{busy === t.id ? "Writing…" : t.label}</button>)}</div>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 12 }}>
+        <div className="prose-body" style={pane}><strong className="sub">Original</strong><div dangerouslySetInnerHTML={{ __html: html }} /></div>
+        {(out || busy) && <div className="prose-body" style={pane}><strong className="sub">AI rewrite</strong>{busy ? <p>Writing…</p> : <div dangerouslySetInnerHTML={{ __html: out }} />}</div>}
+      </div>
+      <div className="bar" style={{ marginTop: 12, justifyContent: "flex-end" }}>
+        <button type="button" disabled={!!busy} onClick={onClose}>Cancel</button>
+        {out && !busy && <button type="button" className="pri" onClick={() => onApply(out)}>Use this version</button>}
+      </div>
+    </dialog>
   );
 }

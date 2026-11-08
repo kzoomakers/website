@@ -8,17 +8,19 @@ const rpc = async (op: string, args: Record<string, unknown> = {}) => {
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 };
+const area = { width: "100%", boxSizing: "border-box", font: "13px/1.4 ui-monospace,monospace" } as const;
 const usd = (p?: number) => (p == null ? "" : p < 0.005 ? " · free" : ` · $${p.toFixed(2)}/M in`);
 
 // Step 1: give each AI service its API token and let it find its models. Step 2: pick which service + model does each job.
 export default function Ai({ initial, canEdit }: { initial: View; canEdit: boolean }) {
   const [v, setV] = useState(initial), [msg, setMsg] = useState(""), [busy, setBusy] = useState(""), [keys, setKeys] = useState<Record<string, string>>({});
   const [pick, setPick] = useState<Record<string, { provider: string; model: string }>>(Object.fromEntries(initial.scenarios.map((s) => [s.id, s.use ?? { provider: "", model: "" }])));
+  const [base, setBase] = useState(initial.prompts.base), [tones, setTones] = useState(Object.fromEntries(initial.prompts.tones.map((t) => [t.id, t.text])));
   const run = async (tag: string, fn: () => Promise<unknown>, ok: string) => { setBusy(tag); setMsg(""); try { const r = await fn(); setV(await rpc("view")); setMsg(typeof r === "string" ? r : ok); } catch (e: any) { setMsg(e.message); } setBusy(""); };
   return (
     <div style={{ maxWidth: 820 }}>
       <h1>AI</h1>
-      <p className="sub">Optional helpers that write plain-language text for staff to review. Add a service's API token, let it find its models, then choose which model does each job. A feature only appears for staff once its model is chosen here. Cheaper models are listed first.</p>
+      <p className="sub">Optional helpers that write plain-language text for staff to review. Add a service's API token, let it find its models, then choose which model does each job. A feature only appears for staff once its model is chosen here. Only free models or models costing $0.06 per million tokens or less are offered, cheapest first.</p>
       {msg && <p role="status" className="sub">{msg}</p>}
 
       <h2>1. Services</h2>
@@ -63,6 +65,23 @@ export default function Ai({ initial, canEdit }: { initial: View; canEdit: boole
           </section>
         );
       })}
+
+      <h2>3. Blog writing style</h2>
+      <p className="sub">Used by "Enhance with AI" in the blog editor. The style rules apply to every personality; each personality adds its own voice. Blank restores the default.</p>
+      <section className="card" style={{ padding: 14, marginBottom: 12 }}>
+        <strong>Style rules (all personalities)</strong>
+        <textarea rows={9} aria-label="Style rules" maxLength={6000} disabled={!canEdit} value={base} onChange={(e) => setBase(e.target.value)} style={area} />
+        {v.prompts.tones.map((t) => (
+          <div key={t.id} style={{ marginTop: 10 }}>
+            <strong>{t.label}</strong>
+            <textarea rows={4} aria-label={`${t.label} personality`} maxLength={6000} disabled={!canEdit} value={tones[t.id]} onChange={(e) => setTones({ ...tones, [t.id]: e.target.value })} style={area} />
+          </div>
+        ))}
+        {canEdit && <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+          <button className="pri" disabled={!!busy} onClick={() => run("prompts", () => rpc("savePrompts", { base, tones }), "Prompts saved.")}>Save prompts</button>
+          <button disabled={!!busy} onClick={() => { setBase(v.prompts.defaultBase); setTones(Object.fromEntries(v.prompts.tones.map((t) => [t.id, t.defaultText]))); }}>Reset to defaults</button>
+        </div>}
+      </section>
     </div>
   );
 }
