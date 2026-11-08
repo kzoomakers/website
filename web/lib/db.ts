@@ -76,6 +76,7 @@ export async function ensureSchema(pool: Pool) {
     created_at timestamptz NOT NULL DEFAULT now())`);
   await pool.query("CREATE INDEX IF NOT EXISTS emergency_contacts_user ON emergency_contacts (user_id)");
   await pool.query("ALTER TABLE site_users ADD COLUMN IF NOT EXISTS session_version int NOT NULL DEFAULT 0");
+  await pool.query("ALTER TABLE site_users ADD COLUMN IF NOT EXISTS member_listed_at timestamptz"); // set once, when they first join the Members mailing list; an admin removing them later sticks
   await pool.query("CREATE TABLE IF NOT EXISTS login_fails (email text NOT NULL, at timestamptz NOT NULL DEFAULT now())");
   await pool.query("ALTER TABLE login_fails ADD COLUMN IF NOT EXISTS ip text NOT NULL DEFAULT ''"); // lockouts are per address + visitor, so a stranger can't lock someone out
   await pool.query("CREATE TABLE IF NOT EXISTS rate_hits (key text NOT NULL, at timestamptz NOT NULL DEFAULT now())"); // lib/limit.ts

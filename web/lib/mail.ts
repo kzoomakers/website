@@ -174,16 +174,21 @@ async function upsert(email: string, name: string, lists: number[], status: stri
  * A reader who just verified their email joins the "Registered users" list (created on first use). Existing status is never touched,
  * so someone who unsubscribed (or bounced) stays unsubscribed; they simply appear on the list.
  */
-export async function addRegistered(email: string, name: string, base: string) {
-  let id = (await q("SELECT data FROM settings WHERE key = 'mail:registered_list'"))[0]?.data?.id;
+async function joinList(key: string, list: string, desc: string, source: string, email: string, name: string) {
+  let id = (await q("SELECT data FROM settings WHERE key = $1", [key]))[0]?.data?.id;
   if (!id || !(await q("SELECT 1 FROM mail_lists WHERE id = $1", [id])).length) {
-    id = (await q("INSERT INTO mail_lists (name, description) VALUES ('Registered users', 'People who registered an account on the website') RETURNING id"))[0].id;
-    await q("INSERT INTO settings (key, data) VALUES ('mail:registered_list', $1) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data", [JSON.stringify({ id })]);
+    id = (await q("INSERT INTO mail_lists (name, description) VALUES ($1, $2) RETURNING id", [list, desc]))[0].id;
+    await q("INSERT INTO settings (key, data) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data", [key, JSON.stringify({ id })]);
   }
-  const s = await upsert(email, name, [id], "subscribed", "registration");
+  const s = await upsert(email, name, [id], "subscribed", source);
   await q("UPDATE mail_subscribers SET confirmed_at = COALESCE(confirmed_at, now()) WHERE id = $1 AND status = 'subscribed'", [s.id]);
-  void welcome(s.token, base);
+  return s;
 }
+export async function addRegistered(email: string, name: string, base: string) {
+  void welcome((await joinList("mail:registered_list", "Registered users", "People who registered an account on the website", "registration", email, name)).token, base);
+}
+/** Approved, waiver signed, ID uploaded and profile complete: joins the "Members" list (unsubscribed stays unsubscribed). */
+export const addMember = (email: string, name: string) => joinList("mail:members_list", "Members", "Approved members who finished onboarding", "onboarding", email, name);
 /** Admin add/edit of one person. Admin-added people skip the confirmation email. */
 const cleanTags = (t: unknown) => [...new Set((Array.isArray(t) ? t : String(t ?? "").split(",")).map((x) => String(x).trim().toLowerCase().slice(0, 40)).filter(Boolean))].slice(0, 20);
 export async function saveSubscriber(x: { id?: number; email: string; name?: string; status?: string; lists?: number[]; tags?: unknown }) {

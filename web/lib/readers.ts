@@ -3,7 +3,7 @@ import { createHash, createHmac, randomBytes, scrypt, timingSafeEqual } from "cr
 import { promisify } from "util";
 import { cookies } from "next/headers";
 import { db } from "./db";
-import { STEP_SQL } from "./waiver";
+import { STEP_SQL, joinMembersIfDone } from "./waiver";
 import { notify, setUserTopicsLocked, userTopicName } from "./ntfy";
 import { addRegistered, getMailCfg, mailReady, sendQueued as send } from "./mail";
 
@@ -110,6 +110,7 @@ export async function consumeLink(token: string, base: string) {
 export async function afterSignIn(userId: number, next: string) {
   const u = (await (await conn()).query(`SELECT u.approval, ${STEP_SQL} AS onboarding, u.phone = '' OR u.address1 = '' AS thin, NOT EXISTS (SELECT 1 FROM emergency_contacts WHERE user_id = $1) AS no_contact FROM site_users u WHERE u.id = $1`, [userId])).rows[0];
   if (u?.approval !== "approved") return "/members";
+  await joinMembersIfDone(userId); // also catches up people who finished before the Members list existed
   if (u.onboarding !== "done") return "/members/onboarding";
   return u.thin || u.no_contact ? `/account?setup=1&next=${encodeURIComponent(safeNext(next))}` : safeNext(next);
 }

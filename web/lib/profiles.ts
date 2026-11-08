@@ -2,6 +2,7 @@ import { db } from "./db";
 import { logAudit } from "./store";
 import { MIN_ADMINS } from "./users";
 import { disabledMsg } from "./readers";
+import { joinMembersIfDone } from "./waiver";
 import { setUserTopicsLocked } from "./ntfy";
 
 async function conn() {
@@ -47,9 +48,13 @@ export async function updateProfile(id: number, patch: Record<string, unknown>, 
   if ("phone" in set && set.phone && !phoneOk(set.phone)) throw new Error("That phone number doesn't look right.");
   const keys = Object.keys(set);
   if (!keys.length) return;
+  const old = "email" in set ? (await c.query("SELECT email FROM site_users WHERE id = $1", [id])).rows[0]?.email : null;
   const r = await c.query(`UPDATE site_users SET ${keys.map((k, i) => `${k} = $${i + 2}`).join(", ")} WHERE id = $1 RETURNING email`, [id, ...keys.map((k) => set[k])]);
   if (!r.rowCount) throw new Error("No such user.");
+  // Their mailing-list entry follows the new address (unless that address is already a subscriber).
+  if (old && old !== set.email) await c.query("UPDATE mail_subscribers SET email = $2 WHERE email = $1 AND NOT EXISTS (SELECT 1 FROM mail_subscribers WHERE email = $2)", [old, set.email]);
   if (fields === ADMIN_FIELDS) await logAudit(who, "user.edit", `${r.rows[0].email}: ${keys.filter((k) => k !== "name").join(", ")}`);
+  await joinMembersIfDone(id);
 }
 
 export const listContacts = async (userId: number): Promise<Contact[]> =>
@@ -70,6 +75,7 @@ export async function saveContact(userId: number, b: Record<string, unknown>) {
     if ((await c.query("SELECT count(*)::int n FROM emergency_contacts WHERE user_id = $1", [userId])).rows[0].n >= 10) throw new Error("That's the maximum of 10 emergency contacts.");
     await c.query("INSERT INTO emergency_contacts (user_id, first_name, last_name, phone, relationship, address, business_phone) VALUES ($1,$2,$3,$4,$5,$6,$7)", [userId, ...vals]);
   }
+  await joinMembersIfDone(userId);
 }
 
 export const deleteContact = async (userId: number, id: number) =>
