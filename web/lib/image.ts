@@ -4,32 +4,14 @@ import path from "node:path";
 import sharp from "sharp";
 import { errMsg } from "./errmsg";
 import { hit } from "./limit";
-import { db } from "./db";
-import { MAX_UPLOAD_MB, tooLarge } from "./upload-limit";
+import { uploadLimitMb } from "./upload-cfg";
+import { tooLarge } from "./upload-limit";
 
 // Every uploaded image goes through here: a child process (workers/image-worker.mjs, shipped in the Docker image) decodes it (JPEG, PNG, WebP, GIF, HEIC, AVIF...),
 // caps it at 12 megapixels and re-encodes it as a medium-quality WebP (animated stays animated). The child has its own memory, no access to our secrets, and is killed after `timeoutMs`.
 // At most 2 run at once and 4 may wait; more are refused as busy, so a burst can't pile up big decodes.
 // shortcut: the whole upload is held in memory while it is checked (up to the upload limit); stream to disk first if the machine ever gets tight.
 
-let limit: { mb: number; at: number } | undefined;
-/** The biggest upload accepted, in MB: the number staff set under Admin > Setup (1 to the 150 MB ceiling), else the ceiling. Cached 30 s per server. */
-export async function uploadLimitMb() {
-  if (limit && Date.now() - limit.at < 30_000) return limit.mb;
-  let mb = MAX_UPLOAD_MB;
-  const d = db();
-  if (d) try { await d.ready; const v = Number((await d.pool.query("SELECT data FROM settings WHERE key = 'upload:max_mb'")).rows[0]?.data?.mb); if (v >= 1) mb = Math.min(Math.floor(v), MAX_UPLOAD_MB); } catch { /* no setting: the ceiling */ }
-  limit = { mb, at: Date.now() };
-  return mb;
-}
-export async function setUploadLimitMb(mb: number) {
-  if (!Number.isInteger(mb) || mb < 1 || mb > MAX_UPLOAD_MB) throw new Error(`Enter a whole number from 1 to ${MAX_UPLOAD_MB}.`);
-  const d = db();
-  if (!d) throw new Error("not configured");
-  await d.ready;
-  await d.pool.query("INSERT INTO settings (key, data) VALUES ('upload:max_mb', $1) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data", [JSON.stringify({ mb })]);
-  limit = undefined;
-}
 export class ImageError extends Error { // the message is safe to show the member
   status: number;
   constructor(message: string, status = 400) { super(message); this.status = status; }

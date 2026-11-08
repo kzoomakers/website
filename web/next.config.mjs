@@ -5,8 +5,6 @@ const nextConfig = {
     return [{ source: "/notify/:path*", destination: "/ntfy/:path*" }, { source: "/notify", destination: "/ntfy" }];
   },
   devIndicators: { position: "bottom-right" },
-  // Middleware runs on every request and Next cuts buffered bodies at 10 MB, which broke uploads over 10 MB. Keep this above MAX_UPLOAD_MB + framing (lib/upload-limit.ts).
-  experimental: { middlewareClientMaxBodySize: "160mb" },
   async redirects() {
     return [
       { source: "/webmaster/:p*", destination: "/admin/webmaster/:p*", permanent: false },

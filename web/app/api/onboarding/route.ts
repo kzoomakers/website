@@ -4,7 +4,7 @@ import { currentApplicant, hasPassword } from "@/lib/readers";
 import { baseUrl } from "@/lib/mail";
 import { clientIp } from "@/lib/comments";
 import * as o from "@/lib/onboarding";
-import { uploadLimitMb } from "@/lib/image";
+import { uploadLimitMb } from "@/lib/upload-cfg";
 import { latestVersion } from "@/lib/waiver";
 import { RELATIONSHIPS } from "@/lib/profiles";
 
