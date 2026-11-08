@@ -1,5 +1,6 @@
 import { debugLog } from "./debug";
 import nodemailer from "nodemailer";
+import type { Transporter } from "nodemailer";
 import { randomBytes, randomUUID } from "crypto";
 import { clickOk, same, sign } from "./signing";
 import { db } from "./db";
@@ -408,7 +409,7 @@ export const subscriberActivity = (subscriberId: number) => q(`SELECT c.id AS ca
   FROM mail_sends x JOIN mail_campaigns c ON c.id = x.campaign_id WHERE x.subscriber_id = $1 ORDER BY x.id DESC LIMIT 200`, [subscriberId]);
 
 // ---- sending
-let tx: { url: string; t: nodemailer.Transporter } | undefined;
+let tx: { url: string; t: Transporter } | undefined;
 const smtp = (c: MailCfg) => (tx?.url === c.smtpUrl ? tx : (tx = { url: c.smtpUrl, t: nodemailer.createTransport(c.smtpUrl) })).t;
 
 type Msg = { to: string; subject: string; html?: string; text?: string; from?: string; headers?: Record<string, string>; attachments?: { filename: string; content: Buffer; type: string }[] };

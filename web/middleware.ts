@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { toRow, record } from "@/lib/httplog";
+import { getSecHeaders } from "@/lib/sechead-store";
+import { headersFor } from "@/lib/sechead";
 import { COOKIE_NAME, cookieUserId } from "@/lib/readers";
 
 // Node runtime (Postgres needs it): logs every request except static assets to the HTTP log (Admin > Services > HTTP log). Never blocks or alters the request.
@@ -20,5 +22,11 @@ export async function middleware(req: NextRequest) {
     }
     record(row);
   } catch { /* logging must never break a page */ }
-  return NextResponse.next();
+  const res = NextResponse.next();
+  try {
+    // Fly's proxy ends TLS, so HTTPS shows in x-forwarded-proto, not in the URL.
+    const https = (req.headers.get("x-forwarded-proto") ?? req.nextUrl.protocol.replace(":", "")) === "https";
+    for (const [k, v] of Object.entries(headersFor(await getSecHeaders(), req.nextUrl.pathname, https))) res.headers.set(k, v);
+  } catch { /* headers are best effort: never take a page down */ }
+  return res;
 }

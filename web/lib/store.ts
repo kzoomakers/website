@@ -288,6 +288,7 @@ export async function revertSetting(prefix: string, id: number, who: string) {
   else if (prefix === "hours") await saveHours(r.rows[0].data, who, ...how);
   else if (prefix === "robots") await saveRobots(r.rows[0].data.text, who, ...how);
   else if (prefix === "privacy") await savePrivacy(r.rows[0].data.text, who, ...how);
+  else if (prefix === "security") await (await import("./sechead-store")).saveSecHeaders(r.rows[0].data, who, ...how);
   else if (prefix === "calendar") await setCalUrl(r.rows[0].data.url, who, ...how);
   else await saveGuided(prefix.replace("guided.", ""), r.rows[0].data, who, ...how);
   return true;
