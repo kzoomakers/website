@@ -9,7 +9,7 @@ primary_region = 'ord'
 [build]
 
 [env]
-  AUTH_URL = 'https://kzoomakers-org-website.fly.dev' # behind Fly's proxy Next sees itself as localhost:3000, which broke the Google redirect URI; change to the real domain when it goes live
+  AUTH_URL = 'https://kzoomakers.org' # behind Fly's proxy Next sees itself as localhost:3000, which broke the Google redirect URI; change to the real domain when it goes live
 
 [http_service]
   internal_port = 3000
