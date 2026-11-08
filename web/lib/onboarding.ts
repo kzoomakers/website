@@ -37,17 +37,29 @@ export async function sign(u: { id: number; name: string; email: string }, signa
 
 export async function handbookRead(userId: number) { await advance(userId, "handbook"); }
 
-export async function storeId(userId: number, kind: string, expires: string, file: File) {
-  if ((await getStep(userId)) !== "id") throw new Error("Finish the earlier steps first.");
+/** The rules for an ID upload; throws a message the member can act on. */
+export function checkId(kind: string, expires: string, size: number, now = Date.now()) {
   if (!(kind in ID_KINDS)) throw new Error("Choose the kind of ID.");
   const exp = expires ? new Date(expires + "T23:59:59") : null;
   if (exp && isNaN(+exp)) throw new Error("That expiration date doesn't look right.");
   if (kind !== "college" && !exp) throw new Error("Enter the expiration date printed on your ID.");
-  if (exp && +exp < Date.now()) throw new Error("That ID is expired. Please use one that hasn't expired.");
-  if (file.size > 12 * 1024 * 1024) throw new Error("That image is too large (12MB max).");
+  if (exp && +exp < now) throw new Error("That ID is expired. Please use one that hasn't expired.");
+  if (size > 12 * 1024 * 1024) throw new Error("That image is too large (12MB max).");
+}
+
+const MAX_PIXELS = 50e6; // decoding is in memory on the one server process; a phone's 48MP photo fits, a decompression bomb doesn't
+
+export async function storeId(userId: number, kind: string, expires: string, file: File) {
+  if ((await getStep(userId)) !== "id") throw new Error("Finish the earlier steps first.");
+  checkId(kind, expires, file.size);
   // Re-encoding drops metadata (GPS and the like) and proves it is a real image.
-  const jpg = await sharp(Buffer.from(await file.arrayBuffer())).rotate().resize(2200, 2200, { fit: "inside", withoutEnlargement: true }).jpeg({ quality: 85 }).toBuffer().catch(() => { throw new Error("That image couldn't be read. Upload a JPG, PNG or WebP photo or scan."); });
-  await (await conn()).query("INSERT INTO member_ids (user_id, kind, expires_on, data) VALUES ($1,$2,$3,$4) ON CONFLICT (user_id) DO UPDATE SET kind = EXCLUDED.kind, expires_on = EXCLUDED.expires_on, data = EXCLUDED.data, uploaded_at = now()", [userId, kind, exp ? expires : null, seal(jpg)]);
+  const raw = Buffer.from(await file.arrayBuffer());
+  const m = await sharp(raw).metadata().catch(() => null); // reads the header only, HEIC included
+  if (m && (m.width ?? 0) * (m.height ?? 0) > MAX_PIXELS) throw new Error("That photo has too many pixels. Use a lower-resolution setting, or take a screenshot of it.");
+  const toJpg = (b: Buffer) => sharp(b).rotate().resize(2200, 2200, { fit: "inside", withoutEnlargement: true }).jpeg({ quality: 85 }).toBuffer();
+  // sharp's build can't read iPhone HEIC photos, so those are converted to JPEG first.
+  const jpg = await toJpg(raw).catch(async () => toJpg(Buffer.from(await (await import("heic-convert")).default({ buffer: raw, format: "JPEG", quality: 0.9 })))).catch(() => { throw new Error("That image couldn't be read. Upload a JPG, PNG, WebP or HEIC photo or scan."); });
+  await (await conn()).query("INSERT INTO member_ids (user_id, kind, expires_on, data) VALUES ($1,$2,$3,$4) ON CONFLICT (user_id) DO UPDATE SET kind = EXCLUDED.kind, expires_on = EXCLUDED.expires_on, data = EXCLUDED.data, uploaded_at = now()", [userId, kind, expires || null, seal(jpg)]);
   await advance(userId, "id");
 }
 
@@ -57,12 +69,4 @@ export async function viewId(userId: number, who: string) {
   if (!r) return null;
   await logAudit(who, "crm.id.view", r.email);
   return open(r.data);
-}
-
-/** What staff see on a person's page: which steps are done, and the id of their signed waiver. */
-export async function status(userId: number) {
-  const c = await conn();
-  const [u, id, w] = await Promise.all([c.query("SELECT 1 FROM site_users WHERE id = $1", [userId]), c.query("SELECT kind, expires_on, uploaded_at FROM member_ids WHERE user_id = $1", [userId]),
-    c.query("SELECT id, completed_at FROM sign_docs WHERE user_id = $1 AND kind = 'waiver' AND status = 'complete' ORDER BY id DESC LIMIT 1", [userId])]);
-  return { step: (u.rows[0]?.onboarding ?? "done") as Step, id: id.rows[0] as { kind: string; expires_on: string | null; uploaded_at: string } | undefined, waiver: w.rows[0] as { id: number; completed_at: string } | undefined };
 }

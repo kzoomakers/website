@@ -10,7 +10,8 @@ const ORDER: [Step, string][] = [["waiver", "1. Sign the waiver"], ["handbook", 
 type Update = { last: string; changes: Change[]; notes: { revision: string; summary: string; at: string }[] } | null;
 export default function Steps({ step: first, name, version, kinds, update }: { step: Step; name: string; version: Version; kinds: Record<string, string>; update: Update }) {
   const [step, setStep] = useState<Step | "done">(first), [busy, setBusy] = useState(false), [err, setErr] = useState(""), [read, setRead] = useState(false);
-  const frame = useRef<HTMLIFrameElement>(null);
+  const frame = useRef<HTMLIFrameElement>(null), errBox = useRef<HTMLParagraphElement>(null);
+  useEffect(() => { if (err) { errBox.current?.scrollIntoView({ behavior: "smooth", block: "center" }); errBox.current?.focus(); } }, [err]); // a failed upload must not be missed off-screen
   const next = (r: Response) => r.json().then((j: { step: Step | "done" }) => { setErr(""); if (j.step === "done") location.href = "/members/onboarding"; else setStep(j.step); });
   const post = async (body: object) => { setBusy(true); setErr(""); const r = await fetch("/api/onboarding", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }); setBusy(false); r.ok ? await next(r) : setErr(await r.text()); };
   // The handbook is the site's own page, so we can watch how far they scrolled. We poll instead of relying on the iframe's load event (it can fire before React hydrates and never reach us),
@@ -33,14 +34,15 @@ export default function Steps({ step: first, name, version, kinds, update }: { s
   }, [step]);
   const sendId = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); setBusy(true); setErr("");
-    const r = await fetch("/api/onboarding/id", { method: "POST", body: new FormData(e.currentTarget) });
-    setBusy(false); r.ok ? await next(r) : setErr(await r.text());
+    const r = await fetch("/api/onboarding/id", { method: "POST", body: new FormData(e.currentTarget) }).catch(() => null);
+    setBusy(false); r?.ok ? await next(r) : setErr(r ? (await r.text()).slice(0, 300) || `Upload failed (${r.status}). Try a smaller photo.` : "Couldn't reach the server. Check your connection and try again.");
   };
   return (
     <div style={{ display: "grid", gap: 16 }}>
       {step !== "resign" && <p>Before you can use the members area, please finish these three steps.</p>}
       {step !== "resign" && <nav aria-label="Steps" className="bar">{ORDER.map(([s, l]) => <span key={s} className={"tag" + (s === step ? " pri" : "")} aria-current={s === step ? "step" : undefined}>{l}</span>)}</nav>}
-      {err && <p role="alert" style={{ color: "#b00020" }}>{err}</p>}
+      {err && <p ref={errBox} tabIndex={-1} role="alert" style={{ color: "#fff", background: "#b00020", border: "2px solid #7a0016", borderRadius: 8, padding: "12px 16px", fontWeight: 600, margin: 0, animation: "errshake .4s" }}>⚠️ {err}</p>}
+      <style>{"@keyframes errshake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}"}</style>
       {(step === "waiver" || step === "resign") && <>
         {step === "resign" && update && <section aria-label="What changed" style={{ display: "grid", gap: 10 }}>
           <div className="card" style={{ borderLeft: "4px solid #d6a21f" }}>

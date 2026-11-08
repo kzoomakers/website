@@ -77,6 +77,9 @@ export async function ensureSchema(pool: Pool) {
   await pool.query("CREATE INDEX IF NOT EXISTS emergency_contacts_user ON emergency_contacts (user_id)");
   await pool.query("ALTER TABLE site_users ADD COLUMN IF NOT EXISTS session_version int NOT NULL DEFAULT 0");
   await pool.query("CREATE TABLE IF NOT EXISTS login_fails (email text NOT NULL, at timestamptz NOT NULL DEFAULT now())");
+  await pool.query("ALTER TABLE login_fails ADD COLUMN IF NOT EXISTS ip text NOT NULL DEFAULT ''"); // lockouts are per address + visitor, so a stranger can't lock someone out
+  await pool.query("CREATE TABLE IF NOT EXISTS rate_hits (key text NOT NULL, at timestamptz NOT NULL DEFAULT now())"); // lib/limit.ts
+  await pool.query("CREATE INDEX IF NOT EXISTS rate_hits_key ON rate_hits (key, at)");
   await pool.query(`CREATE TABLE IF NOT EXISTS login_tokens (hash text PRIMARY KEY, user_id int NOT NULL REFERENCES site_users ON DELETE CASCADE, next text NOT NULL DEFAULT '/blog',
     expires_at timestamptz NOT NULL, created_at timestamptz NOT NULL DEFAULT now())`);
   await pool.query("ALTER TABLE login_tokens ADD COLUMN IF NOT EXISTS reset boolean NOT NULL DEFAULT false"); // an admin-sent password reset link

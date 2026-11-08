@@ -64,7 +64,7 @@ export async function requestLink(emailIn: string, nameIn: string, next: string,
   if (!EMAIL_OK.test(email) || email.length > 200) throw new Error("That email address doesn't look right.");
   const cfg = await getMailCfg();
   if (!mailReady(cfg)) throw new Error(!cfg.from ? "Email isn't set up yet: the admin needs to save a Default sender address in the mail Settings." : "Email isn't set up yet: the admin needs to save an SMTP2GO API key in the mail Settings.");
-  if (ip && !hit("link:" + ip, 5, 600_000)) throw new Error("Too many requests from your connection. Please try again in a few minutes.");
+  if (ip && !(await hit("link:" + ip, 5, 600_000))) throw new Error("Too many requests from your connection. Please try again in a few minutes.");
   const c = await conn();
   // At most 60 links an hour for the whole site, so the form can't be used to mail-bomb other people.
   if ((await c.query("SELECT count(*)::int AS n FROM login_tokens WHERE created_at > now() - interval '1 hour' AND next NOT LIKE '/members/inbox/%' AND next <> '/members/classes'")).rows[0].n >= 60) throw new Error("Too many sign-in requests right now. Please try again later.");
@@ -152,14 +152,15 @@ const revoke = (userId: number) => conn().then((c) => c.query("UPDATE site_users
 /** Password sign-in (verified accounts that set a password). One generic error for every failure; throttled per address and site-wide. */
 export async function passwordLogin(emailIn: string, password: string, ip = "") {
   const email = emailIn.trim().toLowerCase(), c = await conn();
-  if (ip && !hit("pw:" + ip, 20, 900_000)) throw new Error("Too many attempts. Wait a few minutes, or use an emailed link instead.");
+  if (ip && !(await hit("pw:" + ip, 20, 900_000))) throw new Error("Too many attempts. Wait a few minutes, or use an emailed link instead.");
   await c.query("DELETE FROM login_fails WHERE at < now() - interval '1 hour'");
-  const n = (await c.query("SELECT count(*)::int AS mine FROM login_fails WHERE email = $1 AND at > now() - interval '15 minutes'", [email])).rows[0]; // per address, so one visitor can't lock everyone out; the per-IP check above stops one source guessing many
-  if (n.mine >= 5) throw new Error("Too many attempts. Wait a few minutes, or use an emailed link instead.");
+  // 5 misses per address from one visitor locks that visitor out, so a stranger can't lock the real owner out; 50 across everyone still stops a spread-out guesser.
+  const n = (await c.query("SELECT count(*) FILTER (WHERE ip = $2)::int AS mine, count(*)::int AS total FROM login_fails WHERE email = $1 AND at > now() - interval '15 minutes'", [email, ip])).rows[0];
+  if (n.mine >= 5 || n.total >= 50) throw new Error("Too many attempts. Wait a few minutes, or use an emailed link instead.");
   const u = (await c.query("SELECT id, password_hash, disabled_at, disabled_reason FROM site_users WHERE email = $1 AND verified_at IS NOT NULL", [email])).rows[0];
   // Hash even for unknown addresses so response time doesn't reveal who has an account.
   const ok = (await checkPw(password.slice(0, 200), u?.password_hash ?? "00:00")) && !!u?.password_hash;
-  if (!ok) { await c.query("INSERT INTO login_fails (email) VALUES ($1)", [email]); throw new Error("Wrong email or password."); }
+  if (!ok) { await c.query("INSERT INTO login_fails (email, ip) VALUES ($1, $2)", [email, ip]); throw new Error("Wrong email or password."); }
   if (u.disabled_at) throw new Error(disabledMsg(u.disabled_reason)); // only after the password was right, so this doesn't reveal accounts
   return { ...(await session(u.id)), userId: u.id as number };
 }

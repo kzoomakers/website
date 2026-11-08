@@ -14,6 +14,6 @@ export async function GET() {
 // The page's refresh button. POST (not GET) so crawlers and link prefetchers can't trigger it.
 export async function POST() {
   // Anyone can press the button, so a global limit keeps it from being used to hammer Google. spend() doesn't count refused tries, so spamming can't keep it locked.
-  if (!spend("calendar-purge", 6, 60_000).ok) return new NextResponse("Slow down: the calendar was just refreshed.", { status: 429 });
+  if (!(await spend("calendar-purge", 6, 60_000)).ok) return new NextResponse("Slow down: the calendar was just refreshed.", { status: 429 });
   return new NextResponse(await getFeed(true) ? "Calendar refreshed." : "Refresh failed: Google's calendar couldn't be reached.", { status: 200 });
 }

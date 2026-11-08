@@ -1,4 +1,5 @@
 // Run with `npm test`. Small checks on the rules that keep the public parts of the site safe.
+process.env.CONFIG_PATH = "/nonexistent"; delete process.env.DATABASE_URL; // tests must never touch a real database (the limiter then uses memory)
 import { test } from "node:test";
 import assert from "node:assert";
 import { judge } from "../lib/spam.ts";
@@ -51,10 +52,8 @@ test("sanitizer is an allow-list: svg animate, style and unknown tags can't carr
 
 test("rate limiter allows `max` hits per window, then refuses", async () => {
   const { hit } = await import("../lib/limit.ts");
-  const r = [1, 2, 3, 4].map(() => hit("t:" + Math.random().toString(), 3, 1000));
-  assert.deepEqual(r.slice(0, 3), [true, true, true]);
   const k = "same";
-  assert.deepEqual([hit(k, 2, 1000), hit(k, 2, 1000), hit(k, 2, 1000)], [true, true, false]);
+  assert.deepEqual([await hit(k, 2, 1000), await hit(k, 2, 1000), await hit(k, 2, 1000)], [true, true, false]);
 });
 
 test("signer unlock cookie needs a secret and can't be forged", async () => {
