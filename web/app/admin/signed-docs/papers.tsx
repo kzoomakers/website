@@ -22,7 +22,7 @@ export default function Papers({ initial, buckets, tags, sealed }: { sealed: boo
   return (
     <>
       <h1>Signed docs <small className="sub" style={{ fontSize: 12 }} title="Updates every few seconds">● live · {live.toLocaleTimeString()}</small></h1>
-      <p className="sub">Resolutions, minutes and agreements collected with e-signatures. <a href="/admin/signed-docs/new">Start a new paper</a>. {sealed ? "Finished PDFs carry a digital certificate signature." : "No digital certificate is configured, so finished PDFs are hashed and encrypted but not cryptographically signed (see SIGN_P12_FILE in .env.example)."}</p>
+      <p className="sub">Resolutions, minutes and agreements collected with e-signatures. <a href="/admin/signed-docs/new">Start a new paper</a>. {sealed ? "Finished PDFs carry a digital certificate signature." : "No digital certificate is configured, so finished PDFs are hashed and encrypted but not cryptographically signed (add one on the Services page)."}</p>
       <nav className="bar">
         <select value={f.bucket} onChange={(e) => load({ ...f, bucket: e.target.value })} aria-label="Bucket"><option value="">All buckets</option>{buckets.map((b) => <option key={b.id} value={b.id}>{b.name} ({b.n})</option>)}</select>
         <select value={f.tag} onChange={(e) => load({ ...f, tag: e.target.value })} aria-label="Tag"><option value="">All tags</option>{tags.map((t) => <option key={t}>{t}</option>)}</select>

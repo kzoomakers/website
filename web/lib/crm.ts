@@ -313,14 +313,14 @@ export async function setMyPhoto(userId: number, file: File | null) {
 export async function storeArt(file: File): Promise<string> {
   if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) throw new Error("The artwork must be a JPG, PNG, WebP or GIF image.");
   if (file.size > 8 * 1024 * 1024) throw new Error("That image is too large (8MB max).");
-  const store = s3();
+  const store = await s3();
   if (!store) throw new Error("Image uploads aren't available right now.");
   const body = await sharp(Buffer.from(await file.arrayBuffer())).rotate().resize(1400, 1400, { fit: "inside", withoutEnlargement: true }).jpeg({ quality: 84 }).toBuffer().catch(() => { throw new Error("That image couldn't be read."); });
   const key = `class-art/${randomUUID()}.jpg`;
   await store.client.send(new PutObjectCommand({ Bucket: store.bucket, Key: key, Body: body, ContentType: "image/jpeg" }));
   return `/uploads/${key}`;
 }
-const dropArt = async (url: string) => { const st = s3(); if (st && artUrl(url)) await st.client.send(new DeleteObjectCommand({ Bucket: st.bucket, Key: url.replace(/^\/uploads\//, "") })).catch(() => {}); };
+const dropArt = async (url: string) => { const st = await s3(); if (st && artUrl(url)) await st.client.send(new DeleteObjectCommand({ Bucket: st.bucket, Key: url.replace(/^\/uploads\//, "") })).catch(() => {}); };
 
 /** How many days ahead a member must propose a class (CRM-admin setting, never below 45). */
 export async function classMinDays(): Promise<number> {

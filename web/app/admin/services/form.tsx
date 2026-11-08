@@ -10,8 +10,8 @@ const F = ({ n, label, ph, v, set, area, pw }: { n: string; label: string; ph?: 
   </label>
 );
 
-export default function Form() {
-  const [v, setV] = useState<Record<string, string>>({});
+export default function Form({ dbHost, s3, configured }: { dbHost?: string; s3?: { endpoint: string; bucket: string; region: string }; configured: boolean }) {
+  const [v, setV] = useState<Record<string, string>>({ ...s3 });
   const [res, setRes] = useState<{ db: string; s3: string; saved: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
   const set = (k: string, x: string) => setV((o) => ({ ...o, [k]: x }));
@@ -28,14 +28,16 @@ export default function Form() {
       <h1>Services</h1>
       <p className="sub">Connect the external services. Both are tested; if both pass, settings are saved and you continue to the admin.</p>
       <h2>Postgres</h2>
-      <F n="databaseUrl" label="Connection URL" ph="postgres://user:pass@host:5432/db?sslmode=require" v={v} set={set} />
-      <F n="databaseCa" label="CA certificate (optional; Aiven provides one)" ph="-----BEGIN CERTIFICATE-----" v={v} set={set} area />
+      {dbHost ? <p className="ok">✓ {dbHost} (set by the DATABASE_URL environment variable)</p> : <>
+        <F n="databaseUrl" label={configured ? "Connection URL (blank keeps the current one)" : "Connection URL"} ph="postgres://user:pass@host:5432/db?sslmode=require" v={v} set={set} />
+        <F n="databaseCa" label="CA certificate (optional; Aiven provides one)" ph="-----BEGIN CERTIFICATE-----" v={v} set={set} area />
+      </>}
       <h2>S3-compatible storage (uploads)</h2>
       <F n="endpoint" label="Endpoint" ph="http://rustfs:9000" v={v} set={set} />
       <F n="bucket" label="Bucket (created if missing)" ph="uploads" v={v} set={set} />
       <F n="region" label="Region" ph="us-east-1" v={v} set={set} />
-      <F n="accessKey" label="Access key" v={v} set={set} />
-      <F n="secretKey" label="Secret key" v={v} set={set} pw />
+      <F n="accessKey" label={s3 ? "Access key (blank keeps the current one)" : "Access key"} v={v} set={set} />
+      <F n="secretKey" label={s3 ? "Secret key (blank keeps the current one)" : "Secret key"} v={v} set={set} pw />
       <button className="pri" onClick={go} disabled={busy}>{busy ? "Testing…" : "Test & save"}</button>
       {res && <>{line("Postgres", res.db)}{line("Storage", res.s3)}{res.saved && <p>Saved. Loading the admin…</p>}</>}
     </div>

@@ -15,7 +15,7 @@ const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 export async function storePhoto(file: File): Promise<string> {
   if (!PHOTO_TYPES.includes(file.type)) throw new Error("The photo must be a JPG, PNG, WebP or GIF image.");
   if (file.size > 5 * 1024 * 1024) throw new Error("The photo is too large (5MB max).");
-  const store = s3();
+  const store = await s3();
   if (!store) throw new Error("Photo uploads aren't available right now.");
   const body = await sharp(Buffer.from(await file.arrayBuffer())).rotate().resize(240, 240, { fit: "cover" }).jpeg({ quality: 85 }).toBuffer().catch(() => { throw new Error("That image couldn't be read."); });
   const key = `avatars/${randomUUID()}.jpg`;
@@ -23,7 +23,7 @@ export async function storePhoto(file: File): Promise<string> {
   return `/uploads/${key}`;
 }
 export async function dropPhoto(url: string) {
-  const store = s3(), key = url.replace(/^\/uploads\//, "");
+  const store = await s3(), key = url.replace(/^\/uploads\//, "");
   if (store && key.startsWith("avatars/")) await store.client.send(new DeleteObjectCommand({ Bucket: store.bucket, Key: key })).catch(() => {});
 }
 

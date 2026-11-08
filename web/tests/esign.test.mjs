@@ -8,6 +8,7 @@ import { join } from "node:path";
 import { PDFDocument } from "pdf-lib";
 
 process.env.PII_CRYPTO_SECRET = "test-secret";
+process.env.CONFIG_PATH = "/nonexistent/config.json"; // never pick up a developer's real database
 const { buildFieldPdf } = await import("../lib/sign-pdf.ts");
 const { sealPdf } = await import("../lib/pdf-seal.ts");
 const { unlockCookie, unlocked } = await import("../lib/sign-access.ts");
@@ -32,6 +33,44 @@ test("the finished PDF gets a cryptographic signature when a certificate is conf
   const out = await sealPdf(src), text = out.toString("latin1");
   assert.ok(out.length > src.length && /\/ByteRange/.test(text) && /ETSI\.CAdES\.detached/.test(text));
   assert.ok(readFileSync(join(dir, "c.p12")).length > 0);
+});
+
+test("generated certificates always have a positive serial number", async () => {
+  const { newCert } = await import("../lib/pdf-seal.ts");
+  for (let i = 0; i < 20; i++) { // the old code was negative about half the time
+    const serial = execFileSync("openssl", ["x509", "-inform", "DER", "-noout", "-serial"], { input: (await newCert("T")).cert }).toString();
+    assert.ok(!serial.includes("-"), serial);
+  }
+});
+
+test("a generated certificate survives encrypt, store and reload, and then signs a PDF", async () => {
+  const { newCert, packKey, buildSigner } = await import("../lib/pdf-seal.ts");
+  const { seal, open } = await import("../lib/vault.ts");
+  const { PDF } = await import("@libpdf/core");
+  const stored = JSON.parse(JSON.stringify(packKey(await newCert("Test Org"), "Test Org", seal))); // as it comes back from the jsonb column
+  assert.ok(!JSON.stringify(stored).includes("PRIVATE")); // the key is not stored in the clear
+  const { bytes } = await (await PDF.load(src)).sign({ signer: await buildSigner(stored, open), reason: "t", subFilter: "ETSI.CAdES.detached" });
+  const text = Buffer.from(bytes).toString("latin1");
+  assert.ok(/\/ByteRange/.test(text) && /ETSI\.CAdES\.detached/.test(text));
+  process.env.PII_CRYPTO_SECRET = "a-different-secret"; // a changed secret must fail loudly (shown on the Services page), not sign with garbage
+  await assert.rejects(buildSigner(stored, open));
+  process.env.PII_CRYPTO_SECRET = "test-secret";
+});
+
+test("an uploaded .p12 is checked, its name and expiry read, and it signs after reload", async () => {
+  const { packP12, buildSigner } = await import("../lib/pdf-seal.ts");
+  const { seal, open } = await import("../lib/vault.ts");
+  const { PDF } = await import("@libpdf/core");
+  const dir = mkdtempSync(join(tmpdir(), "p12-"));
+  execFileSync("openssl", ["req", "-x509", "-newkey", "rsa:2048", "-nodes", "-keyout", join(dir, "k.pem"), "-out", join(dir, "c.pem"), "-days", "30", "-subj", "/CN=Bought Cert"], { stdio: "ignore" });
+  execFileSync("openssl", ["pkcs12", "-export", "-inkey", join(dir, "k.pem"), "-in", join(dir, "c.pem"), "-out", join(dir, "c.p12"), "-passout", "pass:pw"], { stdio: "ignore" });
+  const p12 = readFileSync(join(dir, "c.p12"));
+  await assert.rejects(packP12(p12, "wrong", seal), /valid \.p12/);
+  const stored = JSON.parse(JSON.stringify(await packP12(p12, "pw", seal)));
+  assert.equal(stored.name, "Bought Cert");
+  assert.ok(Math.abs(new Date(stored.expires) - Date.now() - 30 * 864e5) < 864e5);
+  const { bytes } = await (await PDF.load(src)).sign({ signer: await buildSigner(stored, open), reason: "t", subFilter: "ETSI.CAdES.detached" });
+  assert.ok(/\/ByteRange/.test(Buffer.from(bytes).toString("latin1")));
 });
 
 test("the unlock cookie only works for its own signer and rejects tampering", () => {

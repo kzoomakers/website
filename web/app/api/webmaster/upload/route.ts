@@ -15,7 +15,7 @@ export async function POST(req: Request) {
   const file = form.get("file");
   if (!(file instanceof File) || !TYPES[file.type]) return new NextResponse("image required (jpg/png/webp/gif)", { status: 400 });
   if (file.size > MAX) return new NextResponse("too large (10MB max)", { status: 413 });
-  const store = s3();
+  const store = await s3();
   if (!store) return new NextResponse("storage not set up", { status: 503 });
   const key = `${randomUUID()}.${TYPES[file.type]}`;
   let body = Buffer.from(await file.arrayBuffer());

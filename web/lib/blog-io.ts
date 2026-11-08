@@ -25,7 +25,7 @@ async function conn() {
 /** `files: false` leaves the image bytes out (small, but a restore then needs the files to already be in storage). */
 export async function exportBlog(files = true): Promise<Backup> {
   const [authors, cats, posts, media] = await Promise.all([listAuthors(), listCategories(), listPosts(true), (await conn()).query("SELECT key, filename, mime, size, alt FROM media ORDER BY id")]);
-  const store = s3(), name = new Map(authors.map((a) => [a.id, a.name])), slug = new Map(cats.map((c) => [c.id, c.slug]));
+  const store = await s3(), name = new Map(authors.map((a) => [a.id, a.name])), slug = new Map(cats.map((c) => [c.id, c.slug]));
   return {
     format: "kzoo-blog", version: 1, exported_at: new Date().toISOString(),
     authors: authors.map(({ name, email, bio, image }) => ({ name, email, bio, image })),
@@ -44,7 +44,7 @@ export async function exportBlog(files = true): Promise<Backup> {
 export async function importBlog(b: Backup, who: string) {
   if (b?.format !== "kzoo-blog" || b.version !== 1 || !Array.isArray(b.posts)) throw new Error("This isn't a Kzoo Makers blog backup (import.json).");
   const r = { posts: 0, created: 0, updated: 0, authors: 0, categories: 0, media: 0, mediaSkipped: 0, errors: [] as string[] };
-  const store = s3(), c = await conn();
+  const store = await s3(), c = await conn();
   for (const m of b.media ?? []) {
     if (!m.data) continue;
     if (!store || !/^[\w\-\/.]+$/.test(m.key) || m.key.includes("..")) { r.mediaSkipped++; continue; }

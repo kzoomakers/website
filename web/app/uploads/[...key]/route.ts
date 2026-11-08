@@ -5,7 +5,7 @@ import { s3 } from "@/lib/s3";
 export async function GET(_: Request, { params }: { params: Promise<{ key: string[] }> }) {
   const key = (await params).key.join("/");
   if (!/^[\w\-\/.]+$/.test(key) || key.includes("..")) return new Response("not found", { status: 404 });
-  const store = s3();
+  const store = await s3();
   if (!store) return new Response("not found", { status: 404 });
   try {
     const o = await store.client.send(new GetObjectCommand({ Bucket: store.bucket, Key: key }));

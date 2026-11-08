@@ -10,5 +10,5 @@ export const dynamic = "force-dynamic";
 export default async function SignedDocsPage() {
   await gate("board", "/admin/signed-docs");
   if (!getConfig()) redirect("/admin/services");
-  return <Papers sealed={sealConfigured()} initial={await listDocs()} buckets={await listBuckets()} tags={await listTags()} />;
+  return <Papers sealed={await sealConfigured()} initial={await listDocs()} buckets={await listBuckets()} tags={await listTags()} />;
 }

@@ -20,7 +20,7 @@ export const setAlt = async (id: number, alt: string) => void (await (await conn
 
 /** Removes the file from storage and the library. Pages that still point at it will show a broken image. */
 export async function deleteMedia(id: number) {
-  const c = await conn(), store = s3();
+  const c = await conn(), store = await s3();
   const r = await c.query("DELETE FROM media WHERE id = $1 RETURNING key", [id]);
   if (r.rows[0] && store) await store.client.send(new DeleteObjectCommand({ Bucket: store.bucket, Key: r.rows[0].key }));
 }

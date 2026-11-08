@@ -1,20 +1,16 @@
 import { redirect } from "next/navigation";
 import { gate } from "@/lib/guard";
-import { envConfig } from "@/lib/config";
+import { envConfig, getConfig } from "@/lib/config";
+import { s3Settings } from "@/lib/s3";
+import { sealInfo } from "@/lib/pdf-seal";
 import Form from "./form";
+import Seal from "./seal";
 
 export const dynamic = "force-dynamic";
 
 export default async function Setup() {
   if ((await gate("admin", "/admin/services")) !== "write") redirect("/admin");
-  const env = envConfig();
-  if (env) return (
-    <div style={{ maxWidth: 560 }}>
-      <h1>Services</h1>
-      <p className="sub">Postgres and storage are configured through environment variables, so they can't be changed here. Edit the environment and restart to change them.</p>
-      <p className="ok">✓ Postgres: {URL.canParse(env.databaseUrl) ? new URL(env.databaseUrl).host : "configured"}</p>
-      <p className="ok">✓ Storage: {env.s3.endpoint} / {env.s3.bucket}</p>
-    </div>
-  );
-  return <Form />;
+  const env = envConfig(), cfg = getConfig();
+  const s3 = cfg ? await s3Settings().catch(() => null) : null;
+  return <><Form dbHost={env && URL.canParse(env.databaseUrl) ? new URL(env.databaseUrl).host : undefined} s3={s3 ? { endpoint: s3.endpoint, bucket: s3.bucket, region: s3.region } : undefined} configured={!!cfg} />{cfg && <Seal initial={await sealInfo()} />}</>;
 }
