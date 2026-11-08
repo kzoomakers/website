@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Envelope from "./envelope";
 
-const MENU = [["/members", "🏠", "Home"], ["/members/directory", "🔎", "Directory"], ["/members/classes", "🎓", "Classes"], ["/members/profile", "👤", "My Profile"], ["/members/inbox", "✉️", "Inbox"], ["/members/notifications", "📱", "Phone alerts"], ["/account", "⚙️", "Account"]] as const;
+const MENU = [["/members", "🏠", "Home"], ["/members/directory", "🔎", "Directory"], ["/members/classes", "🎓", "Classes"], ["/members/chores", "🧹", "Chores"], ["/members/profile", "👤", "My Profile"], ["/members/inbox", "✉️", "Inbox"], ["/members/notifications", "📱", "Phone alerts"], ["/account", "⚙️", "Account"]] as const;
 
 // Same bar and sidebar as the admin area (styles come from admin's webmaster.css), with the members links.
 export function Bar({ signedIn }: { signedIn: boolean }) {
