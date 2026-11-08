@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Notice, { msgKind } from "@/components/notice";
 import { confirmDialog } from "@/components/dialog";
 import type { Doc } from "@/lib/sign";
 import { board } from "./rpc";
@@ -28,7 +29,7 @@ export default function Papers({ initial, buckets, tags, sealed }: { sealed: boo
         <select value={f.tag} onChange={(e) => load({ ...f, tag: e.target.value })} aria-label="Tag"><option value="">All tags</option>{tags.map((t) => <option key={t}>{t}</option>)}</select>
         <select value={f.status} onChange={(e) => load({ ...f, status: e.target.value })} aria-label="Status"><option value="">Any status</option>{Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
         <input type="search" placeholder="Search titles" value={f.q} onChange={(e) => load({ ...f, q: e.target.value })} />
-        {msg && <span role="status" className="sub" style={{ margin: 0 }}>{msg}</span>}
+        {msg && <Notice kind={msgKind(msg)}>{msg}</Notice>}
       </nav>
       <div className="card">
         {rows.map((d) => {

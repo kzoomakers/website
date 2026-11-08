@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Notice, { msgKind } from "@/components/notice";
 import Revisions from "../../webmaster/revisions";
 import { CSP_MODES, FRAMES, KEYS, REFERRERS, headersFor, type Exception, type SecHeaders } from "@/lib/sechead";
 
@@ -19,7 +20,7 @@ export default function SecurityEditor({ initial }: { initial: SecHeaders }) {
     <>
       <h1>Security headers</h1>
       <p className="sub">Sent with every page and file. They tell browsers to refuse framing, content sniffing and unexpected scripts. Start the policy in <b>report-only</b>, watch the browser console for "Content Security Policy" warnings, then switch to <b>enforce</b>. Every change is recorded and can be reverted below.</p>
-      {msg && <p className="sub" role="status">{msg}</p>}
+      {msg && <Notice kind={msgKind(msg)}>{msg}</Notice>}
       <div className="card" style={{ padding: 12, display: "grid", gap: 12 }}>
         <label><input type="checkbox" checked={c.enabled} onChange={(e) => set({ enabled: e.target.checked })} /> <b>Send security headers</b> (master switch)</label>
 

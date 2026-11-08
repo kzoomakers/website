@@ -1,5 +1,5 @@
 "use client";
-import Notice from "@/components/notice";
+import Notice, { msgKind } from "@/components/notice";
 import { useEffect, useState } from "react";
 import { alertDialog, promptDialog } from "@/components/dialog";
 import { crm } from "../rpc";
@@ -106,7 +106,7 @@ export default function Approvals({ initial, canEdit, open, compact }: { initial
                 <div className="bar"><button className="pri" type="submit" disabled={busy || !review.ok}>Approve {review.first_name}</button><button type="button" onClick={() => setReview(null)}>Cancel</button></div>
               </form>
             )}
-            {msg && <p role="status" className="sub">{msg}</p>}
+            {msg && <Notice kind={msgKind(msg)}>{msg}</Notice>}
           </div>
         )}
       </div>

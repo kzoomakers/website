@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Notice, { msgKind } from "@/components/notice";
 import Revisions from "../../webmaster/revisions";
 
 export default function PrivacyEditor({ initial }: { initial: string }) {
@@ -13,7 +14,7 @@ export default function PrivacyEditor({ initial }: { initial: string }) {
     <>
       <h1>Privacy statement</h1>
       <p className="sub">Shown at <a href="/privacy" target="_blank">/privacy</a>, in the site footer and at the bottom of the sign-in page. Start a section with <code>## Heading</code>, a bullet with <code>- </code>; any other line is a paragraph. Every change is recorded with who made it and can be reverted below.</p>
-      {msg && <p className="sub" role="status">{msg}</p>}
+      {msg && <Notice kind={msgKind(msg)}>{msg}</Notice>}
       <div className="card" style={{ padding: 12 }}>
         <textarea style={{ width: "100%", fontFamily: "monospace" }} rows={28} aria-label="Privacy statement" value={text} onChange={(e) => { setMsg(""); setText(e.target.value); }} />
         <div className="bar"><button className="pri" onClick={save}>Save</button></div>

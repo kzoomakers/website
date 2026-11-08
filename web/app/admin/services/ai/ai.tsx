@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Notice, { msgKind } from "@/components/notice";
 import type { adminView } from "@/lib/ai";
 
 type View = Awaited<ReturnType<typeof adminView>>;
@@ -21,7 +22,7 @@ export default function Ai({ initial, canEdit }: { initial: View; canEdit: boole
     <div style={{ maxWidth: 820 }}>
       <h1>AI</h1>
       <p className="sub">Optional helpers that write plain-language text for staff to review. Add a service's API token, let it find its models, then choose which model does each job. A feature only appears for staff once its model is chosen here. Only free models or models costing $0.06 per million tokens or less are offered, cheapest first.</p>
-      {msg && <p role="status" className="sub">{msg}</p>}
+      {msg && <Notice kind={msgKind(msg)}>{msg}</Notice>}
 
       <h2>1. Services</h2>
       {v.providers.map((p) => (

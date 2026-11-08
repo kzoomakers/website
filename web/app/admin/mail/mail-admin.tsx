@@ -1,5 +1,5 @@
 "use client";
-import Notice from "@/components/notice";
+import Notice, { msgKind } from "@/components/notice";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { pct, rpc, when, type Cfg, type State } from "./api";
@@ -135,7 +135,7 @@ function Settings({ s, reload }: Props) {
         {text("deepseekKey", "DeepSeek API token", "sk-…", true)}
         {text("aiModel", "Model (optional)", "deepseek-chat")}
         <div className="bar"><button className="pri" onClick={async () => { try { await rpc("saveCfg", { cfg: f }); setF({ ...f, smtp2goKey: "", smtpUrl: "", deepseekKey: "" }); setMsg("Settings saved."); reload(); } catch (e: any) { setMsg(e.message); } }}>Save settings</button>
-          {msg && <span className="sub" style={{ margin: 0 }} role="status">{msg}</span>}</div>
+          {msg && <Notice kind={msgKind(msg)}>{msg}</Notice>}</div>
       </div>
     </>
   );

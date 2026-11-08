@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Notice, { msgKind } from "@/components/notice";
 import { confirmDialog } from "@/components/dialog";
 import type { Fin } from "@/lib/financials";
 
@@ -30,7 +31,7 @@ export default function FinancialsEditor() {
     <>
       <h1>Financials</h1>
       <p className="sub">One PDF per year, shown on <a href="/financials" target="_blank">/financials</a>. The page and its Learn More menu link appear once something is uploaded.</p>
-      {msg && <p className="sub" role="status">{msg}</p>}
+      {msg && <Notice kind={msgKind(msg)}>{msg}</Notice>}
       <div className="card" style={{ padding: 12 }}>
         <label>Organization name <input style={{ width: "100%" }} value={org} onChange={(e) => setOrg(e.target.value)} /></label>
         <div className="bar"><button className="pri" onClick={() => send({ method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ org }) }, "Saved.")}>Save name</button></div>

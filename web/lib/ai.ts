@@ -32,7 +32,7 @@ const load = async (): Promise<Cfg> => ({ keys: {}, models: {}, use: {}, ...(awa
 const store = async (c: Cfg) => void (await (await pool()).query("INSERT INTO settings (key, data) VALUES ('ai:config', $1) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data", [JSON.stringify(c)]));
 const isProvider = (p: unknown): p is ProviderId => typeof p === "string" && p in PROVIDERS;
 
-/** The token for a provider. DeepSeek falls back to the token already saved in the Postmaster settings. */
+/** The token for a provider. DeepSeek falls back to the token already saved in the Email settings. */
 async function token(c: Cfg, p: ProviderId) {
   if (c.keys[p]) return open(Buffer.from(c.keys[p]!, "base64")).toString();
   return p === "deepseek" ? (await getMailCfg()).deepseekKey : "";

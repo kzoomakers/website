@@ -1,5 +1,6 @@
 "use client";
 import { useDirtyGuard } from "@/components/dirty-guard";
+import Notice, { msgKind } from "@/components/notice";
 import { useState } from "react";
 import Revisions from "../revisions";
 import { DAYS, type Hours } from "@/lib/hours";
@@ -21,7 +22,7 @@ export default function HoursEditor({ initial }: { initial: Hours }) {
     <>
       <h1>Hours &amp; address</h1>
       <p className="sub">Shown in the footer, on the contact page and on the home page. Use times like <b>10:00 AM</b>; <b>12:00 AM</b> means midnight.</p>
-      {msg && <p className="sub" role="status">{msg}</p>}
+      {msg && <Notice kind={msgKind(msg)}>{msg}</Notice>}
       <div className="card" style={{ padding: 12 }}>
         <fieldset style={{ border: 0, padding: 0 }}>
           <legend>Open on</legend>

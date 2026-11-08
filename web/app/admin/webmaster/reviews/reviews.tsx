@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Notice, { msgKind } from "@/components/notice";
 import { confirmDialog } from "@/components/dialog";
 import type { Review } from "@/lib/reviews";
 
@@ -27,7 +28,7 @@ export default function Reviews({ initial, tab: t0, counts: n0 }: { initial: Rev
       <p className="sub">Signed-in visitors can submit a review from the homepage. Edit the wording if you like, then add it to the homepage roster or reject it.</p>
       <nav className="bar" aria-label="Review status">
         {TABS.map(([k, l]) => <button key={k} aria-pressed={tab === k} style={tab === k ? { fontWeight: 700 } : undefined} onClick={() => load(k)}>{l} ({n[k] ?? 0})</button>)}
-        {msg && <span className="sub" role="status" style={{ margin: 0 }}>{msg}</span>}
+        {msg && <Notice kind={msgKind(msg)}>{msg}</Notice>}
       </nav>
       <div className="card">
         {items.map((r) => (

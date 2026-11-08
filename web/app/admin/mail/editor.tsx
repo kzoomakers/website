@@ -1,5 +1,6 @@
 "use client";
 import { useDirtyGuard } from "@/components/dirty-guard";
+import Notice, { msgKind } from "@/components/notice";
 import { promptDialog } from "@/components/dialog";
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { ImageInput } from "@/components/image-field";
@@ -62,7 +63,7 @@ export default function Editor({ id, state }: { id: number; state: State }) {
           <button onClick={() => run("Saving", async () => { await save(); setMsg("Saved."); })}>Save</button>
           <button className="pri" onClick={() => run("Saving", async () => { await save(); router.push(`/admin/mail/email/${id}/send`); })}>Next →</button></>}
         <button onClick={() => setMobile(!mobile)}>{mobile ? "🖥 Desktop" : "📱 Mobile"} view</button>
-        {msg && <span className="sub" style={{ margin: 0 }} role="status">{msg}</span>}
+        {msg && <Notice kind={msgKind(msg)}>{msg}</Notice>}
       </div>
       {locked && <p className="sub">This email has already been sent, so it's read-only.</p>}
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 300px", gap: 16, alignItems: "start" }}>
