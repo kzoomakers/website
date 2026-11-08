@@ -18,9 +18,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     // Only verified Google accounts on the allow-list can sign in at all.
     // A domain entry also requires Google's hosted-domain claim, so a personal Google account that merely uses a kzoomakers.org address is refused.
     signIn: ({ profile }) => {
-      if (!profile?.email_verified || !isAdmin(profile.email)) return false;
+      // A string return sends them back to our login page with a friendly message instead of the generic error page.
+      const no = "/login?notadmin=1";
+      if (!profile?.email_verified || !isAdmin(profile.email)) return no;
       const exact = list().includes(profile.email!.toLowerCase());
-      if (!exact && (profile as any).hd !== profile.email!.split("@")[1].toLowerCase()) return false;
+      if (!exact && (profile as any).hd !== profile.email!.split("@")[1].toLowerCase()) return no;
       // Domain admins can't be listed up front, so their personal ntfy topic is made when they sign in (best effort, never blocks login).
       import("@/lib/ntfy").then((n) => n.ensureUserTopic(profile.email!)).catch(() => {});
       return true;

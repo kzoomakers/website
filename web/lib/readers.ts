@@ -40,6 +40,14 @@ function secret() {
 }
 const mac = (v: string) => createHmac("sha256", secret()).update("blog|" + v).digest("hex");
 
+/** The user id in a validly signed, unexpired session cookie value, with no database lookup (so it can't see revocations). For request logging only: access checks use currentApplicant. */
+export function cookieUserId(value?: string): number | null {
+  const [id, exp, ver, sig] = (value ?? "").split(".");
+  if (!sig || Number(exp) < Date.now()) return null;
+  const want = mac(`${id}.${exp}.${ver}`);
+  return sig.length === want.length && timingSafeEqual(Buffer.from(sig), Buffer.from(want)) && Number.isInteger(Number(id)) ? Number(id) : null;
+}
+
 /** Emails the sign-in link. Known and unknown addresses get the same response (no account probing). */
 export async function requestLink(emailIn: string, nameIn: string, next: string, base: string, ip = "") {
   const email = emailIn.trim().toLowerCase(), name = nameIn.trim().slice(0, 80);

@@ -34,6 +34,7 @@
 .adm button:hover:not(:disabled){background:var(--bg)}
 .adm button:disabled{opacity:.4;cursor:default}
 .adm .pri{background:var(--acc);border-color:var(--acc);color:#fff}
+@media (prefers-color-scheme:dark){.adm .pri{color:#0b1020;font-weight:600}}
 .adm .pri:hover:not(:disabled){background:var(--acc);filter:brightness(1.1)}
 .adm .danger:hover:not(:disabled){color:var(--bad);border-color:var(--bad)}
 .adm .row{display:flex;align-items:center;gap:8px;padding:10px 0;border-top:1px solid var(--line)}
@@ -45,6 +46,7 @@
 .adm .item{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:6px 0}
 .adm .item input{flex:1 1 140px}
 .adm .tag{font-size:12px;color:var(--mut);padding:0 8px}
+.adm .tag.pri{background:var(--acc-bg);color:var(--acc);font-weight:600;padding:4px 10px;border-radius:8px}
 .adm .toast{color:var(--ok);font-weight:500}
 @media (max-width:720px){.adm-fly{position:static;box-shadow:none;border:0;padding:0 0 0 12px}.adm-body{grid-template-columns:1fr!important}.adm-side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;border-right:0;border-bottom:1px solid var(--line)}.adm-top{gap:12px;padding:0 12px}.adm-sp{display:none}.adm-side::after{display:none}.adm-top::after{clip-path:none!important}.adm-root:has(.adm-side) .adm-top::after{left:0!important}}
 .adm .diff{margin:0 0 12px;border:1px solid var(--line);border-radius:8px;overflow:hidden;font:13px/1.6 ui-monospace,Menlo,monospace}

@@ -12,8 +12,8 @@ const LOCK = "M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0
 const MAIL = "M3 4a2 2 0 00-2 2v.4l9 5.2 9-5.2V6a2 2 0 00-2-2H3zm16 4.7l-9 5.2-9-5.2V14a2 2 0 002 2h14a2 2 0 002-2V8.7z";
 
 /** Sign-in / registration for everyone (site accounts and admins). `denied` = signed in, but without access to the page asked for. */
-export default function LoginScreen({ next, expired, denied, google }: { next: string; expired: boolean; denied?: string; google: boolean }) {
-  const [cur, setCur] = useState(-1), [email, setEmail] = useState(""), [name, setName] = useState(""), [pw, setPw] = useState(""), [reg, setReg] = useState(false), [busy, setBusy] = useState(false), [sent, setSent] = useState(false);
+export default function LoginScreen({ next, expired, denied, notAdmin, google }: { next: string; expired: boolean; denied?: string; notAdmin?: boolean; google: boolean }) {
+  const [cur, setCur] = useState(-1), [email, setEmail] = useState(""), [name, setName] = useState(""), [pw, setPw] = useState(""), [reg, setReg] = useState(false), [flash, setFlash] = useState(!!notAdmin), [busy, setBusy] = useState(false), [sent, setSent] = useState(false);
   const [msg, setMsg] = useState(denied ? `${denied} doesn't have access to that page. Ask an admin to grant it, or sign in with a different account.` : expired ? "That link has expired or was already used. Request a new one." : "");
   // Start on a random photo, then fade to the next one every few seconds (reduced-motion users get one still photo).
   useEffect(() => {
@@ -32,6 +32,10 @@ export default function LoginScreen({ next, expired, denied, google }: { next: s
   };
   return (
     <main className="lg">
+      {flash && <div className="lg-flash" role="alert">
+        <span>You are not a makerspace admin. <a href="#" onClick={(e) => { e.preventDefault(); setReg(true); setFlash(false); setMsg(""); setSent(false); }}>Click here to sign up.</a></span>
+        <button type="button" aria-label="Dismiss" onClick={() => setFlash(false)}>✕</button>
+      </div>}
       {BGS.map((src, i) => <div key={src} className="lg-bg" aria-hidden style={{ backgroundImage: `url(${src})`, opacity: i === cur ? 1 : 0 }} />)}
       <div className="lg-wrap">
         <h1>Kzoo Makers</h1>

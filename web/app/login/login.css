@@ -20,3 +20,8 @@
 .lg-bad{border:1px solid #fca5a5}.lg-ok{border:1px solid #86efac}
 .lg-note{margin:20px 0 0;text-align:center;font-size:13px;opacity:.9}
 .lg-note a{color:#fff;font-weight:600}
+.lg-flash{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:5;display:flex;gap:14px;align-items:center;max-width:calc(100% - 32px);padding:14px 18px;border-radius:16px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);box-shadow:0 8px 32px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.4);font-size:15px;animation:lg-in .35s ease-out}
+.lg-flash a{color:#fff;font-weight:700;text-decoration:underline}
+.lg-flash button{background:none;border:0;color:#fff;cursor:pointer;font-size:16px;opacity:.8}
+@keyframes lg-in{from{opacity:0;transform:translate(-50%,-12px)}}
+@media (prefers-reduced-motion:reduce){.lg-flash{animation:none}}
