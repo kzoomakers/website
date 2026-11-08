@@ -33,7 +33,7 @@ export default function Booking() {
   if (done) return <div role="status"><h2>You're booked!</h2><p>See you on <strong>{day(done.date)} at {time(done.start)}</strong>. We've emailed you a confirmation with a link to cancel if your plans change.</p></div>;
   if (!data) return <p role={err ? "alert" : undefined} className={err ? "tb-err" : undefined}>{err || "Loading tour times…"}</p>;
   const days = [...new Set(data.slots.map((s) => s.date))];
-  const notes = <label>Notes or additional info <small>(optional)</small><textarea name="notes" maxLength={1000} rows={3} placeholder="Accessibility needs, projects you have in mind, group size…" /></label>;
+  const notes = <label>Notes or additional info <small>(optional)</small><textarea name="notes" maxLength={1000} rows={3} placeholder="Accessibility needs, projects you have in mind…" /></label>;
   return (
     <div className="tb">
       <style>{CSS}</style>
