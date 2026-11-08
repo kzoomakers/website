@@ -44,7 +44,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: docker build -t site:scan .
       # Fails (red) on any HIGH/CRITICAL OS or library CVE that has a fix available; the table is in the log.
-      - uses: aquasecurity/trivy-action@0.28.0
+      - uses: aquasecurity/trivy-action@v0.28.0
         with:
           image-ref: site:scan
           severity: HIGH,CRITICAL
