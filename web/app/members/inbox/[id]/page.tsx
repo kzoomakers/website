@@ -17,7 +17,7 @@ export default async function Conversation({ params }: { params: Promise<{ id: s
           <div style={{ display: "grid", gap: 12, maxWidth: 620 }}>
             <p style={{ margin: 0 }}><a href="/members/inbox">← Inbox</a> · with <b>{t.name}</b></p>
             {t.messages.map((m) => (
-              <div key={m.id} style={{ justifySelf: m.mine ? "end" : "start", maxWidth: "85%", background: m.mine ? "#e8f0fe" : "#f1f1f1", borderRadius: 10, padding: "8px 12px" }}>
+              <div key={m.id} style={{ justifySelf: m.mine ? "end" : "start", maxWidth: "85%", background: m.mine ? "#e8f0fe" : "#f1f1f1", color: "#1a1a1a", borderRadius: 10, padding: "8px 12px" }}>
                 <div style={{ whiteSpace: "pre-wrap" }}>{m.body}</div>
                 <small style={{ color: "#666" }}>{m.mine ? "You" : t.name} · {new Date(m.at).toLocaleString()}</small>
               </div>
