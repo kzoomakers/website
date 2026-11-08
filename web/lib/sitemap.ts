@@ -3,7 +3,7 @@ import { getMenu, type MenuItem } from "./store";
 import { slugOfHref } from "./menu";
 
 export type Node = { label: string; slug?: string; children: Node[] };
-export type Entry = { slug: string; depth: number; lastmod: Date };
+export type Entry = { slug: string; depth: number; lastmod: Date; created: Date };
 
 export const SITE = (process.env.SITE_URL ?? "https://kzoomakers.org").replace(/\/$/, "");
 export const urlOf = (slug: string) => `${SITE}${slug === "index" ? "/" : "/" + slug}`;
@@ -21,12 +21,12 @@ const GROUPS = [
 
 /** Site hierarchy = the menu (dropdowns are parents); published pages not in the menu go under "More pages". */
 export async function siteTree() {
-  const pages = new Map<string, { title: string; at: Date; parent: string }>();
+  const pages = new Map<string, { title: string; at: Date; created: Date; parent: string }>();
   const d = db();
   if (d) {
     await d.ready;
-    const r = await d.pool.query("SELECT slug, data, updated_at FROM pages");
-    for (const p of r.rows) if (!p.data?.root?.props?.bare) pages.set(p.slug, { title: titleOf(p.slug, p.data), at: p.updated_at, parent: p.data?.root?.props?.parent ?? "" });
+    const r = await d.pool.query("SELECT slug, data, updated_at, created_at AS created FROM pages");
+    for (const p of r.rows) if (!p.data?.root?.props?.bare) pages.set(p.slug, { title: titleOf(p.slug, p.data), at: p.updated_at, created: p.created, parent: p.data?.root?.props?.parent ?? "" });
   }
   const seen = new Set<string>();
   const walk = (items: MenuItem[]): Node[] => items.flatMap((i): Node[] => {
@@ -57,7 +57,7 @@ export async function siteTree() {
   }
   tree.push(...groups, ...(loose.length ? [{ label: "More pages", children: loose }] : []));
   const entries: Entry[] = [];
-  const flat = (ns: Node[], depth: number) => ns.forEach((n) => { if (n.slug) entries.push({ slug: n.slug, depth, lastmod: pages.get(n.slug)!.at }); flat(n.children, depth + 1); });
+  const flat = (ns: Node[], depth: number) => ns.forEach((n) => { if (n.slug) entries.push({ slug: n.slug, depth, lastmod: pages.get(n.slug)!.at, created: pages.get(n.slug)!.created }); flat(n.children, depth + 1); });
   flat(tree, 0);
   return { tree, entries };
 }

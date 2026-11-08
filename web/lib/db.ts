@@ -26,6 +26,10 @@ export async function ensureSchema(pool: Pool) {
     actor text NOT NULL, action text NOT NULL, target text NOT NULL DEFAULT '', data jsonb NOT NULL)`);
   await pool.query("ALTER TABLE page_revisions ADD COLUMN IF NOT EXISTS menu jsonb"); // menu links removed along with a deleted page
   await pool.query("CREATE INDEX IF NOT EXISTS page_revisions_slug ON page_revisions (slug, id DESC)");
+  // When the page was made (sitemap "new page" boost). Pages that existed before this column count as old: their first revision is only the baseline saved at the first edit, not their creation.
+  await pool.query("ALTER TABLE pages ADD COLUMN IF NOT EXISTS created_at timestamptz");
+  await pool.query(`UPDATE pages p SET created_at = COALESCE((SELECT min(at) FROM page_revisions r WHERE r.slug = p.slug AND NOT EXISTS (SELECT 1 FROM page_revisions i WHERE i.slug = p.slug AND i.action = 'page.import')), '2000-01-01') WHERE created_at IS NULL`);
+  await pool.query("ALTER TABLE pages ALTER COLUMN created_at SET DEFAULT now()");
   await pool.query(`CREATE TABLE IF NOT EXISTS posts (id serial PRIMARY KEY, slug text UNIQUE NOT NULL, title text NOT NULL, excerpt text NOT NULL DEFAULT '',
     body text NOT NULL DEFAULT '', image text NOT NULL DEFAULT '', tags text[] NOT NULL DEFAULT '{}', status text NOT NULL DEFAULT 'draft',
     publish_at timestamptz, author text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now())`);
@@ -157,11 +161,11 @@ export async function ensureSchema(pool: Pool) {
     if ((await pool.query("INSERT INTO settings (key, data) VALUES ($1, $2) ON CONFLICT DO NOTHING", [key, JSON.stringify(data)])).rowCount)
       await pool.query("INSERT INTO audit (actor, action, target, data) VALUES ('system', $1, 'initial', $2)", [action, JSON.stringify(data)]);
   // Locked pages are not editable in Puck, so their files are the source of truth on every start.
-  for (const slug of LOCKED) await pool.query("INSERT INTO pages (slug, data) VALUES ($1, $2) ON CONFLICT (slug) DO UPDATE SET data = EXCLUDED.data", [slug, await readFile(path.join(process.cwd(), "data", "pages", slug + ".json"), "utf8")]);
+  for (const slug of LOCKED) await pool.query("INSERT INTO pages (slug, data, created_at) VALUES ($1, $2, '2000-01-01') ON CONFLICT (slug) DO UPDATE SET data = EXCLUDED.data", [slug, await readFile(path.join(process.cwd(), "data", "pages", slug + ".json"), "utf8")]);
   if ((await pool.query("SELECT 1 FROM pages WHERE slug <> ALL($1) LIMIT 1", [LOCKED])).rowCount) return;
   const dir = path.join(process.cwd(), "data", "pages");
   for (const f of (await readdir(dir)).filter((f) => f.endsWith(".json"))) {
-    await pool.query("INSERT INTO pages (slug, data) VALUES ($1, $2) ON CONFLICT DO NOTHING", [decodeURIComponent(f.slice(0, -5)), await readFile(path.join(dir, f), "utf8")]);
+    await pool.query("INSERT INTO pages (slug, data, created_at) VALUES ($1, $2, '2000-01-01') ON CONFLICT DO NOTHING", [decodeURIComponent(f.slice(0, -5)), await readFile(path.join(dir, f), "utf8")]);
   }
 }
 
