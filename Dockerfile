@@ -15,6 +15,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 COPY --chown=node:node web/package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force && chown node:node /app
+# npm is only needed to install; its bundled packages carry their own CVEs and nothing at runtime uses it, so remove it and start Next directly.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx /root/.npm
 # data/ is read at start (page seeds) and written by the first-run setup wizard (data/config.json); /app/config is the docker-compose volume.
 # .next/cache is written by the image optimizer. All three must belong to the unprivileged user.
 COPY --from=build --chown=node:node /app/.next ./.next
@@ -25,4 +27,4 @@ COPY --from=build --chown=node:node /app/next.config.mjs ./
 RUN mkdir -p /app/config && chown node:node /app/config
 USER node
 EXPOSE 3000
-CMD ["npm", "start"]
+CMD ["node", "node_modules/next/dist/bin/next", "start"]
