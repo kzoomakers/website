@@ -1,7 +1,15 @@
 .git
+.github
+docs
 **/node_modules
-web/.next
+**/.next
+**/.env*
+**/*.swp
+**/*.pem
 *.bak
 *.backup-*
 *.html-bak
-.env*
+# local config and backups: gitignored, but the Dockerfile copies all of web/ so they must be excluded here too
+web/data/config.json
+web/data/import.json
+web/tsconfig.tsbuildinfo

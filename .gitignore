@@ -11,3 +11,4 @@ node_modules/
 web/data/config.json
 # blog backup: large, and holds author emails (this repo is public)
 web/data/import.json
+*.swp

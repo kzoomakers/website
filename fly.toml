@@ -1,0 +1,28 @@
+# fly.toml app configuration file generated for kzoomakers-org-website on 2026-11-08T02:18:24-05:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'kzoomakers-org-website'
+primary_region = 'ord'
+
+[build]
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = 'off' # the mail queue runs inside the app, so it must stay up
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+  [[http_service.checks]]
+    grace_period = '30s' # first start builds nothing but connects to Postgres and creates tables
+    interval = '30s'
+    timeout = '10s'
+    method = 'GET'
+    path = '/login'
+
+[[vm]]
+  memory = '1gb' # Next.js plus sharp image resizing; 512mb is tight
+  cpus = 1
