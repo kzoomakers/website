@@ -1,6 +1,6 @@
 import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { randomUUID } from "crypto";
-import sharp from "sharp";
+import { processImage } from "./image";
 import { db } from "./db";
 import { s3 } from "./s3";
 import { judge } from "./spam";
@@ -9,17 +9,14 @@ import { getGuided, saveGuided } from "./store";
 
 export type Review = { id: number; user_id: number; name: string; role: string; photo: string; text: string; status: "pending" | "approved" | "rejected"; reason: string; created_at: string; email: string };
 export const MAX_REVIEW = 800;
-const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 /** Reviewer's selfie: validated, shrunk to a 240px square and stored under avatars/. Not added to the media library (like other avatars). */
 export async function storePhoto(file: File): Promise<string> {
-  if (!PHOTO_TYPES.includes(file.type)) throw new Error("The photo must be a JPG, PNG, WebP or GIF image.");
-  if (file.size > 5 * 1024 * 1024) throw new Error("The photo is too large (5MB max).");
   const store = await s3();
   if (!store) throw new Error("Photo uploads aren't available right now.");
-  const body = await sharp(Buffer.from(await file.arrayBuffer())).rotate().resize(240, 240, { fit: "cover" }).jpeg({ quality: 85 }).toBuffer().catch(() => { throw new Error("That image couldn't be read."); });
-  const key = `avatars/${randomUUID()}.jpg`;
-  await store.client.send(new PutObjectCommand({ Bucket: store.bucket, Key: key, Body: body, ContentType: "image/jpeg" }));
+  const body = (await processImage(file, { still: true, fit: { width: 240, height: 240, cover: true } })).data;
+  const key = `avatars/${randomUUID()}.webp`;
+  await store.client.send(new PutObjectCommand({ Bucket: store.bucket, Key: key, Body: body, ContentType: "image/webp" }));
   return `/uploads/${key}`;
 }
 export async function dropPhoto(url: string) {

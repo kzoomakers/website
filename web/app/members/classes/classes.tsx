@@ -1,4 +1,7 @@
 "use client";
+import Flash from "@/components/flash";
+import { sendUpload } from "@/lib/upload-client";
+import { fileTooLarge } from "@/lib/upload-limit";
 import { useEffect, useRef, useState } from "react";
 import type { Klass, Proposal } from "@/lib/crm";
 import "./classes.css";
@@ -58,7 +61,7 @@ export default function Classes({ initial, proposals: p0, minDays }: { initial: 
         <div className="cl-chips" role="group" aria-label="Filter by level">
           {[["", "All"], ...LEVELS.slice(1).map((l) => [l[0], l[1]])].map(([v, t]) => <button key={v} aria-pressed={lvl === v} onClick={() => setLvl(v)}>{t}</button>)}
         </div>
-        {err && <p role="alert" className="cl-err">{err}</p>}
+        <Flash msg={err} />
         <div className="cl-grid">
           {shown.map((c) => {
             const full = c.capacity > 0 && c.signed >= c.capacity, left = c.capacity - c.signed;
@@ -93,9 +96,11 @@ function Teach({ minDays, props, setProps }: { minDays: number; props: Proposal[
     : s === 2 ? (!f.starts_at || isNaN(+new Date(f.starts_at)) ? "Pick a date and time." : +new Date(f.starts_at) < min ? `Classes need ${minDays} days' notice. The earliest is ${new Date(min).toLocaleDateString([], { dateStyle: "long" })}.` : "") : "";
   const go = (n: number) => { const e = n > step ? check(step) : ""; setErr(e); if (!e) setStep(n); };
   const upload = async (fl?: File | null) => {
-    if (!fl) return; setErr(""); setBusy(true);
+    if (!fl) return; setErr("");
+    if (fileTooLarge(fl)) return setErr(fileTooLarge(fl));
+    setBusy(true);
     const fd = new FormData(); fd.set("file", fl);
-    const r = await fetch("/api/members/art", { method: "POST", body: fd }).catch(() => null);
+    const r = await sendUpload("/api/members/art", fd);
     setBusy(false);
     if (r?.ok) set("image", (await r.json()).url); else setErr(r ? await r.text() : "Network error. Try again.");
   };
@@ -160,10 +165,10 @@ function Teach({ minDays, props, setProps }: { minDays: number; props: Proposal[
               onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)} onDrop={(e) => { e.preventDefault(); setOver(false); upload(e.dataTransfer.files[0]); }}>
               {busy ? "Uploading…" : f.image ? "Artwork added. Click or drop to replace it." : <><strong>Add artwork</strong><br />Drop an image here or click to choose one. A poster or photo of something you made works well.</>}
             </div>
-            <input ref={file} type="file" accept="image/*" hidden onChange={(e) => { upload(e.target.files?.[0]); e.target.value = ""; }} />
+            <input ref={file} type="file" accept="image/*,.heic,.heif" hidden onChange={(e) => { upload(e.target.files?.[0]); e.target.value = ""; }} />
             {f.image && <button type="button" className="btn btn-sm" style={{ justifySelf: "start" }} onClick={() => set("image", "")}>Remove artwork</button>}
             <label>Note to the reviewers <small>Optional. Tools needed, your experience, anything else</small><textarea rows={3} maxLength={500} value={f.notes} onChange={(e) => set("notes", e.target.value)} /></label></>}
-          {err && <p role="alert" className="cl-err">{err}</p>}
+          <Flash msg={err} />
           <div className="cl-nav">
             <button type="button" className="btn" onClick={() => (step ? go(step - 1) : setOpen(false))}>{step ? "Back" : "Save draft & close"}</button>
             <button className="btn btn-main" disabled={busy}>{step < 3 ? "Next" : busy ? "Sending…" : "Send for review"}</button>

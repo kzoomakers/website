@@ -1,4 +1,4 @@
-import sharp from "sharp";
+import { processImage } from "./image";
 import { db } from "./db";
 import { logAudit } from "./store";
 import { open, seal } from "./vault";
@@ -38,28 +38,20 @@ export async function sign(u: { id: number; name: string; email: string }, signa
 export async function handbookRead(userId: number) { await advance(userId, "handbook"); }
 
 /** The rules for an ID upload; throws a message the member can act on. */
-export function checkId(kind: string, expires: string, size: number, now = Date.now()) {
+export function checkId(kind: string, expires: string, now = Date.now()) {
   if (!(kind in ID_KINDS)) throw new Error("Choose the kind of ID.");
   const exp = expires ? new Date(expires + "T23:59:59") : null;
   if (exp && isNaN(+exp)) throw new Error("That expiration date doesn't look right.");
   if (kind !== "college" && !exp) throw new Error("Enter the expiration date printed on your ID.");
   if (exp && +exp < now) throw new Error("That ID is expired. Please use one that hasn't expired.");
-  if (size > 12 * 1024 * 1024) throw new Error("That image is too large (12MB max).");
 }
-
-const MAX_PIXELS = 50e6; // decoding is in memory on the one server process; a phone's 48MP photo fits, a decompression bomb doesn't
 
 export async function storeId(userId: number, kind: string, expires: string, file: File) {
   if ((await getStep(userId)) !== "id") throw new Error("Finish the earlier steps first.");
-  checkId(kind, expires, file.size);
-  // Re-encoding drops metadata (GPS and the like) and proves it is a real image.
-  const raw = Buffer.from(await file.arrayBuffer());
-  const m = await sharp(raw).metadata().catch(() => null); // reads the header only, HEIC included
-  if (m && (m.width ?? 0) * (m.height ?? 0) > MAX_PIXELS) throw new Error("That photo has too many pixels. Use a lower-resolution setting, or take a screenshot of it.");
-  const toJpg = (b: Buffer) => sharp(b).rotate().resize(2200, 2200, { fit: "inside", withoutEnlargement: true }).jpeg({ quality: 85 }).toBuffer();
-  // sharp's build can't read iPhone HEIC photos, so those are converted to JPEG first.
-  const jpg = await toJpg(raw).catch(async () => toJpg(Buffer.from(await (await import("heic-convert")).default({ buffer: raw, format: "JPEG", quality: 0.9 })))).catch(() => { throw new Error("That image couldn't be read. Upload a JPG, PNG, WebP or HEIC photo or scan."); });
-  await (await conn()).query("INSERT INTO member_ids (user_id, kind, expires_on, data) VALUES ($1,$2,$3,$4) ON CONFLICT (user_id) DO UPDATE SET kind = EXCLUDED.kind, expires_on = EXCLUDED.expires_on, data = EXCLUDED.data, uploaded_at = now()", [userId, kind, expires || null, seal(jpg)]);
+  checkId(kind, expires);
+  // Any image format in (HEIC included), one still WebP out: re-encoding drops metadata (GPS and the like) and proves it is a real image.
+  const img = (await processImage(file, { still: true, fit: { width: 2200, height: 2200 } })).data;
+  await (await conn()).query("INSERT INTO member_ids (user_id, kind, expires_on, data) VALUES ($1,$2,$3,$4) ON CONFLICT (user_id) DO UPDATE SET kind = EXCLUDED.kind, expires_on = EXCLUDED.expires_on, data = EXCLUDED.data, uploaded_at = now()", [userId, kind, expires || null, seal(img)]);
   await advance(userId, "id");
 }
 

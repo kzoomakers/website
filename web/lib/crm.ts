@@ -9,7 +9,7 @@ import { s3 } from "./s3";
 import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { randomUUID } from "crypto";
 import { FIELDS, SOCIALS, cleanField, cleanSocial, cleanTitle, isFacet, type FieldKey, type Fields } from "./fields";
-import sharp from "sharp";
+import { processImage } from "./image";
 
 async function conn() {
   const d = db();
@@ -281,7 +281,7 @@ export async function signUp(userId: number, classId: number) {
 }
 export const cancelSignUp = async (userId: number, classId: number) => void (await (await conn()).query("DELETE FROM class_signups WHERE class_id = $1 AND user_id = $2", [classId, userId]));
 export const LEVELS = ["all", "beginner", "intermediate", "advanced"];
-const artUrl = (v: unknown) => (typeof v === "string" && /^\/uploads\/class-art\/[\w-]+\.jpg$/.test(v) ? v : "");
+const artUrl = (v: unknown) => (typeof v === "string" && /^\/uploads\/class-art\/[\w-]+\.(jpg|webp)$/.test(v) ? v : "");
 export async function saveClass(b: any): Promise<number | void> {
   const title = clip(b?.title, 120), starts = new Date(b?.starts_at), ends = b?.ends_at ? new Date(b.ends_at) : null;
   if (!title) throw new Error("A class needs a title.");
@@ -311,13 +311,11 @@ export async function setMyPhoto(userId: number, file: File | null) {
 // ---- Class art and proposals ---------------------------------------------------------------------------------------------------------
 /** Poster art for a class: validated, shrunk to at most 1400px wide and stored under class-art/. Returns its /uploads URL. */
 export async function storeArt(file: File): Promise<string> {
-  if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) throw new Error("The artwork must be a JPG, PNG, WebP or GIF image.");
-  if (file.size > 8 * 1024 * 1024) throw new Error("That image is too large (8MB max).");
   const store = await s3();
   if (!store) throw new Error("Image uploads aren't available right now.");
-  const body = await sharp(Buffer.from(await file.arrayBuffer())).rotate().resize(1400, 1400, { fit: "inside", withoutEnlargement: true }).jpeg({ quality: 84 }).toBuffer().catch(() => { throw new Error("That image couldn't be read."); });
-  const key = `class-art/${randomUUID()}.jpg`;
-  await store.client.send(new PutObjectCommand({ Bucket: store.bucket, Key: key, Body: body, ContentType: "image/jpeg" }));
+  const body = (await processImage(file, { still: true, fit: { width: 1400, height: 1400 } })).data;
+  const key = `class-art/${randomUUID()}.webp`;
+  await store.client.send(new PutObjectCommand({ Bucket: store.bucket, Key: key, Body: body, ContentType: "image/webp" }));
   return `/uploads/${key}`;
 }
 const dropArt = async (url: string) => { const st = await s3(); if (st && artUrl(url)) await st.client.send(new DeleteObjectCommand({ Bucket: st.bucket, Key: url.replace(/^\/uploads\//, "") })).catch(() => {}); };

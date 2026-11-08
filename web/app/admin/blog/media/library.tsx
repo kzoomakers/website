@@ -1,7 +1,9 @@
 "use client";
+import Flash from "@/components/flash";
 import { useState } from "react";
 import { confirmDialog } from "@/components/dialog";
 import { uploadImage } from "@/components/image-field";
+import { uploadBatch } from "@/lib/upload-client";
 import type { Media } from "@/lib/media";
 
 export default function Library({ initial }: { initial: Media[] }) {
@@ -9,11 +11,10 @@ export default function Library({ initial }: { initial: Media[] }) {
   const [msg, setMsg] = useState("");
   const reload = async () => setItems(await (await fetch("/api/webmaster/media")).json());
   const upload = async (files: FileList | null) => {
-    for (const f of Array.from(files ?? [])) {
-      setMsg(`Uploading ${f.name}…`);
-      try { await uploadImage(f); } catch (e: any) { return setMsg(e.message); }
-    }
-    setMsg(""); reload();
+    const list = Array.from(files ?? []);
+    setMsg(`Uploading 0 of ${list.length}…`);
+    const bad = (await uploadBatch(list, (f) => uploadImage(f), (d, n) => setMsg(`Uploading ${d} of ${n}…`))).filter((r): r is Error => r instanceof Error);
+    setMsg(bad.length ? `${bad.length} of ${list.length} failed: ${bad[0].message}` : ""); reload();
   };
   const alt = (m: Media, v: string) => setItems(items.map((x) => (x.id === m.id ? { ...x, alt: v } : x)));
   const saveAlt = (m: Media) => fetch("/api/webmaster/media", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: m.id, alt: m.alt }) });
@@ -26,7 +27,8 @@ export default function Library({ initial }: { initial: Media[] }) {
     <>
       <h1>Media</h1>
       <p className="sub">Every image uploaded in the admin. Alt text describes the image for screen readers and search engines.</p>
-      <div className="bar"><input type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif" onChange={(e) => upload(e.target.files)} />{msg && <span>{msg}</span>}</div>
+      <div className="bar"><input type="file" multiple accept="image/*,.heic,.heif" onChange={(e) => upload(e.target.files)} />{msg.startsWith("Uploading") && <span>{msg}</span>}</div>
+      {!msg.startsWith("Uploading") && <Flash msg={msg} />}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
         {items.map((m) => (
           <div className="card" key={m.id} style={{ padding: 8 }}>

@@ -190,7 +190,7 @@ function Inline({ html, sel, multi, onCommit }: { html: string; sel: string; mul
 function Form({ b, set }: { b: Block; set: (b: Block) => void }) {
   const inp = (k: string, ph: string) => <input style={{ width: "100%", marginTop: 4 }} aria-label={ph} placeholder={ph} value={(b as any)[k] ?? ""} onChange={(e) => set({ ...b, [k]: e.target.value } as Block)} />;
   switch (b.t) {
-    case "image": return <div><ImageInput value={b.src} onChange={(v) => set({ ...b, src: v })} />{inp("alt", "Description (alt text)")}{inp("href", "Link when clicked (optional)")}</div>;
+    case "image": return <div><ImageInput email value={b.src} onChange={(v) => set({ ...b, src: v })} />{inp("alt", "Description (alt text)")}{inp("href", "Link when clicked (optional)")}</div>;
     case "button": return <div>{inp("href", "Link address")}<label>Button colour <input type="color" value={b.color || "#2f6fed"} onChange={(e) => set({ ...b, color: e.target.value })} /></label></div>;
     case "spacer": return <label>Height <input type="range" min={4} max={120} value={b.h} onChange={(e) => set({ ...b, h: +e.target.value })} /> {b.h}px</label>;
     case "footer": return inp("text", "Footer text (an unsubscribe link is added automatically)");

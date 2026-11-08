@@ -20,6 +20,7 @@ RUN npm ci --omit=dev && npm cache clean --force && chown node:node /app
 COPY --from=build --chown=node:node /app/.next ./.next
 COPY --from=build --chown=node:node /app/public ./public
 COPY --from=build --chown=node:node /app/data ./data
+COPY --from=build --chown=node:node /app/workers ./workers
 COPY --from=build --chown=node:node /app/next.config.mjs ./
 RUN mkdir -p /app/config && chown node:node /app/config
 USER node

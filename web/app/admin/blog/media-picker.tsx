@@ -1,6 +1,8 @@
 "use client";
+import Flash from "@/components/flash";
 import { useEffect, useState } from "react";
 import { uploadImage } from "@/components/image-field";
+import { uploadBatch } from "@/lib/upload-client";
 import type { Media } from "@/lib/media";
 
 export const mediaUrl = (m: Media) => `/uploads/${m.key}`;
@@ -12,17 +14,16 @@ export function MediaPicker({ onPick, onClose }: { onPick: (url: string, alt: st
   const load = () => fetch("/api/webmaster/media").then((r) => r.json()).then(setItems).catch(() => setMsg("Could not load the library."));
   useEffect(() => { load(); }, []);
   const upload = async (files: FileList | null) => {
-    for (const f of Array.from(files ?? [])) {
-      setMsg(`Uploading ${f.name}…`);
-      try { await uploadImage(f); } catch (e: any) { return setMsg(e.message); }
-    }
-    setMsg(""); load();
+    const list = Array.from(files ?? []);
+    setMsg(`Uploading 0 of ${list.length}…`);
+    const bad = (await uploadBatch(list, (f) => uploadImage(f), (d, n) => setMsg(`Uploading ${d} of ${n}…`))).filter((r): r is Error => r instanceof Error);
+    setMsg(bad.length ? `${bad.length} of ${list.length} failed: ${bad[0].message}` : ""); load();
   };
   return (
     <div role="dialog" aria-modal="true" aria-label="Media library" onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 100000, display: "grid", placeItems: "center" }}>
       <div className="card" onClick={(e) => e.stopPropagation()} style={{ background: "#fff", width: "min(900px, 94vw)", maxHeight: "86vh", overflow: "auto", padding: 16 }}>
-        <div className="bar"><strong style={{ flex: 1 }}>Media library</strong><input type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif" onChange={(e) => upload(e.target.files)} /><button onClick={onClose}>Close</button></div>
-        {msg && <p className="sub">{msg}</p>}
+        <div className="bar"><strong style={{ flex: 1 }}>Media library</strong><input type="file" multiple accept="image/*,.heic,.heif" onChange={(e) => upload(e.target.files)} /><button onClick={onClose}>Close</button></div>
+        {msg.startsWith("Uploading") ? <p className="sub">{msg}</p> : <Flash msg={msg} />}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: 10 }}>
           {items.map((m) => (
             <button key={m.id} onClick={() => onPick(mediaUrl(m), m.alt)} title={m.filename} style={{ padding: 4 }}>

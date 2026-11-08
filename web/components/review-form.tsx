@@ -1,4 +1,7 @@
 "use client";
+import Flash from "./flash";
+import { sendUpload } from "@/lib/upload-client";
+import { fileTooLarge } from "@/lib/upload-limit";
 import { useEffect, useState } from "react";
 
 // "Leave a review" under the homepage reviews. Signed-in state is fetched client-side so the page stays cacheable.
@@ -12,7 +15,7 @@ export function ReviewForm() {
   const go = async (e: React.FormEvent) => {
     e.preventDefault(); setBusy(true); setMsg("");
     const fd = new FormData(); fd.set("text", text); fd.set("role", role); if (photo) fd.set("photo", photo);
-    const r = await fetch("/api/reviews", { method: "POST", body: fd }).catch(() => null);
+    const r = await sendUpload("/api/reviews", fd);
     setBusy(false);
     if (r?.ok) setDone(true); else setMsg(r ? await r.text() : "Couldn't reach the server. Try again.");
   };
@@ -25,10 +28,10 @@ export function ReviewForm() {
         {preview ? <img src={preview} alt="Your photo" width={56} height={56} style={{ borderRadius: "50%", objectFit: "cover" }} />
           : <span aria-hidden style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(127,127,127,.25)", display: "grid", placeItems: "center", fontSize: 24 }}>📷</span>}
         <span>{photo ? "Change photo" : "Add a photo of yourself (optional)"}
-          <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" style={{ display: "block" }} onChange={(e) => {
-            const f = e.target.files?.[0] ?? null; setPhoto(f); setPreview((old) => { if (old) URL.revokeObjectURL(old); return f ? URL.createObjectURL(f) : ""; }); }} /></span>
+          <input type="file" accept="image/*,.heic,.heif" style={{ display: "block" }} onChange={(e) => {
+            const f = e.target.files?.[0] ?? null; setMsg(f ? fileTooLarge(f) : ""); if (f && fileTooLarge(f)) { e.target.value = ""; return; } setPhoto(f); setPreview((old) => { if (old) URL.revokeObjectURL(old); return f ? URL.createObjectURL(f) : ""; }); }} /></span>
       </label>
-      {msg && <p role="alert" style={{ color: "#ff8a8a", margin: 0 }}>{msg}</p>}
+      <Flash msg={msg} />
       <small style={{ opacity: 0.7 }}>Posting as {me.name}. Reviews are checked by a volunteer before they appear.</small>
       <div style={{ textAlign: "center" }}><button className="btn btn-main" disabled={busy}>{busy ? "Sending…" : "Submit review"}</button></div>
     </form>

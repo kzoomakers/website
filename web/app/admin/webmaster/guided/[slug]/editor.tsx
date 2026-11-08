@@ -1,7 +1,9 @@
 "use client";
+import Flash from "@/components/flash";
 import { useEffect, useState } from "react";
 import { confirmDialog } from "@/components/dialog";
 import { ImageInput, uploadImage } from "@/components/image-field";
+import { uploadBatch } from "@/lib/upload-client";
 import NeedsEditor from "./needs";
 import Revisions from "../../revisions";
 import { guidedLines, type Field, type GuidedDef } from "@/lib/guided";
@@ -61,14 +63,11 @@ function PhotoGrid({ f, list, set }: { f: Field; list: Obj[]; set: (l: Obj[]) =>
   };
   const add = async (files: FileList | null) => {
     if (!files?.length) return;
-    const added: Obj[] = [];
-    try {
-      for (const [i, file] of Array.from(files).entries()) {
-        setBusy(`Uploading ${i + 1} of ${files.length}…`);
-        added.push({ ...blank(f.of!), [t]: await uploadImage(file) });
-      }
-      setBusy("");
-    } catch (e: any) { setBusy(`Upload failed: ${e.message}`); }
+    setBusy(`Uploading 0 of ${files.length}…`);
+    const res = await uploadBatch(Array.from(files), (file) => uploadImage(file), (d, n) => setBusy(`Uploading ${d} of ${n}…`));
+    const bad = res.find((r): r is Error => r instanceof Error);
+    setBusy(bad ? `Upload failed: ${bad.message}` : "");
+    const added: Obj[] = res.filter((r): r is string => typeof r === "string").map((url) => ({ ...blank(f.of!), [t]: url }));
     if (added.length) { set([...list, ...added]); setSel(list.length); }
   };
   const cur = sel !== null ? list[sel] : null;
@@ -85,10 +84,10 @@ function PhotoGrid({ f, list, set }: { f: Field; list: Obj[]; set: (l: Obj[]) =>
           </button>
         ))}
         <label className="ptile padd"><span>＋<br />Add photos</span>
-          <input type="file" multiple hidden accept="image/jpeg,image/png,image/webp,image/gif" onChange={(e) => { add(e.target.files); e.target.value = ""; }} />
+          <input type="file" multiple hidden accept="image/*,.heic,.heif" onChange={(e) => { add(e.target.files); e.target.value = ""; }} />
         </label>
       </div>
-      {busy && <p role="status" className={busy.startsWith("Upload failed") ? "err" : "sub"}>{busy}</p>}
+      {busy.startsWith("Upload failed") ? <Flash msg={busy} /> : busy && <p role="status" className="sub">{busy}</p>}
       {cur && sel !== null && (
         <div className="card pedit">
           <Fields fields={f.of!} v={cur} set={(x) => set(list.map((y, j) => (j === sel ? x : y)))} />

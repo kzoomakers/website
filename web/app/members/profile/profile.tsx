@@ -1,4 +1,7 @@
 "use client";
+import Flash from "@/components/flash";
+import { sendUpload } from "@/lib/upload-client";
+import { fileTooLarge } from "@/lib/upload-limit";
 import { useEffect, useId, useRef, useState } from "react";
 import "./rocker.css";
 import "./toggle.css";
@@ -57,9 +60,10 @@ export default function Profile({ init, suggestions, values }: { values: Fields;
   const text = (k: FieldKey, ph: string, list?: string) => <input list={list} maxLength={FIELDS[k].max} value={one(k)} onChange={(e) => setOne(k, e.target.value)} placeholder={ph} />;
   const upload = async (f?: File) => {
     if (!f) return;
+    if (fileTooLarge(f)) return setPm(fileTooLarge(f));
     setPm("Uploading…");
     const fd = new FormData(); fd.set("file", f);
-    const r = await fetch("/api/members/photo", { method: "POST", body: fd }).catch(() => null);
+    const r = await sendUpload("/api/members/photo", fd);
     if (r?.ok) { setPhoto((await r.json()).url); setPm(""); } else setPm(r ? await r.text() : "Network error. Try again.");
   };
   const drop = async () => { const r = await fetch("/api/members/photo", { method: "DELETE" }).catch(() => null); if (r?.ok) { setPhoto(""); setPm(""); } };
@@ -107,10 +111,10 @@ export default function Profile({ init, suggestions, values }: { values: Fields;
           {photo ? <img src={photo} alt="Your photo" width={80} height={80} style={{ borderRadius: "50%", objectFit: "cover", flex: "none" }} />
             : <span aria-hidden style={{ width: 80, height: 80, borderRadius: "50%", background: "#ddd", display: "grid", placeItems: "center", fontSize: 28, color: "#777", flex: "none" }}>📷</span>}
           <div style={{ display: "grid", gap: 6 }}>
-            <label className="btn btn-sm" style={{ cursor: "pointer", width: "fit-content" }}>{photo ? "Change photo" : "Upload a photo of yourself"}<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden onChange={(e) => { upload(e.target.files?.[0]); e.target.value = ""; }} /></label>
+            <label className="btn btn-sm" style={{ cursor: "pointer", width: "fit-content" }}>{photo ? "Change photo" : "Upload a photo of yourself"}<input type="file" accept="image/*,.heic,.heif" hidden onChange={(e) => { upload(e.target.files?.[0]); e.target.value = ""; }} /></label>
             {photo && <button type="button" className="btn btn-sm" style={{ width: "fit-content" }} onClick={drop}>Remove photo</button>}
             <small className="mp-h">A friendly face helps people recognize you at the space.</small>
-            {pm && <small role="status">{pm}</small>}
+            {pm === "Uploading…" ? <small role="status">{pm}</small> : <Flash msg={pm} />}
           </div>
         </div>
         <label className="mp-f"><span className="mp-l">Pronouns <small>(optional)</small></span><span className="mp-h">Shown next to your name so people know how to refer to you. Pick one or type your own.</span>{text("pronouns", "e.g. she/her, he/him, they/them", "v-pronouns")}</label>
