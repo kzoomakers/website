@@ -69,7 +69,7 @@ export default function Steps({ step: first, name, version, kinds, update }: { s
         <form className="card" onSubmit={sendId} style={{ display: "grid", gap: 10 }}>
           <label>Type of ID<select name="kind" required defaultValue="">{<option value="" disabled>Choose…</option>}{Object.entries(kinds).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
           <label>Expiration date (leave blank only for a college ID with none)<input type="date" name="expires" min={new Date().toISOString().slice(0, 10)} /></label>
-          <label>Photo or scan<input type="file" name="file" accept="image/*" capture="environment" required /></label>
+          <label>Photo or scan<input type="file" name="file" accept="image/*" required /></label>
           <button className="pri" disabled={busy}>{busy ? "Uploading…" : "Upload and finish"}</button>
         </form>
       </>}

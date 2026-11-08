@@ -20,12 +20,17 @@ primary_region = 'ord'
   min_machines_running = 1
   processes = ['app']
 
-  [[http_service.checks]]
-    grace_period = '30s' # first start builds nothing but connects to Postgres and creates tables
-    interval = '30s'
-    timeout = '10s'
-    method = 'GET'
-    path = '/login'
+[[restart]]
+  policy = "always"
+  processes = [ "app" ]
+  retries = 10
+
+[[http_service.checks]]
+  grace_period = '30s' # first start builds nothing but connects to Postgres and creates tables
+  interval = '30s'
+  timeout = '10s'
+  method = 'GET'
+  path = '/login'
 
 [[vm]]
   memory = '1gb' # Next.js plus sharp image resizing; 512mb is tight
