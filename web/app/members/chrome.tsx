@@ -23,7 +23,7 @@ export function Bar({ signedIn }: { signedIn: boolean }) {
 }
 
 // `limited`: not approved yet, so only Home and Account.
-export function Side({ user, limited }: { user: ReactNode; limited?: boolean }) {
+export function Side({ user, limited, admin }: { user: ReactNode; limited?: boolean; admin?: boolean }) {
   const here = usePathname();
   return (
     <aside className="adm-side"><Collapse>
@@ -32,6 +32,7 @@ export function Side({ user, limited }: { user: ReactNode; limited?: boolean }) 
         return <Link key={href} href={href} className="adm-link" aria-current={on ? "page" : undefined}><span aria-hidden>{icon}</span>{label}</Link>;
       })}
       <span className="adm-sp" />
+      {admin && <a className="adm-link" href="/admin">🛠️ Admin panel</a>}
       <a className="adm-link" href="/" target="_blank">↗ View site</a>
       {user}
     </Collapse></aside>

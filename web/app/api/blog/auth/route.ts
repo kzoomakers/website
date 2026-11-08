@@ -3,11 +3,16 @@ import { errMsg } from "@/lib/errmsg";
 import { COOKIE_NAME, currentVerified, requestLink, safeNext, setPassword } from "@/lib/readers";
 import { baseUrl } from "@/lib/mail";
 import { hashIp } from "@/lib/comments";
+import { SECTIONS, levelOf, me } from "@/lib/guard";
 
 // GET returns the signed-in reader (or null) so any page can show account state.
 export async function GET() {
   const u = await currentVerified().catch(() => null);
-  return NextResponse.json(u && { name: u.name }, { headers: { "cache-control": "no-store" } });
+  const m = await me().catch(() => null);
+  const admin = !!m && SECTIONS.some((s) => levelOf(m, s));
+  // A Google-only admin has no site account; local dev's stand-in admin ("dev") isn't a real sign-in.
+  const name = u?.name ?? (admin && m!.email !== "dev" ? m!.name : null);
+  return NextResponse.json(name && { name, admin }, { headers: { "cache-control": "no-store" } });
 }
 
 // POST { email, name?, next? } emails a sign-in/registration link. DELETE signs out.

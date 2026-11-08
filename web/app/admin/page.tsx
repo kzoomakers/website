@@ -7,5 +7,5 @@ import { TABS } from "./tabs";
 export default async function Admin() {
   const m = await me();
   const any = TABS.some(([, , , s]) => levelOf(m, s));
-  redirect(any ? "/admin/landing" : "/login?next=/admin" + (m ? "&denied=1" : ""));
+  redirect(any ? "/admin/landing" : "/admin-login?next=/admin" + (m ? "&denied=1" : ""));
 }

@@ -39,7 +39,7 @@ export async function editingAllowed(section: Section, need: Level = "write") {
 /** Page check: returns the caller's level, or sends them to sign in (or to the "no access" message if already signed in). */
 export async function gate(section: Section, path: string): Promise<Level> {
   const m = await me(), l = levelOf(m, section);
-  if (!l) redirect(`/login?next=${encodeURIComponent(path)}${m ? "&denied=1" : ""}`);
+  if (!l) redirect(`/admin-login?next=${encodeURIComponent(path)}${m ? "&denied=1" : ""}`);
   return l;
 }
 
