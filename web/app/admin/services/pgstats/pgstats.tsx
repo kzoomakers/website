@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Query } from "@/lib/pgstats";
 
 type Stat = Record<"numbackends" | "commit" | "rollback" | "blks_read" | "blks_hit" | "returned" | "fetched" | "inserted" | "updated" | "deleted" | "deadlocks" | "temp_bytes", number>;
-type Snap = { at: number; source: string; errors: string[]; stat: Stat; conns: { state: string; n: number }[]; size: number; queries: Query[] };
+type Snap = { at: number; source: string; errors: string[]; dbName: string; schemas: string[]; stat: Stat; conns: { state: string; n: number }[]; size: number; queries: Query[] };
 const EVERY = 5000, KEEP = 60;
 const n = (v: number, d = 0) => v.toLocaleString(undefined, { maximumFractionDigits: d });
 const bytes = (b: number) => (b >= 2 ** 30 ? n(b / 2 ** 30, 2) + " GB" : b >= 2 ** 20 ? n(b / 2 ** 20, 1) + " MB" : n(b / 1024) + " KB");
@@ -47,7 +47,7 @@ export default function PgStats() {
     ["Cache hit", n(hit, 2) + " %"], ["Database size", bytes(cur.size)], ["Rollbacks", n(s.rollback)], ["Deadlocks", n(s.deadlocks)], ["Temp files", bytes(s.temp_bytes)]];
   return (
     <div style={{ padding: 16, maxWidth: 1200 }}>
-      <h1>Postgres stats</h1>
+      <h1>Postgres stats <small style={{ fontWeight: 400, opacity: 0.7 }}>database: {cur.dbName} · schemas: {cur.schemas.join(", ")}</small></h1>
       <p style={{ opacity: 0.7 }}>Updates every 5 seconds{document.hidden ? " (paused: tab hidden)" : ""}. Counters are since the last stats reset. {err && <b style={{ color: "#d64545" }}>Last refresh failed: {err}</b>}</p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 12 }}>
         {tiles.map(([label, val, k]) => (
