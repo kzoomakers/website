@@ -13,7 +13,7 @@
    "note": "",
    "features": "Community of Makers\nCollaborative Workspace\nYour Own Small Tools\nCoffee Machine and Fridge\nWIFI",
    "buttonLabel": "Signup",
-   "buttonHref": "/tour-form-redirect"
+   "buttonHref": "/tours"
   },
   {
    "name": "Clean Side Tools",
@@ -25,7 +25,7 @@
    "note": "A Membership is Required",
    "features": "Clean Side Area Tools\nLaser Cutters and Engravers\n3D Printers\nCraft and Fabrics\nStorage Options",
    "buttonLabel": "Signup",
-   "buttonHref": "/tour-form-redirect"
+   "buttonHref": "/tours"
   },
   {
    "name": "Everything Tools",
@@ -37,7 +37,7 @@
    "note": "A Membership is Required",
    "features": "**Woodshop Tools**\n**Metalshop Equipment**\nClean Side Area Tools\nLaser Cutters and Engravers\n3D Printers\nCraft and Fabrics\nStorage Options",
    "buttonLabel": "Signup",
-   "buttonHref": "/tour-form-redirect"
+   "buttonHref": "/tours"
   }
  ],
  "footnote": "Completion of a tour and orientation and agreement to the membership policy and",
@@ -46,6 +46,6 @@
  "ctaTitle": "Ready to Join Our Maker Community?",
  "ctaText": "Start creating, learning, and collaborating with fellow makers today!",
  "ctaLabel": "Get Started",
- "ctaHref": "/tour-form-redirect",
+ "ctaHref": "/tours",
  "footEnd": "are required prior to becoming a member."
 }

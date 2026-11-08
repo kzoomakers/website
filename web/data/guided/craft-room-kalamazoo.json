@@ -63,7 +63,7 @@
     {
      "icon": "none",
      "heading": "Plan Your Visit",
-     "text": "- [Check the calendar](/calendar?search=fiber%20arts%20club) for fiber arts meetups and workshops.\n- [Schedule a tour](/tour-form-redirect) to see the craft room layout and storage.\n- [Review membership tiers](/pricing) for clean-side tool access.\n- Ask about reserving tables for your own craft meetup or club.\n- Bring friends! Community creativity helps ideas stick."
+     "text": "- [Check the calendar](/calendar?search=fiber%20arts%20club) for fiber arts meetups and workshops.\n- [Schedule a tour](/tours) to see the craft room layout and storage.\n- [Review membership tiers](/pricing) for clean-side tool access.\n- Ask about reserving tables for your own craft meetup or club.\n- Bring friends! Community creativity helps ideas stick."
     }
    ],
    "buttons": []
@@ -104,7 +104,7 @@
    "buttons": [
     {
      "label": "Schedule a Tour",
-     "href": "/tour-form-redirect"
+     "href": "/tours"
     },
     {
      "label": "View Membership Options",

@@ -202,6 +202,7 @@ export async function setDue(id: number, due: string | null) {
 }
 
 /** Final signed PDF, decrypted. */
+export async function signedKind(id: number) { return (await (await conn()).query("SELECT kind FROM sign_docs WHERE id = $1 AND status = 'complete'", [id])).rows[0]?.kind as string | undefined; }
 export async function signedPdf(id: number) {
   const r = (await (await conn()).query("SELECT title, kind, pdf FROM sign_docs WHERE id = $1 AND status = 'complete'", [id])).rows[0];
   return r?.pdf ? { title: r.title as string, kind: r.kind as string, pdf: open(r.pdf) } : null;

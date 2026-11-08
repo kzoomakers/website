@@ -50,7 +50,7 @@
    "type": "HtmlSection",
    "props": {
     "id": "HtmlSection-228",
-    "html": "<section class=\"call-to-action section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-xl-6 col-lg-8 text-center\">\n\t\t\t\t<h2>Tour the Fabrication Space</h2>\n\t\t\t\t<p>Before you sign a lease on a private studio, see what a membership-based fabrication space feels like. You might find everything you need already lives under one roof.</p>\n\t\t\t\t<a href=\"/tour-form-redirect\" class=\"btn btn-main\">Schedule a Tour</a>\n\t\t\t\t<a href=\"/pricing\" class=\"btn btn-main\">View Membership Options</a>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+    "html": "<section class=\"call-to-action section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-xl-6 col-lg-8 text-center\">\n\t\t\t\t<h2>Tour the Fabrication Space</h2>\n\t\t\t\t<p>Before you sign a lease on a private studio, see what a membership-based fabrication space feels like. You might find everything you need already lives under one roof.</p>\n\t\t\t\t<a href=\"/tours\" class=\"btn btn-main\">Schedule a Tour</a>\n\t\t\t\t<a href=\"/pricing\" class=\"btn btn-main\">View Membership Options</a>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
    }
   },
   {

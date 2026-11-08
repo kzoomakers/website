@@ -3,5 +3,8 @@ export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
     const { tick } = await import("./lib/mail");
     setInterval(() => tick().catch(() => {}), 60_000);
+    const { checkStale, checkReminders } = await import("./lib/tours");
+    setInterval(() => checkReminders().catch(() => {}), 60_000); // "due now / in 1, 3, 6 hours" lines in the tours timeline
+    setInterval(() => checkStale().catch(() => {}), 30 * 60_000); // untaken walk-ups
   }
 }

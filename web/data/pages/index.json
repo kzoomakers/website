@@ -67,7 +67,7 @@
       "type": "HtmlSection",
       "props": {
         "id": "HtmlSection-112",
-        "html": "<section class=\"wanna-tour section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-xl-6 col-lg-8 text-center\">\n\t\t\t\t<h2>Want a tour?</h2>\n\t\t\t\t<p>Tours are free and no pressure.<br>We like showing the space to new groups!</p>\n\t\t\t<br>\n\t\t\t\t<a href=\"/tour-form-redirect\" class=\"btn btn-main\">Tour Sign Up</a>\n\t\t\t\t<p><sub>* Please allow a few days to get scheduled with a volunteer</sub></p>\n\t\t\t</div>\n\t\t</div> <!-- End row -->\n\t</div> <!-- End container -->\n</section>"
+        "html": "<section class=\"wanna-tour section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-xl-6 col-lg-8 text-center\">\n\t\t\t\t<h2>Want a tour?</h2>\n\t\t\t\t<p>Tours are free and no pressure.<br>We like showing the space to new groups!</p>\n\t\t\t<br>\n\t\t\t\t<a href=\"/tours\" class=\"btn btn-main\">Tour Sign Up</a>\n\t\t\t\t<p><sub>* Please allow a few days to get scheduled with a volunteer</sub></p>\n\t\t\t</div>\n\t\t</div> <!-- End row -->\n\t</div> <!-- End container -->\n</section>"
       }
     },
     {

@@ -7,6 +7,14 @@ import { isAdmin } from "@/auth";
 // /{topic}/json|sse|raw (streaming, or poll=1), message ids, `since`, keepalives. Stored in Postgres; streams poll the table.
 // Not ported: attachments, scheduled delivery, email/Firebase/APNs push, WebSocket, accounts (tokens replace them), message updates/deletes.
 export const TOURS_TOPIC = "kzoomakers-tours";
+/** Special topics, one per tour event. Staff attach their own topic to the ones they want (Admin > Tours > Notifications), so one publish reaches everyone through the links. */
+export const TOUR_EVENTS = {
+  booked: ["kzoomakers-tours-booked", "A tour is booked"],
+  walkup_new: ["kzoomakers-tours-walkup-new", "A walk-up request is created"],
+  walkup_taken: ["kzoomakers-tours-walkup-taken", "A volunteer takes a walk-up request"],
+  walkup_stale: ["kzoomakers-tours-walkup-stale", "A walk-up request is still untaken after a few days"],
+} as const;
+export type TourEvent = keyof typeof TOUR_EVENTS;
 export const TOPIC_OK = /^[-_A-Za-z0-9]{1,64}$/;
 export const RESERVED = ["v1", "docs", "static", "app", "account", "settings", "mytopic", "publish", "subscribe", "json", "sse", "raw", "auth", "send", "trigger"];
 export const UNREAD_DAYS = 60, MAX_RETENTION = 120;
@@ -43,6 +51,8 @@ async function conn() {
     await p.query(`CREATE TABLE IF NOT EXISTS ntfy_links (source text NOT NULL REFERENCES ntfy_topics ON DELETE CASCADE, target text NOT NULL REFERENCES ntfy_topics ON DELETE CASCADE,
       PRIMARY KEY (source, target), CHECK (source <> target))`);
     await p.query("INSERT INTO ntfy_topics (name, description, builtin, created_by) VALUES ($1, 'Tour bookings and cancellations, for staff', true, 'system') ON CONFLICT DO NOTHING", [TOURS_TOPIC]);
+    for (const [name, label] of Object.values(TOUR_EVENTS)) await p.query("INSERT INTO ntfy_topics (name, description, builtin, created_by) VALUES ($1, $2, true, 'system') ON CONFLICT DO NOTHING", [name, label + " (staff attach their topic to get these)"]);
+    await p.query("ALTER TABLE ntfy_topics ADD COLUMN IF NOT EXISTS locked boolean NOT NULL DEFAULT false"); // locked = nobody can read or publish through the API (set while the owner's account is disabled)
     await p.query("ALTER TABLE ntfy_tokens ADD COLUMN IF NOT EXISTS expires_at timestamptz, ADD COLUMN IF NOT EXISTS scopes text[] NOT NULL DEFAULT '{read,publish}'"); // scopes: read | publish
     await p.query("UPDATE ntfy_topics SET retention_days = $1 WHERE retention_days > $1", [MAX_RETENTION]);
     await syncUserTopics(p);
@@ -125,7 +135,7 @@ let swept = 0;
 async function sweep() {
   if (Date.now() - swept < 3600_000) return;
   swept = Date.now();
-  await q(`DELETE FROM ntfy_messages m USING ntfy_topics t WHERE t.name = m.topic AND t.kind = 'user' AND t.created_at < now() - make_interval(days => $1)
+  await q(`DELETE FROM ntfy_messages m USING ntfy_topics t WHERE t.name = m.topic AND t.kind = 'user' AND m.time < now() - make_interval(days => $1)
     AND NOT EXISTS (SELECT 1 FROM ntfy_clients c WHERE c.topic = t.name AND c.last_seen > now() - make_interval(days => $1))`, [UNREAD_DAYS]).catch(() => { swept = 0; });
 }
 
@@ -135,6 +145,15 @@ export async function addLink(source: string, target: string) {
   if (source === target) throw new Error("A topic can't be attached to itself.");
   if ((await q("SELECT 1 FROM ntfy_topics WHERE name = ANY($1)", [[source, target]])).length !== 2) throw new Error("No such topic.");
   await q("INSERT INTO ntfy_links (source, target) VALUES ($1,$2) ON CONFLICT DO NOTHING", [source, target]);
+}
+/** Topics attached to `source` (who receives it), with the person each belongs to. */
+export const subscribersOf = (source: string) => q("SELECT t.name, t.kind, t.owner FROM ntfy_links l JOIN ntfy_topics t ON t.name = l.target WHERE l.source = $1 ORDER BY t.owner, t.name", [source]);
+/** Every personal topic (a person's own, or one of their extras) that can be attached. */
+export const personalTopics = async () => { await syncUserTopics(await conn()); return q("SELECT name, kind, owner FROM ntfy_topics WHERE kind IN ('user','extra') ORDER BY owner, kind DESC, name"); };
+/** Locks or unlocks a person's own topic and their extra topics. Returns false when `locked` was already that way (nothing changed). */
+export async function setUserTopicsLocked(email: string, locked: boolean) {
+  await ensureUserTopic(email);
+  return (await q("UPDATE ntfy_topics SET locked = $2 WHERE owner = $1 AND kind IN ('user','extra') AND locked <> $2 RETURNING 1", [email.toLowerCase(), locked])).length > 0;
 }
 export const removeLink = (source: string, target: string) => q("DELETE FROM ntfy_links WHERE source = $1 AND target = $2", [source, target]);
 
@@ -190,8 +209,9 @@ export const tokenFrom = (req: Request) => {
 };
 /** Who may do this: returns the caller's label ("anonymous" for public access) or null if forbidden. Throws "unknown topic" for topics nobody created. */
 export async function authorize(req: Request, topics: string[], write: boolean) {
-  const rows = await q("SELECT name, public_read, public_write FROM ntfy_topics WHERE name = ANY($1)", [topics]);
+  const rows = await q("SELECT name, public_read, public_write, locked FROM ntfy_topics WHERE name = ANY($1)", [topics]);
   if (rows.length !== new Set(topics).size) throw new Error("unknown topic");
+  if (rows.some((t) => t.locked)) return null;
   if (rows.every((t) => (write ? t.public_write : t.public_read))) return "anonymous";
   const tok = tokenFrom(req);
   if (!tok) return null;

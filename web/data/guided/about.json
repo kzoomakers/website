@@ -56,5 +56,5 @@
  "cta1Label": "See pricing",
  "cta1Href": "pricing.html",
  "cta2Label": "Schedule a tour",
- "cta2Href": "tour-form-redirect.html"
+ "cta2Href": "/tours"
 }

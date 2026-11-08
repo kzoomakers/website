@@ -44,7 +44,7 @@
         },
         {
           "label": "Tour",
-          "href": "tour-form-redirect.html"
+          "href": "/tours"
         },
         {
           "label": "Pricing",
@@ -78,7 +78,7 @@
         },
         {
           "label": "Discord",
-          "href": "discord-redirect.html"
+          "href": "https://discord.gg/4jmJ32QyuF"
         },
         {
           "label": "Youtube",

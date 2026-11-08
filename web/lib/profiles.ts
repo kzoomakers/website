@@ -2,6 +2,7 @@ import { db } from "./db";
 import { logAudit } from "./store";
 import { MIN_ADMINS } from "./users";
 import { disabledMsg } from "./readers";
+import { setUserTopicsLocked } from "./ntfy";
 
 async function conn() {
   const d = db();
@@ -113,6 +114,7 @@ export async function setDisabled(id: number, reason: string | null, who: string
   if (!u) return false;
   if (reason === null) {
     await c.query("UPDATE site_users SET disabled_at = NULL, disabled_reason = '' WHERE id = $1", [id]);
+    await setUserTopicsLocked(u.email, false); // idempotent: if this throws, enabling again retries it
   } else {
     if (u.email.toLowerCase() === who.toLowerCase()) throw new Error("You can't disable your own account.");
     if ((await c.query("SELECT 1 FROM user_perms WHERE user_id = $1 AND locked", [id])).rowCount) throw new Error("The founding administrator can't be disabled.");

@@ -73,6 +73,6 @@
  "tourTitle": "Want a tour?",
  "tourText": "Tours are free and no pressure.\nWe like showing the space to new groups!",
  "tourLabel": "Tour Sign Up",
- "tourHref": "/tour-form-redirect",
+ "tourHref": "/tours",
  "tourNote": "* Please allow a few days to get scheduled with a volunteer"
 }

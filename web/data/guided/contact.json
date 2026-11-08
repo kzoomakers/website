@@ -13,7 +13,7 @@
    "title": "Visit Us",
    "icon": "people",
    "button": "Get A Tour",
-   "href": "/tour-form-redirect",
+   "href": "/tours",
    "line1": "A member will show you the space",
    "line2": "Doors locked outside of event times!",
    "hours": "no"
@@ -22,7 +22,7 @@
    "title": "Discord Us",
    "icon": "chatboxes",
    "button": "Discord Invite",
-   "href": "/discord-redirect",
+   "href": "https://discord.gg/4jmJ32QyuF",
    "line1": "Chat with members on our Discord",
    "line2": "Discord is a free app members use to coordinate and share",
    "hours": "no"

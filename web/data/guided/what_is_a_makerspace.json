@@ -57,7 +57,7 @@
    "buttons": [
     {
      "label": "Schedule a Tour",
-     "href": "/tour-form-redirect"
+     "href": "/tours"
     },
     {
      "label": "About Kzoo Makers",
@@ -81,7 +81,7 @@
     },
     {
      "label": "Schedule a tour",
-     "href": "/tour-form-redirect"
+     "href": "/tours"
     }
    ]
   }

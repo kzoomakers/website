@@ -1,7 +1,8 @@
 import { randomBytes } from "crypto";
 import { db } from "./db";
 import { notify, TOURS_TOPIC } from "./ntfy";
-import { checkOffers, DATE, fmtOffer, mins, TIME, TZ, type Offer } from "./tours-fmt";
+import { checkOffers, DATE, fmtOffer, mins, reminderDue, TIME, TZ, type Offer } from "./tours-fmt";
+import { announce, getCfg as notifyCfg } from "./tours-notify";
 import { getMailCfg, mailReady, sendQueued as send } from "./mail";
 
 // Tour scheduling, ported from kzoomakers/schedulingapp (tours only). Guides publish availability blocks; slots are derived from
@@ -45,6 +46,10 @@ async function conn() {
       offers jsonb NOT NULL DEFAULT '[]', guide_name text NOT NULL DEFAULT '', guide_email text NOT NULL DEFAULT '', decline_note text NOT NULL DEFAULT '', token text NOT NULL UNIQUE,
       booking_id int, ip_hash text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now())`);
     for (const t of ["tour_bookings", "tour_requests"]) await p.query(`ALTER TABLE ${t} ADD COLUMN IF NOT EXISTS client_ip text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS user_agent text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS screen text NOT NULL DEFAULT ''`);
+    await p.query("ALTER TABLE tour_requests ADD COLUMN IF NOT EXISTS stale_notified_at timestamptz");
+    // The timeline: one row per thing that happened. `dedupe` makes a row fire once (reminders), whichever machine gets there first.
+    await p.query(`CREATE TABLE IF NOT EXISTS tour_events (id bigserial PRIMARY KEY, at timestamptz NOT NULL DEFAULT now(), kind text NOT NULL, title text NOT NULL, detail text NOT NULL DEFAULT '',
+      actor text NOT NULL DEFAULT '', guide text NOT NULL DEFAULT '', dedupe text UNIQUE)`);
     // One conversation per booking or walk-up request: staff emails, visitor replies (via a token link), and internal notes only staff see.
     await p.query(`CREATE TABLE IF NOT EXISTS tour_messages (id serial PRIMARY KEY, kind text NOT NULL, ref_id int NOT NULL, author_kind text NOT NULL, author text NOT NULL DEFAULT '', body text NOT NULL,
       created_at timestamptz NOT NULL DEFAULT now())`);
@@ -133,6 +138,22 @@ export async function openSlots() {
     block: b.id, date: b.date, start: s, end: hhmm(mins(s) + b.slot_minutes), left: b.max_per_slot - (used.get(`${b.id}|${s}`) ?? 0) })).filter((s) => s.left > 0));
 }
 
+export type CalItem = { key: string; confirmed: boolean; date: string; start: string; end: string; guide: string; guide_email: string; visitor: string; email: string; phone: string; interest: string; notes: string; status: string; walkup: boolean };
+
+/** Everything with a time on it for [from, to): confirmed tours (bookings, walk-up or not) and the times offered to walk-ups that haven't answered yet. `now` is the club's wall clock. */
+export async function calendar(from: string, to: string) {
+  if (!DATE.test(from) || !DATE.test(to)) throw new Error("Bad dates.");
+  const c = await conn(), plus = (t: string, m: number) => new Date(+new Date(`2000-01-01T${t}:00Z`) + m * 60000).toISOString().slice(11, 16);
+  const [bk, rq] = await Promise.all([
+    c.query(`SELECT k.id, k.name, k.email, k.phone, k.interest, k.status, k.visitor_notes, b.date, k.start_time, b.slot_minutes, b.guide_name, b.guide_email, b.created_by = 'walk-up' AS walkup
+      FROM tour_bookings k JOIN tour_blocks b ON b.id = k.block_id WHERE NOT k.cancelled AND b.date >= $1 AND b.date < $2`, [from, to]),
+    c.query("SELECT id, first_name, last_name, email, phone, interest, notes, guide_name, guide_email, offers FROM tour_requests WHERE status = 'offered'"),
+  ]);
+  const items: CalItem[] = bk.rows.map((r) => ({ key: `b${r.id}`, confirmed: true, date: r.date, start: r.start_time, end: plus(r.start_time, r.slot_minutes), guide: r.guide_name, guide_email: r.guide_email, visitor: r.name, email: r.email, phone: r.phone, interest: r.interest, notes: r.visitor_notes, status: r.status, walkup: r.walkup }));
+  for (const r of rq.rows) (r.offers as Offer[]).forEach((o, i) => { if (o.date >= from && o.date < to) items.push({ key: `r${r.id}-${i}`, confirmed: false, date: o.date, start: o.start, end: o.end, guide: r.guide_name, guide_email: r.guide_email, visitor: `${r.first_name} ${r.last_name}`, email: r.email, phone: r.phone, interest: r.interest, notes: r.notes, status: "offered", walkup: true }); });
+  return { items, now: localNow() };
+}
+
 export async function listBookings(past: boolean): Promise<Booking[]> {
   return (await (await conn()).query(`SELECT k.id, k.block_id, b.date, k.start_time, k.name, k.email, k.phone, k.interest, k.heard,
     CASE WHEN k.cancelled THEN 'cancelled' ELSE k.status END AS status, k.visitor_notes, k.client_ip, k.user_agent, k.screen, k.created_at, b.guide_name, (SELECT count(*)::int FROM tour_messages m WHERE m.kind = 'booking' AND m.ref_id = k.id AND m.author_kind <> 'note') AS msgs, (SELECT m.author_kind FROM tour_messages m WHERE m.kind = 'booking' AND m.ref_id = k.id ORDER BY m.id DESC LIMIT 1) AS last_from
@@ -141,7 +162,44 @@ export async function listBookings(past: boolean): Promise<Booking[]> {
 
 export async function setStatus(id: number, status: string) {
   if (!(STATUSES as readonly string[]).includes(status)) throw new Error("bad status");
-  if (!(await (await conn()).query("UPDATE tour_bookings SET status = $2 WHERE id = $1 AND NOT cancelled", [id, status])).rowCount) throw new Error("That booking is cancelled or gone.");
+  const r = (await (await conn()).query("UPDATE tour_bookings SET status = $2 WHERE id = $1 AND NOT cancelled RETURNING name", [id, status])).rows[0];
+  if (!r) throw new Error("That booking is cancelled or gone.");
+  await logEvent("status", `${r.name}'s tour marked ${status.replace(/_/g, " ")}`);
+}
+
+// ---- timeline (best effort, like email: a log failure never fails the thing being logged)
+async function logEvent(kind: string, title: string, o: { detail?: string; actor?: string; guide?: string; dedupe?: string } = {}) {
+  try {
+    await (await conn()).query("INSERT INTO tour_events (kind, title, detail, actor, guide, dedupe) VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT (dedupe) DO NOTHING",
+      [kind, title.slice(0, 300), (o.detail ?? "").slice(0, 600), (o.actor ?? "").slice(0, 100), (o.guide ?? "").slice(0, 100), o.dedupe ?? null]);
+  } catch (e) { console.error("tour log failed:", e); }
+}
+
+export type TimelineEvent = { id: number; at: string; kind: string; title: string; detail: string; actor: string; guide: string };
+const GROUPS: Record<string, string[]> = { bookings: ["booking", "cancel", "status"], walkups: ["walkup_new", "walkup_taken", "walkup_confirmed", "walkup_declined", "walkup_closed", "walkup_reopened"], messages: ["message", "note", "message_visitor"], reminders: ["reminder_6h", "reminder_3h", "reminder_1h", "reminder_now"] };
+/** Newest first, 100 at a time (`before` is the last id of the previous page). `groups` limits to bookings / walkups / messages / reminders; `q` searches the text. */
+export async function timeline(o: { before?: number; groups?: string[]; q?: string }) {
+  const kinds = (o.groups ?? []).flatMap((g) => GROUPS[g] ?? []), ps: unknown[] = [], w: string[] = [];
+  if (o.before && Number.isInteger(o.before)) w.push(`id < $${ps.push(o.before)}`);
+  if (kinds.length) w.push(`kind = ANY($${ps.push(kinds)})`);
+  if (o.q?.trim()) { const p = `$${ps.push(`%${o.q.trim().replace(/[\\%_]/g, "\\$&")}%`)}`; w.push(`(title ILIKE ${p} OR detail ILIKE ${p} OR actor ILIKE ${p} OR guide ILIKE ${p})`); }
+  return (await (await conn()).query(`SELECT id, at, kind, title, detail, actor, guide FROM tour_events ${w.length ? "WHERE " + w.join(" AND ") : ""} ORDER BY id DESC LIMIT 100`, ps)).rows as TimelineEvent[];
+}
+
+/** Writes "Appointment with X administered by Y is due now / in 1, 3 or 6 hours" into the timeline, once each. Each warning is only logged within 30 minutes of its moment, so a late booking
+ *  or a restart never logs an hours-old "in 6 hours". Run every minute; safe on several machines. */
+export async function checkReminders() {
+  const c = await conn();
+  const rows = (await c.query(`SELECT k.id, k.name, b.guide_name, b.guide_email, k.start_time, b.date,
+      extract(epoch FROM ((b.date || ' ' || k.start_time)::timestamp - (now() AT TIME ZONE $1))) / 60 AS left
+    FROM tour_bookings k JOIN tour_blocks b ON b.id = k.block_id
+    WHERE NOT k.cancelled AND b.date BETWEEN to_char((now() AT TIME ZONE $1) - interval '1 day', 'YYYY-MM-DD') AND to_char((now() AT TIME ZONE $1) + interval '2 days', 'YYYY-MM-DD')`, [TZ])).rows;
+  for (const r of rows) {
+    const due = reminderDue(+r.left);
+    if (!due) continue;
+    const [m, kind, label] = due, guide = r.guide_name || r.guide_email;
+    await logEvent(kind, `Appointment with ${r.name} administered by ${guide || "no guide yet"} ${label === "due now" ? "is due now" : label}`, { detail: when(r.date, r.start_time), guide, dedupe: `rem:${r.id}:${m}` });
+  }
 }
 
 // ---- email (best effort: a booking is never lost because mail failed)
@@ -181,6 +239,8 @@ export async function book(x: { block: number; start: string; name: string; emai
   await mail(email, "Your Kzoo Makers tour", [`Hi ${name}, you're booked for a tour on ${w}.`, "If your plans change, please cancel so someone else can have the spot."], ["Cancel this tour", `${base}/tours/cancel?token=${token}`]);
   await mail(b.guide_email, `New tour booking: ${name}`, [`${name} (${email}, ${phone}) booked a tour on ${w}.`, interest && `Interested in: ${interest}`, vnotes && `Notes: ${vnotes}`].filter(Boolean) as string[]);
   await notify(TOURS_TOPIC, { title: `Tour booked: ${name}`, message: `${w}\n${name} · ${email} · ${phone}${interest ? `\nInterested in: ${interest}` : ""}`, tags: "calendar", click: `${base}/admin/tours` });
+  await logEvent("booking", `${name} booked a tour for ${w}`, { detail: [interest && `Interested in: ${interest}`, `${email} · ${phone}`].filter(Boolean).join("\n"), guide: b.guide_name || b.guide_email, actor: name });
+  await announce("booked", { subject: `Tour booked: ${name}`, lines: [`${name} (${email}, ${phone}) booked a tour on ${w}.`, interest && `Interested in: ${interest}`].filter(Boolean) as string[], tags: "calendar", click: `${base}/admin/tours` });
   return { date: b.date, start: x.start };
 }
 
@@ -191,6 +251,7 @@ export async function cancelByToken(token: string, confirm: boolean) {
   if (confirm && !r.cancelled) {
     await c.query("UPDATE tour_bookings SET cancelled = true WHERE id = $1", [r.id]);
     await c.query("UPDATE tour_requests SET status = 'closed' WHERE booking_id = $1", [r.id]); // a walk-up that cancels is no longer waiting for a tour
+    await logEvent("cancel", `${r.name} cancelled their tour on ${when(r.date, r.start_time)}`, { guide: r.guide_email, actor: r.name });
     await mail(r.guide_email, `Tour cancelled: ${r.name}`, [`${r.name} cancelled their tour on ${when(r.date, r.start_time)}.`]);
     await notify(TOURS_TOPIC, { title: `Tour cancelled: ${r.name}`, message: when(r.date, r.start_time), tags: "x", priority: 2 });
   }
@@ -203,6 +264,7 @@ export async function cancelBooking(id: number) {
   if (!r) throw new Error("Already cancelled.");
   await c.query("UPDATE tour_requests SET status = 'closed' WHERE booking_id = $1", [id]);
   const b = (await c.query("SELECT date FROM tour_blocks WHERE id = $1", [r.block_id])).rows[0];
+  await logEvent("cancel", `${r.name}'s tour on ${when(b.date, r.start_time)} was cancelled by staff`);
   await mail(r.email, "Your Kzoo Makers tour was cancelled", [`Hi ${r.name}, your tour on ${when(b.date, r.start_time)} has been cancelled. Sorry for the trouble. You're welcome to book another time at kzoomakers.org/tours.`]);
 }
 
@@ -222,6 +284,8 @@ export async function requestTour(x: Record<string, unknown>, ipHash: string, de
   await c.query("INSERT INTO tour_requests (first_name, last_name, email, phone, zip, contact_method, interest, notes, token, ip_hash, client_ip, user_agent, screen) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)",
     [r.first, r.last, r.email, r.phone, r.zip, contact, interest, r.notes, randomBytes(24).toString("hex"), ipHash, dev.ip, dev.ua, dev.screen]);
   await notify(TOURS_TOPIC, { title: `Tour request: ${r.first} ${r.last}`, message: `${r.email} · ${r.phone} (prefers ${contact})${interest ? `\nInterested in: ${interest}` : ""}`, tags: "raising_hand", click: `${base}/admin/tours/walkups` });
+  await logEvent("walkup_new", `${r.first} ${r.last} asked for a walk-up tour`, { detail: [`${r.email} · ${r.phone} (prefers ${contact})`, interest && `Interested in: ${interest}`].filter(Boolean).join("\n"), actor: `${r.first} ${r.last}` });
+  await announce("walkup_new", { subject: `Walk-up tour request: ${r.first} ${r.last}`, lines: [`${r.first} ${r.last} (${r.email}, ${r.phone}, prefers ${contact}) asked for a tour.`, interest && `Interested in: ${interest}`, r.notes && `Notes: ${r.notes}`].filter(Boolean) as string[], tags: "raising_hand", click: `${base}/admin/tours/walkups` });
 }
 
 export async function listRequests(all: boolean): Promise<WalkupRequest[]> {
@@ -243,10 +307,25 @@ export async function offerTimes(id: number, raw: unknown, guide: { name: string
   const html = `<p>Hi ${esc(r.first_name)},</p><p>${esc(intro)}</p><ul>${offers.map((o, i) => `<li><a href="${esc(link)}&pick=${i}">${esc(fmtOffer(o))}</a></li>`).join("")}</ul><p><a href="${esc(link)}&none=1">${esc(outro)}</a></p>`;
   const text = `Hi ${r.first_name},\n\n${intro}\n\n${offers.map((o, i) => `* ${fmtOffer(o)}\n  ${link}&pick=${i}`).join("\n")}\n\n${outro}\n${link}&none=1`;
   await send({ to: r.email, subject: "Good news! A Kzoo Makers volunteer can give you a tour", text, html }, cfg);
+  await logEvent("walkup_taken", `${gname || gemail} took ${r.first_name}'s walk-up request and offered ${offers.length} time(s)`, { detail: offers.map(fmtOffer).join("\n"), guide: gname || gemail, actor: gname || gemail });
+  await announce("walkup_taken", { subject: `Walk-up taken: ${r.first_name}`, lines: [`${gname || gemail} offered ${r.first_name} ${offers.length} time(s) for a tour.`], tags: "white_check_mark", click: `${base}/admin/tours/walkups` });
+}
+
+/** Walk-up requests nobody has taken within the configured number of days are announced once each. Run by a timer; safe on several machines (the UPDATE hands each request to one). */
+export async function checkStale() {
+  const days = (await notifyCfg()).staleDays;
+  if (!days) return;
+  const c = await conn();
+  const rows = (await c.query("UPDATE tour_requests SET stale_notified_at = now() WHERE status = 'open' AND stale_notified_at IS NULL AND created_at < now() - make_interval(days => $1) RETURNING first_name, last_name, created_at", [days])).rows;
+  if (!rows.length) return;
+  const base = ((await getMailCfg().catch(() => null))?.siteUrl || process.env.SITE_URL || "https://kzoomakers.org").replace(/\/+$/, "");
+  await announce("walkup_stale", { subject: `${rows.length} walk-up request${rows.length > 1 ? "s" : ""} still untaken after ${days} day${days > 1 ? "s" : ""}`, lines: rows.slice(0, 20).map((r) => `${r.first_name} ${r.last_name}, asked ${new Date(r.created_at).toLocaleDateString("en-US", { timeZone: TZ, month: "short", day: "numeric" })}`), tags: "hourglass", click: `${base}/admin/tours/walkups`, priority: 4 });
 }
 
 export const setRequestStatus = async (id: number, status: "open" | "closed") => {
-  if (!(await (await conn()).query("UPDATE tour_requests SET status = $2, offers = '[]' WHERE id = $1 AND status <> 'scheduled'", [id, status])).rowCount) throw new Error("That request is already scheduled.");
+  const r = (await (await conn()).query("UPDATE tour_requests SET status = $2, offers = '[]' WHERE id = $1 AND status <> 'scheduled' RETURNING first_name, last_name", [id, status])).rows[0];
+  if (!r) throw new Error("That request is already scheduled.");
+  await logEvent(status === "closed" ? "walkup_closed" : "walkup_reopened", `${r.first_name} ${r.last_name}'s walk-up request was ${status === "closed" ? "dismissed or offer taken back" : "reopened"}`);
 };
 
 /** What the visitor's response page needs. Offers that have already passed are dropped. */
@@ -284,12 +363,14 @@ export async function respond(token: string, pick: number | null, note: string, 
   } catch (e) { await client.query("ROLLBACK").catch(() => {}); throw e; } finally { client.release(); }
   const name = `${r.first_name} ${r.last_name}`;
   if (!o) {
+    await logEvent("walkup_declined", `${name} asked for different times`, { detail: note.trim().slice(0, 300), guide: r.guide_name, actor: name });
     await notify(TOURS_TOPIC, { title: `Tour request needs new times: ${name}`, message: `They have asked for new times ${r.reschedules + 1} time(s).${note ? `\n"${note}"` : ""}`, tags: "arrows_counterclockwise", click: `${base}/admin/tours/walkups` });
     return { declined: true as const };
   }
   const w = fmtOffer(o);
   await mail(r.email, "Your Kzoo Makers tour", [`Hi ${r.first_name}, you're booked for a tour on ${w}.`, "If your plans change, please cancel so we can offer the time to someone else."], ["Cancel this tour", `${base}/tours/cancel?token=${bookingToken}`]);
   await mail(r.guide_email, `Tour confirmed: ${name}`, [`${name} (${r.email}, ${r.phone}) accepted your tour time: ${w}.`, r.interest && `Interested in: ${r.interest}`, r.notes && `Notes: ${r.notes}`].filter(Boolean) as string[]);
+  await logEvent("walkup_confirmed", `${name} picked a time: ${w}`, { guide: r.guide_name, actor: name });
   await notify(TOURS_TOPIC, { title: `Walk-up tour confirmed: ${name}`, message: w, tags: "calendar", click: `${base}/admin/tours` });
   return { declined: false as const, when: w };
 }
@@ -324,6 +405,7 @@ export async function postStaff(kind: string, id: number, body: string, internal
       html: `<p>${esc(author)} from Kzoo Makers wrote:</p><blockquote style="margin:0 0 16px;padding-left:12px;border-left:3px solid #f9b234;white-space:pre-wrap">${esc(body)}</blockquote><p><a href="${esc(`${base}/tours/thread?token=${p.token}`)}">Click here to reply</a></p>` }, cfg);
   }
   await (await conn()).query("INSERT INTO tour_messages (kind, ref_id, author_kind, author, body) VALUES ($1,$2,$3,$4,$5)", [kind, id, internal ? "note" : "staff", author.slice(0, 100), body]);
+  await logEvent(internal ? "note" : "message", `${author} ${internal ? "added an internal note on" : "emailed"} ${p.name}`, { detail: body.slice(0, 300), actor: author, guide: p.guide_email });
 }
 
 /** The visitor's side of the conversation, found by the token in their emails. */
@@ -346,6 +428,7 @@ export async function postVisitor(token: string, body: string, base: string) {
   if ((await c.query("SELECT count(*)::int AS n FROM tour_messages WHERE kind = $1 AND ref_id = $2 AND author_kind = 'visitor' AND created_at > now() - interval '1 hour'", [t.kind, t.id])).rows[0].n >= 10) throw new Error("That's a lot of messages. Please wait a bit before sending more.");
   await c.query("INSERT INTO tour_messages (kind, ref_id, author_kind, author, body) VALUES ($1,$2,'visitor',$3,$4)", [t.kind, t.id, t.name.slice(0, 100), body]);
   const p = await party(t.kind, t.id), page = `${base}/admin/tours${t.kind === "request" ? "/walkups" : ""}`;
+  await logEvent("message_visitor", `${t.name} replied about their tour`, { detail: body.slice(0, 300), actor: t.name, guide: p.guide_email });
   await mail(p.guide_email, `${t.name} replied about their tour`, [`${t.name} wrote:`, body], ["Open the conversation", page]);
   await notify(TOURS_TOPIC, { title: `Reply from ${t.name}`, message: body.slice(0, 300), tags: "speech_balloon", click: page });
 }

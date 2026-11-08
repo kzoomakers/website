@@ -493,7 +493,7 @@
    "buttons": [
     {
      "label": "Schedule a Free Tour",
-     "href": "/tour-form-redirect"
+     "href": "/tours"
     },
     {
      "label": "View Membership Options",

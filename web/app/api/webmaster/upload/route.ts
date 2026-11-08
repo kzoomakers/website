@@ -17,15 +17,19 @@ export async function POST(req: Request) {
   if (file.size > MAX) return new NextResponse("too large (10MB max)", { status: 413 });
   const store = await s3();
   if (!store) return new NextResponse("storage not set up", { status: 503 });
-  const key = `${randomUUID()}.${TYPES[file.type]}`;
   let body = Buffer.from(await file.arrayBuffer());
+  // Trust the bytes, not the client's claimed MIME: sharp re-encodes in the input's real format, so label it with that.
+  const real = await sharp(body).metadata().then((m) => m.format, () => undefined);
+  const type = Object.keys(TYPES).find((t) => t === `image/${real}`);
+  if (!type) return new NextResponse("image required (jpg/png/webp/gif)", { status: 400 });
+  const key = `${randomUUID()}.${TYPES[type]}`;
   // Keep uploads from being gigantic: avatars become 240px squares, everything else is capped at 2000px wide. GIFs are left alone (animation).
-  if (file.type !== "image/gif") {
+  if (type !== "image/gif") {
     const img = sharp(body).rotate();
     body = await (form.get("avatar") ? img.resize(240, 240, { fit: "cover" }) : img.resize({ width: 2000, withoutEnlargement: true })).toBuffer();
   }
-  await store.client.send(new PutObjectCommand({ Bucket: store.bucket, Key: key, Body: body, ContentType: file.type }));
+  await store.client.send(new PutObjectCommand({ Bucket: store.bucket, Key: key, Body: body, ContentType: type }));
   // Everything but avatars shows up in the media library; a library failure must not lose the upload.
-  if (!form.get("avatar")) await registerMedia(key, file.name, file.type, body.length, await actor()).catch(() => {});
+  if (!form.get("avatar")) await registerMedia(key, file.name, type, body.length, await actor()).catch(() => {});
   return NextResponse.json({ url: `/uploads/${key}` });
 }

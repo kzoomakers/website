@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { actor, editingAllowed } from "@/lib/guard";
 import { viewId } from "@/lib/onboarding";
-import { signedPdf } from "@/lib/sign";
+import { signedKind, signedPdf } from "@/lib/sign";
 import { buildAgreementPdf } from "@/lib/sign-pdf";
 import { getVersion } from "@/lib/waiver";
 
@@ -20,7 +20,8 @@ export async function GET(req: Request) {
     const v = await getVersion(Number(q.get("ver")));
     return v ? new NextResponse(new Uint8Array(await buildAgreementPdf(v, null)), { headers: { ...hdr, "content-type": "application/pdf", "content-disposition": `attachment; filename="membership-agreement-${v.revision.replace(/[^\w.-]+/g, "_")}.pdf"` } }) : new NextResponse("not found", { status: 404 });
   }
+  const kind = await signedKind(Number(q.get("pdf")));
+  if (!kind || !(await editingAllowed(kind === "waiver" ? "crm" : "board", "read"))) return new NextResponse("not found", { status: 404 }); // authorize before the decrypt
   const f = await signedPdf(Number(q.get("pdf")));
-  if (f && !(await editingAllowed(f.kind === "waiver" ? "crm" : "board", "read"))) return new NextResponse("not found", { status: 404 });
   return f ? new NextResponse(new Uint8Array(f.pdf), { headers: { ...hdr, "content-type": "application/pdf", "content-disposition": `attachment; filename="${f.title.replace(/[^\w.-]+/g, "_").slice(0, 60)}.pdf"` } }) : new NextResponse("not found", { status: 404 });
 }
