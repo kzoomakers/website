@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { editingAllowed } from "@/lib/guard";
+import { gate } from "@/lib/guard";
 import { getConfig } from "@/lib/config";
 import { getRobots } from "@/lib/store";
 import RobotsEditor from "./editor";
@@ -7,7 +7,7 @@ import RobotsEditor from "./editor";
 export const dynamic = "force-dynamic";
 
 export default async function RobotsPage() {
-  if (!(await editingAllowed())) redirect("/api/auth/signin?callbackUrl=/admin/webmaster/robots");
-  if (!getConfig()) redirect("/admin/webmaster/setup");
+  await gate("webmaster", "/admin/webmaster/robots");
+  if (!getConfig()) redirect("/admin/services");
   return <RobotsEditor initial={await getRobots()} />;
 }

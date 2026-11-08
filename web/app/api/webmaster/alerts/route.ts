@@ -5,7 +5,7 @@ import { editingAllowed } from "@/lib/guard";
 
 // What is waiting for an admin: pending reviews, comments and held contact messages, with the newest id of each (the popup uses it to know what is new).
 export async function GET() {
-  if (!(await editingAllowed())) return new NextResponse("not found", { status: 404 });
+  if (!(await Promise.all((["webmaster", "blog", "forms"] as const).map((s) => editingAllowed(s, "read")))).some(Boolean)) return new NextResponse("not found", { status: 404 });
   const d = db();
   if (!d) return NextResponse.json({ reviews: 0, reviewMax: 0, comments: 0, commentMax: 0, forms: 0, formMax: 0 });
   await d.ready;

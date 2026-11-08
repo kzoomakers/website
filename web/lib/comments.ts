@@ -1,3 +1,4 @@
+import { notifyUser } from "./notifications";
 import { createHash } from "crypto";
 import { db } from "./db";
 import { getMailCfg, mailReady, send } from "./mail";
@@ -90,6 +91,11 @@ export async function toggleLike(commentId: number, userId: number) {
 
 /** Emails the post's author and, for a reply, the person replied to. Skips the commenter themself and anyone already emailed. */
 async function notify(id: number, base: string) {
+  // In-app: tell the author of the comment being replied to (not for replying to yourself).
+  const n = (await (await conn()).query(`SELECT c.body, c.user_id, u.name, p.title, p.slug, pc.user_id AS parent_user FROM comments c JOIN site_users u ON u.id = c.user_id JOIN posts p ON p.id = c.post_id
+    LEFT JOIN comments pc ON pc.id = c.parent_id WHERE c.id = $1`, [id])).rows[0];
+  if (n?.parent_user && n.parent_user !== n.user_id)
+    await notifyUser(n.parent_user, { kind: "comment.reply", title: `${n.name} replied to your comment on "${n.title}"`, body: n.body, url: `/blog/${n.slug}#c${id}` }).catch(() => {});
   const [cfg, s] = [await getMailCfg(), await getSettings()];
   if (!s.notify || !mailReady(cfg)) return;
   const r = (await (await conn()).query(`SELECT c.body, u.name, u.email AS by, p.title, p.slug, (SELECT a.email FROM authors a WHERE a.id = p.author_id) AS author_email, pu.email AS parent_email

@@ -1,0 +1,17 @@
+
+.adm-main:has(.landing){max-width:none;padding:0}
+.landing{position:relative;min-height:calc(100vh - 76px);overflow:hidden;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0 8vw;box-sizing:border-box;text-align:center;color:#121416;
+  background:radial-gradient(ellipse at 50% 45%,#2b4a52 0%,#16303a 45%,#0a1a22 100%),linear-gradient(180deg,#12303a,#08141b)}
+.landing::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(circle at 20% 10%,rgb(60 140 150/.14),transparent 30%),radial-gradient(circle at 85% 90%,rgb(40 90 140/.16),transparent 32%),linear-gradient(90deg,rgb(0 0 0/.35),transparent 12%,transparent 88%,rgb(0 0 0/.35))}
+.landing::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;opacity:.12;mix-blend-mode:overlay;
+  background-image:repeating-radial-gradient(circle at 0 0,rgb(0 0 0/.05) 0,rgb(0 0 0/.2) 2px,transparent 1px,transparent 4px)}
+.landing .brain{position:relative;z-index:2;height:75vh;max-width:90%}
+.landing .brain #lighting path{fill:#fff7bd;filter:drop-shadow(0 0 3px #fff3a0) drop-shadow(0 0 8px #ffc13b);animation:tube-core 1.6s ease-in-out infinite alternate}
+.landing .brain #lighting-glow path{fill:#ffb22e;opacity:.55;filter:blur(10px);animation:tube-glow 1.6s ease-in-out infinite alternate}
+.landing .brain #pins-base{fill:#6f1f1a}
+.landing .brain #pins-charge{fill:#f0473b;filter:drop-shadow(0 0 2px rgba(240,71,59,.7)) drop-shadow(0 0 6px rgba(240,71,59,.45))}
+.landing .brain #charge-rect{animation:charge-pins 1s steps(4) infinite}
+@keyframes tube-core{0%{fill:#ffd35a;opacity:.8;filter:drop-shadow(0 0 2px #fff0a0) drop-shadow(0 0 6px #ffb72e)}100%{fill:#fff8cf;opacity:1;filter:drop-shadow(0 0 5px #fff7bd) drop-shadow(0 0 14px #ffb72e)}}
+@keyframes tube-glow{0%{opacity:.25;filter:blur(5px)}100%{opacity:.7;filter:blur(16px)}}
+@keyframes charge-pins{0%{width:0}25%{width:18px}50%{width:38px}75%{width:58px}100%{width:78px}}

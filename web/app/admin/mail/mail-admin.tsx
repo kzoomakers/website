@@ -7,7 +7,6 @@ import { Emails, NewEmail, SendStep } from "./emails";
 import Subscribers from "./subscribers";
 import Forms from "./forms";
 
-const NAV = [["", "Home", "🏠"], ["emails", "Emails", "✉️"], ["forms", "Forms", "📝"], ["subscribers", "Subscribers", "👥"], ["lists", "Lists", "📋"], ["settings", "Settings", "⚙️"]] as const;
 export type Props = { s: State; reload: () => void };
 
 export default function MailAdmin({ slug }: { slug: string[] }) {
@@ -25,11 +24,6 @@ export default function MailAdmin({ slug }: { slug: string[] }) {
   }
   return (
     <div className="mp">
-      <nav className="mp-nav" aria-label="Mailing lists">
-        <h3>Postmaster</h3>
-        {NAV.map(([href, label, icon]) => <Link key={href} href={"/admin/mail" + (href && "/" + href)} aria-current={(a ?? "") === href ? "page" : undefined}>{icon} {label}</Link>)}
-        
-      </nav>
       <div style={{ minWidth: 0 }}>
         {!s.cfg.mail && a !== "settings" && <p className="sub" role="status">⚠️ Sending isn't set up yet — it needs both a sender address and an SMTP2GO key (or SMTP server). Add them under <Link href="/admin/mail/settings">Settings</Link>. You can still build lists and drafts.</p>}
         {!a && <Home s={s} />}

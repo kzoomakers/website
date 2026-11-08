@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { editingAllowed } from "@/lib/guard";
+import { gate } from "@/lib/guard";
 import { getConfig } from "@/lib/config";
 import { listPosts } from "@/lib/blog";
 import Link from "next/link";
@@ -8,8 +8,8 @@ import Backup from "./backup";
 export const dynamic = "force-dynamic";
 
 export default async function BlogAdminList() {
-  if (!(await editingAllowed())) redirect("/api/auth/signin?callbackUrl=/admin/blog");
-  if (!getConfig()) redirect("/admin/webmaster/setup");
+  await gate("blog", "/admin/blog");
+  if (!getConfig()) redirect("/admin/services");
   const posts = await listPosts(true);
   const now = Date.now();
   return (

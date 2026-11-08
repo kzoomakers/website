@@ -10,11 +10,11 @@ const TTL = 60 * 60 * 1000;
 export async function GET(req: Request) {
   const q = new URL(req.url).searchParams;
   if (q.has("history")) {
-    if (!(await editingAllowed())) return new NextResponse("not found", { status: 404 });
+    if (!(await editingAllowed("webmaster", "read"))) return new NextResponse("not found", { status: 404 });
     return NextResponse.json(await settingHistory("calendar"));
   }
   if (q.has("config")) {
-    if (!(await editingAllowed())) return new NextResponse("not found", { status: 404 });
+    if (!(await editingAllowed("webmaster", "read"))) return new NextResponse("not found", { status: 404 });
     return NextResponse.json({ url: await getCalUrl(), cachedAt: cache?.at ?? null });
   }
   if (!cache || Date.now() - cache.at > TTL) {
@@ -26,7 +26,7 @@ export async function GET(req: Request) {
 }
 
 export async function PUT(req: Request) {
-  if (!(await editingAllowed())) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("webmaster"))) return new NextResponse("not found", { status: 404 });
   const { url } = await req.json().catch(() => ({}));
   if (typeof url !== "string" || !/^https?:\/\/\S+$/.test(url.trim())) return new NextResponse("need an http(s) URL", { status: 400 });
   await setCalUrl(url.trim(), await actor());
@@ -35,7 +35,7 @@ export async function PUT(req: Request) {
 }
 
 export async function POST(req: Request) {
-  if (!(await editingAllowed())) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("webmaster"))) return new NextResponse("not found", { status: 404 });
   const { revert } = await req.json().catch(() => ({}));
   if (revert !== undefined) {
     if (!Number.isInteger(revert) || !(await revertSetting("calendar", revert, await actor()))) return new NextResponse("no such revision", { status: 404 });

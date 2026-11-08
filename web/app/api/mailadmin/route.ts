@@ -1,16 +1,20 @@
 import { NextResponse } from "next/server";
-import { editingAllowed } from "@/lib/guard";
+import { actor, editingAllowed } from "@/lib/guard";
+import { logAudit } from "@/lib/store";
 import * as m from "@/lib/mail";
 
 // One admin RPC endpoint: POST { op, ...args }. Everything is behind the same admin check as /webmaster.
 export const dynamic = "force-dynamic";
 
+// Ops that only look; every other op changes something (or sends mail) and needs write access.
+const READS = new Set(["state", "forms", "subscribers", "dashboard", "exportPerson", "exportSubscribers", "emails", "campaign", "recipients", "activity", "stats"]);
+
 export async function POST(req: Request) {
-  if (!(await editingAllowed())) return new NextResponse("not found", { status: 404 });
   const a = await req.json().catch(() => null);
   if (!a?.op) return new NextResponse("bad request", { status: 400 });
+  if (!(await editingAllowed("mail", READS.has(a.op) ? "read" : "write"))) return new NextResponse("not found", { status: 404 });
   try {
-    switch (a.op) {
+    const res = await (async () => { switch (a.op) {
       case "state": return NextResponse.json({ lists: await m.getLists(), tags: await m.allTags(), templates: await m.getTemplates(), cfg: await m.publicMailCfg() });
       case "saveCfg": await m.saveMailCfg(a.cfg); break;
       case "saveList": await m.saveList(a); break;
@@ -39,8 +43,10 @@ export async function POST(req: Request) {
       case "send": return NextResponse.json({ recipients: await m.sendCampaign(a.id, await m.baseUrl(req), a.at) });
       case "ai": return NextResponse.json(await m.composeWithAI(String(a.prompt ?? ""), a.current));
       default: return new NextResponse("unknown op", { status: 400 });
-    }
-    return NextResponse.json({ ok: true });
+    } return NextResponse.json({ ok: true }); })();
+    // Every successful change is logged (mail.<op>); the target is whatever names the thing changed.
+    if (res.ok && !READS.has(a.op)) await logAudit(await actor(), "mail." + a.op, String(a.name ?? a.form?.name ?? a.campaign?.subject ?? a.subscriber?.email ?? a.tool?.name ?? a.klass?.name ?? a.id ?? ""));
+    return res;
   } catch (e: any) {
     return new NextResponse(e.message ?? "failed", { status: 400 });
   }

@@ -6,7 +6,7 @@ import Editor from "./editor";
 export const dynamic = "force-dynamic";
 
 export default async function EditPage({ params }: { params: Promise<{ path?: string[] }> }) {
-  if (!await editingAllowed()) notFound();
+  if (!await editingAllowed("webmaster")) notFound();
   const slug = slugOf((await params).path);
   if (LOCKED.includes(slug)) notFound();
   // Unknown slug = creating a new page.

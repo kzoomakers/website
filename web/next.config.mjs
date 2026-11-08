@@ -1,5 +1,10 @@
 // Keep legacy URLs alive: /about.html -> /about, /index.html -> /
 const nextConfig = {
+  // /notify is an alias of /ntfy (the ntfy-compatible API).
+  async rewrites() {
+    return [{ source: "/notify/:path*", destination: "/ntfy/:path*" }, { source: "/notify", destination: "/ntfy" }];
+  },
+  devIndicators: { position: "bottom-right" },
   async redirects() {
     return [
       { source: "/webmaster/:p*", destination: "/admin/webmaster/:p*", permanent: false },

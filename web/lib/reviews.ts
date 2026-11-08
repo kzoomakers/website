@@ -12,7 +12,7 @@ export const MAX_REVIEW = 800;
 const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 /** Reviewer's selfie: validated, shrunk to a 240px square and stored under avatars/. Not added to the media library (like other avatars). */
-async function storePhoto(file: File): Promise<string> {
+export async function storePhoto(file: File): Promise<string> {
   if (!PHOTO_TYPES.includes(file.type)) throw new Error("The photo must be a JPG, PNG, WebP or GIF image.");
   if (file.size > 5 * 1024 * 1024) throw new Error("The photo is too large (5MB max).");
   const store = s3();
@@ -22,7 +22,7 @@ async function storePhoto(file: File): Promise<string> {
   await store.client.send(new PutObjectCommand({ Bucket: store.bucket, Key: key, Body: body, ContentType: "image/jpeg" }));
   return `/uploads/${key}`;
 }
-async function dropPhoto(url: string) {
+export async function dropPhoto(url: string) {
   const store = s3(), key = url.replace(/^\/uploads\//, "");
   if (store && key.startsWith("avatars/")) await store.client.send(new DeleteObjectCommand({ Bucket: store.bucket, Key: key })).catch(() => {});
 }

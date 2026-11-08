@@ -1,0 +1,2 @@
+// Top-level admin sections: path, label, ribbon colour, and the permission section that unlocks it.
+export const TABS = [["/admin/webmaster", "Webmaster", "#c00", "webmaster"], ["/admin/mail", "Postmaster", "#1b7f3b", "mail"], ["/admin/blog", "Blog", "#2563eb", "blog"], ["/admin/forms", "Forms", "#7c3aed", "forms"], ["/admin/crm", "CRM", "#0891b2", "crm"], ["/admin/tours", "Tours", "#e11d48", "tours"], ["/admin/users", "Admin", "#d97706", "admin"]] as const;

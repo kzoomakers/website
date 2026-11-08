@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
 type F = { id: number; kind: "popup" | "slidein" | "bar" | "inline"; heading: string; body: string; button: string; success: string; delay: number; color: string; ask_name: boolean };
-const SKIP = ["/admin", "/edit", "/mail", "/api"];
+const SKIP = ["/admin", "/edit", "/mail", "/api", "/login", "/account", "/members"];
 const key = (id: number) => "subscribe-form-" + id;
 const hidden = (id: number) => { try { return Date.now() < Number(localStorage.getItem(key(id))); } catch { return false; } };
 const hide = (id: number, days: number) => { try { localStorage.setItem(key(id), String(Date.now() + days * 864e5)); } catch {} };

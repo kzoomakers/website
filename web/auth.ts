@@ -13,6 +13,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [Google],
   session: { strategy: "jwt" },
   trustHost: true,
+  pages: { signIn: "/login", error: "/login" },
   callbacks: {
     // Only verified Google accounts on the allow-list can sign in at all.
     // A domain entry also requires Google's hosted-domain claim, so a personal Google account that merely uses a kzoomakers.org address is refused.

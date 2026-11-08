@@ -5,13 +5,13 @@ import { actor, editingAllowed } from "@/lib/guard";
 const s = (v: unknown) => typeof v === "string";
 
 export async function GET() {
-  if (!(await editingAllowed())) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("blog", "read"))) return new NextResponse("not found", { status: 404 });
   return NextResponse.json(await listPosts(true));
 }
 
 // Create (no id) or update.
 export async function POST(req: Request) {
-  if (!(await editingAllowed())) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("blog"))) return new NextResponse("not found", { status: 404 });
   const b = await req.json().catch(() => null);
   if (!s(b?.title) || !s(b?.slug) || !s(b?.excerpt) || !s(b?.body) || !s(b?.image) || !Array.isArray(b?.tags) || !b.tags.every(s) || !["draft", "published"].includes(b?.status)
     || (b.publish_at && isNaN(Date.parse(b.publish_at))) || (b.id != null && !Number.isInteger(b.id)) || (b.author_id != null && !Number.isInteger(b.author_id)) || !Array.isArray(b.category_ids) || !b.category_ids.every(Number.isInteger)) return new NextResponse("bad post", { status: 400 });
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  if (!(await editingAllowed())) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("blog"))) return new NextResponse("not found", { status: 404 });
   const id = Number(new URL(req.url).searchParams.get("id"));
   if (!Number.isInteger(id)) return new NextResponse("bad id", { status: 400 });
   await deletePost(id, await actor());

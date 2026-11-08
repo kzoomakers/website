@@ -10,7 +10,7 @@ export function AccountLink() {
   }, []);
   if (me === undefined) return null;
   return me ? (
-    <li className="nav-item"><span className="nav-link">Hi, {me.name.split(" ")[0]} · <a href="#!" onClick={async (e) => { e.preventDefault(); await fetch("/api/blog/auth", { method: "DELETE" }); location.reload(); }}>Sign out</a></span></li>
+    <li className="nav-item"><span className="nav-link"><a href="/members">Members</a> · <a href="/account">Hi, {me.name.split(" ")[0]}</a> · <a href="#!" onClick={async (e) => { e.preventDefault(); await fetch("/api/blog/auth", { method: "DELETE" }); location.reload(); }}>Sign out</a></span></li>
   ) : (
     <li className="nav-item"><a className="nav-link" href={`/login?next=${encodeURIComponent(here)}`}>Sign in</a></li>
   );

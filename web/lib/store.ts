@@ -1,3 +1,4 @@
+import { AUDIT_SECTIONS } from "./audit-areas";
 import type { Data } from "@puckeditor/core";
 import { db, LOCKED, CAL_DEFAULT } from "./db";
 import { guidedDef, withDefaults } from "./guided";
@@ -169,11 +170,35 @@ export async function revertAudit(id: number, who: string) {
   return d.family === "menu" ? revertMenu(d.prevId!, who) : revertSetting(d.family, d.prevId!, who);
 }
 
-export async function searchAudit(q: string) {
-  const like = `%${q.replace(/[\\%_]/g, "\\$&")}%`;
-  return (await (await conn()).query(
-    `SELECT id, at, actor, action, target FROM audit
-     WHERE actor ILIKE $1 OR action ILIKE $1 OR target ILIKE $1 ORDER BY id DESC LIMIT 200`, [like])).rows;
+export type AuditQuery = { q?: string; actors?: string[]; sections?: string[]; actions?: string[]; from?: string; to?: string; sort?: string; offset?: number; unit?: string };
+
+/** Filtered, sorted audit entries plus a time histogram and the people/actions available to filter by (those ignore the people/section/action filters, so you can still pick more). */
+export async function queryAudit(f: AuditQuery) {
+  const c = await conn();
+  const like = (q: string) => `%${q.replace(/[\\%_]/g, "\\$&")}%`;
+  const time: string[] = [], tp: unknown[] = [];
+  const add = (arr: unknown[], v: unknown) => `$${arr.push(v)}`;
+  const valid = (d?: string) => (d && !isNaN(Date.parse(d)) ? d : null);
+  if (valid(f.from)) time.push(`at >= ${add(tp, f.from)}`);
+  if (valid(f.to)) time.push(`at < ${add(tp, f.to)}`);
+  if (f.q?.trim()) { const p = add(tp, like(f.q.trim())); time.push(`(actor ILIKE ${p} OR action ILIKE ${p} OR target ILIKE ${p})`); }
+  const where = (extra: string[], ps: unknown[]) => (time.length + extra.length ? "WHERE " + [...time, ...extra].join(" AND ") : "");
+  const ps = [...tp], extra: string[] = [];
+  if (f.actors?.length) extra.push(`actor = ANY(${add(ps, f.actors)})`);
+  if (f.actions?.length) extra.push(`action = ANY(${add(ps, f.actions)})`);
+  const pats = (f.sections ?? []).flatMap((x) => AUDIT_SECTIONS[x]?.like ?? []);
+  if (f.sections?.length) extra.push(`action LIKE ANY(${add(ps, pats)})`);
+  const order = { old: "id ASC", actor: "lower(actor) ASC, id DESC", action: "action ASC, id DESC" }[f.sort ?? ""] ?? "id DESC";
+  const unit = ["hour", "day", "week", "month"].includes(f.unit ?? "") ? f.unit : "day";
+  const W = where(extra, ps);
+  const [rows, total, buckets, actors, actions] = await Promise.all([
+    c.query(`SELECT id, at, actor, action, target FROM audit ${W} ORDER BY ${order} LIMIT 100 OFFSET ${add(ps, Math.max(0, Number(f.offset) || 0))}`, ps),
+    c.query(`SELECT count(*)::int n FROM audit ${W}`, ps.slice(0, ps.length - 1)),
+    c.query(`SELECT date_trunc('${unit}', at) t, action, count(*)::int n FROM audit ${W} GROUP BY 1, 2 ORDER BY 1`, ps.slice(0, ps.length - 1)),
+    c.query(`SELECT actor v, count(*)::int n FROM audit ${where([], tp)} GROUP BY 1 ORDER BY 2 DESC LIMIT 200`, tp),
+    c.query(`SELECT action v, count(*)::int n FROM audit ${where([], tp)} GROUP BY 1 ORDER BY 2 DESC LIMIT 300`, tp),
+  ]);
+  return { rows: rows.rows, total: total.rows[0].n, buckets: buckets.rows, actors: actors.rows, actions: actions.rows };
 }
 
 

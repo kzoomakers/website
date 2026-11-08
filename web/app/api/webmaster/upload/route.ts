@@ -10,7 +10,7 @@ const TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png",
 const MAX = 10 * 1024 * 1024;
 
 export async function POST(req: Request) {
-  if (!await editingAllowed()) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("webmaster")) && !(await editingAllowed("blog")) && !(await editingAllowed("mail"))) return new NextResponse("not found", { status: 404 });
   const form = await req.formData();
   const file = form.get("file");
   if (!(file instanceof File) || !TYPES[file.type]) return new NextResponse("image required (jpg/png/webp/gif)", { status: 400 });

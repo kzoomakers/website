@@ -9,7 +9,7 @@ const msg = (e: unknown) => (e instanceof Error ? e.message || e.name : String(e
 
 // Tests each datasource; only when both pass is the config saved ("test and continue").
 export async function POST(req: Request) {
-  if (!(await editingAllowed())) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("admin"))) return new NextResponse("not found", { status: 404 });
   if (envConfig()) return new NextResponse("configured via environment", { status: 409 });
   const b = await req.json().catch(() => ({}));
   const cfg: Cfg = {
