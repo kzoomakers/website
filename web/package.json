@@ -17,7 +17,7 @@
     "@tiptap/react": "^3.33.0",
     "@tiptap/starter-kit": "^3.33.0",
     "@types/nodemailer": "^8.0.2",
-    "animejs": "^3.2.2",
+    "animejs": "^4.5.0",
     "asn1js": "3.1.0",
     "cheerio": "^1.2.0",
     "heic-convert": "^2.1.0",
