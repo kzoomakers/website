@@ -1,0 +1,65 @@
+{
+ "root": {
+  "props": {
+   "title": "Electronics Lab & Robotics Workshop Space | Kalamazoo Makerspace",
+   "description": "Looking for an electronics lab or robotics workshop space in Kalamazoo? Join Kalamazoo Makerspace for soldering stations, benches, and fabrication tools instead of renting a single lab bench.",
+   "bare": false,
+   "inline": [],
+   "bodyClass": "",
+   "refresh": "",
+   "css": "",
+   "styles": [],
+   "scripts": []
+  }
+ },
+ "content": [
+  {
+   "type": "PageHeader",
+   "props": {
+    "id": "PageHeader-235",
+    "title": "Electronics Lab & Robotics Workshop Space",
+    "tag": "h1",
+    "crumb": "Electronics Lab",
+    "subtitle": "",
+    "subtitleTag": "h5",
+    "trail": []
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-236",
+    "html": "<section class=\"about-2 section\" id=\"electronics-lab-overview\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<div class=\"title text-center\">\n\t\t\t\t\t<h2>Electronics Lab &amp; Robotics Build Space in Kalamazoo, MI</h2>\n\t\t\t\t\t<p><strong>Searching for an “electronics lab Kalamazoo” because your kitchen table is full of wires and half-built robots?</strong></p>\n\t\t\t\t\t<p>Kalamazoo Makerspace offers membership-based access to a shared electronics and robotics workshop. Instead of renting a single bench by the hour, you get ongoing access to benches and soldering stations plus the rest of the makerspace: <a href=\"/3d-printing\">3D printers</a>, an <a href=\"/laser-shop\">industrial laser cutter</a>, a <a href=\"/metal-shop\">metal shop with welding</a>, a <a href=\"/wood-shop\">wood shop</a>, and open shared tables for assembly and debugging.</p>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\n\t\t<div class=\"row mt-5\">\n\t\t\t<div class=\"col-md-6 mb-4\">\n\t\t\t\t<h3>Who the Electronics Lab Is For</h3>\n\t\t\t\t<ul class=\"checklist\">\n\t\t\t\t\t<li>Electronics hobbyists who want reliable <strong>soldering station access</strong> and room to spread out.</li>\n\t\t\t\t\t<li>Students and mentors working on <strong>robotics teams, STEM clubs, or capstone projects</strong>.</li>\n\t\t\t\t\t<li>Hardware startup founders and tinkerers doing <strong>IoT devices, sensor prototypes, and test rigs</strong>.</li>\n\t\t\t\t\t<li>Repair-minded folks who fix audio gear, arcade machines, small devices, and embedded systems.</li>\n\t\t\t\t\t<li>Software people who want to move from blinking LEDs to mechanical motion and full mechatronics.</li>\n\t\t\t\t</ul>\n\t\t\t</div>\n\t\t\t<div class=\"col-md-6 mb-4\">\n\t\t\t\t<h3>What You Get With Membership</h3>\n\t\t\t\t<ul class=\"checklist\">\n\t\t\t\t\t<li>Electronics benches and soldering stations for building and debugging circuits.</li>\n\t\t\t\t\t<li>Shared hand tools and basic test gear appropriate for hobby-level electronics work.</li>\n\t\t\t\t\t<li>Access to the <a href=\"/3d-printing\">3D printing lab</a> for enclosures, brackets, and robot parts.</li>\n\t\t\t\t\t<li>Use of the <a href=\"/laser-shop\">industrial laser cutter</a> for panels, control boxes, and robot chassis plates.</li>\n\t\t\t\t\t<li>Mechanical support areas in the <a href=\"/metal-shop\">metal shop</a> and <a href=\"/wood-shop\">wood shop</a> when your electronics need a frame, cart, or structure.</li>\n\t\t\t\t\t<li>Meeting and class options in the <a href=\"/meeting-space\">meeting space</a> for coding nights, robotics strategy, or group work sessions.</li>\n\t\t\t\t</ul>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-237",
+    "html": "<section class=\"section\" style=\"background:#f9f9f9;\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center\">\n      <div class=\"col-lg-8\">\n        <div class=\"title text-center\">\n          <h2>Home Bench vs. Makerspace Electronics Lab</h2>\n          <div class=\"border\"></div>\n        </div>\n      </div>\n    </div>\n    <div class=\"row mt-4\">\n      <div class=\"col-md-6 mb-4\">\n        <h3>Working at Home</h3>\n        <ul class=\"checklist\">\n          <li>Limited bench space fighting with everyday life (kitchen tables, basement corners).</li>\n          <li>Only the tools and parts you personally own.</li>\n          <li>No easy access to fabrication tools for enclosures or mechanical parts.</li>\n          <li>Debugging alone, with nobody to ask when something smokes or won’t boot.</li>\n        </ul>\n      </div>\n      <div class=\"col-md-6 mb-4\">\n        <h3>Kalamazoo Makerspace Electronics Lab</h3>\n        <ul class=\"checklist\">\n          <li>Dedicated electronics benches and soldering areas in a shared workshop.</li>\n          <li>Community knowledge from people who build robots, instruments, test rigs, and more.</li>\n          <li>Fabrication support from <a href=\"/3d-printing\">3D printers</a>, <a href=\"/laser-shop\">laser cutters</a>, and shop tools.</li>\n          <li>A volunteer-run, nonprofit <a href=\"/about\">maker community</a> focused on safe, hands-on learning.</li>\n        </ul>\n      </div>\n    </div>\n  </div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-238",
+    "html": "<section class=\"about-2 section\" id=\"electronics-lab-get-started\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<div class=\"title text-center\">\n\t\t\t\t\t<h2>How to Get Started in the Electronics Lab</h2>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\n\t\t<div class=\"row mt-4\">\n\t\t\t<div class=\"col-lg-12\">\n\t\t\t\t<ol>\n\t\t\t\t\t<li><strong>Schedule a tour.</strong> Visit during open hours to see the benches, tools, and other projects in progress. Ask how your robotics or electronics work might fit.</li>\n\t\t\t\t\t<li><strong>Pick a membership level.</strong> Review options on our <a href=\"/pricing\">pricing page</a> and choose what matches how often you’ll be in the lab.</li>\n\t\t\t\t\t<li><strong>Complete orientation and safety basics.</strong> Learn how we handle power tools, soldering safety, material storage, and shared spaces.</li>\n\t\t\t\t\t<li><strong>Bring your boards, parts, and ideas.</strong> You provide components and consumables; we provide the infrastructure, tools, and community.</li>\n\t\t\t\t\t<li><strong>Plug into meetups and events.</strong> Use our <a href=\"/calendar\">calendar</a> and <a href=\"/meetups\">meetups</a> to find groups that align with your interests—Linux, robotics, coding, and more.</li>\n\t\t\t\t</ol>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-239",
+    "html": "<section class=\"call-to-action section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-xl-6 col-lg-8 text-center\">\n\t\t\t\t<h2>Launch Your Next Electronics or Robotics Project</h2>\n\t\t\t\t<p>Instead of buying every tool and clearing out a spare room, use a community electronics lab with room to grow your skills step by step.</p>\n\t\t\t\t<a href=\"/tours\" class=\"btn btn-main\">Schedule a Tour</a>\n\t\t\t\t<a href=\"/pricing\" class=\"btn btn-main\">View Membership Options</a>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-240",
+    "html": "<section class=\"section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-8\">\n\t\t\t\t<div class=\"title text-center\">\n\t\t\t\t\t<h2>Electronics Lab &amp; Robotics FAQ</h2>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t\t<div class=\"row mt-4\">\n\t\t\t<div class=\"col-lg-10 mx-auto\">\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>Is this a dedicated electronics lab or part of the larger makerspace?</h4>\n\t\t\t\t\t<p>The electronics lab lives inside the broader makerspace. You’ll have access to benches and soldering areas, plus the surrounding tools: <a href=\"/3d-printing\">3D printers</a>, <a href=\"/laser-shop\">laser cutters</a>, and the <a href=\"/metal-shop\">metal</a> and <a href=\"/wood-shop\">wood</a> shops for mechanical work.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>Do I need to be an expert to use the lab?</h4>\n\t\t\t\t\t<p>No. We welcome beginners who are willing to learn safely and respect the tools. Many members are self-taught or come from software and want to learn hardware the right way, step by step.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>Can students or youth robotics teams use the space?</h4>\n\t\t\t\t\t<p>Often yes, with the right membership and supervision structure. Because we are a volunteer-run makerspace, details depend on current policies. The best way to explore this is to schedule a tour and ask about your specific team or group.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>What should I bring, and what does the makerspace provide?</h4>\n\t\t\t\t\t<p>You bring your own components, boards, and consumables (wire, solder, specialty parts). The makerspace provides shared benches, basic tools, and access to other fabrication equipment that supports your electronics work.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>Can I store robots or electronics projects at the space?</h4>\n\t\t\t\t\t<p>Short-term staging is common, but long-term storage is limited and depends on size, safety, and current policies. During your tour, we can talk through where your project might live while it’s in progress.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>How do I see everything the makerspace offers beyond electronics?</h4>\n\t\t\t\t\t<p>Start with our <a href=\"/\">homepage</a> and <a href=\"/about\">about page</a>, then explore focused pages for the <a href=\"/wood-shop\">wood shop</a>, <a href=\"/metal-shop\">metal shop</a>, <a href=\"/3d-printing\">3D printing lab</a>, and <a href=\"/laser-shop\">laser shop</a>. You can also browse <a href=\"/portfolio\">sample projects &amp; portfolio</a> to see how members combine electronics with fabrication.</p>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  }
+ ],
+ "zones": {}
+}

@@ -1,0 +1,65 @@
+{
+ "root": {
+  "props": {
+   "title": "Fabrication Lab in Kalamazoo | Digital Fabrication & Prototyping Space | Kalamazoo Makerspace",
+   "description": "Looking for a fabrication lab in Kalamazoo? Kalamazoo Makerspace offers a digital fabrication lab with 3D printing, laser cutting, CNC machining, electronics prototyping, and rapid prototyping tools for makers, students, and startups.",
+   "bare": false,
+   "inline": [],
+   "bodyClass": "",
+   "refresh": "",
+   "css": "",
+   "styles": [],
+   "scripts": []
+  }
+ },
+ "content": [
+  {
+   "type": "PageHeader",
+   "props": {
+    "id": "PageHeader-241",
+    "title": "Fabrication Lab in Kalamazoo",
+    "tag": "h1",
+    "crumb": "Fabrication Lab",
+    "subtitle": "",
+    "subtitleTag": "h5",
+    "trail": []
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-242",
+    "html": "<section class=\"about-2 section py-5\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center\">\n      <div class=\"col-lg-10\">\n        <div class=\"title text-center mb-3\">\n          <h2>About Our Fabrication Lab</h2>\n          <p>Our fabrication lab is part of our 501(c)(3) nonprofit makerspace, providing access to digital fabrication tools, rapid prototyping equipment, and collaborative workspace for makers, students, and startups.</p>\n          <div class=\"border\"></div>\n        </div>\n      </div>\n    </div>\n  </div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-243",
+    "html": "<section class=\"portfolio section-sm py-5\" id=\"fab-lab-gallery\">\n  <div class=\"row\">\n    <div class=\"col-lg-12\">\n      <div class=\"row\">\n        <div class=\"col-12\">\n          <div class=\"filtr-container\">\n\n            <div class=\"col-md-3 col-sm-6 col-xs-6 filtr-item\" data-category=\"all\">\n              <div class=\"portfolio-block\">\n                <img class=\"img-fluid\" src=\"/images/3dprint/usb-plugs.webp\" alt=\"3D printed USB plugs from our fabrication lab\">\n                <div class=\"caption\">\n                  <a class=\"search-icon\" href=\"images/3dprint/usb-plugs.webp\" data-lightbox=\"fab-lab\">\n                    <i class=\"tf-ion-ios-search-strong\"></i>\n                  </a>\n                  <h4><a href=\"#\">3D Printed USB Plugs</a></h4>\n                </div>\n              </div>\n            </div>\n\n            <div class=\"col-md-3 col-sm-6 col-xs-6 filtr-item\" data-category=\"all\">\n              <div class=\"portfolio-block\">\n                <img class=\"img-fluid\" src=\"/images/laser/wood-cutting-acryllic-work.png\" alt=\"Laser cut acrylic work from our fabrication lab\">\n                <div class=\"caption\">\n                  <a class=\"search-icon\" href=\"images/laser/wood-cutting-acryllic-work.png\" data-lightbox=\"fab-lab\">\n                    <i class=\"tf-ion-ios-search-strong\"></i>\n                  </a>\n                  <h4><a href=\"#\">Laser Cut Acrylic</a></h4>\n                </div>\n              </div>\n            </div>\n\n            <div class=\"col-md-3 col-sm-6 col-xs-6 filtr-item\" data-category=\"all\">\n              <div class=\"portfolio-block\">\n                <img class=\"img-fluid\" src=\"/images/3dprint/tree-people.jpg\" alt=\"3D printed tree people sculpture from our fabrication lab\">\n                <div class=\"caption\">\n                  <a class=\"search-icon\" href=\"images/3dprint/tree-people.jpg\" data-lightbox=\"fab-lab\">\n                    <i class=\"tf-ion-ios-search-strong\"></i>\n                  </a>\n                  <h4><a href=\"#\">3D Printed Tree People</a></h4>\n                </div>\n              </div>\n            </div>\n\n            <div class=\"col-md-3 col-sm-6 col-xs-6 filtr-item\" data-category=\"all\">\n              <div class=\"portfolio-block\">\n                <img class=\"img-fluid\" src=\"/images/3dprint/will-made-it.jpg\" alt=\"3D printed projects from our fabrication lab\">\n                <div class=\"caption\">\n                  <a class=\"search-icon\" href=\"images/3dprint/will-made-it.jpg\" data-lightbox=\"fab-lab\">\n                    <i class=\"tf-ion-ios-search-strong\"></i>\n                  </a>\n                  <h4><a href=\"#\">3D Printed Projects</a></h4>\n                </div>\n              </div>\n            </div>\n\n          </div>\n        </div>\n      </div>\n    </div>\n  </div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-244",
+    "html": "<section class=\"section py-5\" style=\"background:#f9f9f9;\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center\">\n      <div class=\"col-lg-10\">\n\n        <!-- Mission -->\n        <div class=\"title text-center mb-3\">\n          <h2>Mission</h2>\n          <div class=\"border\"></div>\n        </div>\n        <p>\n          The Kzoo Makers Fabrication Lab exists to provide accessible digital fabrication tools and rapid prototyping capabilities to the Kalamazoo community. We believe that everyone should have access to the tools and knowledge needed to turn ideas into reality.\n        </p>\n        <p>\n          Our goal is to create a collaborative environment where makers, students, entrepreneurs, and hobbyists can access professional-grade fabrication equipment without the high cost of individual ownership.\n        </p>\n        <div class=\"text-center\">\n          <a href=\"/prices\" class=\"btn btn-main\">See our Prices</a>\n        </div>\n\n        <!-- Fabrication Lab Overview -->\n        <div class=\"title text-center mt-5 mb-3\">\n          <h2>Fabrication Lab Overview</h2>\n          <div class=\"border\"></div>\n        </div>\n        <p>\n          The Fabrication Lab at Kalamazoo Makerspace is a complete digital fabrication and rapid prototyping facility. We offer access to professional-grade equipment that would be cost-prohibitive for most individuals to own, along with the community support to help you use these tools effectively.\n        </p>\n        <p>\n          Our fabrication lab includes:\n        </p>\n        <div class=\"row\">\n         <div class=\"col-md-4\">\n          <ul>\n            <li>3D Printing Lab with multiple FDM printers</li>\n            <li>Industrial Laser Cutting &amp; Engraving</li>\n            <li>CNC Machining capabilities</li>\n            <li>Electronics Prototyping stations</li>\n            <li>Digital Design workstations</li>\n            <li>Post-processing and finishing areas</li>\n          </ul>\n         </div>\n         <div class=\"col-md-4\">\n          <ul>\n            <li>Rapid prototyping tools and materials</li>\n            <li>3D scanning equipment</li>\n            <li>Vinyl cutting for signage and decals</li>\n            <li>Small-scale CNC routing</li>\n            <li>Electronics testing and debugging</li>\n            <li>Collaborative project spaces</li>\n          </ul>\n         </div>\n         <div class=\"col-md-4\">\n          <ul>\n            <li>Material testing and experimentation</li>\n            <li>Project documentation stations</li>\n            <li>Tool calibration and maintenance</li>\n            <li>Safety equipment and training</li>\n            <li>Community knowledge sharing</li>\n            <li>Interdisciplinary project support</li>\n          </ul>\n         </div>\n        </div>\n        <p>\n        Members regularly collaborate on projects, share techniques for optimizing fabrication workflows, and help each other troubleshoot complex builds. Whether you're working with digital designs, physical prototypes, or mixed-media projects, our fabrication lab provides the tools and community support to bring your ideas to life.\n        </p>\n\n      </div>\n    </div>\n  </div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-245",
+    "html": "<section class=\"section py-5\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center\">\n      <div class=\"col-lg-8\">\n        <div class=\"title text-center mb-3\">\n          <h2>Join Our Fabrication Lab Community</h2>\n          <p>Ready to turn your ideas into reality? Learn more about our fabrication lab, membership options, and how to get started with digital fabrication and rapid prototyping.</p>\n          <div class=\"border\"></div>\n        </div>\n        <div class=\"text-center\">\n          <a href=\"/prices\" class=\"btn btn-main\">See our Prices</a>\n        </div>\n      </div>\n    </div>\n  </div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-246",
+    "html": "<section class=\"section py-5\" style=\"background:#f9f9f9;\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center\">\n      <div class=\"col-lg-10\">\n        <div class=\"title text-center mb-3\">\n          <h2>What Our Members Say</h2>\n          <div class=\"border\"></div>\n        </div>\n      </div>\n    </div>\n    <div class=\"row\">\n      <div class=\"col-lg-10 mx-auto\">\n        <div class=\"mb-2\">\n          <blockquote style=\"border-left: 4px solid #333; padding-left: 20px; font-style: italic;\">\n            \"The fabrication lab gave me access to tools I could never afford on my own. I went from sketching ideas to holding physical prototypes in just a few weeks.\" <br> — Sarah T., Product Designer\n          </blockquote>\n        </div>\n        <div class=\"mb-2\">\n          <blockquote style=\"border-left: 4px solid #333; padding-left: 20px; font-style: italic;\">\n            \"As a student, the fabrication lab has been invaluable for my engineering projects. The combination of 3D printing, laser cutting, and electronics prototyping in one space is incredible.\" <br>— Mark R., Engineering Student\n          </blockquote>\n        </div>\n        <div class=\"mb-2\">\n          <blockquote style=\"border-left: 4px solid #333; padding-left: 20px; font-style: italic;\">\n            \"The community aspect is what makes this fabrication lab special. When I get stuck, there's always someone who can help me troubleshoot or suggest a better approach.\" <br>— Lisa M., Entrepreneur\n          </blockquote>\n        </div>\n      </div>\n    </div>\n  </div>\n</section>"
+   }
+  }
+ ],
+ "zones": {}
+}

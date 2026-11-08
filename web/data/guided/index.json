@@ -1,0 +1,263 @@
+{
+  "slides": [
+    {
+      "image": "images/slider/slider-bg-0.webp",
+      "title": "Kalamazoo Makerspace",
+      "text": "",
+      "buttonLabel": "",
+      "buttonHref": "",
+      "typing": "yes"
+    },
+    {
+      "image": "images/slider/mill_women4.webp",
+      "title": "Michigan Made",
+      "text": "A community-driven hub for makers, tinkerers, and creators.",
+      "buttonLabel": "About Us",
+      "buttonHref": "/about",
+      "typing": "no"
+    },
+    {
+      "image": "images/slider/slider-bg-7-1.jpeg",
+      "title": "Ideas Built by Hand\nGuided by Innovation",
+      "text": "Tools, space, and mentorship to bring your vision to life.",
+      "buttonLabel": "About Us",
+      "buttonHref": "/about",
+      "typing": "no"
+    },
+    {
+      "image": "images/slider/slider-bg-6.webp",
+      "title": "You bring Creativity\nWe provide Tools",
+      "text": "Where creativity meets craftsmanship.",
+      "buttonLabel": "About Us",
+      "buttonHref": "/about",
+      "typing": "no"
+    },
+    {
+      "image": "images/slider/speakergals.png",
+      "title": "Safer Than It Looks",
+      "text": "(Bluetooth Speakers in a Suitcase)",
+      "buttonLabel": "",
+      "buttonHref": "",
+      "typing": "no"
+    },
+    {
+      "image": "images/slider/thing.avif",
+      "title": "Come With Ideas\nLeave with a Thing",
+      "text": "",
+      "buttonLabel": "",
+      "buttonHref": "",
+      "typing": "no"
+    }
+  ],
+  "whatImage": "/images/clipart/questionmark.webp",
+  "whatTitle": "What is a makerspace?",
+  "whatText": "A makerspace is a shared workshop where people create, experiment, and build together—using tools that are rare, specialized, expensive, or simply too large for most individuals to own.\n\nMost makerspaces operate in libraries, schools, or universities.\n\nWe are unique in being a membership funded non-profit organization.",
+  "whatLabel": "Learn more about our philosophy",
+  "whatHref": "/what_is_a_makerspace",
+  "offerTitle": "What We Offer",
+  "offerText": "Click an item to get a list of equipment in each section.",
+  "cards": [
+    {
+      "image": "/images/wood-shop/zones_wood.jpg",
+      "label": "Wood Shop",
+      "href": "/wood-shop"
+    },
+    {
+      "image": "/images/about/laser.webp",
+      "label": "Lasers",
+      "href": "/laser-shop"
+    },
+    {
+      "image": "/images/about/bridgeport-operator-large.webp",
+      "label": "Metal Shop",
+      "href": "/metal-shop"
+    },
+    {
+      "image": "/images/about/3dprinter.webp",
+      "label": "3D Printing",
+      "href": "/3d-printing"
+    },
+    {
+      "image": "/images/about/fiber-arts.webp",
+      "label": "Fiber Arts",
+      "href": "/meetup-fiber-arts"
+    },
+    {
+      "image": "/images/about/misctools.jpg",
+      "label": "Donate Tools",
+      "href": "/tools-we-are-seeking-donations-kalamazoo"
+    }
+  ],
+  "howTitle": "How our makerspace works",
+  "howImage": "/images/clipart/bulb.webp",
+  "howBullets": "We are a volunteer operated **501(c)(3) non-profit**, nobody gets paid.\nEveryone pitches in, whether it’s giving tours or taking out the trash\nOur tool collection grows through donated and loaned gear from makers\nMembership fees keep the lights on — rent, utilities, insurance, supplies, repairs, outreach\nSafety first: members complete training before they’re turned loose on the machines.",
+  "btn1Label": "Learn More About Us",
+  "btn1Href": "/about",
+  "btn2Label": "See pricing",
+  "btn2Href": "/pricing",
+  "reviewsTitle": "What Our Members Say",
+  "reviewsText": "Hear from makers who are part of our community.",
+  "reviews": [
+    {
+      "photo": "/images/client-logo/chrisc.webp",
+      "name": "Chris",
+      "role": "Makerspace Member",
+      "text": "Kzoo Makers is easily one of the most inspiring spaces I've encountered. The range of equipment is impressive, but what really sets it apart is the community."
+    },
+    {
+      "photo": "/images/client-logo/clients-2.png",
+      "name": "Austin",
+      "role": "Makerspace Member",
+      "text": "As a small business owner prototyping new products, I found the makerspace invaluable. The real value comes from the people and culture of collaboration."
+    },
+    {
+      "photo": "/images/client-logo/member-8.jpeg",
+      "name": "Parker",
+      "role": "Makerspace Member",
+      "text": "The biggest shift for me has been confidence in tool proficiency. At home I hesitated before every cut or print. Here, measured feedback from experienced members eliminates that uncertainty."
+    },
+    {
+      "photo": "/images/client-logo/member-1.jpeg",
+      "name": "Riley",
+      "role": "Makerspace Member",
+      "text": "Before joining Kzoo Makers, most of my projects stalled out halfway. Having immediate access to people who understand fabrication workflows changed that."
+    },
+    {
+      "photo": "/images/client-logo/member-2.jpeg",
+      "name": "Sam",
+      "role": "Makerspace Member",
+      "text": "I came for access to a 3D printer and ended up learning far more about electronics diagnostics than I planned. That honesty makes learning efficient instead of frustrating."
+    },
+    {
+      "photo": "/images/client-logo/member-10.jpeg",
+      "name": "Lucas",
+      "role": "KLUG Member",
+      "text": "I go to Kalamazoo Linux Users group and I use Linux, people are very friendly at The Makerspace. Thank you for listening Ryan."
+    },
+    {
+      "photo": "/images/client-logo/member-3.jpeg",
+      "name": "Taylor",
+      "role": "Workshop Attendee",
+      "text": "Kzoo Makers gave me my first exposure to metalworking tools that most hobbyists can't justify at home. It's one of the few places where experimentation and discipline coexist."
+    },
+    {
+      "photo": "/images/client-logo/member-4.jpeg",
+      "name": "Jordan",
+      "role": "Makerspace Member",
+      "text": "I joined to prototype a product idea, and the environment forced me to confront weak points in my process. The space removes excuses and exposes gaps you didn't notice."
+    },
+    {
+      "photo": "/images/client-logo/chrisc.webp",
+      "name": "Chris",
+      "role": "Makerspace Member",
+      "text": "Experienced members are generous with their knowledge, and new makers are encouraged to dive in without intimidation. You walk in with an idea and leave with something real in your hands."
+    },
+    {
+      "photo": "/images/client-logo/member-5.jpeg",
+      "name": "Avery",
+      "role": "Makerspace Member",
+      "text": "What surprised me most is the range of skills represented here. The reciprocity feels natural. It's collaborative without drifting into chaos."
+    },
+    {
+      "photo": "/images/client-logo/member-6.jpeg",
+      "name": "Morgan",
+      "role": "Makerspace Member",
+      "text": "I've worked in corporate engineering labs, but accessibility was always limited. Here, the tools and space are straightforward to book. It's not just equipment—it's operational freedom."
+    },
+    {
+      "photo": "/images/client-logo/member-1.jpeg",
+      "name": "Riley",
+      "role": "Makerspace Member",
+      "text": "I've gone from guesswork to deliberate iteration, especially with wood CNC and safety practices. It's the first place where my ideas stop being hypothetical."
+    },
+    {
+      "photo": "/images/client-logo/member-12.webp",
+      "name": "Sigrid",
+      "role": "KLUG Member",
+      "text": "I like how inclusive and creative people are here, this space is special to me because it's like my second home after the coffee shop of course!"
+    },
+    {
+      "photo": "/images/client-logo/member-11.jpeg",
+      "name": "James",
+      "role": "Makerspace Member",
+      "text": "I've got all this equipment at my house, but after woodworking for 33 years it's boring at home. I like how I can come in to the building and collaborate and bounce ideas off peoples heads."
+    }
+  ],
+  "words": [
+    {
+      "word": "3D Printing"
+    },
+    {
+      "word": "Laser Beams"
+    },
+    {
+      "word": "Acryllic Sheets"
+    },
+    {
+      "word": "Wood"
+    },
+    {
+      "word": "Welding"
+    },
+    {
+      "word": "CAD"
+    },
+    {
+      "word": "Robotics"
+    },
+    {
+      "word": "Metal"
+    },
+    {
+      "word": "Machining"
+    },
+    {
+      "word": "CNC"
+    },
+    {
+      "word": "Electronics"
+    },
+    {
+      "word": "Fiber Arts"
+    },
+    {
+      "word": "Arduino"
+    },
+    {
+      "word": "Rasberry PI"
+    },
+    {
+      "word": "ESP32"
+    },
+    {
+      "word": "3D Prints"
+    },
+    {
+      "word": "Lathes"
+    },
+    {
+      "word": "Mills"
+    },
+    {
+      "word": "Sewing"
+    },
+    {
+      "word": "Soldering"
+    },
+    {
+      "word": "Python"
+    },
+    {
+      "word": "Microcontrollers"
+    },
+    {
+      "word": "Power Tools"
+    },
+    {
+      "word": "Vacuum Forming"
+    },
+    {
+      "word": "Textiles"
+    }
+  ]
+}

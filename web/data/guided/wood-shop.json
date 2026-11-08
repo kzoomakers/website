@@ -1,0 +1,171 @@
+{
+ "galleryTitle": "Wood Shop Gallery",
+ "galleryText": "Explore our professional woodworking facility featuring planers, table saws, band saws, CNC machines and more to meet your woodworking project needs.",
+ "slides": [
+  {
+   "image": "/images/wood-shop/woodshop_1.webp",
+   "alt": "Band Saw",
+   "caption": ""
+  },
+  {
+   "image": "/images/wood-shop/woodshop_2.webp",
+   "alt": "Sawblade",
+   "caption": ""
+  },
+  {
+   "image": "/images/wood-shop/woodshop_3.webp",
+   "alt": "Safety Sign",
+   "caption": ""
+  },
+  {
+   "image": "/images/wood-shop/woodshop_4.webp",
+   "alt": "Tools",
+   "caption": ""
+  },
+  {
+   "image": "/images/wood-shop/woodshop_5.webp",
+   "alt": "Bits",
+   "caption": ""
+  },
+  {
+   "image": "/images/wood-shop/woodshop_6.webp",
+   "alt": "Wood Planer",
+   "caption": ""
+  },
+  {
+   "image": "/images/wood-shop/woodshop_7.webp",
+   "alt": "More Tools",
+   "caption": ""
+  },
+  {
+   "image": "/images/wood-shop/woodshop_10.webp",
+   "alt": "CNC Machine",
+   "caption": ""
+  }
+ ],
+ "sections": [
+  {
+   "look": "Columns of text",
+   "background": "White",
+   "title": "Complete & Professional Woodworking Facility",
+   "intro": "Our wood shop is equipped with everything you need to bring your woodworking projects to life, from rough lumber to finished masterpieces.",
+   "columns": "2",
+   "items": [
+    {
+     "icon": "none",
+     "heading": "Major Equipment",
+     "text": "- **CNC Router** - Computer-controlled precision cutting and carving\n- **Wood Lathe** - Turn bowls, spindles, and custom pieces\n- **Bandsaws** - Multiple sizes for resawing and curved cuts\n- **20-Foot Belt Sander** - Massive industrial sander for large projects\n- **Planers** - Thickness planing for smooth, uniform boards\n- **Jointer** - Create perfectly flat and square edges\n- **Table Saw** - Professional-grade for precise rip cuts\n- **Panel Saw** - Vertical saw for breaking down sheet goods"
+    },
+    {
+     "icon": "none",
+     "heading": "Additional Tools & Equipment",
+     "text": "- **Drill Press** - Accurate drilling and mortising\n- **Miter Saw** - Precision crosscuts and angles\n- **Table Router** - Edge profiling and joinery\n- **Scroll Saw** - Intricate curves and detailed work\n- **Dust Collection System** - Keep the workspace clean and safe\n- **Hand Tools** - Complete selection of chisels, planes, and more\n- **Clamps & Jigs** - Everything needed for assembly\n- **Finishing Station** - Dedicated area for staining and sealing"
+    }
+   ],
+   "buttons": []
+  },
+  {
+   "look": "Columns of text",
+   "background": "White",
+   "title": "",
+   "intro": "",
+   "columns": "1",
+   "items": [
+    {
+     "icon": "none",
+     "heading": "What Makes Our Wood Shop Special",
+     "text": "At Kalamazoo Makerspace, our wood shop is designed to accommodate woodworkers of all skill levels. Whether you're a beginner learning the basics or an experienced craftsperson working on complex projects, you'll find the tools and space you need.\n\nOur complete and total woodworking facility includes professional-grade equipment that would be cost-prohibitive for most individuals to own. From our impressive 20-foot belt sander to our precision CNC router, every tool is maintained to the highest standards and available for member use after proper safety training.\n\nThe wood shop features ample workspace for projects of all sizes, dedicated areas for different operations, and a comprehensive dust collection system to maintain a clean and healthy working environment. Members have access to the shop during open hours and can work on everything from furniture building to fine woodworking, cabinetry, wood turning, and artistic pieces."
+    }
+   ],
+   "buttons": []
+  },
+  {
+   "look": "Centered call-to-action",
+   "background": "White",
+   "title": "",
+   "intro": "",
+   "columns": "1",
+   "items": [
+    {
+     "icon": "none",
+     "heading": "Ready to Start Your Next Woodworking Project?",
+     "text": "Join Kalamazoo Makerspace and gain access to our complete wood shop facility."
+    }
+   ],
+   "buttons": [
+    {
+     "label": "View Complete Inventory",
+     "href": "/woodshop-inventory"
+    },
+    {
+     "label": "View Membership Options",
+     "href": "/pricing"
+    },
+    {
+     "label": "Schedule a Tour",
+     "href": "/tours"
+    }
+   ]
+  },
+  {
+   "look": "Icon cards",
+   "background": "Grey",
+   "title": "Safety & Training",
+   "intro": "",
+   "columns": "3",
+   "items": [
+    {
+     "icon": "check",
+     "heading": "Required Training",
+     "text": "All members must complete safety orientation and equipment-specific training before independent use of machinery."
+    },
+    {
+     "icon": "people",
+     "heading": "Expert Guidance",
+     "text": "Experienced woodworkers are available to provide guidance, answer questions, and help you learn new techniques."
+    },
+    {
+     "icon": "star",
+     "heading": "Best Practices",
+     "text": "We maintain high standards for tool maintenance, workspace cleanliness, and safe operating procedures."
+    }
+   ],
+   "buttons": []
+  },
+  {
+   "look": "Columns of text",
+   "background": "White",
+   "title": "Frequently Asked Questions",
+   "intro": "",
+   "columns": "1",
+   "items": [
+    {
+     "icon": "none",
+     "heading": "Do I need to bring my own wood?",
+     "text": "Yes, members provide their own materials for projects. However, we occasionally have scrap wood available for small projects or testing."
+    },
+    {
+     "icon": "none",
+     "heading": "What skill level do I need?",
+     "text": "All skill levels are welcome! We offer training for beginners and have the advanced equipment that experienced woodworkers appreciate."
+    },
+    {
+     "icon": "none",
+     "heading": "Can I work on large projects?",
+     "text": "Absolutely! Our spacious wood shop and 20-foot belt sander can accommodate large furniture projects and other substantial builds."
+    },
+    {
+     "icon": "none",
+     "heading": "How do I get trained on the equipment?",
+     "text": "After becoming a member, you'll complete a general safety orientation followed by equipment-specific training sessions if we can pair you up with someone."
+    },
+    {
+     "icon": "none",
+     "heading": "What are the wood shop hours?",
+     "text": "The wood shop is available during all makerspace open hours. Check our calendar or contact us for current hours and any scheduled maintenance times."
+    }
+   ],
+   "buttons": []
+  }
+ ]
+}

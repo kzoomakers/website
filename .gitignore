@@ -1,0 +1,14 @@
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+ca.pem
+node_modules/
+.next/
+.DS_Store
+.local/
+web/data/config.json
+# blog backup: large, and holds author emails (this repo is public)
+web/data/import.json
+*.swp

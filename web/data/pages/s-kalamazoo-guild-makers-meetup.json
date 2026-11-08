@@ -1,0 +1,65 @@
+{
+ "root": {
+  "props": {
+   "title": "Kalamazoo Makers Meetup Guild | Nonprofit Community Craft Guild | Kalamazoo",
+   "description": "Join the Kalamzoo Makers Meetup Guild, a nonprofit community dedicated to collective skill development, creative reuse, and mutual support. Learn traditional guild practices adapted for contemporary making disciplines.",
+   "bare": false,
+   "inline": [],
+   "bodyClass": "",
+   "refresh": "",
+   "css": "",
+   "styles": [],
+   "scripts": []
+  }
+ },
+ "content": [
+  {
+   "type": "PageHeader",
+   "props": {
+    "id": "PageHeader-266",
+    "title": "Kalamazoo Makers Meetup Guild",
+    "tag": "h1",
+    "crumb": "Makers Meetup Guild",
+    "subtitle": "",
+    "subtitleTag": "h5",
+    "trail": []
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-267",
+    "html": "<section class=\"about-2 section py-5\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<div class=\"title text-center mb-3\">\n\t\t\t\t\t<h2>About the Kalamazoo Makers Meetup Guild</h2>\n\t\t\t\t\t<p>Since 2016 our guild has been dedicated to broadening access to crafting, technical learning, and creative practices through meetups.</p>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-268",
+    "html": "<section class=\"portfolio section-sm py-5\" id=\"guild-gallery\">\n\t<div class=\"row\">\n\t\t<div class=\"col-lg-12\">\n\t\t\t<div class=\"row\">\n\t\t\t\t<div class=\"col-12\">\n\t\t\t\t\t<div class=\"filtr-container\">\n\n\t\t\t\t\t\t<div class=\"col-md-3 col-sm-6 col-xs-6 filtr-item\" data-category=\"all\">\n\t\t\t\t\t\t\t<div class=\"portfolio-block\">\n\t\t\t\t\t\t\t\t<img class=\"img-fluid\" src=\"/images/gallery/makers_meetup_guild_01.webp\" alt=\"Soldering class\">\n\t\t\t\t\t\t\t\t<div class=\"caption\">\n\t\t\t\t\t\t\t\t\t<a class=\"search-icon\" href=\"images/gallery/makers_meetup_guild_01.webp\" data-lightbox=\"guild\">\n\t\t\t\t\t\t\t\t\t\t<i class=\"tf-ion-ios-search-strong\"></i>\n\t\t\t\t\t\t\t\t\t</a>\n\t\t\t\t\t\t\t\t\t<h4><a href=\"#\">Soldering class</a></h4>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\n\t\t\t\t\t\t<div class=\"col-md-3 col-sm-6 col-xs-6 filtr-item\" data-category=\"all\">\n\t\t\t\t\t\t\t<div class=\"portfolio-block\">\n\t\t\t\t\t\t\t\t<img class=\"img-fluid\" src=\"/images/gallery/makers_meetup_guild_02.webp\" alt=\"DIY Sterling Engine\">\n\t\t\t\t\t\t\t\t<div class=\"caption\">\n\t\t\t\t\t\t\t\t\t<a class=\"search-icon\" href=\"images/gallery/makers_meetup_guild_02.webp\" data-lightbox=\"guild\">\n\t\t\t\t\t\t\t\t\t\t<i class=\"tf-ion-ios-search-strong\"></i>\n\t\t\t\t\t\t\t\t\t</a>\n\t\t\t\t\t\t\t\t\t<h4><a href=\"#\">DIY Sterling Engine</a></h4>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\n\t\t\t\t\t\t<div class=\"col-md-3 col-sm-6 col-xs-6 filtr-item\" data-category=\"all\">\n\t\t\t\t\t\t\t<div class=\"portfolio-block\">\n\t\t\t\t\t\t\t\t<img class=\"img-fluid\" src=\"/images/gallery/makers_meetup_guild_03.webp\" alt=\"Guild Logo\">\n\t\t\t\t\t\t\t\t<div class=\"caption\">\n\t\t\t\t\t\t\t\t\t<a class=\"search-icon\" href=\"images/gallery/makers_meetup_guild_03.webp\" data-lightbox=\"guild\">\n\t\t\t\t\t\t\t\t\t\t<i class=\"tf-ion-ios-search-strong\"></i>\n\t\t\t\t\t\t\t\t\t</a>\n\t\t\t\t\t\t\t\t\t<h4><a href=\"#\">Guild Logo</a></h4>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\n\t\t\t\t\t\t<div class=\"col-md-3 col-sm-6 col-xs-6 filtr-item\" data-category=\"all\">\n\t\t\t\t\t\t\t<div class=\"portfolio-block\">\n\t\t\t\t\t\t\t\t<img class=\"img-fluid\" src=\"/images/gallery/makers_meetup_guild_04.webp\" alt=\"Automatic robot\">\n\t\t\t\t\t\t\t\t<div class=\"caption\">\n\t\t\t\t\t\t\t\t\t<a class=\"search-icon\" href=\"images/gallery/makers_meetup_guild_04.webp\" data-lightbox=\"guild\">\n\t\t\t\t\t\t\t\t\t\t<i class=\"tf-ion-ios-search-strong\"></i>\n\t\t\t\t\t\t\t\t\t</a>\n\t\t\t\t\t\t\t\t\t<h4><a href=\"#\">Automatic robot</a></h4>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-269",
+    "html": "<section class=\"about-2 section py-5\" style=\"background:#f9f9f9;\">\n\t<div class=\"container\">\n\t  <div class=\"row justify-content-center\">\n\t\t<div class=\"col-lg-10\">\n  \n\t\t  <!-- Mission -->\n\t\t  <div class=\"title text-center mb-3\">\n\t\t\t<h2>Mission</h2>\n\t\t\t<div class=\"border\"></div>\n\t\t  </div>\n\n\t\t  <p>\n\t\t\tThe Kzoo Makers Guild works to move Kalamazoo’s maker culture away from isolated projects and toward shared learning, creative reuse, and mutual support.\n\t\t  </p>\n\t\t  <p>\n\t\t\tOur aim is straightforward: give anyone in the community access to practical skills, collaborative spaces, and a network of makers who learn from and build with one another.\n\t\t  </p>\n\n\t\t  \n\t\t  <div class=\"text-center\">\n\t\t\t<a href=\"/calendar?search=makers%20meetup%20guild\" class=\"btn btn-main\">Find our next meetup</a>\n\t\t  </div>\n  \n\t\t  <!-- Makers Meetup -->\n\t\t  <div class=\"title text-center mt-5 mb-3\">\n\t\t\t<h2>What we do</h2>\n\t\t\t<div class=\"border\"></div>\n\t\t  </div>\n\t\t  <p>\n\t\t\tThe Makers Meetup Guild in Kalamazoo is open and free to anyone interested in building, creating, experimenting, or learning. It offers a straightforward environment to share projects, compare approaches, ask questions, or observe how others work.\n\t\t  </p>\n\t\t  <p>\n\t\t\tMeetups are held twice a month on Sunday. Participants introduce themselves, discuss a maker-related topic, or show a project if they have one. Curiosity is enough—no project required.\n\t\t  </p>\n\t\t  <p>\n\t\t\tDiscussions and projects we've seen shared include:\n\t\t  </p>\n\t\t  <div class=\"row\">\n\t\t <div class=\"col-md-4\">\n\t\t  <ul class=\"checklist\">\n\t\t  \t<li>Sewing Techniques</li>\n\t\t  \t<li>3D Printing Projects</li>\n\t\t  \t<li>Cosplay Designs</li>\n\t\t  \t<li>Metal Creations</li>\n\t\t  \t<li>Wood Crafting Works</li>\n\t\t  \t<li>Other local maker events</li>\n\t\t  \t<li>Puzzle Crafting</li>\n\t\t  \t<li>3D Printing</li>\n\t\t  </ul>\n\t\t </div>\n\t\t <div class=\"col-md-4\">\n\t\t  <ul class=\"checklist\">\n\t\t  \t<li>Laser Cut Mini-Models</li>\n\t\t  \t<li>Robots</li>\n\t\t  \t<li>Moth Tracking Devices</li>\n\t\t  \t<li>Home-built CNC machines or CNC-milled objects</li>\n\t\t  \t<li>Custom PCB designs and small electronics prototypes</li>\n\t\t  \t<li>Raspberry Pi or Arduino automation builds</li>\n\t\t  \t<li>Wearable electronics (LED garments, smart badges)</li>\n\t\t  \t<li>DIY synthesizers or handmade audio equipment</li>\n\t\t  </ul>\n\t\t </div>\n\t\t <div class=\"col-md-4\">\n\t\t  <ul class=\"checklist\">\n\t\t  \t<li>Kinetic sculptures or mechanical automata</li>\n\t\t  \t<li>Hand-forged tools or bladesmithing samples</li>\n\t\t  \t<li>Upcycled material projects (functional or artistic)</li>\n\t\t  \t<li>Biomimetic mechanisms (insect- or animal-inspired motion rigs)</li>\n\t\t  \t<li>Resin casting and mold-making demos</li>\n\t\t  \t<li>Custom keyboard builds or input-device experiments</li>\n\t\t  \t<li>Home robotics platforms with navigation or vision demos</li>\n\t\t  \t<li>Hand-bound books or papercraft engineering (pop-up mechanisms)</li>\n\t\t  \t<li>Environmental sensors and DIY scientific instruments</li>\n\t\t  \t<li>Projection-mapping or interactive light installations</li>\n\t\t  </ul>\n\t\t </div>\n\t\t  </div>\n\t\t  <p>\n\t\t  </p><p>Members regularly compare problem-solving strategies, analyze failed experiments, and break down how to refine tools or processes for better reliability. Whether you're working with wood, metal, code, circuits, or mixed media, the goal is to unpack the how and why behind effective making.</p>\n  \n\t\t</div>\n\t  </div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-270",
+    "html": "<section class=\"section py-5\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-8\">\n\t\t\t\t<div class=\"title text-center mb-3\">\n\t\t\t\t\t<h2>Join the Makers Meetup Guild</h2>\n\t\t\t\t\t<p>Ready to be part of a community-first maker movement? Learn more about our meetups, membership, and how to get involved.</p>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"text-center\">\n\t\t\t\t\t<a href=\"/calendar?search=makers%20meetup%20guild\" class=\"btn btn-main\">Find our next meetup</a>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-271",
+    "html": "<section class=\"section py-5\" style=\"background:#f9f9f9;\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<div class=\"title text-center mb-3\">\n\t\t\t\t\t<h2>Statements</h2>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t\t<div class=\"row\">\n\t\t\t<div class=\"col-lg-10 mx-auto\">\n\t\t\t\t<div class=\"mb-2\">\n\t\t\t\t\t<blockquote style=\"border-left: 4px solid #333; padding-left: 20px; font-style: italic;\">\n\t\t\t\t\t\t\"As a nonprofit guild, our value is measured in shared knowledge and accessible tools, not revenue.\" <br> — Zach Enos, President\n\t\t\t\t\t</blockquote>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-2\">\n\t\t\t\t\t<blockquote style=\"border-left: 4px solid #333; padding-left: 20px; font-style: italic;\">\n\t\t\t\t\t\t\"Mentorship is the core of the guild model. We pass skills forward so the community improves collectively.\" <br>— Brian I\n\t\t\t\t\t</blockquote>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-2\">\n\t\t\t\t\t<blockquote style=\"border-left: 4px solid #333; padding-left: 20px; font-style: italic;\">\n\t\t\t\t\t\t\"We operate on radical generosity. Everyone learns, everyone contributes, and no one's growth depends on their income.\" <br>— Jon Kelley, Secretary\n\t\t\t\t\t</blockquote>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-2\">\n\t\t\t\t\t<blockquote style=\"border-left: 4px solid #333; padding-left: 20px; font-style: italic;\">\n\t\t\t\t\t\t\"The purpose of a guild is not to certify experts—it’s to create the conditions where beginners become them.\" <br>— Guild Council\n\t\t\t\t\t</blockquote>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-2\">\n\t\t\t\t\t<blockquote style=\"border-left: 4px solid #333; padding-left: 20px; font-style: italic;\">\n\t\t\t\t\t\t“A healthy maker community isn’t competitive. It’s iterative. Ideas move faster when no one is protecting turf.” <br>— Don\n\t\t\t\t\t</blockquote>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  }
+ ],
+ "zones": {}
+}

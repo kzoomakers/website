@@ -1,0 +1,42 @@
+{
+ "root": {
+  "props": {
+   "title": "Why Choose Kzoo Makers - Kalamazoo's Only Full-Spectrum Community Makerspace",
+   "description": "Discover why Kzoo Makers is the best choice for serious makers in Kalamazoo. Full-spectrum tools, hands-on access, flexible hours, and a supportive community for fabrication, prototyping, and entrepreneurship.",
+   "bare": false,
+   "inline": [],
+   "bodyClass": "",
+   "refresh": "",
+   "css": "\n    .feature-card {\n      background: white;\n      border-radius: 8px;\n      padding: 30px;\n      margin-bottom: 30px;\n      box-shadow: 0 2px 15px rgba(0,0,0,0.1);\n      transition: transform 0.3s ease;\n    }\n    .feature-card:hover {\n      transform: translateY(-5px);\n    }\n    .feature-card h3, .feature-card h4 {\n      color: #47424C;\n      margin-bottom: 15px;\n    }\n    .feature-icon {\n      font-size: 48px;\n      margin-bottom: 20px;\n      display: block;\n    }\n    .feature-list {\n      list-style: none;\n      padding: 0;\n    }\n    .feature-list li {\n      padding: 10px 0;\n      border-bottom: 1px solid #e0e0e0;\n    }\n    .feature-list li:before {\n      content: \"✓\";\n      color: #8490ff;\n      font-weight: bold;\n      margin-right: 10px;\n      font-size: 18px;\n    }\n    .highlight-box {\n      background: linear-gradient(135deg, #8490ff 0%, #62bdfc 100%);\n      color: white;\n      padding: 40px;\n      border-radius: 8px;\n      margin: 30px 0;\n    }\n    .highlight-box h3 {\n      color: white;\n      margin-bottom: 20px;\n      font-weight: 700;\n    }\n    .highlight-box p {\n      color: white;\n      text-shadow: 0 1px 2px rgba(0,0,0,0.1);\n    }\n    .highlight-box .lead {\n      color: white;\n      font-weight: 500;\n    }\n    .stat-box {\n      text-align: center;\n      padding: 20px;\n    }\n    .stat-box .number {\n      font-size: 48px;\n      font-weight: bold;\n      color: #8490ff;\n      display: block;\n    }\n    .stat-box .label {\n      font-size: 16px;\n      color: #666;\n      margin-top: 10px;\n    }\n    .comparison-badge {\n      background: #8490ff;\n      color: white;\n      padding: 8px 20px;\n      border-radius: 20px;\n      font-weight: 600;\n      display: inline-block;\n      margin: 10px 5px;\n    }\n  ",
+   "styles": [],
+   "scripts": []
+  }
+ },
+ "content": [
+  {
+   "type": "PageHeader",
+   "props": {
+    "id": "PageHeader-410",
+    "title": "Why Choose Kzoo Makers",
+    "tag": "h2",
+    "crumb": "Why Kzoo Makers",
+    "subtitle": "",
+    "subtitleTag": "h5",
+    "trail": [
+     {
+      "label": "Comparison",
+      "href": "/comparison"
+     }
+    ]
+   }
+  },
+  {
+   "type": "Guided",
+   "props": {
+    "id": "Guided-1",
+    "kind": "why-kzoo-makers"
+   }
+  }
+ ],
+ "zones": {}
+}

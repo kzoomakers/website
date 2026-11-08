@@ -1,0 +1,41 @@
+{
+ "root": {
+  "props": {
+   "title": "Kzoo Makers News",
+   "description": "Kzoo Makers news - Read about maker projects, community events, and DIY tutorials from our Kalamazoo makerspace. Learn about woodworking, metalworking, laser cutting, and more.",
+   "bare": false,
+   "inline": [],
+   "bodyClass": "blog-page",
+   "refresh": "",
+   "css": "",
+   "styles": [],
+   "scripts": [
+    {
+     "src": "js/blog.js"
+    }
+   ]
+  }
+ },
+ "content": [
+  {
+   "type": "PageHeader",
+   "props": {
+    "id": "PageHeader-195",
+    "title": "News",
+    "tag": "h2",
+    "crumb": "News",
+    "subtitle": "",
+    "subtitleTag": "h5",
+    "trail": []
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-196",
+    "html": "<section class=\"posts section\">\n\t<div class=\"container\">\n\t\t<div class=\"row\">\n\t\t\t<!-- /section title -->\n\t\t\t<!-- single blog post -->\n\t\t\t<article class=\"col-lg-4 col-md-6\">\n\t\t\t\t<div class=\"post-item\">\n\t\t\t\t\t<div class=\"media-wrapper\">\n\t\t\t\t\t\t<img loading=\"lazy\" src=\"/images/blog/post-1.jpg\" alt=\"amazing caves coverimage\" class=\"img-fluid\">\n\t\t\t\t\t</div>\n\n\t\t\t\t\t<div class=\"content\">\n\t\t\t\t\t\t<h3><a href=\"/single-post\">Reasons to Smile</a></h3>\n\t\t\t\t\t\t<p>Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf\n\t\t\t\t\t\t\tmoon officia aute, non skateboard dolor brunch.</p>\n\t\t\t\t\t\t<a class=\"btn btn-main\" href=\"/single-post\">Read more</a>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</article>\n\t\t\t<!-- /single blog post -->\n\n\t\t\t<!-- single blog post -->\n\t\t\t<article class=\"col-lg-4 col-md-6\">\n\t\t\t\t<div class=\"post-item\">\n\t\t\t\t\t<div class=\"media-wrapper\">\n\t\t\t\t\t\t<img loading=\"lazy\" src=\"/images/blog/post-2.jpg\" alt=\"amazing caves coverimage\" class=\"img-fluid\">\n\t\t\t\t\t</div>\n\n\t\t\t\t\t<div class=\"content\">\n\t\t\t\t\t\t<h3><a href=\"/single-post\">A Few Moments</a></h3>\n\t\t\t\t\t\t<p>Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf\n\t\t\t\t\t\t\tmoon officia aute, non skateboard dolor brunch.</p>\n\t\t\t\t\t\t<a class=\"btn btn-main\" href=\"/single-post\">Read more</a>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</article>\n\t\t\t<!-- end single blog post -->\n\n\t\t\t<!-- single blog post -->\n\t\t\t<article class=\"col-lg-4 col-md-6\">\n\t\t\t\t<div class=\"post-item\">\n\t\t\t\t\t<div class=\"media-wrapper\">\n\t\t\t\t\t\t<img loading=\"lazy\" src=\"/images/blog/post-3.jpg\" alt=\"amazing caves coverimage\" class=\"img-fluid\">\n\t\t\t\t\t</div>\n\n\t\t\t\t\t<div class=\"content\">\n\t\t\t\t\t\t<h3><a href=\"/single-post\">Hints for Life</a></h3>\n\t\t\t\t\t\t<p>Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf\n\t\t\t\t\t\t\tmoon officia aute, non skateboard dolor brunch.</p>\n\t\t\t\t\t\t<a class=\"btn btn-main\" href=\"/single-post\">Read more</a>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</article>\n\t\t\t<!-- /section title -->\n\t\t\t<!-- single blog post -->\n\t\t\t<article class=\"col-lg-4 col-md-6\">\n\t\t\t\t<div class=\"post-item\">\n\t\t\t\t\t<div class=\"media-wrapper\">\n\t\t\t\t\t\t<img loading=\"lazy\" src=\"/images/blog/post-4.jpg\" alt=\"amazing caves coverimage\" class=\"img-fluid\">\n\t\t\t\t\t</div>\n\n\t\t\t\t\t<div class=\"content\">\n\t\t\t\t\t\t<h3><a href=\"/single-post\">Looking Back</a></h3>\n\t\t\t\t\t\t<p>Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf\n\t\t\t\t\t\t\tmoon officia aute, non skateboard dolor brunch.</p>\n\t\t\t\t\t\t<a class=\"btn btn-main\" href=\"/single-post\">Read more</a>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</article>\n\t\t\t<!-- /single blog post -->\n\n\t\t\t<!-- single blog post -->\n\t\t\t<article class=\"col-lg-4 col-md-6\">\n\t\t\t\t<div class=\"post-item\">\n\t\t\t\t\t<div class=\"media-wrapper\">\n\t\t\t\t\t\t<img loading=\"lazy\" src=\"/images/blog/post-5.jpg\" alt=\"amazing caves coverimage\" class=\"img-fluid\">\n\t\t\t\t\t</div>\n\n\t\t\t\t\t<div class=\"content\">\n\t\t\t\t\t\t<h3><a href=\"/single-post\">Laugh and Cry</a></h3>\n\t\t\t\t\t\t<p>Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf\n\t\t\t\t\t\t\tmoon officia aute, non skateboard dolor brunch.</p>\n\t\t\t\t\t\t<a class=\"btn btn-main\" href=\"/single-post\">Read more</a>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</article>\n\t\t\t<!-- end single blog post -->\n\n\t\t\t<!-- single blog post -->\n\t\t\t<article class=\"col-lg-4 col-md-6\">\n\t\t\t\t<div class=\"post-item\">\n\t\t\t\t\t<div class=\"media-wrapper\">\n\t\t\t\t\t\t<img loading=\"lazy\" src=\"/images/blog/post-6.jpg\" alt=\"amazing caves coverimage\" class=\"img-fluid\">\n\t\t\t\t\t</div>\n\n\t\t\t\t\t<div class=\"content\">\n\t\t\t\t\t\t<h3><a href=\"/single-post\">Regret No More</a></h3>\n\t\t\t\t\t\t<p>Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf\n\t\t\t\t\t\t\tmoon officia aute, non skateboard dolor brunch.</p>\n\t\t\t\t\t\t<a class=\"btn btn-main\" href=\"/single-post\">Read more</a>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</article>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  }
+ ],
+ "zones": {}
+}

@@ -1,0 +1,54 @@
+name: Security audit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 12 * * 1" # weekly: new CVEs land without any push
+
+jobs:
+  npm-audit:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci --ignore-scripts
+      # Fails the job (red) on any advisory; report is kept in the log and summary.
+      - name: npm audit
+        run: |
+          set +e
+          npm audit --audit-level=low | tee audit.txt
+          code=${PIPESTATUS[0]}
+          {
+            echo '### npm audit'
+            echo '```'
+            cat audit.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit $code
+      - name: Verify registry signatures
+        run: npm audit signatures
+
+  image-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t site:scan .
+      # Fails (red) on any HIGH/CRITICAL OS or library CVE that has a fix available; the table is in the log.
+      - uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: site:scan
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
+          trivyignores: .trivyignore.yaml

@@ -1,0 +1,16 @@
+import { redirect } from "next/navigation";
+import { gate } from "@/lib/guard";
+import { envConfig, getConfig } from "@/lib/config";
+import { s3Settings } from "@/lib/s3";
+import { sealInfo } from "@/lib/pdf-seal";
+import Form from "./form";
+import Seal from "./seal";
+
+export const dynamic = "force-dynamic";
+
+export default async function Setup() {
+  if ((await gate("admin", "/admin/services")) !== "write") redirect("/admin");
+  const env = envConfig(), cfg = getConfig();
+  const s3 = cfg ? await s3Settings().catch(() => null) : null;
+  return <><Form dbHost={env && URL.canParse(env.databaseUrl) ? new URL(env.databaseUrl).host : undefined} s3={s3 ? { endpoint: s3.endpoint, bucket: s3.bucket, region: s3.region } : undefined} configured={!!cfg} />{cfg && <Seal initial={await sealInfo()} />}</>;
+}

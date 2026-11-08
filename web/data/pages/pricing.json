@@ -1,0 +1,41 @@
+{
+ "root": {
+  "props": {
+   "title": "Kzoo Makers Pricing",
+   "description": "Kzoo Makers membership pricing - Affordable makerspace access in Kalamazoo, MI. Membership is just ($5/month), addon tools with Clean Side Tools ($20/month), or Everything Tools ($60/month). Access woodshop, metal shop, lasers, 3D printers, and more. Join our nonprofit maker community today.",
+   "bare": false,
+   "inline": [],
+   "bodyClass": "",
+   "refresh": "",
+   "css": "\n    /* Light gray text override for terms and conditions */\n    .terms-text {\n      color: #999999 !important;\n    }\n\n    /* Cyan color for normal price labels */\n    .normal-price-label {\n      color: #00FFFF !important;\n    }\n\n    /* Animated background for call-to-action section */\n    .call-to-action-2 {\n      position: relative;\n      overflow: hidden;\n      min-height: 210px;\n      background-image: url('images/call-to-action/source4.gif');\n      background-size: cover;\n      background-position: center;\n      background-repeat: no-repeat;\n    }\n\n    .call-to-action-2::before {\n      content: '';\n      position: absolute;\n      top: 0;\n      left: 0;\n      right: 0;\n      bottom: 0;\n      background-color: rgba(0, 0, 0.6, 0.8);\n      z-index: 0;\n    }\n    .call-to-action-2 .container {\n      position: relative;\n      z-index: 1;\n    }\n\n    .call-to-action-2 h2 {\n      position: relative;\n      z-index: 1;\n    }\n\n    /* Wormhole animated background for call-to-action section */\n    .call-to-action-wormhole {\n      position: relative;\n      overflow: hidden;\n      min-height: 300px;\n      background-image: url('images/call-to-action/wormhole.gif');\n      background-size: cover;\n      background-position: center;\n      background-repeat: no-repeat;\n    }\n\n    .call-to-action-wormhole::before {\n      content: '';\n      position: absolute;\n      top: 0;\n      left: 0;\n      right: 0;\n      bottom: 0;\n      background-color: rgba(0, 0, 0, 0.6);\n      z-index: 0;\n    }\n\n    .call-to-action-wormhole .container {\n      position: relative;\n      z-index: 1;\n    }\n\n    .call-to-action-wormhole h2,\n    .call-to-action-wormhole p {\n      position: relative;\n      z-index: 1;\n      color: white;\n    }\n  ",
+   "styles": [],
+   "scripts": [
+    {
+     "src": "js/pricing-special.js"
+    }
+   ]
+  }
+ },
+ "content": [
+  {
+   "type": "PageHeader",
+   "props": {
+    "id": "PageHeader-208",
+    "title": "Pricing",
+    "tag": "h2",
+    "crumb": "Pricing",
+    "subtitle": "",
+    "subtitleTag": "h5",
+    "trail": []
+   }
+  },
+  {
+   "type": "Guided",
+   "props": {
+    "id": "Guided-1",
+    "kind": "pricing"
+   }
+  }
+ ],
+ "zones": {}
+}

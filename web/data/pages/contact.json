@@ -1,0 +1,37 @@
+{
+ "root": {
+  "props": {
+   "title": "Contact Kzoo Makers",
+   "description": "Contact Kzoo Makers - Visit us at {address}. Call (269) 270-3141 or email contact@kzoomakers.org. Open Mon, Tue, Thur, Sat. Schedule a tour of our community makerspace today.",
+   "bare": false,
+   "inline": [],
+   "bodyClass": "",
+   "refresh": "",
+   "css": "\n    .contact-us {\n      background-color: #f8f9fa;\n      padding: 60px 0;\n    }\n    \n    .contact-card {\n      border-radius: 8px;\n      transition: transform 0.3s ease, box-shadow 0.3s ease;\n    }\n    \n    .contact-card:hover {\n      transform: translateY(-5px);\n      box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;\n    }\n    \n    .map-section {\n      background-color: #ffffff;\n    }\n    \n    .google-map iframe {\n      border-radius: 8px;\n      box-shadow: 0 4px 15px rgba(0,0,0,0.1);\n    }\n  ",
+   "styles": [],
+   "scripts": []
+  }
+ },
+ "content": [
+  {
+   "type": "PageHeader",
+   "props": {
+    "id": "PageHeader-23",
+    "title": "Contact Us",
+    "tag": "h2",
+    "crumb": "Contact Us",
+    "subtitle": "",
+    "subtitleTag": "h5",
+    "trail": []
+   }
+  },
+  {
+   "type": "Guided",
+   "props": {
+    "id": "Guided-1",
+    "kind": "contact"
+   }
+  }
+ ],
+ "zones": {}
+}

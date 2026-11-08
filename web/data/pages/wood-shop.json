@@ -1,0 +1,37 @@
+{
+ "root": {
+  "props": {
+   "title": "Wood Shop - Complete Woodworking Facility | Kalamazoo Makerspace",
+   "description": "Explore our fully-equipped wood shop at Kalamazoo Makerspace. Access professional woodworking tools including planers, bandsaws, CNC, lathe, and more. Perfect for hobbyists and professionals.",
+   "bare": false,
+   "inline": [],
+   "bodyClass": "",
+   "refresh": "",
+   "css": "",
+   "styles": [],
+   "scripts": []
+  }
+ },
+ "content": [
+  {
+   "type": "PageHeader",
+   "props": {
+    "id": "PageHeader-425",
+    "title": "Wood Shop",
+    "tag": "h1",
+    "crumb": "Wood Shop",
+    "subtitle": "",
+    "subtitleTag": "h5",
+    "trail": []
+   }
+  },
+  {
+   "type": "Guided",
+   "props": {
+    "id": "Guided-1",
+    "kind": "wood-shop"
+   }
+  }
+ ],
+ "zones": {}
+}

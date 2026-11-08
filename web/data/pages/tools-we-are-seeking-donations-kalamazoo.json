@@ -1,0 +1,49 @@
+{
+ "root": {
+  "props": {
+   "title": "Donate to Kalamazoo Nonprofit Makerspace | Tax-Deductible Tool Donations",
+   "description": "Support our Kalamazoo nonprofit makerspace with tax-deductible donations. Donate tools, equipment, and supplies to help our community makerspace serve Southwest Michigan. Your nonprofit donation makes a difference in Kalamazoo.",
+   "bare": false,
+   "inline": [],
+   "bodyClass": "",
+   "refresh": "",
+   "css": "",
+   "styles": [
+    {
+     "href": "css/inventory.css"
+    },
+    {
+     "href": "css/donations.css"
+    }
+   ],
+   "scripts": []
+  }
+ },
+ "content": [
+  {
+   "type": "PageHeader",
+   "props": {
+    "id": "PageHeader-401",
+    "title": "Donate to Our Kalamazoo Nonprofit Makerspace",
+    "tag": "h1",
+    "crumb": "Donate to Nonprofit",
+    "subtitle": "",
+    "subtitleTag": "h5",
+    "trail": [
+     {
+      "label": "Support Us",
+      "href": "/"
+     }
+    ]
+   }
+  },
+  {
+   "type": "Guided",
+   "props": {
+    "id": "Guided-1",
+    "kind": "tools-we-are-seeking-donations-kalamazoo"
+   }
+  }
+ ],
+ "zones": {}
+}

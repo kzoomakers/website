@@ -1,0 +1,157 @@
+{
+ "galleryTitle": "3D Printing Lab Gallery",
+ "galleryText": "See what's possible with desktop 3D printers and a community of makers.",
+ "slides": [
+  {
+   "image": "/images/3dprint/OrangeStorm-Giga.webp",
+   "alt": "Elegoo OrangeStorm Giga",
+   "caption": "Elegoo OrangeStorm Giga"
+  },
+  {
+   "image": "/images/3dprint/kobra-s1-combo-colors.jpg",
+   "alt": "AnyCubic Kobra S1 Multicolor",
+   "caption": "AnyCubic Kobra S1 Multicolor"
+  },
+  {
+   "image": "/images/3dprint/M200.webp",
+   "alt": "Zortrax M200",
+   "caption": "Zortrax M200"
+  }
+ ],
+ "sections": [
+  {
+   "look": "Columns of text",
+   "background": "White",
+   "title": "Prototype, Experiment, and Learn 3D Printing",
+   "intro": "**From first-time prints to functional prototypes, our 3D printing lab is here to help.**",
+   "columns": "2",
+   "items": [
+    {
+     "icon": "none",
+     "heading": "What You Can Do in the 3D Printing Lab",
+     "text": "- **Print prototypes and functional parts** for engineering, robotics, and electronics projects.\n- **Create cosplay props and costumes** that can be sanded, painted, and combined with laser-cut details.\n- **Make replacement parts and brackets** for household fixes, shop jigs, and tools.\n- **Design educational models** for classrooms, STEM demonstrations, and workshops.\n- **Experiment with different materials** like PLA, PETG, and more as approved by the lab.\n- **Combine 3D prints with laser-cut parts** for enclosures, signage, and multi-material builds."
+    },
+    {
+     "icon": "none",
+     "heading": "Equipment & Workflow",
+     "text": "Our 3D printing area is set up to make it easy to go from idea to printed part:\n\n- Available Printers:\n- AnyCubic Kobra S1, with 4 Filmanent AMS for **Multicolor** Printing\n- Zortrax M200, 2X, **Easy and Reliable ABS** and Polycarbonate\n- Elegoo OrangeStorm Giga, **HUGE 800x800x1000mm** Build Volume!\n- Materials: PLA, PETG, ABS, HIPS, PCABS, AND MORE!!!\n- Computer workstations for slicing and file preparation.\n- Slicers - Prusa, Cura, Orca, ZSuite\n- Tools for removal and post processing\n- Guidance from members who print regularly\n\nNew to 3D printing? Start with a simple calibration cube or small project. We'll help you choose settings so you can get a successful first print."
+    }
+   ],
+   "buttons": []
+  },
+  {
+   "look": "Columns of text",
+   "background": "White",
+   "title": "",
+   "intro": "",
+   "columns": "1",
+   "items": [
+    {
+     "icon": "none",
+     "heading": "From Idea to 3D Printed Part: Basic Steps",
+     "text": "- **Start with a model.** Design your own part in CAD software or download a model from a site like Printables or Thingiverse.\n- **Import into a slicer.** Use slicing software (like PrusaSlicer, Cura, or similar) to set layer height, infill, and supports.\n- **Choose material and printer.** Pick an approved filament and an available printer profile.\n- **Slice and save the file.** Export G-code to an SD card or send it using the recommended workflow for our printers.\n- **Prepare the machine.** Check bed leveling, clean the build surface, and load filament.\n- **Start the print and monitor the first layers.** The first layer tells you most of what you need to know about adhesion and leveling.\n- **Remove, inspect, and iterate.** Once the print is done, remove it carefully, evaluate the results, and adjust settings for future runs."
+    }
+   ],
+   "buttons": []
+  },
+  {
+   "look": "Columns of text",
+   "background": "Grey",
+   "title": "Combine 3D Printing with Laser Cutting",
+   "intro": "",
+   "columns": "2",
+   "items": [
+    {
+     "icon": "none",
+     "heading": "Digital Fabrication Workflow",
+     "text": "3D printing is even more powerful when you pair it with our laser cutters and other shop areas. Use the 3D printing lab to make complex shapes, then add laser-cut panels, inlays, or engraved details for a professional finish.\n\n- 3D printed brackets with laser-cut acrylic panels.\n- Electronics enclosures with engraved labels and cutouts.\n- Cosplay armor that combines printed parts with foam and laser-cut accents.\n- Signage with 3D printed lettering mounted on laser-cut backers."
+    },
+    {
+     "icon": "none",
+     "heading": "Next Steps After 3D Printing",
+     "text": "If you're ready to branch out beyond FDM printers, check out our other digital fabrication resources:\n\n- [Laser cutter how-to guide](/how-to-use-a-laser-cutter) for safety and step-by-step operation.\n- [Laser shop overview](/laser-shop) with details on Trotec laser capabilities.\n- Woodworking, metalworking, and electronics areas for finishing and integrating your parts.\n\nThese tools together turn the makerspace into a full prototyping lab for personal projects, startups, and community teams."
+    }
+   ],
+   "buttons": []
+  },
+  {
+   "look": "Centered call-to-action",
+   "background": "Grey",
+   "title": "",
+   "intro": "",
+   "columns": "1",
+   "items": [
+    {
+     "icon": "none",
+     "heading": "Ready to Explore the Lab?",
+     "text": "Become a member of Kalamazoo Makerspace to access the 3D printing lab, laser cutters, and more."
+    }
+   ],
+   "buttons": [
+    {
+     "label": "View Membership Options",
+     "href": "/pricing"
+    },
+    {
+     "label": "Schedule a Tour",
+     "href": "/tours"
+    }
+   ]
+  },
+  {
+   "look": "Columns of text",
+   "background": "White",
+   "title": "3D Printing FAQ",
+   "intro": "",
+   "columns": "1",
+   "items": [
+    {
+     "icon": "none",
+     "heading": "Do I need experience to use the 3D printers?",
+     "text": "No prior experience is required. We'll help you with the basics of slicing, printer setup, and safe operation. 3D printing is beginner-friendly, and you'll learn a lot just by doing a few small projects."
+    },
+    {
+     "icon": "none",
+     "heading": "Is there required training like with the laser cutter?",
+     "text": "We strongly recommend an orientation or informal training session so you understand how to level the bed, load filament, and recover from common issues like stringing or poor adhesion. Ask a volunteer or regular 3D printing user to walk you through the process."
+    },
+    {
+     "icon": "none",
+     "heading": "What software should I use for 3D printing?",
+     "text": "Popular options include PrusaSlicer, Cura, and other FDM slicers. Many of these are free and well-documented. We can share printer profiles and recommended settings for our machines."
+    },
+    {
+     "icon": "none",
+     "heading": "Can I bring my own filament?",
+     "text": "Yes, as long as it is a material approved for our printers (typically PLA or PETG). Check in with a volunteer before running unfamiliar materials so we can protect the equipment."
+    },
+    {
+     "icon": "none",
+     "heading": "How long do 3D prints take?",
+     "text": "Print time depends on size, layer height, and infill. A small part might take under an hour, while large or detailed prints can run overnight. We'll help you estimate print times and plan accordingly."
+    },
+    {
+     "icon": "none",
+     "heading": "Can I 3D print parts and then laser cut matching pieces?",
+     "text": "Absolutely. Many members design projects that combine 3D printed parts with laser-cut wood or acrylic. Read our [laser cutter guide](/how-to-use-a-laser-cutter) to learn how to safely use the laser shop."
+    },
+    {
+     "icon": "none",
+     "heading": "What are the most common 3D printing mistakes?",
+     "text": "We see the same failures week after week: poor first-layer adhesion, wrong material selection, ignoring print orientation, and more. Read our guide on [common 3D printing failures](/how-to-3d-print-failures-we-see-every-week) to learn how to avoid them."
+    },
+    {
+     "icon": "none",
+     "heading": "Why do home 3D printers often sit unused?",
+     "text": "Many home printers end up collecting dust due to calibration drift, maintenance burden, and lack of support. Learn [why makerspaces solve these problems](/how-to-why-most-3d-printers-sit-at-home-gathering-dust) through shared maintenance and collective knowledge."
+    },
+    {
+     "icon": "none",
+     "heading": "When should I NOT use 3D printing?",
+     "text": "3D printing has specific limitations in strength, surface finish, speed, and materials. Read our guide on [what 3D printing is bad at](/how-to-what-3d-printing-is-bad-at) to understand when laser cutting, CNC, or traditional tools are better choices."
+    }
+   ],
+   "buttons": []
+  }
+ ]
+}

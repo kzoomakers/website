@@ -1,0 +1,56 @@
+{
+ "root": {
+  "props": {
+   "title": "What 3D Printing Is Bad At (And Why That Matters) | Kalamazoo Makerspace",
+   "description": "Understand the real limitations of 3D printing: strength, surface finish, speed, and materials. Learn when to use other fabrication tools for better results.",
+   "bare": false,
+   "inline": [],
+   "bodyClass": "",
+   "refresh": "",
+   "css": "",
+   "styles": [],
+   "scripts": []
+  }
+ },
+ "content": [
+  {
+   "type": "PageHeader",
+   "props": {
+    "id": "PageHeader-85",
+    "title": "What 3D Printing Is Bad At",
+    "tag": "h1",
+    "crumb": "3D Printing Limitations",
+    "subtitle": "",
+    "subtitleTag": "h5",
+    "trail": [
+     {
+      "label": "How-To Guides",
+      "href": "/how-to"
+     }
+    ]
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-86",
+    "html": "<section class=\"about-2 section\" id=\"printing-limitations\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center\">\n      <div class=\"col-lg-10\">\n        <div class=\"title text-center\">\n          <h2>What 3D Printing Is Bad At</h2>\n          <p class=\"lead\">(And Why That Matters)</p>\n          <p>3D printing is often presented as a general-purpose manufacturing solution. In practice, it is a narrow tool with specific strengths and equally specific weaknesses. Experienced makers usually learn this through failed parts rather than documentation.</p>\n          <p><strong>Being explicit about what 3D printing does poorly is not pessimism. It is a marker of technical maturity.</strong></p>\n          <div class=\"border\"></div>\n        </div>\n      </div>\n    </div>\n\n    <div class=\"row mt-5\">\n      <div class=\"col-lg-10 mx-auto\">\n        \n        <p>Unrealistic expectations waste time, materials, and effort—and they are one of the fastest ways to stall a project.</p>\n\n        <!-- Section 1 -->\n        <div class=\"mb-5 mt-5\">\n          <h3>Strength and Structural Limitations</h3>\n          <p>Most consumer and prosumer 3D printing relies on layer-by-layer deposition. This introduces anisotropy by default.</p>\n          <ul class=\"checklist\">\n            <li>Parts are weakest along layer lines</li>\n            <li>Tensile strength varies by orientation</li>\n            <li>Small design changes can dramatically affect failure modes</li>\n          </ul>\n          <p>Even with optimized settings, printed plastics rarely compete with machined, molded, or laser-cut parts in structural reliability. Reinforced filaments help, but they increase cost, wear hardware, and still do not eliminate directional weakness.</p>\n          <div class=\"alert alert-warning mt-3\">\n            <strong>This matters</strong> when parts are load-bearing, safety-critical, or repeatedly stressed. In those cases, printing may be acceptable for iteration—but not for the final solution.\n          </div>\n        </div>\n\n        <!-- Section 2 -->\n        <div class=\"mb-5\">\n          <h3>Surface Finish and Dimensional Reality</h3>\n          <p>3D printed parts advertise precision, but surface finish tells a different story.</p>\n          <ul class=\"checklist\">\n            <li>Layer lines are inherent, not a defect</li>\n            <li>Post-processing adds labor and inconsistency</li>\n            <li>Fine features degrade quickly at small scales</li>\n          </ul>\n          <p>Achieving smooth, flat, or optically clean surfaces usually requires sanding, filling, chemical smoothing, or secondary machining. Each step adds time and introduces variability.</p>\n          <p><strong>For parts where appearance, tolerances, or mating surfaces matter, printing is often the slowest path to an acceptable result.</strong></p>\n        </div>\n\n        <!-- Section 3 -->\n        <div class=\"mb-5\">\n          <h3>Speed: Printing vs. Subtractive Tools</h3>\n          <p>3D printing is often described as \"fast,\" but this is only true in specific contexts.</p>\n          <p><strong>Compared to CNC machining or laser cutting:</strong></p>\n          <ul class=\"checklist\">\n            <li>Printing is slow for flat or simple geometries</li>\n            <li>Setup time may be lower, but run time is much higher</li>\n            <li>Single-part production often masks inefficiency</li>\n          </ul>\n          <p>A laser cutter can produce precise flat components in minutes. A CNC mill can remove material quickly and repeatably. A 3D printer excels when geometry cannot be made subtractively—but struggles when it can.</p>\n          <div class=\"alert alert-info mt-3\">\n            <strong>Using a printer for parts that should be cut or milled is not innovation; it is tool mismatch.</strong>\n          </div>\n        </div>\n\n        <!-- Section 4 -->\n        <div class=\"mb-5\">\n          <h3>Material Constraints Are Real</h3>\n          <p>Despite a growing list of filaments, material choice remains limited.</p>\n          <ul class=\"checklist\">\n            <li>Mechanical properties vary wildly by brand and batch</li>\n            <li>Heat resistance is often overstated</li>\n            <li>Chemical resistance is inconsistent</li>\n          </ul>\n          <p>Printed plastics are rarely equivalent to their bulk material counterparts. Fiber-filled filaments improve stiffness but reduce impact resistance and layer adhesion. Engineering plastics introduce enclosure, moisture, and temperature constraints that many setups cannot reliably meet.</p>\n          <p><strong>This becomes critical when parts must survive heat, UV exposure, solvents, or long-term stress.</strong></p>\n        </div>\n\n        <!-- Section 5 -->\n        <div class=\"mb-5\">\n          <h3>Why This Matters at the System Level</h3>\n          <p>When 3D printing is treated as a universal solution, it becomes a bottleneck. Projects stall because the wrong tool is being forced to do the job.</p>\n          <p><strong>The correct response is not better printers—it is tool diversity.</strong></p>\n        </div>\n\n      </div>\n    </div>\n  </div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-87",
+    "html": "<section class=\"section\" style=\"background: #f9f9f9;\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center\">\n      <div class=\"col-lg-10\">\n        <div class=\"title text-center\">\n          <h2>Why Multiple Fabrication Tools Change Everything</h2>\n          <div class=\"border\"></div>\n        </div>\n      </div>\n    </div>\n    <div class=\"row mt-4\">\n      <div class=\"col-lg-10 mx-auto\">\n        <p>In a space with only a 3D printer, printing becomes the default. In a space with multiple fabrication tools, it becomes one option among several.</p>\n        \n        <p><strong>A shared shop that includes:</strong></p>\n        <ul class=\"checklist\">\n          <li>Laser cutting for flat, precise parts</li>\n          <li>CNC routing or milling for strength and accuracy</li>\n          <li>Traditional tools for finishing and assembly</li>\n          <li>3D printing for complex geometry and iteration</li>\n        </ul>\n        \n        <p class=\"mt-4\">…allows each tool to be used where it excels. Design decisions improve because constraints are visible early, not discovered after hours of failed prints.</p>\n        \n        <div class=\"alert alert-success mt-4\">\n          <strong>This is not about having more equipment for its own sake.</strong> It is about reducing friction by matching the problem to the correct process.\n        </div>\n      </div>\n    </div>\n  </div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-88",
+    "html": "<section class=\"section\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center\">\n      <div class=\"col-lg-8\">\n        <div class=\"title text-center\">\n          <h2>Access the Right Tool for Every Job</h2>\n          <div class=\"border\"></div>\n        </div>\n      </div>\n    </div>\n    <div class=\"row mt-4\">\n      <div class=\"col-md-6 mb-4\">\n        <h3>Explore Our Full Fabrication Lab</h3>\n        <p>Kalamazoo Makerspace provides access to multiple fabrication tools so you can choose the best method for each part:</p>\n        <ul class=\"checklist\">\n          <li><a href=\"/3d-printing\">3D printing lab</a> for complex geometry and rapid iteration</li>\n          <li><a href=\"/how-to-use-a-laser-cutter\">Laser cutting</a> for precise flat parts and fast production</li>\n          <li>CNC routing and milling for strength and accuracy</li>\n          <li>Wood and metal shops for traditional fabrication</li>\n        </ul>\n        <a href=\"/pricing\" class=\"btn btn-main mt-3\">View Membership Options</a>\n      </div>\n      <div class=\"col-md-6 mb-4\">\n        <h3>Learn More About 3D Printing</h3>\n        <p>Understanding when and how to use 3D printing effectively:</p>\n        <ul class=\"checklist\">\n          <li><a href=\"/how-to-3d-print-failures-we-see-every-week\">Common 3D printing failures</a> and how to prevent them</li>\n          <li><a href=\"/how-to-why-most-3d-printers-sit-at-home-gathering-dust\">Why home printers sit unused</a> and how makerspaces solve this</li>\n          <li>Material selection and design for additive manufacturing</li>\n          <li>When to combine 3D printing with other fabrication methods</li>\n        </ul>\n        <a href=\"/3d-printing\" class=\"btn btn-main mt-3\">Visit Our 3D Printing Lab</a>\n      </div>\n    </div>\n    <div class=\"row mt-4\">\n      <div class=\"col-lg-12 text-center\">\n        <p>Want to see how tool diversity improves your projects? Schedule a tour and explore our full fabrication lab.</p>\n        <a href=\"/tours\" class=\"btn btn-transparent mt-20\">Schedule a Tour</a>\n      </div>\n    </div>\n  </div>\n</section>"
+   }
+  }
+ ],
+ "zones": {}
+}

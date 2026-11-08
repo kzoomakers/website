@@ -1,0 +1,42 @@
+# Local production-like stack: docker compose up --build  ->  http://localhost:3000 (editor: /edit)
+# Local passwords below are throwaway; real secrets come from .env / Fly secrets.
+services:
+  certgen: # self-signed TLS cert for local Postgres (written once)
+    image: alpine/openssl
+    volumes: [certs:/certs]
+    entrypoint: ["sh", "-c", "[ -f /certs/server.key ] || openssl req -new -x509 -days 3650 -nodes -subj /CN=db -keyout /certs/server.key -out /certs/server.crt; chown 999:999 /certs/*; chmod 600 /certs/server.key"]
+    restart: "no"
+
+  db:
+    image: postgres:17
+    command: ["postgres", "-c", "ssl=on", "-c", "ssl_cert_file=/certs/server.crt", "-c", "ssl_key_file=/certs/server.key"]
+    depends_on: { certgen: { condition: service_completed_successfully } }
+    environment: { POSTGRES_USER: kzoo, POSTGRES_PASSWORD: kzoo, POSTGRES_DB: kzoo }
+    volumes: [pgdata:/var/lib/postgresql/data, certs:/certs]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U kzoo"], interval: 3s, retries: 20 }
+    ports: ["5432:5432"]
+
+  rustfs:
+    image: rustfs/rustfs:latest
+    environment: { RUSTFS_ACCESS_KEY: rustfsadmin, RUSTFS_SECRET_KEY: rustfsadmin, RUSTFS_ADDRESS: ":9000", RUSTFS_CONSOLE_ENABLE: "true" }
+    volumes: [rustfsdata:/data]
+    ports: ["9000:9000", "9001:9001"]
+
+  web:
+    build: .
+    depends_on:
+      db: { condition: service_healthy }
+    # Database and storage are NOT set here: sign in at /webmaster and the setup wizard asks for them.
+    #   Postgres: postgres://kzoo:kzoo@db:5432/kzoo?sslmode=no-verify
+    #   Storage:  http://rustfs:9000  bucket uploads  keys rustfsadmin / rustfsadmin
+    environment:
+      AUTH_SECRET: ${AUTH_SECRET:?copy .env.example to .env}
+      PII_CRYPTO_SECRET: ${PII_CRYPTO_SECRET:?copy .env.example to .env}
+      AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID:?}
+      AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET:?}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:?}
+      CONFIG_PATH: /app/config/config.json
+    volumes: [appconfig:/app/config]
+    ports: ["3000:3000"]
+
+volumes: { pgdata: {}, rustfsdata: {}, certs: {}, appconfig: {} }

@@ -1,0 +1,32 @@
+{
+ "root": {
+  "props": {
+   "title": "Meetups - Kzoo Makers",
+   "description": "Kalamazoo Makerspace meetups and community events",
+   "bare": false,
+   "inline": [],
+   "bodyClass": "meetups-page",
+   "refresh": "",
+   "css": "",
+   "styles": [],
+   "scripts": []
+  }
+ },
+ "content": [
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-184",
+    "html": "<section class=\"page-title-section\" style=\"background-image: url(images/slider/slider-bg-0.webp);\">\n    <div class=\"container\">\n      <div class=\"row\">\n        <div class=\"col-md-12\">\n        </div>\n      </div>\n    </div>\n  </section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-185",
+    "html": "<section class=\"section\">\n    <div class=\"container\">\n      <div class=\"row\">\n        <div class=\"col-lg-8 mx-auto\">\n          <div class=\"content\">\n            <h2>Kalamazoo Meetups</h2>\n            <p>We host regular meetups and community events.</p>\n            \n            <div class=\"meetups-card-container mt-5\">\n              <div class=\"meetup-card\">\n                <span class=\"meetup-card-glow\"></span>\n                <div class=\"meetup-card-content\">\n                  <h2>Fiber Arts Meetup</h2>\n                  <p>Join our fiber arts community for discussions, workshops, and collaborative projects in spinning, weaving, dyeing, and other fiber arts.</p>\n                  <a href=\"/meetup-fiber-arts\" class=\"btn btn-main\">Learn More</a>\n                </div>\n              </div>\n\n              <div class=\"meetup-card\">\n                <span class=\"meetup-card-glow\"></span>\n                <div class=\"meetup-card-content\">\n                  <h2>Woodworkers Guild of SW Michigan</h2>\n                  <p>A community of hobbyist and professional woodworkers who meet monthly at Kalamazoo Makerspace to share skills, discuss projects, and explore all facets of woodworking.</p>\n                  <a href=\"/meetup-woodworkers-guild\" class=\"btn btn-main\">Learn More</a>\n                </div>\n              </div>\n\n              <div class=\"meetup-card\">\n                <span class=\"meetup-card-glow\"></span>\n                <div class=\"meetup-card-content\">\n                  <h2>Kalamazoo Makers Meetup Guild</h2>\n                  <p>The Kalamazoo Makers Guild exists to shift local maker culture away from isolated efforts and toward shared learning, creative reuse, and mutual support.</p>\n                  <a href=\"/s-kalamazoo-guild-makers-meetup\" class=\"btn btn-main\">Learn More</a>\n                </div>\n              </div>\n\n              <div class=\"meetup-card\">\n                <span class=\"meetup-card-glow\"></span>\n                <div class=\"meetup-card-content\">\n                  <h2>Crafting Cosplay Connections</h2>\n                  <p>A community-driven cosplay group bringing together cosplayers, costume makers, prop builders, and fandom enthusiasts of all skill levels. Cosplay is for everyone!</p>\n                  <a href=\"/meetup-cosplay-connections\" class=\"btn btn-main\">Learn More</a>\n                </div>\n              </div>\n            </div>\n          </div>\n        </div>\n      </div>\n    </div>\n  </section>"
+   }
+  }
+ ],
+ "zones": {}
+}

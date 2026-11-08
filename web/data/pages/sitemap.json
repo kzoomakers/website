@@ -1,0 +1,36 @@
+{
+ "root": {
+  "props": {
+   "title": "Sitemap | Kzoo Makers",
+   "description": "Sitemap for Kzoo Makers. Browse all pages in our Kalamazoo makerspace website including membership, pricing, workshops, tools, spaces, events, and how-to resources.",
+   "bare": false,
+   "inline": [],
+   "bodyClass": "",
+   "refresh": "",
+   "css": "",
+   "styles": [],
+   "scripts": []
+  }
+ },
+ "content": [
+  {
+   "type": "PageHeader",
+   "props": {
+    "id": "PageHeader-391",
+    "title": "Sitemap",
+    "tag": "h1",
+    "crumb": "Sitemap",
+    "subtitle": "A human-readable index of our website to help visitors and search engines find key pages.",
+    "subtitleTag": "p",
+    "trail": []
+   }
+  },
+  {
+   "type": "SiteMap",
+   "props": {
+    "id": "SiteMap-1"
+   }
+  }
+ ],
+ "zones": {}
+}

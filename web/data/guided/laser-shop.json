@@ -1,0 +1,98 @@
+{
+ "galleryTitle": "Laser Cutting & Engraving Project Gallery",
+ "galleryText": "Explore examples of laser cutting and laser engraving projects made in our Kalamazoo laser shop.",
+ "slides": [
+  {
+   "image": "/images/photoreel/laser/trotec-speedy500.webp",
+   "alt": "Industrial Trotec laser cutter for laser cutting and laser engraving at Kalamazoo Makerspace laser shop",
+   "caption": "Trotec Speedy Laser"
+  },
+  {
+   "image": "/images/laser/lake-michigan.webp",
+   "alt": "Members using an industrial laser cutter for DIY laser cutting projects",
+   "caption": "DIY Laser Projects"
+  },
+  {
+   "image": "/images/laser/polygonia.webp",
+   "alt": "Maker 3D laser cuts polygons on a laser cutter",
+   "caption": "Maker 3d cuts polygons on laser cutter"
+  },
+  {
+   "image": "/images/laser/bee-sign.jpg",
+   "alt": "Laser cut and laser engraved signs and logos",
+   "caption": "Signs and Logos"
+  }
+ ],
+ "detailsTitle": "Professional Laser Cutting & Engraving Facility",
+ "detailsIntro": "Our laser shop in Kalamazoo features professional Trotec laser cutters and laser engravers with support for both Ruby and Lightburn software, making it easy to get started on your precision laser cutting and engraving projects.",
+ "equipTitle": "Equipment & Software",
+ "equipment": "**Trotec Laser Cutters** - Professional-grade laser cutting and engraving systems for precision work\n**Ruby Software Support** - Native Trotec software for advanced control of laser cutting and engraving jobs\n**Lightburn Software Support** - Popular third-party software option for managing laser cutting and engraving projects\n**Cut Wood up to 2\"** - Powerful enough for thick materials\n**Complex Laser Engravings** - High-resolution detailed work\n**Ventilation System** - Proper fume extraction for safe operation\n**Material Storage** - Space for your project materials\n**Computer Workstations** - Design and prepare your files on-site",
+ "materialsTitle": "Supported Materials",
+ "canTitle": "Materials You CAN Laser Cut/Engrave:",
+ "can": "Wood (up to 2\" thick)\nPlywood and MDF\nAcrylic and Plexiglass\nLeather and Fabric\nPaper and Cardboard\nCork and Rubber\nAnodized Aluminum (engraving only)\nGlass (engraving only)",
+ "cannotTitle": "Materials You CANNOT Laser:",
+ "cannot": "PVC or Vinyl (releases toxic chlorine gas)\nABS Plastic (releases toxic fumes)\nPolycarbonate (discolors and releases fumes)\nFiberglass (releases harmful particles)\nCoated Carbon Fiber",
+ "startTitle": "Easy to Get Started",
+ "startText": "Getting started with laser cutting and engraving at Kalamazoo Makerspace is straightforward and accessible to makers of all skill levels. Our Trotec lasers support both Ruby software (the native Trotec solution) and Lightburn (a popular third-party option), giving you flexibility in how you set up laser cutting and engraving jobs.\n\nWhether you're creating intricate laser engravings on wood, cutting precise parts from acrylic, personalizing leather goods, or producing custom laser-cut signage, our laser shop has the capabilities you need. The lasers can cut through wood up to 2 inches thick and perform complex, high-resolution engravings with exceptional detail.\n\nTraining is available from multiple members who are experienced with laser cutting and engraving. They can help you understand material settings, optimize your designs for laser cutting and engraving, and master both Ruby and Lightburn software. The learning curve is gentle, and you'll be creating your first projects in no time.",
+ "readyTitle": "Ready to Start Laser Cutting?",
+ "readyText": "Join Kalamazoo Makerspace and gain access to our professional laser cutting and laser engraving facility in Kalamazoo, MI.",
+ "buttons": [
+  {
+   "label": "View Membership Options",
+   "href": "/pricing"
+  },
+  {
+   "label": "Schedule a Tour",
+   "href": "/tours"
+  },
+  {
+   "label": "View Laser How-To Guide",
+   "href": "/how-to-use-a-laser-cutter"
+  }
+ ],
+ "safetyTitle": "Safety & Training",
+ "safety": [
+  {
+   "icon": "check",
+   "title": "Required Training",
+   "text": "All members must complete laser safety training before independent use. Training covers safe operation, material selection, and software basics."
+  },
+  {
+   "icon": "people",
+   "title": "Multiple Trainers Available",
+   "text": "Training is available from multiple experienced members who can teach you Ruby software, Lightburn, and best practices for laser cutting."
+  },
+  {
+   "icon": "star",
+   "title": "Easy to Learn",
+   "text": "Laser cutting is one of the most accessible fabrication methods. With proper training, you'll be creating projects quickly."
+  }
+ ],
+ "faqTitle": "Frequently Asked Questions",
+ "faqs": [
+  {
+   "q": "Do I need to bring my own materials?",
+   "a": "Yes, members provide their own materials for laser cutting projects. We can help you source appropriate materials and recommend suppliers."
+  },
+  {
+   "q": "Which laser cutting and engraving software should I use - Ruby or Lightburn?",
+   "a": "Both are excellent options! Ruby is the native Trotec software with advanced features, while Lightburn is popular for its user-friendly interface. Our trainers can help you with either one for your laser cutting and engraving projects."
+  },
+  {
+   "q": "How thick of material can I laser cut or engrave?",
+   "a": "Our Trotec lasers can laser cut wood up to 2 inches thick. Cutting depth varies by material type and density, and laser engraving can be done on even thicker materials."
+  },
+  {
+   "q": "How do I get trained on the laser cutters and engravers?",
+   "a": "After becoming a member, you can schedule training with one of our multiple qualified trainers. Training covers laser safety, laser cutting and engraving software operation, and material handling."
+  },
+  {
+   "q": "Can I engrave photos or complex designs with the laser cutter?",
+   "a": "Absolutely! Our lasers excel at complex laser engravings including photographs, detailed artwork, and intricate patterns. We'll teach you how to prepare your files for optimal laser cutting and engraving results."
+  },
+  {
+   "q": "What file formats do the laser cutters accept for cutting and engraving?",
+   "a": "Both Ruby and Lightburn support common vector formats (SVG, AI, DXF) and raster formats (JPG, PNG, BMP) for laser cutting and engraving. We'll help you prepare your designs properly for the laser."
+  }
+ ]
+}

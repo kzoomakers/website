@@ -1,0 +1,233 @@
+{
+ "introTitle": "Who runs this place?",
+ "introText": "We all do! We are a member and volunteer-operated makerspace where no profit is made and nobody is paid. Members make donations of tools, soap, glue or toilet paper to keep the space running smoothly, and without help it would not be possible!",
+ "image": "/images/man-pointing-min.png",
+ "body": "At Kzoo Makers, we operate in a uncoordinated but communal way. Our space thrives on the collective energy and dedication of our members and volunteers who give their time, skills, and enthusiasm to keep things running. There are no employees, no salaries, and no profit margins—just a community of makers helping makers.\n\nWe embrace the organized chaos that comes with a volunteer-run operation. While things might not always run with corporate precision, they run with heart. Every decision, every improvement, and every project is guided by our best intentions and our shared commitment to making the space better for everyone.",
+ "driveTitle": "What Drives Us",
+ "features": "Building lasting friendships\nStrengthening the community\nContinuously improving our space\nSharing knowledge and skills\nCreating an inclusive environment\nMaking stuff, no cap",
+ "buttonLabel": "Schedule a tour or sign up",
+ "buttonHref": "/tours",
+ "volTitle": "The Doers",
+ "volIntro": "Our volunteers are the heartbeat of Kzoo Makers. They dedicate their time, skills, and passion to keep our space running, teach workshops, maintain equipment, clean up and welcome new members and show them the ropes. Without their time, we wouldn't be here.",
+ "volunteers": [
+  {
+   "name": "Chris C",
+   "title": "TITLE REDACTED",
+   "color": "#000",
+   "bio": "Chris avoids titles, but functionally fills the gaps that keep everything running. He consistently steps in when something breaks, stalls before it becomes visible to anyone else. Whether it’s fixing equipment, handling logistics, or addressing operational gaps as they arise, Chris operates with a bias toward action rather than delegation.",
+   "photo": "/images/client-logo/chrisc2.jpg"
+  },
+  {
+   "name": "Jon K",
+   "title": "Chief Technology Officer",
+   "color": "#008080",
+   "bio": "Oversees the organization's website, internal software, operational tooling, and back-office systems. Leads RFID access control integration, technology solutions, network security, and management of the local area network. Along with being our digital janitor, he also takes out the trash and mops the floor from time to time.",
+   "photo": "/images/client-logo/jon2k.jpeg"
+  },
+  {
+   "name": "Brian I",
+   "title": "3D Printshop Leader",
+   "color": "#008080",
+   "bio": "Manages and maintains the makerspace's 3D printers, oversees printer scheduling and readiness, assists members with setup and troubleshooting, and supports responsible use of equipment. Acts as a technical resource for members' 3D printing needs and helps ensure reliable, safe, and accessible operation of the 3D printing area.",
+   "photo": "/images/client-logo/brian.jpeg"
+  },
+  {
+   "name": "Ryan R",
+   "title": "Director of Too Many Hats",
+   "color": "#008080",
+   "bio": "Ryan does it all—signups, tours, equipment fixes, operations, safety, you name it. Honestly, he's wearing way too many hats and could use some backup. If you want to help lighten his load, we'd all appreciate it.",
+   "photo": "/images/client-logo/ryanr2.webp"
+  },
+  {
+   "name": "Meredith K",
+   "title": "Cosplay Meetup Coordinator",
+   "color": "#008080",
+   "bio": "An avid cosplayer and costume designer, Meredith brings creativity and community together. She manages our Cosplay Connections Meetup, helping fellow cosplayers connect, share techniques, and bring their favorite characters to life.",
+   "photo": "/images/client-logo/maredith.webp"
+  },
+  {
+   "name": "Scott C",
+   "title": "Building Coordinator",
+   "color": "#008080",
+   "bio": "Scott brings extensive experience in facility build-outs and general construction. He has advised us on significant work across the space, including framing, lighting, electrical. His contributions have been central to upgrading the facility and coordinating the work needed to make it operational.",
+   "photo": "/images/client-logo/scott2.jpg"
+  },
+  {
+   "name": "Needed",
+   "title": "Tour Coordinator",
+   "color": "",
+   "bio": "Love showing off cool spaces? Respond to tour requests and welcome visitors to our makerspace. Share your enthusiasm, answer questions, and help potential members discover what we're all about.",
+   "photo": "/images/clipart/silo-female2.webp"
+  },
+  {
+   "name": "Needed",
+   "title": "Grant Writer",
+   "color": "",
+   "bio": "Strong writer with a knack for storytelling? Help us secure funding by researching and writing grant applications. Your words can help us acquire new equipment and expand our programs.",
+   "photo": "/images/clipart/silo-man2.webp"
+  },
+  {
+   "name": "Needed",
+   "title": "Photography / Media Archivist",
+   "color": "",
+   "bio": "Got an eye for photography or video? Capture the amazing projects and moments at our space. Create content for social media, our website, and marketing materials that showcase what makes us special.",
+   "photo": "/images/clipart/silo-female3.webp"
+  },
+  {
+   "name": "Needed",
+   "title": "Member Retention Coordinator",
+   "color": "",
+   "bio": "Social butterfly who loves bringing people together? Plan fun events, build community recognition programs, and create opportunities for members to connect. Keep our community engaged and growing.",
+   "photo": "/images/clipart/silo-man3.webp"
+  },
+  {
+   "name": "Needed",
+   "title": "Welding Lead",
+   "color": "",
+   "bio": "Know how to weld? We have all the equipment but need someone to teach it! Lead our welding area, ensure safe practices, and help members learn MIG, TIG, and stick welding techniques.",
+   "photo": "/images/clipart/silo-man2.webp"
+  },
+  {
+   "name": "Needed",
+   "title": "Ceramics Lead",
+   "color": "",
+   "bio": "Pottery enthusiast? Help us launch our ceramics program! We're planning to acquire a kiln and need someone to lead this new area, teach techniques, and build a community of clay artists.",
+   "photo": "/images/clipart/silo-female1.webp"
+  },
+  {
+   "name": "Needed",
+   "title": "Woodshop Workshop Lead",
+   "color": "",
+   "bio": "Love the smell of sawdust? Help members safely use our table saws, jointers, and routers. Share your woodworking knowledge, keep tools sharp and maintained, and create a welcoming environment for beginners and experts alike.",
+   "photo": "/images/clipart/silo-man1.webp"
+  },
+  {
+   "name": "Needed",
+   "title": "Metal Workshop Lead",
+   "color": "",
+   "bio": "Got metalworking skills? Help members learn to use our mills, lathes, and grinders safely. Maintain equipment, troubleshoot projects, and share your expertise with those looking to work with metal for the first time.",
+   "photo": "/images/clipart/silo-man2.webp"
+  },
+  {
+   "name": "Needed",
+   "title": "Laser Workshop Lead",
+   "color": "",
+   "bio": "Know your way around laser cutters? Help members prepare files, choose materials, and create amazing projects. Keep our lasers calibrated and clean, and teach safe operation to new users.",
+   "photo": "/images/clipart/silo-female1.webp"
+  },
+  {
+   "name": "Needed",
+   "title": "CNC Workshop Lead",
+   "color": "",
+   "bio": "CNC experience? Help members navigate CAM software, generate toolpaths, and bring their designs to life. Maintain our CNC equipment, manage bits and tools, and ensure everyone operates safely.",
+   "photo": "/images/clipart/silo-man3.webp"
+  },
+  {
+   "name": "Needed",
+   "title": "Safety Officer",
+   "color": "",
+   "bio": "Safety-minded? Help us keep everyone protected by developing safety policies, conducting audits, and ensuring proper signage and PPE are available. Coordinate training sessions and help create a culture of safety first.",
+   "photo": "/images/clipart/silo-female2.webp"
+  },
+  {
+   "name": "Needed",
+   "title": "Inventory Manager",
+   "color": "",
+   "bio": "Love organization? Keep track of our consumables, tools, and supplies. Coordinate donations, maintain stock levels, and create systems that help everyone find what they need when they need it.",
+   "photo": "/images/clipart/silo-man1.webp"
+  },
+  {
+   "name": "Needed",
+   "title": "Facilities Maintenance Coordinator",
+   "color": "",
+   "bio": "Handy with building systems? Keep our space running smoothly by handling HVAC, plumbing, and electrical issues. Coordinate repairs and maintenance to ensure our facility stays functional and comfortable for all members.",
+   "photo": "/images/clipart/silo-man2.webp"
+  },
+  {
+   "name": "Needed",
+   "title": "Community Outreach Coordinator",
+   "color": "",
+   "bio": "Love connecting with people? Build partnerships with schools, libraries, and local organizations. Represent us at community events and develop programs that bring new makers into our space.",
+   "photo": "/images/clipart/silo-female3.webp"
+  },
+  {
+   "name": "Needed",
+   "title": "Donation Coordinator",
+   "color": "",
+   "bio": "Good with people and paperwork? Manage equipment and monetary donations, work with generous donors, handle tax documentation, and evaluate what donations will best serve our community.",
+   "photo": "/images/clipart/silo-man3.webp"
+  },
+  {
+   "name": "Needed",
+   "title": "Textile/Sewing Workshop Lead",
+   "color": "",
+   "bio": "Passionate about fabric arts? Help members use our sewing machines, sergers, and embroidery equipment. Teach textile skills, maintain equipment, and build a welcoming community for sewers and crafters of all levels.",
+   "photo": "/images/clipart/silo-female1.webp"
+  },
+  {
+   "name": "Needed",
+   "title": "Volunteer Coordinator",
+   "color": "",
+   "bio": "Great at organizing people? Recruit new volunteers, schedule shifts, track hours, and make sure everyone has the support and resources they need to make a real impact at our makerspace.",
+   "photo": "/images/clipart/silo-man1.webp"
+  },
+  {
+   "name": "Needed",
+   "title": "Electronics Lead",
+   "color": "",
+   "bio": "Passionate about electronics? Start Arduino classes, teach soldering skills, and build our electronics program from the ground up. Help members bring their electronic projects to life.",
+   "photo": "/images/clipart/silo-man3.webp"
+  },
+  {
+   "name": "Needed",
+   "title": "Robotics Club Volunteer",
+   "color": "",
+   "bio": "Passionate about robotics? Help coordinate our robotics club activities, mentor members on robot building and programming, and foster a community of robotics enthusiasts. Share your knowledge and inspire the next generation of makers.",
+   "photo": "/images/clipart/silo-man2.webp"
+  },
+  {
+   "name": "Needed",
+   "title": "Marketing & PR Assistant",
+   "color": "",
+   "bio": "Social media savvy? Help with social media management, community outreach, and promoting the space. Create engaging content, build our online presence, and help spread the word about what makes our makerspace special.",
+   "photo": "/images/clipart/silo-female2.webp"
+  },
+  {
+   "name": "Needed",
+   "title": "\"Teach Kids How to Sew\" Instructor",
+   "color": "",
+   "bio": "Love working with kids and sewing? Teach beginner sewing classes for children using our sewing machines. Create a fun, safe learning environment where young makers can develop practical skills and creativity through fabric arts.",
+   "photo": "/images/clipart/silo-female1.webp"
+  },
+  {
+   "name": "Needed",
+   "title": "Jewelry & Glass Instructor",
+   "color": "",
+   "bio": "Experienced in jewelry making or glass art? Share your expertise by teaching classes and workshops. Help members learn techniques like beading, metalsmithing, glass fusing, or stained glass, and build a vibrant community of artisans.",
+   "photo": "/images/clipart/silo-man3.webp"
+  },
+  {
+   "name": "Needed",
+   "title": "Leatherworking Instructor",
+   "color": "",
+   "bio": "Skilled in leathercraft? Teach members leather tooling, stitching, dyeing, and creating items like wallets, belts, bags, and other leather goods. Share traditional and modern leatherworking techniques with aspiring artisans.",
+   "photo": "/images/clipart/silo-man1.webp"
+  },
+  {
+   "name": "Needed",
+   "title": "Woodturning Instructor",
+   "color": "",
+   "bio": "Experienced with the lathe? Teach members the art of woodturning to create bowls, pens, spindles, and decorative wooden items. Share your expertise in this specialized craft and help others discover the beauty of turned wood.",
+   "photo": "/images/clipart/silo-female3.webp"
+  }
+ ],
+ "seekTitle": "Want to do someting?",
+ "seekText": "We're always looking for passionate individuals to join our volunteer team! If you have willingness to help, we'd love to hear from you.",
+ "seekLabel": "Contact Us to Volunteer",
+ "seekHref": "/contact",
+ "ctaTitle": "Meet Our Board of Directors",
+ "ctaText": "The Board sets the vision, sustainability, and growth of this non-profit. They manage finances, safety policies, insurance and other business related operations required for sustainability, working to ensure the space remains available, innovative, and collaborative.",
+ "ctaLabel": "View Board of Directors",
+ "ctaHref": "/board",
+ "ctaImage": "images/about/emptyboardroom.jpg"
+}

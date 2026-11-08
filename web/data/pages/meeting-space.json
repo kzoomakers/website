@@ -1,0 +1,37 @@
+{
+ "root": {
+  "props": {
+   "title": "Meeting Space - Host Events & Workshops | Kalamazoo Makerspace",
+   "description": "Host meetings, workshops, and events at Kalamazoo Makerspace. Free meeting space for members hosting maker-focused events, learning functions, and community gatherings.",
+   "bare": false,
+   "inline": [],
+   "bodyClass": "",
+   "refresh": "",
+   "css": "",
+   "styles": [],
+   "scripts": []
+  }
+ },
+ "content": [
+  {
+   "type": "PageHeader",
+   "props": {
+    "id": "PageHeader-161",
+    "title": "Meeting Space",
+    "tag": "h1",
+    "crumb": "Meeting Space",
+    "subtitle": "",
+    "subtitleTag": "h5",
+    "trail": []
+   }
+  },
+  {
+   "type": "Guided",
+   "props": {
+    "id": "Guided-1",
+    "kind": "meeting-space"
+   }
+  }
+ ],
+ "zones": {}
+}

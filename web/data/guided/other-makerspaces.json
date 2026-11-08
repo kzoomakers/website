@@ -1,0 +1,107 @@
+{
+ "title": "Connect with Other Michigan Makerspaces",
+ "intro": "Michigan has a growing ecosystem of makerspaces, hackerspaces, and community workshops. If you travel, move, or want to collaborate with other groups, this list is a good place to start.",
+ "groups": [
+  {
+   "title": "Community & Independent Makerspaces",
+   "spaces": [
+    {
+     "city": "Ann Arbor",
+     "name": "All Hands Active",
+     "url": "https://allhandsactive.org/"
+    },
+    {
+     "city": "Ann Arbor",
+     "name": "Maker Works",
+     "url": "https://www.maker-works.com/"
+    },
+    {
+     "city": "Detroit",
+     "name": "Brightmoor Makerspace",
+     "url": "https://brightmoormakerspace.org/"
+    },
+    {
+     "city": "Ferndale",
+     "name": "i3Detroit",
+     "url": "http://www.i3detroit.org/"
+    },
+    {
+     "city": "Flint",
+     "name": "Factory Two",
+     "url": "http://factorytwo.org/"
+    },
+    {
+     "city": "Grand Rapids",
+     "name": "Grand River Makerspace",
+     "url": "https://www.grandrivermakerspace.org/"
+    },
+    {
+     "city": "Houghton",
+     "name": "MTU Makerspace",
+     "url": "https://www.makerspace.mtu.edu/"
+    },
+    {
+     "city": "Houghton",
+     "name": "MTU ECE Makerspace",
+     "url": "https://www.makerspace.ece.mtu.edu/"
+    },
+    {
+     "city": "Jackson",
+     "name": "Jackson Makerspace",
+     "url": "https://www.jacksonmakerspace.net/"
+    },
+    {
+     "city": "Lansing",
+     "name": "Lansing Makers Network",
+     "url": "https://www.lansingmakersnetwork.org/"
+    },
+    {
+     "city": "Marquette",
+     "name": "MAPS Makerspace",
+     "url": "https://united.mapsmakerspace.org/"
+    },
+    {
+     "city": "Muskegon",
+     "name": "Lakeshore Fab Lab",
+     "url": "http://www.lakeshorefablab.com/"
+    },
+    {
+     "city": "Port Huron",
+     "name": "FORGE Makerspace",
+     "url": "https://www.theforgeph.com/"
+    },
+    {
+     "city": "Troy",
+     "name": "Open Workshops",
+     "url": "https://www.open-workshops.com/"
+    }
+   ]
+  },
+  {
+   "title": "City-Affiliated & Library Makerspaces",
+   "spaces": [
+    {
+     "city": "Farmington Hills",
+     "name": "The Hawk Makerspace",
+     "url": "https://www.fhgov.com/makerspace"
+    },
+    {
+     "city": "Kalamazoo",
+     "name": "Idea Lab (Kalamazoo Public Library)",
+     "url": "https://www.kpl.gov/idea-lab"
+    },
+    {
+     "city": "Novi",
+     "name": "iCube Makerspace (Novi Public Library)",
+     "url": "https://www.novilibrary.org/icube/"
+    },
+    {
+     "city": "Portage",
+     "name": "Creation Station (Portage District Library)",
+     "url": "https://www.portagelibrary.info/creation-station/"
+    }
+   ]
+  }
+ ],
+ "note": "Kzoo Makers has no affiliation to these organizations. This list is provided as a community resource. Links may change over time; please check each makerspace’s website for the most current information."
+}

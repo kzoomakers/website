@@ -1,0 +1,172 @@
+{
+ "galleryTitle": "",
+ "galleryText": "",
+ "slides": [
+  {
+   "image": "/images/meeting-space/meeting_1.webp",
+   "alt": "Metal Shop Equipment",
+   "caption": ""
+  },
+  {
+   "image": "/images/meeting-space/meeting_2.webp",
+   "alt": "Metal Shop Equipment",
+   "caption": ""
+  },
+  {
+   "image": "/images/meeting-space/meeting_3.webp",
+   "alt": "Metal Shop Equipment",
+   "caption": ""
+  },
+  {
+   "image": "/images/meeting-space/meeting_4.webp",
+   "alt": "Metal Shop Equipment",
+   "caption": ""
+  }
+ ],
+ "sections": [
+  {
+   "look": "Columns of text",
+   "background": "White",
+   "title": "Host Your Event at Kalamazoo Makerspace",
+   "intro": "Members can use our facility for meetings, workshops, and events at no additional cost. We welcome any function that promotes a maker spirit or learning.",
+   "columns": "2",
+   "items": [
+    {
+     "icon": "none",
+     "heading": "Meeting Space Features",
+     "text": "- **No Additional Cost** - Free for members hosting approved events\n- **Flexible Space** - Accommodates various group sizes and setups\n- **Tables & Chairs** - Comfortable seating for meetings and workshops\n- **WiFi Access** - High-speed internet for presentations and collaboration\n- **Projector & Screen** - Professional projection system for presentations and workshops\n- **Presentation Equipment** - Everything you need for demonstrations and talks\n- **Parking Available** - Convenient parking for attendees\n- **Accessible Location** - Easy to find in Kalamazoo"
+    },
+    {
+     "icon": "none",
+     "heading": "Current Regular Groups",
+     "text": "- **Fiber Arts Group** - Knitting, crocheting, and textile crafts enthusiasts meet regularly\n- **Kalamazoo Linux Users Group** - Open source technology discussions and learning\n- **Maker Workshops** - Various skill-building sessions and demonstrations\n- **Community Meetups** - Tech talks, project showcases, and networking\n\n**Want to start your own group?** We welcome new regular meetups that align with our maker and learning mission!"
+    }
+   ],
+   "buttons": []
+  },
+  {
+   "look": "Columns of text",
+   "background": "White",
+   "title": "",
+   "intro": "",
+   "columns": "1",
+   "items": [
+    {
+     "icon": "none",
+     "heading": "Perfect for Maker-Focused Events",
+     "text": "Kalamazoo Makerspace provides an ideal venue for events that promote creativity, learning, and community. Whether you're organizing a workshop to teach a new skill, hosting a user group meeting, planning a craft circle, or running a technical presentation, our space is available to members at no additional cost.\n\nWe've hosted a diverse range of events including our regular fiber arts group where members gather for knitting, crocheting, and other textile crafts, as well as the Kalamazoo Linux Users Group for open source technology discussions. These regular meetups have become valued parts of our community, bringing together people with shared interests in a welcoming, creative environment.\n\nOur facility is equipped to support various types of gatherings, from intimate group meetings to larger workshops and demonstrations. The space is flexible and can be arranged to suit your event's needs, whether that's classroom-style seating for a workshop, round tables for collaborative work, or an open layout for demonstrations and hands-on activities."
+    }
+   ],
+   "buttons": []
+  },
+  {
+   "look": "Columns of text",
+   "background": "White",
+   "title": "",
+   "intro": "",
+   "columns": "1",
+   "items": [
+    {
+     "icon": "none",
+     "heading": "Event Guidelines & Approval",
+     "text": "We welcome events that promote a maker spirit, learning, creativity, and community building. To ensure the best experience for all members and maintain our facility, all events are subject to prior approval.\n\n- Events must be approved in advance by contacting our volunteer staff or board\n- Priority is given to events that align with maker culture, education, and skill-sharing\n- Events may be rejected or cancelled at any time at the discretion of volunteer staff or the board\n- Event organizers are responsible for setup, cleanup, and ensuring participants follow makerspace rules\n- Commercial events or sales-focused activities may not be permitted\n- Space availability is subject to makerspace operations and other scheduled activities"
+    }
+   ],
+   "buttons": []
+  },
+  {
+   "look": "Centered call-to-action",
+   "background": "White",
+   "title": "",
+   "intro": "",
+   "columns": "1",
+   "items": [
+    {
+     "icon": "none",
+     "heading": "Ready to Host Your Event?",
+     "text": "Contact us to discuss your event idea and get approval to use our meeting space."
+    }
+   ],
+   "buttons": [
+    {
+     "label": "Contact Us About Events",
+     "href": "/contact"
+    },
+    {
+     "label": "Become a Member",
+     "href": "/pricing"
+    }
+   ]
+  },
+  {
+   "look": "Icon cards",
+   "background": "Grey",
+   "title": "Types of Events We Welcome",
+   "intro": "",
+   "columns": "3",
+   "items": [
+    {
+     "icon": "people",
+     "heading": "Workshops & Classes",
+     "text": "Teach skills, share knowledge, and help others learn new techniques in any maker discipline."
+    },
+    {
+     "icon": "laptop",
+     "heading": "User Groups & Meetups",
+     "text": "Technology groups, craft circles, and special interest communities are welcome to meet regularly."
+    },
+    {
+     "icon": "idea",
+     "heading": "Demonstrations & Talks",
+     "text": "Share your projects, give presentations, or demonstrate techniques to inspire and educate others."
+    }
+   ],
+   "buttons": []
+  },
+  {
+   "look": "Columns of text",
+   "background": "White",
+   "title": "Frequently Asked Questions",
+   "intro": "",
+   "columns": "1",
+   "items": [
+    {
+     "icon": "none",
+     "heading": "Do I need to be a member to host an event?",
+     "text": "Yes, event organizers must be current members of Kalamazoo Makerspace. However, your event attendees do not need to be members."
+    },
+    {
+     "icon": "none",
+     "heading": "Is there a cost to use the meeting space?",
+     "text": "No! Members can use the meeting space at no additional cost for approved events that promote maker culture, learning, or community building."
+    },
+    {
+     "icon": "none",
+     "heading": "How do I get my event approved?",
+     "text": "Contact our volunteer staff or board with details about your proposed event, including the purpose, expected attendance, and preferred dates. We'll review and respond to your request."
+    },
+    {
+     "icon": "none",
+     "heading": "Can I host a regular recurring meeting?",
+     "text": "Absolutely! We love regular groups like our fiber arts and Linux users groups. Contact us to discuss scheduling for recurring events."
+    },
+    {
+     "icon": "none",
+     "heading": "What types of events are not allowed?",
+     "text": "We generally don't permit purely commercial events, sales presentations, or activities that don't align with our maker and learning mission. When in doubt, contact us to discuss your event idea."
+    },
+    {
+     "icon": "none",
+     "heading": "Can attendees use the makerspace equipment during my event?",
+     "text": "Equipment access depends on the nature of your event and must be discussed during the approval process. All equipment users must be trained and follow safety protocols."
+    },
+    {
+     "icon": "none",
+     "heading": "What if I need to cancel my event?",
+     "text": "Please notify us as soon as possible if you need to cancel or reschedule. This helps us make the space available for other members and activities."
+    }
+   ],
+   "buttons": []
+  }
+ ]
+}

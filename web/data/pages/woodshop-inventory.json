@@ -1,0 +1,54 @@
+{
+ "root": {
+  "props": {
+   "title": "Woodshop Inventory - Complete Equipment List | Kalamazoo Makerspace",
+   "description": "Complete inventory list of all woodworking equipment and tools available at Kalamazoo Makerspace wood shop.",
+   "bare": false,
+   "inline": [
+    {
+     "code": "\n  // Initialize the inventory table with tool data\n  document.addEventListener('DOMContentLoaded', function() {\n    const inventory = new InventoryTable({\n      jsonPath: 'dynamic/json/inventory-woodshop.json',\n      tableId: 'inventoryTable',\n      searchInputId: 'searchInput',\n      statsConfig: {\n        totalItems: 'total-items',\n        totalQuantity: 'total-quantity',\n        typeCounts: 'type-counts-container'\n      },\n      typeCountsConfig: {\n        enabled: true,\n        minCount: 10\n      },\n      columns: ['quantity', 'description', 'type'],\n      columnHeaders: {\n        quantity: 'Quantity',\n        description: 'Item Description',\n        type: 'Type of Tool'\n      },\n      onLoad: function(data) {\n        console.log('Woodshop inventory loaded:', data.length, 'items');\n      }\n    });\n    \n    // Setup toggle button\n    const toggleBtn = document.getElementById('toggle-type-counts');\n    if (toggleBtn) {\n      toggleBtn.addEventListener('click', function() {\n        inventory.toggleTypeCounts();\n      });\n    }\n    \n    // Setup min count slider\n    const minCountSlider = document.getElementById('min-count-slider');\n    const minCountValue = document.getElementById('min-count-value');\n    \n    if (minCountSlider && minCountValue) {\n      // Update display and filter on slider input\n      minCountSlider.addEventListener('input', function() {\n        minCountValue.textContent = this.value;\n        inventory.updateMinCount(this.value);\n      });\n    }\n  });\n"
+    }
+   ],
+   "bodyClass": "",
+   "refresh": "",
+   "css": "",
+   "styles": [
+    {
+     "href": "css/inventory.css"
+    }
+   ],
+   "scripts": [
+    {
+     "src": "dynamic/js/inventory.js"
+    }
+   ]
+  }
+ },
+ "content": [
+  {
+   "type": "PageHeader",
+   "props": {
+    "id": "PageHeader-430",
+    "title": "Woodshop Inventory",
+    "tag": "h1",
+    "crumb": "Inventory",
+    "subtitle": "",
+    "subtitleTag": "h5",
+    "trail": [
+     {
+      "label": "Wood Shop",
+      "href": "/wood-shop"
+     }
+    ]
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-431",
+    "html": "<section class=\"inventory-section\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center mb-5\">\n      <div class=\"col-lg-8\">\n        <div class=\"title text-center\">\n          <h2>Complete Equipment Inventory</h2>\n          <p>Browse our comprehensive list of woodworking tools and equipment. Use the search box to quickly find specific items.</p>\n          <div class=\"border\"></div>\n        </div>\n      </div>\n    </div>\n\n    <div class=\"row\">\n      <div class=\"col-12\">\n        <div class=\"inventory-stats\">\n          <div class=\"stat-card\">\n            <div class=\"stat-number\" id=\"total-items\">0</div>\n            <div class=\"stat-label\">Total Items</div>\n          </div>\n          <div class=\"stat-card\">\n            <div class=\"stat-number\" id=\"total-quantity\">0</div>\n            <div class=\"stat-label\">Total Quantity</div>\n          </div>\n        </div>\n        \n        <!-- Type Counts Section -->\n        <div class=\"type-counts-section\">\n          <div class=\"type-counts-controls\">\n            <h3 class=\"type-counts-title\" style=\"margin: 0;\">MAJOR TOOL TYPES</h3>\n            <div style=\"display: flex; gap: 15px; align-items: center; flex-wrap: wrap;\">\n              <div class=\"cutoff-control\">\n                <label for=\"min-count-slider\">Min Count:</label>\n                <input type=\"range\" id=\"min-count-slider\" value=\"10\" min=\"1\" max=\"100\" step=\"1\">\n                <span id=\"min-count-value\" class=\"slider-value\">10</span>\n              </div>\n              <button id=\"toggle-type-counts\" class=\"toggle-btn\">▼ Hide Major Tool Types</button>\n            </div>\n          </div>\n          <div id=\"type-counts-container\" class=\"type-counts-container\">\n            <!-- Type counts will be dynamically populated -->\n          </div>\n        </div>\n        \n        <div class=\"text-center mb-4\">\n          <input type=\"text\" id=\"searchInput\" class=\"search-box\" placeholder=\"🔍 Search inventory...\">\n        </div>\n        \n        <div class=\"inventory-table-wrapper\">\n          <div class=\"table-container\">\n            <div class=\"inventory-table\">\n          <table id=\"inventoryTable\">\n            <!-- Table will be dynamically populated by inventory.js -->\n          </table>\n            </div>\n          </div>\n        </div>\n\n        <div class=\"text-center mt-5\">\n          <a href=\"/wood-shop\" class=\"btn btn-main\">← Back to Wood Shop</a>\n          <a href=\"/pricing\" class=\"btn btn-main ml-2\">View Membership Options</a>\n        </div>\n      </div>\n    </div>\n  </div>\n</section>"
+   }
+  }
+ ],
+ "zones": {}
+}

@@ -1,0 +1,41 @@
+{
+ "root": {
+  "props": {
+   "title": "Board of Directors - Kzoo Makers",
+   "description": "Meet the Kzoo Makers Board of Directors - Our volunteer board members who guide Kalamazoo's nonprofit makerspace. Learn about our President, Treasurer, Secretary, and board members dedicated to supporting makers and innovation.",
+   "bare": false,
+   "inline": [],
+   "bodyClass": "",
+   "refresh": "",
+   "css": "",
+   "styles": [],
+   "scripts": []
+  }
+ },
+ "content": [
+  {
+   "type": "PageHeader",
+   "props": {
+    "id": "PageHeader-9",
+    "title": "Board of Directors",
+    "tag": "h2",
+    "crumb": "Board of Directors",
+    "subtitle": "",
+    "subtitleTag": "h5",
+    "trail": [
+     {
+      "label": "Team",
+      "href": "/team"
+     }
+    ]
+   }
+  },
+  {
+   "type": "BoardMembers",
+   "props": {
+    "id": "BoardMembers-10"
+   }
+  }
+ ],
+ "zones": {}
+}

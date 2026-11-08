@@ -1,0 +1,25 @@
+{
+ "root": {
+  "props": {
+   "title": "Loading Form - Kzoo Makers",
+   "description": "Redirecting to visitor packet form - Kzoo Makers",
+   "bare": false,
+   "inline": [],
+   "bodyClass": "body-redirect",
+   "refresh": "3;url=https://sign.kzoomakers.org/d/g7LyS2n715ybpN",
+   "css": "\n    .body-redirect {\n       background-color: black;\n       color: white;\n       font-family: sans-serif;\n    }\n\n    .page-redirect-custom {\n        min-height: 80vh;\n        display: flex;\n        flex-direction: column;\n        align-items: center;\n        justify-content: center;\n    }\n\n    .loading-msg {\n       text-align: center;\n    }\n\n    .loading-msg img {\n        max-width: 200px;\n        width: 100%;\n        height: auto;\n        margin-bottom: 30px;\n    }\n\n    .loading-msg h1 {\n        font-family: \"Courier New\", Courier, monospace;\n        font-size: 3rem;\n        color: #FFFFFF;\n        margin-bottom: 20px;\n    }\n\n    .loading-msg p {\n        font-family: \"Courier New\", Courier, monospace;\n        font-size: 1.25rem;\n        color: #CCCCCC;\n        opacity: 1;\n    }\n\n    /* Simple loading animation */\n    .spinner {\n        border: 4px solid rgba(255, 255, 255, 0.3);\n        border-top: 4px solid #FFFFFF;\n        border-radius: 50%;\n        width: 50px;\n        height: 50px;\n        animation: spin 1s linear infinite;\n        margin: 20px auto;\n    }\n\n    @keyframes spin {\n        0% { transform: rotate(0deg); }\n        100% { transform: rotate(360deg); }\n    }\n  ",
+   "styles": [],
+   "scripts": []
+  }
+ },
+ "content": [
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-35",
+    "html": "<section class=\"page-redirect-custom section text-center\">\n    <div class=\"container\">\n        <div class=\"row\">\n            <div class=\"col-md-12\">\n                <div class=\"loading-msg\">\n                    <img src=\"/images/clipart/form.webp\" alt=\"Form Icon\">\n                    <h1>Loading form...</h1>\n                    <div class=\"spinner\"></div>\n                    <p>You will be redirected to the form in 3 seconds.</p>\n                    <p style=\"margin-top: 20px;\">\n                        <a href=\"https://sign.kzoomakers.org/d/g7LyS2n715ybpN\" style=\"color: #4A90E2; text-decoration: underline;\">\n                            Click here if you are not redirected automatically\n                        </a>\n                    </p>\n                </div>\n            </div>\n        </div>\n    </div>\n</section>"
+   }
+  }
+ ],
+ "zones": {}
+}

@@ -1,0 +1,62 @@
+.cm{--cm-line:rgba(127,127,127,.28);--cm-soft:rgba(127,127,127,.1);--cm-mute:rgba(127,127,127,.95);--cm-acc:var(--primary,#d6336c);margin-top:48px;font-size:16px;line-height:1.55}
+.cm-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}
+.cm-head h3{margin:0}
+.cm-sort{display:inline-flex;border:1px solid var(--cm-line);border-radius:999px;padding:3px;gap:2px}
+.cm-sort button{border:0;background:none;color:inherit;font:inherit;font-size:13px;padding:4px 12px;border-radius:999px;cursor:pointer}
+.cm-sort button[aria-pressed=true]{background:var(--cm-acc);color:#fff}
+.cm button:focus-visible,.cm textarea:focus-visible,.cm a:focus-visible{outline:2px solid var(--cm-acc);outline-offset:2px}
+.cm-av{flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px;user-select:none}
+.cm-composer{display:flex;gap:12px;align-items:flex-start;margin-bottom:24px}
+.cm-composer form{flex:1;min-width:0}
+.cm-box{border:1px solid var(--cm-line);border-radius:12px;transition:border-color .15s,box-shadow .15s;background:transparent}
+.cm-box:focus-within{border-color:var(--cm-acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--cm-acc) 18%,transparent)}
+.cm-box textarea{display:block;width:100%;border:0;background:transparent;color:inherit;font:inherit;resize:none;padding:10px 12px;min-height:44px;max-height:320px;outline:0!important;box-shadow:none!important}
+.cm-bar{display:flex;align-items:center;gap:10px;justify-content:flex-end;padding:6px 8px 8px}
+.cm-bar small{margin-right:auto;color:var(--cm-mute);font-size:12px}
+.cm-bar small.warn{color:#c0392b}
+.cm-btn{border:0;border-radius:999px;font:inherit;font-size:14px;font-weight:600;padding:6px 18px;cursor:pointer;background:var(--cm-acc);color:#fff;transition:opacity .15s,transform .1s}
+.cm-btn:active{transform:scale(.97)}
+.cm-btn:disabled{opacity:.4;cursor:default}
+.cm-btn.ghost{background:none;color:inherit;font-weight:500}
+.cm-err{color:#c0392b;font-size:14px;margin:6px 2px 0}
+.cm-hp{position:absolute!important;left:-9999px;width:1px;height:1px;overflow:hidden}
+.cm-cta{border:1px dashed var(--cm-line);border-radius:12px;padding:16px;text-align:center;margin-bottom:24px}
+.cm-empty{color:var(--cm-mute);text-align:center;padding:32px 0}
+
+.cm-node{position:relative;display:flex;gap:12px;padding-top:16px}
+.cm-node.new{animation:cm-in .35s ease-out}
+.cm-node.hit>.cm-main>.cm-card{animation:cm-flash 2.2s ease-out}
+.cm-rail{flex:none;display:flex;flex-direction:column;align-items:center;width:36px}
+.cm-line{flex:1;width:14px;margin-top:6px;border:0;background:none;padding:0;cursor:pointer;position:relative}
+.cm-line::after{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--cm-line);border-radius:2px;transition:background .15s,width .15s}
+.cm-line:hover::after,.cm-line:focus-visible::after{background:var(--cm-acc);width:3px;margin-left:-1.5px}
+.cm-main{flex:1;min-width:0}
+.cm-card{border-radius:10px;margin:-4px -8px;padding:4px 8px}
+.cm-meta{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;font-size:14px}
+.cm-meta strong{font-size:15px}
+.cm-meta time,.cm-meta .cm-in{color:var(--cm-mute);font-size:13px}
+.cm-badge{font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:1px 8px;border-radius:999px;background:var(--cm-acc);color:#fff}
+.cm-badge.soft{background:var(--cm-soft);color:var(--cm-mute)}
+.cm-body{white-space:pre-wrap;overflow-wrap:anywhere;margin:2px 0 0}
+.cm-removed .cm-body{color:var(--cm-mute);font-style:italic}
+.cm-acts{display:flex;gap:4px;margin:4px -8px 0}
+.cm-acts button{border:0;background:none;color:var(--cm-mute);font:inherit;font-size:13px;font-weight:600;padding:4px 8px;border-radius:999px;cursor:pointer;display:inline-flex;gap:5px;align-items:center;transition:background .15s,color .15s}
+.cm-acts button:hover{background:var(--cm-soft);color:inherit}
+.cm-acts button[aria-pressed=true]{color:var(--cm-acc)}
+.cm-acts svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2}
+.cm-acts button[aria-pressed=true] svg{fill:currentColor}
+.cm-pop svg{animation:cm-pop .3s ease-out}
+/* Depth keeps threads readable at any level: full avatar rail, then a slim rail, then no extra indent (with a "replying to" hint). */
+.cm-node.slim>.cm-rail{width:14px}.cm-node.slim>.cm-rail .cm-av{display:none}.cm-node.slim{gap:8px}
+.cm-node.flat>.cm-rail{display:none}.cm-node.flat{gap:0}
+.cm-node.flat>.cm-main{border-left:2px solid var(--cm-line);padding-left:10px}
+.cm-fold{border:1px solid var(--cm-line);background:none;color:inherit;font:inherit;font-size:13px;border-radius:999px;padding:3px 12px;cursor:pointer;margin-top:8px}
+.cm-fold:hover{background:var(--cm-soft)}
+.cm-reply{margin-top:10px;display:flex;gap:10px}
+.cm-reply form{flex:1;min-width:0}
+.cm-reply .cm-av{width:28px;height:28px;font-size:12px}
+@media (max-width:600px){.cm-rail{width:28px}.cm-av{width:28px;height:28px;font-size:12px}.cm-node{gap:8px}}
+@keyframes cm-in{from{opacity:0;transform:translateY(8px)}}
+@keyframes cm-flash{0%,40%{background:color-mix(in srgb,var(--cm-acc) 16%,transparent)}}
+@keyframes cm-pop{40%{transform:scale(1.35)}}
+@media (prefers-reduced-motion:reduce){.cm *{animation:none!important;transition:none!important}}

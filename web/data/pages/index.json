@@ -1,0 +1,116 @@
+{
+  "root": {
+    "props": {
+      "title": "Kzoo Makers",
+      "description": "Kalamazoo Makerspace - Community workshop in Kalamazoo, MI offering wood shop, metal shop, laser cutting, 3D printing, welding, and fabrication tools. Join our 501(c)(3) nonprofit makerspace for DIY projects, prototyping, and collaborative making. Equipment training, membership access, and community events available.",
+      "bare": false,
+      "inline": [
+        {
+          "code": "\n// The list is edited in the webmaster (Homepage > Animated words); it arrives as JSON on the typing container.\nvar words = [];\ntry { words = JSON.parse(document.querySelector('.typing-container').getAttribute('data-words')); } catch (e) {}\nif (!words.length) words = [''];\n\n// Fisher-Yates shuffle: randomize order when page loads\nfunction shuffleArray(arr) {\n    var a = arr.slice();\n    for (var j = a.length - 1; j > 0; j--) {\n        var k = Math.floor(Math.random() * (j + 1));\n        var t = a[j];\n        a[j] = a[k];\n        a[k] = t;\n    }\n    return a;\n}\nwords = shuffleArray(words);\n\nvar part,\ni = 0,\noffset = 0,\nlen = words.length,\nforwards = true,\nskip_count = 0,\nskip_delay = 15,\nspeed = 70;\n\nvar wordflick = function () {\n    setInterval(function () {\n        if (forwards) {\n            if (offset >= words[i].length) {\n                ++skip_count;\n                if (skip_count == skip_delay) {\n                    forwards = false;\n                    skip_count = 0;\n                }\n            }\n        }\n        else {\n            if (offset == 0) {\n                forwards = true;\n                i++;\n                offset = 0;\n                if (i >= len) {\n                    i = 0;\n                }\n            }\n        }\n        part = words[i].substr(0, offset);\n        if (skip_count == 0) {\n            if (forwards) {\n                offset++;\n            }\n            else {\n                offset--;\n            }\n        }\n        $('.word').text(part);\n    }, speed);\n};\n\n$(document).ready(function () {\n    wordflick();\n});\n"
+        },
+        {
+          "code": "\n$(document).ready(function() {\n    var rollingBall = $('#rolling-ball');\n    var targetImage = $('#questionmark-target');\n    var section = $('.what-is-makerspace');\n    var hasAnimated = false;\n    var animationInProgress = false;\n\n    // Target coordinates on the original 1920x1080 image\n    var targetCoordX = 1673;\n    var targetCoordY = 963;\n    var originalImageWidth = 1920;\n    var originalImageHeight = 1080;\n    \n    // Function to calculate and return the target position\n    function getTargetPosition() {\n        var sectionOffset = section.offset();\n        var targetOffset = targetImage.offset();\n        var currentImageWidth = targetImage.width();\n        var currentImageHeight = targetImage.height();\n        \n        // Calculate scale factor based on current image size vs original\n        var scaleX = currentImageWidth / originalImageWidth;\n        var scaleY = currentImageHeight / originalImageHeight;\n        \n        // Calculate the scaled target position within the image\n        var scaledTargetX = targetCoordX * scaleX;\n        var scaledTargetY = targetCoordY * scaleY;\n        \n        // Calculate end position relative to section\n        var endX = targetOffset.left + scaledTargetX - (rollingBall.width() / 2) - sectionOffset.left;\n        var endY = targetOffset.top + scaledTargetY - (rollingBall.height() / 2) - sectionOffset.top;\n        \n        return { x: endX, y: endY };\n    }\n    \n    // Function to snap ball to correct position on resize\n    function snapBallToPosition() {\n        if (hasAnimated && !animationInProgress) {\n            var pos = getTargetPosition();\n            rollingBall.css({\n                'left': pos.x + 'px',\n                'top': pos.y + 'px'\n            });\n        }\n    }\n    \n    function animateRollingBall() {\n        if (hasAnimated || animationInProgress) return;\n        \n        var sectionOffset = section.offset();\n        var sectionHeight = section.outerHeight();\n        var scrollTop = $(window).scrollTop();\n        var windowHeight = $(window).height();\n        \n        // Check if section is in view (at least 30% visible)\n        var sectionTop = sectionOffset.top;\n        var sectionBottom = sectionTop + sectionHeight;\n        var viewportBottom = scrollTop + windowHeight;\n        \n        if (viewportBottom > sectionTop + (sectionHeight * 0.3) && scrollTop < sectionBottom) {\n            animationInProgress = true;\n            \n            var pos = getTargetPosition();\n            var endX = pos.x;\n            var endY = pos.y;\n            \n            // Start position (off-screen left, same Y as end)\n            var startX = -100;\n            var startY = endY;\n            \n            // Calculate distance for rotation\n            var distance = endX - startX;\n            var ballCircumference = Math.PI * rollingBall.width();\n            var rotations = distance / ballCircumference;\n            var totalRotation = rotations * 360;\n            \n            // Set initial position\n            rollingBall.css({\n                'left': startX + 'px',\n                'top': startY + 'px',\n                'transform': 'translateX(0) rotate(0deg)',\n                'opacity': '1'\n            });\n            \n            // Animate the ball rolling\n            $({progress: 0}).animate({progress: 1}, {\n                duration: 2000,\n                easing: 'easeOutQuad',\n                step: function(progress) {\n                    var currentX = startX + (distance * progress);\n                    var currentRotation = totalRotation * progress;\n                    rollingBall.css({\n                        'left': currentX + 'px',\n                        'transform': 'rotate(' + currentRotation + 'deg)'\n                    });\n                },\n                complete: function() {\n                    hasAnimated = true;\n                    animationInProgress = false;\n                }\n            });\n        }\n    }\n    \n    // Add easing function if not available\n    if (!$.easing.easeOutQuad) {\n        $.easing.easeOutQuad = function(x, t, b, c, d) {\n            return -c *(t/=d)*(t-2) + b;\n        };\n    }\n    \n    // Listen for scroll events\n    $(window).on('scroll', function() {\n        animateRollingBall();\n    });\n    \n    // Listen for window resize to snap ball to new position\n    $(window).on('resize', function() {\n        snapBallToPosition();\n    });\n    \n    // Bounce animation variables\n    var isBouncing = false;\n    var bounceTimeout = null;\n    \n    // Click handler for bounce animation\n    rollingBall.on('click', function(e) {\n        e.preventDefault();\n        e.stopPropagation();\n        \n        // Don't start bouncing if already bouncing or if roll animation hasn't completed\n        if (isBouncing || !hasAnimated || animationInProgress) return;\n        \n        isBouncing = true;\n        var baseY = parseFloat(rollingBall.css('top'));\n        var currentRotation = 0;\n        var bounceCount = 0;\n        var maxBounces = 8 + Math.floor(Math.random() * 5); // 8-12 bounces\n        var bounceHeight = 40 + Math.random() * 30; // Initial bounce height 40-70px\n        var dampening = 0.7 + Math.random() * 0.15; // How much bounce reduces each time\n        \n        function doBounce() {\n            if (bounceCount >= maxBounces) {\n                // Animation complete, snap back to base position\n                rollingBall.css({\n                    'top': baseY + 'px',\n                    'transform': 'rotate(' + currentRotation + 'deg)'\n                });\n                isBouncing = false;\n                return;\n            }\n            \n            // Add randomness to each bounce\n            var thisHeight = bounceHeight * Math.pow(dampening, bounceCount);\n            thisHeight += (Math.random() - 0.5) * 10; // Add ±5px randomness\n            var duration = 150 + Math.random() * 50; // 150-200ms per half-bounce\n            \n            // Random rotation per bounce\n            var rotationChange = (Math.random() - 0.5) * 30; // ±15 degrees\n            \n            // Bounce up\n            $({progress: 0}).animate({progress: 1}, {\n                duration: duration,\n                easing: 'easeOutQuad',\n                step: function(progress) {\n                    var y = baseY - (thisHeight * Math.sin(progress * Math.PI));\n                    var rot = currentRotation + (rotationChange * progress);\n                    rollingBall.css({\n                        'top': y + 'px',\n                        'transform': 'rotate(' + rot + 'deg)'\n                    });\n                },\n                complete: function() {\n                    currentRotation += rotationChange;\n                    bounceCount++;\n                    // Small delay between bounces for more natural feel\n                    bounceTimeout = setTimeout(doBounce, 20 + Math.random() * 30);\n                }\n            });\n        }\n        \n        doBounce();\n    });\n    \n    // Also check on page load in case section is already visible\n    setTimeout(animateRollingBall, 500);\n});\n"
+        }
+      ],
+      "bodyClass": "",
+      "refresh": "",
+      "css": "\n    h1[data-duration-in] {\n      font-family: 'Caveat', cursive;\n      font-size: 75px;\n    }\n    \n    /* Apply Emilys Candy font to specific section headings */\n    .what-is-makerspace h2,\n    .about-2 h2,\n    .service-2 h2,\n    .wanna-tour h2,\n    .hours-section h2,\n    .blog h2,\n    .reviews-section h2 {\n      font-family: 'Emilys Candy', cursive;\n      font-size: 38px;\n    }\n    \n    /* Make question mark image smaller on mobile */\n    @media (max-width: 768px) {\n      .what-is-makerspace img {\n        max-width: 60%;\n        margin: 0 auto;\n        display: block;\n      }\n    }\n    \n    /* Rolling ball animation styles */\n    .what-is-makerspace {\n      position: relative;\n      overflow: hidden;\n    }\n    \n    .rolling-ball {\n      position: absolute;\n      width: 105px;\n      height: 105px;\n      z-index: 10;\n      pointer-events: auto;\n      cursor: pointer;\n      transform: translateX(-100px);\n      transition: none;\n    }\n    \n    .rolling-ball img {\n      width: 100%;\n      height: 100%;\n      object-fit: contain;\n    }\n    \n    @media (max-width: 768px) {\n      .rolling-ball {\n        width: 50px;\n        height: 50px;\n      }\n    }\n    \n    /* Tighten spacing between \"How our makerspace works\" title and content */\n    .about-2 .title {\n      margin-bottom: 20px;\n    }\n  r\n    .call-to-action-2 .container {\n      position: relative;\n      z-index: 1;\n    }\n    \n    .call-to-action-2 h2 {\n      position: relative;\n      z-index: 2;\n      color: #ffffff;\n      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);\n    }\n    \n    /* Tour section with wormhole background */\n    .wanna-tour {\n      position: relative;\n      overflow: hidden;\n      background-image: url('images/call-to-action/wormhole.gif');\n      background-size: cover;\n      background-position: center;\n      background-repeat: no-repeat;\n    }\n    \n    .wanna-tour .container {\n      position: relative;\n      z-index: 1;\n    }\n    \n    .wanna-tour h2,\n    .wanna-tour p,\n    .wanna-tour .btn {\n      position: relative;\n      z-index: 2;\n      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);\n    }\n    \n    /* Typing animation styles */\n    .typing-container {\n      margin-top: 30px;\n    }\n    .first-line {\n      margin-bottom: 15px;\n    }\n    .static-text {\n      color: white;\n      font: 700 normal 1.8em 'tahoma';\n      text-shadow: 3px 2px #222324, 2px 3px #222324, 2px 4px #222324;\n      display: inline-block;\n      margin-right: 10px;\n    }\n    .word {\n      display: inline-block;\n      color: #00ff00;\n      font: 400 normal 1.8em 'Courier New', monospace;\n      background-color: rgba(0, 100, 0, 0.3);\n      padding: 8px 15px;\n      border: 2px solid rgba(0, 150, 0, 0.5);\n      border-radius: 5px;\n      box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);\n      min-width: 200px;\n      text-align: left;\n    }\n    .second-line {\n      color: white;\n      font: 700 normal 1.5em 'tahoma';\n      text-shadow: 3px 2px #222324, 2px 3px #222324, 2px 4px #222324;\n      margin-top: 15px;\n    }\n    \n    @media (max-width: 768px) {\n      .static-text {\n        font-size: 1.2em;\n      }\n      .word {\n        font-size: 1.2em;\n        min-width: 150px;\n        padding: 6px 12px;\n      }\n      .second-line {\n        font-size: 1em;\n      }\n    }\n  ",
+      "styles": [
+        {
+          "href": "https://fonts.googleapis.com/css2?family=Caveat:wght@400..700&family=Emilys+Candy&family=Inter:wght@400;500;600;700&family=Permanent+Marker&display=swap"
+        }
+      ],
+      "scripts": []
+    }
+  },
+  "content": [
+    {
+      "type": "Guided",
+      "props": {
+        "id": "Guided-hero",
+        "kind": "index",
+        "part": "hero"
+      }
+    },
+    {
+      "type": "Guided",
+      "props": {
+        "id": "Guided-what",
+        "kind": "index",
+        "part": "what"
+      }
+    },
+    {
+      "type": "HtmlSection",
+      "props": {
+        "id": "HtmlSection-109",
+        "html": "<section class=\"call-to-action-2 section\">\n\t<div class=\"container\">\n\t\t<div class=\"row\">\n\t\t\t<div class=\"col-md-12 text-center\">\n\t\t\t\t<h2>A place where curiosity meets craftsmanship <br>for every maker to turn ideas into impact, together.</h2>\n\t\t\t</div>\n\t\t</div> \t\t<!-- End row -->\n\t</div>   \t<!-- End container -->\n</section>"
+      }
+    },
+    {
+      "type": "Guided",
+      "props": {
+        "id": "Guided-offer",
+        "kind": "index",
+        "part": "offer"
+      }
+    },
+    {
+      "type": "Guided",
+      "props": {
+        "id": "Guided-how",
+        "kind": "index",
+        "part": "how"
+      }
+    },
+    {
+      "type": "HtmlSection",
+      "props": {
+        "id": "HtmlSection-112",
+        "html": "<section class=\"wanna-tour section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-xl-6 col-lg-8 text-center\">\n\t\t\t\t<h2>Want a tour?</h2>\n\t\t\t\t<p>Tours are free and no pressure.<br>We like showing the space to new groups!</p>\n\t\t\t<br>\n\t\t\t\t<a href=\"/tours\" class=\"btn btn-main\">Tour Sign Up</a>\n\t\t\t\t<p><sub>* Please allow a few days to get scheduled with a volunteer</sub></p>\n\t\t\t</div>\n\t\t</div> <!-- End row -->\n\t</div> <!-- End container -->\n</section>"
+      }
+    },
+    {
+      "type": "HtmlSection",
+      "props": {
+        "id": "HtmlSection-113",
+        "html": "<section class=\"hours-section section-sm\" style=\"background-color: #f8f9fa;\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-xl-8 col-lg-10 text-center\">\n\t\t\t\t<div class=\"title\">\n\t\t\t\t\t<h2>Hours of Operation</h2>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t\t<div class=\"row justify-content-center mt-4\">\n\t\t\t<div class=\"col-lg-8 col-md-10\" id=\"hours-homepage-section\">\n\t\t\t\t<!-- Hours will be dynamically loaded by hours.js -->\n\t\t\t\t<div class=\"card shadow-sm\" style=\"border: none; border-radius: 10px;\">\n\t\t\t\t\t<div class=\"card-body text-center p-5\">\n\t\t\t\t\t\t<p>Loading hours...</p>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div> <!-- End container -->\n</section>"
+      }
+    },
+    {
+      "type": "ChipAnimation",
+      "props": {
+        "id": "ChipAnimation-1",
+        "label": "KZOO"
+      }
+    },
+    {
+      "type": "Counters",
+      "props": {
+        "id": "Counters-114"
+      }
+    },
+    {
+      "type": "LatestPosts",
+      "props": {
+        "id": "LatestPosts-115"
+      }
+    },
+    {
+      "type": "HtmlSection",
+      "props": {
+        "id": "HtmlSection-116",
+        "html": "<style>\n\t.reviews-section {\n\t\tfont-family: 'Inter', sans-serif;\n\t\tbackground-color: #0f172a;\n\t\tcolor: white;\n\t\tpadding: 5rem 0;\n\t}\n\n\t.gradient-text {\n\t\tbackground: linear-gradient(to right, #60a5fa, #a855f7);\n\t\t-webkit-background-clip: text;\n\t\tbackground-clip: text;\n\t\t-webkit-text-fill-color: transparent;\n\t\tcolor: transparent;\n\t}\n\n\t.review-container {\n\t\theight: 40rem;\n\t\toverflow: hidden;\n\t\tborder-radius: 1.5rem;\n\t\t-webkit-mask-image: linear-gradient(to bottom, transparent, white 20%, white 80%, transparent);\n\t\tmask-image: linear-gradient(to bottom, transparent, white 20%, white 80%, transparent);\n\t}\n\n\t.review-container-reverse {\n\t\t-webkit-mask-image: linear-gradient(to top, transparent, white 20%, white 80%, transparent);\n\t\tmask-image: linear-gradient(to top, transparent, white 20%, white 80%, transparent);\n\t}\n\n\t.review-card {\n\t\tbackground-color: #1f2937;\n\t\tborder: 1px solid #374151;\n\t\tborder-radius: 1rem;\n\t\tbox-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);\n\t\ttransition: transform 0.3s ease;\n\t\tpadding: 1.5rem;\n\t}\n\n\t.review-card:hover {\n\t\ttransform: scale(1.05);\n\t}\n\n\t.review-avatar {\n\t\twidth: 60px;\n\t\theight: 60px;\n\t\tborder-radius: 50%;\n\t\tobject-fit: cover;\n\t\tborder: 2px solid #60a5fa;\n\t}\n\n\t.stars {\n\t\tcolor: #fbbf24;\n\t}\n\n\t.text-gray-300 {\n\t\tcolor: #d1d5db;\n\t}\n\n\t.text-gray-400 {\n\t\tcolor: #9ca3af;\n\t}\n\n\t.text-gray-500 {\n\t\tcolor: #6b7280;\n\t}\n\n\t/* Define keyframes for the top-to-bottom scroll animation */\n\t@keyframes scroll-top-to-bottom {\n\t\t0% {\n\t\t\ttransform: translateY(0);\n\t\t}\n\n\t\t100% {\n\t\t\ttransform: translateY(-50%);\n\t\t}\n\t}\n\n\t/* Define keyframes for the bottom-to-top scroll animation */\n\t@keyframes scroll-bottom-to-top {\n\t\t0% {\n\t\t\ttransform: translateY(-50%);\n\t\t}\n\n\t\t100% {\n\t\t\ttransform: translateY(0);\n\t\t}\n\t}\n\n\t/* Class to apply the top-to-bottom animation */\n\t.animate-scroll-t2b {\n\t\tanimation: scroll-top-to-bottom 60s linear infinite;\n\t}\n\n\t/* Class to apply the bottom-to-top animation */\n\t.animate-scroll-b2t {\n\t\tanimation: scroll-bottom-to-top 60s linear infinite;\n\t}\n\n\t/* Utility class to pause the animation on hover */\n\t.reviews-wrapper:hover .group-hover-pause {\n\t\tanimation-play-state: paused;\n\t}\n\n\t@media (max-width: 767.98px) {\n\t\t.d-md-block {\n\t\t\tdisplay: none !important;\n\t\t}\n\t}\n\n\t@media (max-width: 991.98px) {\n\t\t.d-lg-block {\n\t\t\tdisplay: none !important;\n\t\t}\n\t}\n</style>"
+      }
+    },
+    {
+      "type": "Guided",
+      "props": {
+        "id": "Guided-reviews",
+        "kind": "index",
+        "part": "reviews"
+      }
+    }
+  ],
+  "zones": {}
+}

@@ -1,0 +1,51 @@
+{
+ "root": {
+  "props": {
+   "title": "Membership Agreement & Liability Waiver | Kalamazoo Makerspace",
+   "description": "Review the Kalamazoo Makerspace membership agreement and liability waiver before signing up. Understand membership terms, rules, and safety expectations.",
+   "bare": false,
+   "inline": [],
+   "bodyClass": "",
+   "refresh": "",
+   "css": "\n    .pdf-container {\n      width: 100%;\n      height: 800px;\n      border: 1px solid #ddd;\n      margin: 20px 0;\n    }\n    @media (max-width: 768px) {\n      .pdf-container {\n        height: 500px;\n      }\n    }\n  ",
+   "styles": [],
+   "scripts": []
+  }
+ },
+ "content": [
+  {
+   "type": "PageHeader",
+   "props": {
+    "id": "PageHeader-186",
+    "title": "Membership Agreement & Liability Waiver",
+    "tag": "h1",
+    "crumb": "Membership Agreement",
+    "subtitle": "",
+    "subtitleTag": "h5",
+    "trail": []
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-187",
+    "html": "<section class=\"about-2 section\" id=\"membership-agreement-intro\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center\">\n      <div class=\"col-lg-10\">\n        <div class=\"title text-center\">\n          <h2>Before You Join</h2>\n          <div class=\"border\"></div>\n        </div>\n        <p>Below is a copy of our <strong>Membership Agreement and Liability Waiver</strong>. This document has been carefully written to protect the makerspace from liability, help you understand the inherent dangers of working in a makerspace environment, and lay out the membership requirements and terms you agree to when you join.</p>\n        \n        <p>We highly suggest familiarizing yourself with this document before you come in—it will help expedite your signup process. That said, you can always read it at the time of signing as well. There's no rush; we want you to understand what you're agreeing to.</p>\n      </div>\n    </div>\n\n    <div class=\"row mt-5\">\n      <div class=\"col-lg-10 mx-auto\">\n        <h3>What's In the Document?</h3>\n        <p>If you're new to makerspaces, don't worry—here's a quick overview of what the agreement typically covers:</p>\n        <ul class=\"checklist\">\n          <li><b>Liability &amp; assumption of risk</b> – You'll acknowledge that using tools, machinery, and shared spaces carries some risk, and you accept responsibility for your own safety.</li>\n          <li><b>Membership rules</b> – General guidelines for being a good member: respecting the space, other members, and our equipment.</li>\n          <li><b>Safety expectations</b> – Following safety protocols, completing training where required, and using common sense when working.</li>\n          <li><b>Payment &amp; membership terms</b> – How dues work, cancellation, and what your membership includes.</li>\n          <li><b>Code of conduct</b> – How we expect members to treat each other and the space so everyone can create in a welcoming environment.</li>\n        </ul>\n        <p>Think of it like joining a gym, except we aren't huge jerks when you want to cancel. It's standard paperwork that protects everyone and sets clear expectations. We're here to help you learn and create—this document just makes sure we're all on the same page.</p>\n      </div>\n    </div>\n  </div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-188",
+    "html": "<section class=\"section\" style=\"background: #f9f9f9;\" id=\"agreement-pdf\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center\">\n      <div class=\"col-lg-10\">\n        <div class=\"title text-center\">\n          <h2>Membership Agreement &amp; Kzoo Makers Rules</h2>\n          <p>Read the full document below or download it for your records.</p>\n          <div class=\"border\"></div>\n        </div>\n      </div>\n    </div>\n    <div class=\"row mt-4\">\n      <div class=\"col-lg-12\">\n        <div class=\"pdf-container\">\n          <iframe src=\"/pdfjs/web/viewer.html?file=../../pdfs/MEMBERSHIP%20AGREEMENT%20AND%20KZOO%20MAKERS%20RULES.pdf\" width=\"100%\" height=\"100%\" style=\"border: none;\">\n          </iframe>\n        </div>\n      </div>\n    </div>\n  </div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-189",
+    "html": "<section class=\"section\" id=\"next-steps\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center\">\n      <div class=\"col-lg-8\">\n        <div class=\"title text-center\">\n          <h2>Ready to Join?</h2>\n          <div class=\"border\"></div>\n        </div>\n      </div>\n    </div>\n    <div class=\"row mt-4\">\n      <div class=\"col-lg-10 mx-auto text-center\">\n        <p>Once you've reviewed the agreement, come visit us for a tour or sign up for membership.</p>\n        <div class=\"mt-4\">\n          <a href=\"/contact\" class=\"btn btn-main mt-10 ml-2\">Contact Us</a>\n          <a href=\"/pricing\" class=\"btn btn-main mt-10 ml-2\">Membership Options</a>\n          <a href=\"/\" class=\"btn btn-transparent mt-10 ml-2\">Back to Home</a>\n        </div>\n      </div>\n    </div>\n  </div>\n</section>"
+   }
+  }
+ ],
+ "zones": {}
+}

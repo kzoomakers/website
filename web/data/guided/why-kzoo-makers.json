@@ -1,0 +1,505 @@
+{
+ "galleryTitle": "",
+ "galleryText": "",
+ "slides": [],
+ "sections": [
+  {
+   "look": "Columns of text",
+   "background": "White",
+   "columns": "1",
+   "title": "The Only Full-Spectrum Community Makerspace in Kalamazoo",
+   "intro": "Unlike university or library makerspaces, Kzoo Makers is a public, nonprofit workshop offering full access to woodworking, metalworking, CNC, laser cutting, and fabrication tools for real projects—not just demonstrations or coursework.",
+   "image": "",
+   "items": [],
+   "outro": "",
+   "buttons": []
+  },
+  {
+   "look": "Highlight box",
+   "background": "Grey",
+   "columns": "3",
+   "title": "What Makes Kzoo Makers Different",
+   "intro": "We're the only place in Kalamazoo where the general public can access professional-grade fabrication equipment with hands-on control, flexible hours, and a community of makers ready to help you succeed.",
+   "image": "",
+   "items": [
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "Public Access",
+     "label": "",
+     "text": "",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "Full-Spectrum Tools",
+     "label": "",
+     "text": "",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "Hands-On Control",
+     "label": "",
+     "text": "",
+     "linkLabel": "",
+     "linkHref": ""
+    }
+   ],
+   "outro": "",
+   "buttons": []
+  },
+  {
+   "look": "Feature cards",
+   "background": "White",
+   "columns": "3",
+   "title": "Why Serious Makers Choose Kzoo Makers",
+   "intro": "",
+   "image": "",
+   "items": [
+    {
+     "icon": "none",
+     "emoji": "🏗️",
+     "heading": "Complete Fabrication Capability",
+     "label": "",
+     "text": "The only place locally with wood + metal + CNC + laser under one roof. Build anything from furniture to metal sculpture to product prototypes.",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "🔧",
+     "heading": "Hands-On Tool Access",
+     "label": "",
+     "text": "After safety training, you operate the equipment yourself. No staff-mediated projects or waiting for someone else to run your job.",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "🕐",
+     "heading": "Flexible Hours",
+     "label": "",
+     "text": "Open evenings and weekends. Trained members get 56 hours of access. Work on your schedule, not ours.",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "💼",
+     "heading": "Commercial Use Supported",
+     "label": "",
+     "text": "Start your business, prototype products, or run small production. We explicitly support entrepreneurial projects.",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "👥",
+     "heading": "Peer Mentorship",
+     "label": "",
+     "text": "Learn from experienced makers in a collaborative environment. Real skill transfer, not just demonstrations.",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "🌐",
+     "heading": "Open to Everyone",
+     "label": "",
+     "text": "No enrollment required. No coursework. No academic affiliation. Just a passion for making.",
+     "linkLabel": "",
+     "linkHref": ""
+    }
+   ],
+   "outro": "",
+   "buttons": []
+  },
+  {
+   "look": "Feature cards",
+   "background": "Grey",
+   "columns": "2",
+   "title": "Full-Spectrum Tools & Equipment",
+   "intro": "",
+   "image": "",
+   "items": [
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "🪵 Wood Shop",
+     "label": "",
+     "text": "- Table saw, jointer, planer\n- Band saws, drill press\n- Router table, sanders\n- Hand tools and clamps\n- Dust collection system\n\n**Build:** Furniture, cabinets, art, home projects",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "⚙️ Metal Shop",
+     "label": "",
+     "text": "- MIG and TIG welding\n- Metal lathe and mill\n- Angle grinders, cut-off saw\n- Drill press, band saw\n- Fabrication tables\n\n**Build:** Steel sculpture, brackets, frames, repairs",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "✨ Laser Cutting",
+     "label": "",
+     "text": "- Industrial 100W CO2 laser\n- 24\" x 36\" cutting bed\n- Cut and engrave wood, acrylic, leather\n- Precision up to 0.001\"\n- Production runs supported\n\n**Build:** Signs, art, product prototypes, gifts",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "🤖 CNC Router",
+     "label": "",
+     "text": "- Full-size CNC router\n- 4' x 8' capable cutting area\n- Cut wood, plastic, soft metals\n- 3D carving and engraving\n- Large-format projects\n\n**Build:** Furniture parts, signs, molds, templates",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "🖨️ 3D Printing",
+     "label": "",
+     "text": "- Multiple FDM printers\n- Various build volumes\n- Hands-on operation\n- Member-owned printers welcome\n- Filament available\n\n**Build:** Prototypes, parts, tools, art",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "⚡ Electronics Lab",
+     "label": "",
+     "text": "- Soldering stations\n- Oscilloscopes and multimeters\n- Power supplies\n- Component storage\n- Arduino and Raspberry Pi support\n\n**Build:** Circuits, robots, IoT devices, repairs",
+     "linkLabel": "",
+     "linkHref": ""
+    }
+   ],
+   "outro": "",
+   "buttons": []
+  },
+  {
+   "look": "Feature cards",
+   "background": "White",
+   "columns": "2",
+   "title": "What You Can't Get at Other Makerspaces",
+   "intro": "",
+   "image": "",
+   "items": [
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "Capabilities Unique to Kzoo Makers in Kalamazoo:",
+     "label": "",
+     "text": "- Public access to a full wood shop\n- Public access to metal fabrication and welding\n- Industrial laser cutting for the public\n- Full-size CNC routing for the public\n- Hands-on tool operation (not staff-mediated)\n- 56 hour access for trained members",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "",
+     "label": "",
+     "text": "- Commercial and entrepreneurial use\n- Heavy fabrication and noisy work\n- Long-term project storage\n- Peer-to-peer skill sharing\n- No enrollment or coursework required\n- Ongoing access (not semester-bound)",
+     "linkLabel": "",
+     "linkHref": ""
+    }
+   ],
+   "outro": "",
+   "buttons": []
+  },
+  {
+   "look": "Feature cards",
+   "background": "Grey",
+   "columns": "3",
+   "title": "Real Projects from Real Members",
+   "intro": "",
+   "image": "",
+   "items": [
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "Furniture & Woodworking",
+     "label": "",
+     "text": "Members build custom tables, cabinets, cutting boards, picture frames, and home renovations using our complete wood shop.",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "Metal Fabrication",
+     "label": "",
+     "text": "Welded sculptures, steel furniture, bike racks, automotive repairs, custom brackets, and metal art projects.",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "Product Prototyping",
+     "label": "",
+     "text": "Entrepreneurs develop product prototypes, test designs, and run small production batches for their businesses.",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "Laser Engraving",
+     "label": "",
+     "text": "Custom signs, wedding gifts, business products, leather goods, acrylic displays, and personalized items.",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "Electronics Projects",
+     "label": "",
+     "text": "Arduino robots, home automation, circuit repairs, custom PCBs, and IoT devices.",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "Art & Sculpture",
+     "label": "",
+     "text": "Mixed-media art, metal sculpture, wood carving, installations, and creative experiments.",
+     "linkLabel": "",
+     "linkHref": ""
+    }
+   ],
+   "outro": "",
+   "buttons": []
+  },
+  {
+   "look": "Feature cards",
+   "background": "White",
+   "columns": "2",
+   "title": "More Than Tools: A Community",
+   "intro": "",
+   "image": "",
+   "items": [
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "Peer Mentorship",
+     "label": "",
+     "text": "Learn from experienced makers who are passionate about sharing skills. No formal classes—just makers helping makers.",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "Volunteer-Run",
+     "label": "",
+     "text": "Every member contributes to keeping the space running. This isn't a service—it's a community you're part of.",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "Collaborative Environment",
+     "label": "",
+     "text": "Work alongside people from all backgrounds: engineers, artists, entrepreneurs, hobbyists, students, and retirees.",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "Events & Meetups",
+     "label": "",
+     "text": "Regular meetups, skill shares, and social events. Connect with other makers and learn new techniques.",
+     "linkLabel": "",
+     "linkHref": ""
+    }
+   ],
+   "outro": "",
+   "buttons": []
+  },
+  {
+   "look": "Stats",
+   "background": "Grey",
+   "columns": "3",
+   "title": "Membership That Fits Your Needs",
+   "intro": "",
+   "image": "",
+   "items": [
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "$5",
+     "label": "Starting at per month",
+     "text": "Affordable tiers for every budget and usage level",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "56 hour/wk",
+     "label": "Access for trained members",
+     "text": "Work on your schedule, not limited to business hours",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "∞",
+     "label": "Ongoing access",
+     "text": "Not semester-bound or time-limited",
+     "linkLabel": "",
+     "linkHref": ""
+    }
+   ],
+   "outro": "",
+   "buttons": [
+    {
+     "label": "View Membership Options",
+     "href": "/pricing"
+    }
+   ]
+  },
+  {
+   "look": "Feature cards",
+   "background": "White",
+   "columns": "2",
+   "title": "Who Joins Kzoo Makers?",
+   "intro": "",
+   "image": "",
+   "items": [
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "✅ You Should Join If:",
+     "label": "",
+     "text": "- You need wood or metal fabrication tools\n- You want to learn welding, CNC, or laser cutting\n- You're starting a business or prototyping products\n- You want hands-on control of professional tools\n- You need flexible hours (evenings/weekends)\n- You value community and peer learning\n- You're serious about making things",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "❓ Consider Alternatives If:",
+     "label": "",
+     "text": "- **You're a WMU/KVCC student:** Use university resources for coursework, but join us for tools they don't have\n- **You only need light crafting:** Library makerspaces might be sufficient (and free)\n- **You want staff to do the work:** We're hands-on—you operate the tools\n- **You're just curious:** Schedule a free tour first to see if it's right for you",
+     "linkLabel": "",
+     "linkHref": ""
+    }
+   ],
+   "outro": "",
+   "buttons": []
+  },
+  {
+   "look": "Highlight box",
+   "background": "Grey",
+   "columns": "3",
+   "title": "The Bottom Line",
+   "intro": "If you're serious about making—whether it's furniture, metal art, product prototypes, or just learning new skills—Kzoo Makers is the only place in Kalamazoo that gives you:",
+   "image": "",
+   "items": [
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "Full-Spectrum Tools",
+     "label": "",
+     "text": "Wood, metal, laser, CNC, electronics, and more",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "Hands-On Access",
+     "label": "",
+     "text": "You control the tools after training",
+     "linkLabel": "",
+     "linkHref": ""
+    },
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "Public Access",
+     "label": "",
+     "text": "No enrollment or affiliation required",
+     "linkLabel": "",
+     "linkHref": ""
+    }
+   ],
+   "outro": "**We're not just a makerspace. We're a community of makers building real things.**",
+   "buttons": []
+  },
+  {
+   "look": "Feature cards",
+   "background": "White",
+   "columns": "3",
+   "title": "Still Comparing Options?",
+   "intro": "",
+   "image": "",
+   "items": [
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "vs Library Makerspaces",
+     "label": "",
+     "text": "See how we compare with KPL and Portage libraries",
+     "linkLabel": "Compare",
+     "linkHref": "/makerspace-vs-library"
+    },
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "vs University Labs",
+     "label": "",
+     "text": "Understand the difference from WMU and KVCC",
+     "linkLabel": "Compare",
+     "linkHref": "/makerspace-vs-university"
+    },
+    {
+     "icon": "none",
+     "emoji": "",
+     "heading": "Full Comparison",
+     "label": "",
+     "text": "See all options side-by-side",
+     "linkLabel": "View All",
+     "linkHref": "/comparison"
+    }
+   ],
+   "outro": "",
+   "buttons": []
+  },
+  {
+   "look": "Banner",
+   "background": "White",
+   "columns": "1",
+   "title": "Ready to Start Making?",
+   "intro": "Join Kalamazoo's only full-spectrum community makerspace.",
+   "image": "",
+   "items": [],
+   "outro": "",
+   "buttons": [
+    {
+     "label": "Schedule a Free Tour",
+     "href": "/tours"
+    },
+    {
+     "label": "View Membership Options",
+     "href": "/pricing"
+    }
+   ]
+  }
+ ]
+}

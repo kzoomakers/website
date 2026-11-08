@@ -1,0 +1,65 @@
+{
+ "root": {
+  "props": {
+   "title": "Tech Workshop Space in Kalamazoo | Kalamazoo Makerspace",
+   "description": "Looking for tech workshop space in Kalamazoo? Host hands‑on technology workshops, coding nights, electronics labs, and maker meetups at Kalamazoo Makerspace with tools, WiFi, and community support.",
+   "bare": false,
+   "inline": [],
+   "bodyClass": "",
+   "refresh": "",
+   "css": "",
+   "styles": [],
+   "scripts": []
+  }
+ },
+ "content": [
+  {
+   "type": "PageHeader",
+   "props": {
+    "id": "PageHeader-336",
+    "title": "Tech Workshop Space in Kalamazoo",
+    "tag": "h1",
+    "crumb": "Tech Workshop Space",
+    "subtitle": "",
+    "subtitleTag": "h5",
+    "trail": []
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-337",
+    "html": "<section class=\"about-2 section\" id=\"tech-workshop-overview\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<div class=\"title text-center\">\n\t\t\t\t\t<h2>Hands-On Tech Workshop Space in Kalamazoo, MI</h2>\n\t\t\t\t\t<p><strong>Searching for “tech workshop space” in Kalamazoo because you want more than a plain conference room?</strong></p>\n\t\t\t\t\t<p>At Kalamazoo Makerspace, you get a community <a href=\"/meeting-space\">meeting space</a> that lives inside a full makerspace. That means tables, projector, and high-speed WiFi <em>plus</em> access to areas like our <a href=\"/wood-shop\">wood shop</a>, <a href=\"/metal-shop\">metal shop &amp; welding</a>, <a href=\"/3d-printing\">3D printing lab</a>, and <a href=\"/laser-shop\">laser shop</a>. It’s a tech workshop venue where participants can actually build, prototype, and experiment.</p>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\n\t\t<div class=\"row mt-5\">\n\t\t\t<div class=\"col-md-6 mb-4\">\n\t\t\t\t<h3>Who Our Tech Workshop Space Is For</h3>\n\t\t\t\t<ul class=\"checklist\">\n\t\t\t\t\t<li>Instructors running <strong>STEM and coding workshops</strong> that need real tools, not just slides.</li>\n\t\t\t\t\t<li>Meetup organizers looking for a <strong>tech workshop space in Kalamazoo</strong> with a strong maker vibe.</li>\n\t\t\t\t\t<li>Startup founders teaching <strong>hardware, IoT, or prototyping bootcamps</strong>.</li>\n\t\t\t\t\t<li>Teachers and professors who want an off‑campus <strong>STEM lab or makerspace classroom</strong>.</li>\n\t\t\t\t\t<li>Clubs and community groups hosting <strong>robotics, electronics, 3D printing, or Linux nights</strong>.</li>\n\t\t\t\t</ul>\n\t\t\t</div>\n\t\t\t<div class=\"col-md-6 mb-4\">\n\t\t\t\t<h3>What You Get in the Space</h3>\n\t\t\t\t<ul class=\"checklist\">\n\t\t\t\t\t<li>Flexible tables and seating that can be rearranged for lectures or hands‑on labs.</li>\n\t\t\t\t\t<li>Projector, screen, and WiFi for presentations, code walkthroughs, and demos.</li>\n\t\t\t\t\t<li>Access to the surrounding makerspace for demonstrations in the <a href=\"/3d-printing\">3D printing area</a>, <a href=\"/laser-shop\">laser shop</a>, or shop spaces (with proper training and supervision).</li>\n\t\t\t\t\t<li>Support from a volunteer‑run <a href=\"/about\">maker community</a> that understands tools, tech, and teaching.</li>\n\t\t\t\t\t<li>Easy connection points to our <a href=\"/calendar\">event calendar</a> and <a href=\"/meetups\">existing meetups</a> if you want to grow attendance.</li>\n\t\t\t\t</ul>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-338",
+    "html": "<section class=\"section\" style=\"background:#f9f9f9;\">\n  <div class=\"container\">\n    <div class=\"row justify-content-center\">\n      <div class=\"col-lg-8\">\n        <div class=\"title text-center\">\n          <h2>Typical Training Room vs. Tech Workshop Space</h2>\n          <div class=\"border\"></div>\n        </div>\n      </div>\n    </div>\n    <div class=\"row mt-4\">\n      <div class=\"col-md-6 mb-4\">\n        <h3>Traditional Training Room</h3>\n        <ul class=\"checklist\">\n          <li>Chairs, a projector, and not much else.</li>\n          <li>Limited or no access to fabrication tools.</li>\n          <li>Feels like another meeting instead of a build session.</li>\n          <li>Harder to keep people engaged for hands‑on learning.</li>\n        </ul>\n      </div>\n      <div class=\"col-md-6 mb-4\">\n        <h3>Kalamazoo Makerspace Tech Workshop Model</h3>\n        <ul class=\"checklist\">\n          <li>A dedicated <a href=\"/meeting-space\">meeting space</a> inside an active makerspace.</li>\n          <li>Easy access to <a href=\"/wood-shop\">woodworking tools</a>, <a href=\"/metal-shop\">metalworking &amp; welding</a>, <a href=\"/3d-printing\">3D printers</a>, and <a href=\"/laser-shop\">industrial laser cutters</a> for demos.</li>\n          <li>A community of makers who can answer questions and inspire new project ideas.</li>\n          <li>The feel of a <strong>tech lab</strong> instead of a corporate boardroom.</li>\n        </ul>\n      </div>\n    </div>\n  </div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-339",
+    "html": "<section class=\"about-2 section\" id=\"tech-workshop-get-started\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<div class=\"title text-center\">\n\t\t\t\t\t<h2>How to Run a Tech Workshop at Kalamazoo Makerspace</h2>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\n\t\t<div class=\"row mt-4\">\n\t\t\t<div class=\"col-lg-12\">\n\t\t\t\t<ol>\n\t\t\t\t\t<li><strong>Become a member or connect with an existing member.</strong> Our <a href=\"/pricing\">membership options</a> keep the lights on and the tools maintained.</li>\n\t\t\t\t\t<li><strong>Get your event approved.</strong> Share your idea with our volunteers or board so we can confirm it aligns with our maker and learning mission. Many tech workshops qualify as member events at no extra cost.</li>\n\t\t\t\t\t<li><strong>Plan your format.</strong> Decide what needs a projector and what should happen out in the shops or labs—3D printing demos, electronics benches, laser engraving, and more.</li>\n\t\t\t\t\t<li><strong>Promote your tech workshop.</strong> We can help list it on our <a href=\"/calendar\">calendar</a> and connect you with existing groups like our <a href=\"/meetup-fiber-arts\">fiber arts meetup</a> and local tech communities.</li>\n\t\t\t\t\t<li><strong>Teach, build, repeat.</strong> Use the makerspace as your ongoing <strong>tech workshop space in Kalamazoo</strong>, not just a one‑time rental.</li>\n\t\t\t\t</ol>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-340",
+    "html": "<section class=\"call-to-action section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-xl-6 col-lg-8 text-center\">\n\t\t\t\t<h2>Ready to Host a Tech Workshop?</h2>\n\t\t\t\t<p>We’re a volunteer‑run nonprofit makerspace, not a hotel ballroom. If you care about hands‑on learning, this is your kind of tech workshop space.</p>\n\t\t\t\t<a href=\"/tours\" class=\"btn btn-main\">Schedule a Tour</a>\n\t\t\t\t<a href=\"/contact\" class=\"btn btn-main\">Talk About Your Event</a>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-341",
+    "html": "<section class=\"section\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-8\">\n\t\t\t\t<div class=\"title text-center\">\n\t\t\t\t\t<h2>Tech Workshop Space FAQ</h2>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t\t<div class=\"row mt-4\">\n\t\t\t<div class=\"col-lg-10 mx-auto\">\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>Do I need to be a member to use the tech workshop space?</h4>\n\t\t\t\t\t<p>Yes, the organizer should be a current member of Kalamazoo Makerspace. That keeps things sustainable and ensures you understand how the space operates. Attendees don’t need to be members for most events.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>Is this a paid rental space?</h4>\n\t\t\t\t\t<p>We are primarily a membership‑based makerspace, not a commercial event hall. Many tech workshops run as member events at no additional cost, provided they align with our mission and are approved in advance.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>Can participants use the tools during my workshop?</h4>\n\t\t\t\t\t<p>Possibly. Tool access depends on the type of event, the experience level of participants, and the availability of trained supervisors. For things like <a href=\"/3d-printing\">3d printing</a> demos or <a href=\"/laser-shop\">laser cutting</a> walkthroughs, we can often accommodate supervised use after safety expectations are clear.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>What kinds of tech workshops work best here?</h4>\n\t\t\t\t\t<p>Events that combine explanation with hands‑on building do especially well: robotics, electronics soldering labs, CAD &amp; CAM for CNC, Linux or open‑source toolchains, hardware prototyping, and STEM education nights for students or adults.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>How do I see what else happens at the makerspace?</h4>\n\t\t\t\t\t<p>Browse our main <a href=\"/\">homepage</a>, learn more <a href=\"/about\">about us</a>, and explore focused pages for the <a href=\"/wood-shop\">wood shop</a>, <a href=\"/metal-shop\">metal shop</a>, <a href=\"/3d-printing\">3D printing</a>, and <a href=\"/laser-shop\">laser shop</a>. You can also review upcoming events on our <a href=\"/calendar\">calendar</a> and <a href=\"/meetups\">meetups</a> pages.</p>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  }
+ ],
+ "zones": {}
+}

@@ -1,0 +1,6 @@
+# happy-dom (pulled in by the Puck editor) ships a localhost test certificate and key inside its bundle. It is public and protects nothing.
+secrets:
+  - id: private-key
+    paths:
+      - "/app/.next/server/chunks/*.js"
+    statement: "happy-dom's built-in test HTTPS key, bundled into the server chunks"

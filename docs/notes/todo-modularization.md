@@ -1,0 +1,193 @@
+# TODO: Modularize the site → everything editable in Puck
+
+Branch: `poc` (local only, not pushed). Repo is **PUBLIC**: no secrets in git, ever.
+
+## Goal
+1. Every currently-static page is editable WYSIWYG (visual mode) via [Puck](https://github.com/puckeditor/puck).
+2. Editors can **create new pages** and **delete existing pages** from the UI.
+3. Visual styling stays identical (Bootstrap 4 + Themefisher + `css/style.css`). The *framework* may change; the *look* may not.
+
+## Current state (what we're migrating from)
+- ~106 hand-written `.html` files at repo root, Bootstrap 4, jQuery, Themefisher icon font, `plugins/*`.
+- Shared chrome is already half-modular: `dynamic/js/{navbar,footer,hours,counters}.js` render from `dynamic/json/*.json`. These JSONs become DB rows / Puck globals.
+- Calendar: `cal.ics` (~600KB) + `ical/` parser + `dynamic/js/calendar*.js`, all client-side.
+- Inventory pages: `dynamic/json/inventory-*.json` + `dynamic/js/inventory*.js`.
+- Contact form: OpenResty/Lua + SMTP2GO + HMAC tokens (`docs/contact/`), needs replacing since we're leaving nginx.
+- Hosting today: static (nginx / `wrangler.toml` Cloudflare assets).
+- Junk to delete before migrating: `*.bak`, `*.html-bak`, `index.html-bak`, `contact copy.html`, `calendar.html.backup-do-not-touch` (**ask owner first**), `demo*.html`, `calendar2.html`, `onepage-*.html`, `index-text.html`, `contact-new.html`.
+- Many near-duplicate templated pages (`s-makerspace-<city>.html`, `s-wood-shop-*`, `s-welding-shop-*`, `s-tool-rental-*`, `how-to-*`, `meetup-*`). These should become **one component/template + data**, not N pages.
+
+## Target architecture
+```
+Browser ──> Fly.io app (Next.js, Node)  ──> Aiven (shared SQL)  : pages, globals, users
+                │                         └─> Fly volume or S3  : uploaded images/PDFs
+                ├─ /[...path]   renders Puck JSON with <Render/> (public, SSR/ISR)
+                ├─ /edit/[...path]  <Puck/> editor (auth required)
+                └─ /api/*       publish, create, delete, upload, contact form
+```
+- **Framework: Next.js (App Router)** — Puck's first-class integration; dynamic catch-all route gives create/delete pages for free.
+- **Puck data model:** each page = one row `{ path, title, data(JSON), published, updated_at }`. Puck `Data` JSON is stored as-is.
+- **Globals:** navbar, footer, hours, counters = single-row "globals" table (or Puck `root` props) edited in the same UI.
+- **Styling:** keep `css/style.css` + `plugins/*` served from `public/`; Puck components emit the *same markup/classes* as today's HTML. Do not rewrite CSS to Tailwind.
+
+## Infrastructure checklist (the stuff not to forget)
+
+### Secrets: PUBLIC repo rules
+- [x] `.gitignore` blocks `.env*`, `*.pem`, `*.key` (done on `poc`).
+- [x] `.env.example` documents every variable with **empty** values.
+- [ ] Enable GitHub **secret scanning + push protection** (Settings → Code security).
+- [ ] Audit git history for leaked keys before going further (`gitleaks detect`). Rotate anything found (SMTP2GO key, HMAC secret in `docs/contact/lua/*`).
+- [ ] Prod secrets: `fly secrets set DATABASE_URL=... AUTH_SECRET=... SMTP2GO_API_KEY=...`
+- [ ] CI secrets: GitHub → Settings → Secrets and variables → Actions (`FLY_API_TOKEN` from `fly tokens create deploy`).
+
+### Aiven (shared SQL)
+- [ ] Create service (MySQL or PostgreSQL; **recommend Postgres**: JSONB fits Puck data). Free/shared tier has small limits: connection cap, storage, **no HA**; keep pool size ≤ 5.
+- [ ] Download CA cert; require TLS from the app.
+- [ ] Create a least-privilege app user + separate DB; don't use `avnadmin` in the app.
+- [ ] Aiven IP allow-list: Fly egress IPs aren't static by default → allocate a static egress IP (`fly ips allocate-egress`) and allow-list it (and your dev IP).
+- [ ] Backups: confirm retention on the plan; add a weekly `pg_dump` to somewhere else (shared tier backups are limited).
+- [ ] Migrations tool (Drizzle or Prisma) with migration files committed; run in a Fly `release_command`.
+
+### Fly.io
+- [ ] `fly launch` → `fly.toml` (no secrets in it), `Dockerfile` (Node, `output: "standalone"`).
+- [ ] Volume mounted at `/data` for uploads (or S3-compatible bucket; volumes are single-region/single-machine).
+- [ ] Custom domain `kzoomakers.org`: `fly certs add`, update DNS.
+- [ ] Health check endpoint, 1 machine to start (cost), auto-stop off if cold starts hurt.
+- [ ] GitHub Action: deploy on push to `main` with `flyctl deploy --remote-only`.
+- [ ] Remove `wrangler.toml` and nginx assumptions once cut over.
+
+### Auth for the editor
+- [ ] `/edit/*` and all write APIs require login. Start simple: Auth.js (GitHub or email magic-link) + `ADMIN_EMAILS` allow-list. Public site never needs auth.
+- [ ] CSRF / origin checks on write APIs; validate Puck JSON with a schema before saving.
+
+### Contact form / email
+- [ ] Port the Lua flow to a Next.js route handler: validation, Cyrillic filter, rate limit (per IP), SMTP2GO API call, HMAC token. Secrets from env only.
+
+### Uploads / media
+- [ ] Move `images/` to `public/images/` (existing refs keep working). Editor uploads go to `/data/uploads` or S3; Puck image field uses an upload API.
+- [ ] Keep `pdfs/`, `pdfjs/`, `download/` as static assets.
+
+### SEO / redirects (don't lose rankings)
+- [ ] Keep URL paths. Old `/about.html` → 301 to `/about` (or serve both).
+- [ ] Generate `sitemap.xml` and `robots.txt` from DB pages.
+- [ ] `<title>`, meta description, OG tags editable per page (Puck `root` fields).
+
+## Local testing (Docker Compose, prod-like)
+Goal: same moving parts as Fly + Aiven, so "works locally" means "works deployed". Nothing here needs real secrets.
+
+| Prod | Local stand-in | Fidelity note |
+|---|---|---|
+| Aiven Postgres (TLS required, CA cert) | `postgres:<same major as Aiven>` with **SSL on** and a self-signed CA | App connects with `sslmode=verify-full` + `DATABASE_CA_CERT`, same code path as prod |
+| Fly machine + `/data` volume | App built from the **same `Dockerfile`** as prod, named volume at `/data` | Run `next start` standalone, not `next dev`, for the faithful check |
+| `release_command` migrations | one-shot `migrate` service that must finish before `app` starts | Same migration files as prod |
+| SMTP2GO HTTP API | stub (`SMTP2GO_API_URL` env override; stub logs the payload) | Real sends only from staging |
+| Fly TLS/proxy | none locally; test at `http://localhost:3000` | Cookie `secure` flag + Auth.js URL differ; verify on Fly staging |
+
+`.local/` (generated certs, volumes) is gitignored. Compose uses only `.env` values (copy `.env.example`).
+
+```yaml
+# docker-compose.yml  (to be added in Phase 0; no secrets, dev-only passwords)
+services:
+  db:
+    image: postgres:16            # match Aiven's major version
+    environment: { POSTGRES_USER: app, POSTGRES_PASSWORD: devonly, POSTGRES_DB: site }
+    command: >
+      postgres -c ssl=on -c ssl_cert_file=/certs/server.crt -c ssl_key_file=/certs/server.key
+    volumes: [ "./.local/certs:/certs:ro", "pgdata:/var/lib/postgresql/data" ]
+    healthcheck: { test: ["CMD-SHELL","pg_isready -U app -d site"], interval: 3s, retries: 20 }
+  migrate:
+    build: .
+    command: ["npm","run","db:migrate"]
+    env_file: .env
+    depends_on: { db: { condition: service_healthy } }
+  app:
+    build: .                      # same Dockerfile Fly uses
+    env_file: .env
+    ports: ["3000:3000"]
+    volumes: [ "uploads:/data/uploads", "./.local/certs/ca.crt:/certs/ca.crt:ro" ]
+    depends_on: { migrate: { condition: service_completed_successfully } }
+volumes: { pgdata: {}, uploads: {} }
+```
+
+Local `.env` values: `DATABASE_URL=postgres://app:devonly@db:5432/site?sslmode=verify-full`, `DATABASE_CA_CERT=/certs/ca.crt`, `AUTH_SECRET=<any random>`, `ADMIN_EMAILS=you@example.com`.
+
+One-time cert setup (script `scripts/dev-certs.sh`; server cert CN/SAN must be `db`; key file must be `chmod 600` and owned by uid 999 or Postgres refuses to start):
+```sh
+mkdir -p .local/certs && cd .local/certs
+openssl req -x509 -newkey rsa:2048 -nodes -days 365 -keyout ca.key -out ca.crt -subj "/CN=dev-ca"
+openssl req -newkey rsa:2048 -nodes -keyout server.key -out server.csr -subj "/CN=db"
+openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -days 365 \
+  -extfile <(echo "subjectAltName=DNS:db,DNS:localhost") -out server.crt
+chmod 600 server.key && sudo chown 999 server.key   # Linux; Docker Desktop on macOS usually OK without chown
+```
+
+Faithful-check routine before every deploy:
+- [ ] `docker compose up --build` from a clean `docker compose down -v` (proves migrations from zero).
+- [ ] Create, edit, publish, delete a page via `/edit`; restart the stack; content persists (DB volume) and uploaded image persists (`/data` volume).
+- [ ] Unauthenticated `/edit` and write APIs get 401/redirect.
+- [ ] Old `.html` URLs 301 correctly; `sitemap.xml` lists DB pages.
+- [ ] Playwright old-vs-new screenshot diff against the legacy static site (serve legacy with `python3 -m http.server` or an `nginx` compose service on :8080).
+- [ ] Contact form hits the stub and the payload looks right.
+- Not reproducible locally (verify on Fly staging): real Aiven allow-list/egress IP, Fly TLS + secure cookies, domain/DNS, real email delivery.
+
+## Phases
+
+### Phase 0: POC (this branch)
+- [x] Scaffold Next.js in `web/` alongside the legacy HTML; legacy untouched.
+- [x] Install Puck: package is now **`@puckeditor/core`** (0.24), not `@measured/puck`.
+- [x] Port theme (POC: `web/public/*` are **symlinks** to the legacy dirs; replace with real copies before Docker/Fly build); load in root layout; verify identical render of one page.
+- [x] Components for ONE page (`about.html`): `PageHeader`, `TwoColumnText`, `ImageBlock`, `VideoEmbed`, `CallToAction`.
+- [x] Persist to JSON files for the POC (`web/data/pages/`; `web/lib/store.ts` is the swap point for Postgres).
+- [ ] Add `Dockerfile`, `docker-compose.yml`, `scripts/dev-certs.sh` (see Local testing); move to compose Postgres before Phase 2; edit at `/edit/about`, view at `/about`.
+- [x] Shared `Navbar`/`Footer`/`Counters` rendered from `web/data/globals/*.json` (copies of `dynamic/json`).
+- **POC status / known gaps** (run: `cd web && npm install && npm run dev`, view `/about`, edit `/edit/about`; an unknown slug under `/edit/` creates a page):
+  - Side-by-side screenshot matched except button spacing (fixed). Counters show 0 until scrolled, same as legacy.
+  - Editor + write API return 404 when `NODE_ENV=production` (no auth yet, Phase 2). Do NOT deploy before auth exists.
+  - Legacy `js/script.js` is loaded after hydration and still fires GA/Heap/PostHog from localhost: gate by env before real use.
+  - Not yet done: nav active-link highlight, mobile dropdown tweaks from `navbar.js`, image upload field (images are URL text), globals editing, delete/list UI, rich text, `Dockerfile`/`docker-compose`, Google Maps script (contact page).
+  - Other `.html` links 301 to `/x` and 404 until those pages are migrated.
+- **Exit criteria:** side-by-side screenshot of `about.html` vs `/about` matches; edit + publish works.
+
+### Phase 1: Component library
+- [ ] Inventory every section pattern across the 106 pages (hero/page-header, text+image, card grid, gallery/lightbox, team grid, FAQ/accordion, pricing, CTA, timeline, table, form, embed, markdown/rich-text).
+- [ ] One Puck component per pattern; fields mirror the classes actually used.
+- [ ] Rich-text field for long-form content (handbook, how-to guides, SOPs).
+- [ ] Data-driven components: Hours, Counters, Events list, Inventory table, Team.
+
+### Phase 2: Database + CRUD
+- [ ] Schema: `pages`, `globals`, `users`, `page_revisions` (undo/restore).
+- [ ] Pages UI (`/edit`): list, **create** (choose template), **duplicate**, **delete** (soft-delete + confirm), publish/unpublish, change slug (auto-redirect).
+- [ ] Protect core pages (home, 404, contact) from deletion.
+
+### Phase 1.5: Bulk migration (done early on `poc`, so every page is editable now)
+- [x] `web/scripts/migrate.mjs`: 86 of 105 legacy pages → Puck JSON in `web/data/pages/` (re-runnable; never overwrites hand-built `about`). Header → `PageHeader` (with breadcrumb trail), counters → `Counters`, every other `<section>` → `HtmlSection` (raw HTML, edited in a textarea). Per-page head CSS, extra stylesheets/scripts, `<body class>` and meta-refresh redirects are kept as page settings.
+- [x] `web/scripts/diffall.sh` + `shotdiff.mjs`: old-vs-new screenshot diff for every page (needs legacy site on :8080 and `npm run dev`). Result after fixes: nearly all pages are <1% different. Known noise: pages with the filterizr gallery (screenshot catches the animation mid-frame, e.g. `s-*-shop-*`, `meetup-*`, `sitemap`), and redirect pages (browser leaves the page).
+- [x] Inline-script pages migrated too (home, calendar, handbook, history, how-to, sop, single-post, both inventory pages; 95 pages total). Mechanism: root settings **Page scripts** (inline JS, run after site scripts; `DOMContentLoaded` listeners fire immediately), **Standalone page** (handbook/sop: no site chrome/theme/scripts), theme CSS now rendered per page instead of in the root layout. Scripts don't run inside the editor (only on the public page).
+- [ ] Not migrated (junk, **ask owner before deleting the files**): `demo`, `demo1`, `demo3`, `calendar2`, `contact-new`, `index-text`, `onepage-slider`, `onepage-text`, `ical-demo`, `contact copy`.
+- [ ] Calendar/inventory/home animations are only verified by static screenshot; click-test month grid, filters, print, "add whole series", inventory search/sort.
+- [ ] Inline scripts are raw JS in a textbox: fine behind auth, but move calendar/inventory/hero logic into real components in Phase 4 so editors never touch JS.
+- [ ] `HtmlSection` is the escape hatch, NOT the goal: promote repeated patterns (`about-2` text sections, `portfolio` galleries, pricing, bg-gray cards) into real components so editors get WYSIWYG fields instead of an HTML box. Phase 1 order by usage: classless text sections (112), `about-2` (71), `portfolio` (37), `bg-gray` (38), `call-to-action` (13).
+- [ ] Redirect pages (discord/forms/tour) should become a real redirects table in Phase 2.
+
+### Phase 3: Content migration
+- [ ] Script: parse each legacy `.html` `<section>` → Puck component JSON (cheerio). Hand-fix leftovers.
+- [ ] Collapse templated families (`s-makerspace-*` etc.) into a template component + per-city data.
+- [ ] Import `dynamic/json/*.json` into globals/tables.
+- [ ] Diff each page visually (Playwright screenshots) old vs new.
+
+### Phase 4: Dynamic features
+- [ ] Calendar: decide source of truth (keep `cal.ics` feed from external calendar vs. DB events). Server-side or client-side `ical/` parsing; "add whole series" + print button must keep working.
+- [ ] Inventory editors (woodshop / donations needed) as editable tables.
+- [ ] Contact form (see above).
+
+### Phase 5: Deploy + cutover
+- [ ] Fly staging app + Aiven staging DB.
+- [ ] Content freeze, final migration run, DNS cutover, 301 map verified.
+- [ ] Keep legacy static site reachable for rollback for 2 weeks.
+
+## Open questions for owner
+- Who gets editor accounts? (drives auth choice) - not sure be flexible
+- MySQL vs Postgres on Aiven? (recommend Postgres) - yes postgres
+- Is `cal.ics` fed from Google Calendar or hand-maintained? - yes google cal
+- OK to delete the `.bak` / demo / duplicate pages listed above? - yes
+- Uploads: Fly volume (simple) or S3-compatible bucket (survives machine loss)? i will prably use rustfs a s3 compatible

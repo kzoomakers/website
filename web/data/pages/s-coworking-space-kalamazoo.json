@@ -1,0 +1,58 @@
+{
+ "root": {
+  "props": {
+   "title": "Coworking Space in Kalamazoo, MI | Kalamazoo Makerspace Hackerspace",
+   "description": "Looking for an affordable coworking space in Kalamazoo, MI? Kalamazoo Makerspace is a coworking hackerspace with quiet desks, noisy build areas, and free Wi‑Fi for as little as $5/month.",
+   "bare": false,
+   "inline": [],
+   "bodyClass": "",
+   "refresh": "",
+   "css": "",
+   "styles": [],
+   "scripts": []
+  }
+ },
+ "content": [
+  {
+   "type": "PageHeader",
+   "props": {
+    "id": "PageHeader-230",
+    "title": "Coworking Space in Kalamazoo",
+    "tag": "h1",
+    "crumb": "Coworking Hackerspace",
+    "subtitle": "",
+    "subtitleTag": "h5",
+    "trail": []
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-231",
+    "html": "<section class=\"about-2 section\" id=\"coworking-kalamazoo-overview\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<div class=\"title text-center\">\n\t\t\t\t\t<h2>Coworking Hackerspace for Makers, Coders &amp; Tinkerers</h2>\n\t\t\t\t\t<p><strong>Kalamazoo Makerspace doubles as an affordable coworking space and hackerspace in Kalamazoo, MI.</strong></p>\n\t\t\t\t\t<p>Instead of a traditional corporate coworking brand, you get a community-run workshop with Wi‑Fi, desks, benches, and tools. Work on your laptop in a quiet area, or move to our noisier hackerspace zones when you want to solder, build, or prototype with friends.</p>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\n\t\t<div class=\"row mt-5\">\n\t\t\t<div class=\"col-md-6 mb-4\">\n\t\t\t\t<h3>Quiet &amp; Noisy Areas That Match How You Work</h3>\n\t\t\t\t<ul class=\"checklist\">\n\t\t\t\t\t<li><b>Quiet coworking desks</b> for laptops, writing, coding, and deep-focus work.</li>\n\t\t\t\t\t<li><b>Noisy hackerspace areas</b> where conversations, power tools, and collaboration are welcome.</li>\n\t\t\t\t\t<li><b>Free Wi‑Fi throughout the space</b> so you can move between quiet and loud zones without losing connection.</li>\n\t\t\t\t\t<li><b>Community guidelines</b> to keep quiet zones focused and noisy zones friendly for build nights and meetups.</li>\n\t\t\t\t\t<li><b>Evening and weekend access</b> that lines up with typical side projects and startup experiments.</li>\n\t\t\t\t</ul>\n\t\t\t</div>\n\t\t\t<div class=\"col-md-6 mb-4\">\n\t\t\t\t<h3>Just $5/Month for Hackerspace Coworking Access</h3>\n\t\t\t\t<p>Because Kalamazoo Makerspace is a nonprofit community workshop, our coworking-style access is extremely affordable. Membership options start around <strong>$5 per month</strong>, which gives you a place to work with free Wi‑Fi and access to a wider maker community.</p>\n\t\t\t\t<ul class=\"checklist\">\n\t\t\t\t\t<li>Use the space as your <strong>coworking hackerspace in Kalamazoo</strong>.</li>\n\t\t\t\t\t<li>Meet other makers, programmers, artists, and small business owners.</li>\n\t\t\t\t\t<li>Upgrade to <strong>Dedicated bench rental</strong> if you want a more permanent setup.</li>\n\t\t\t\t\t<li>Ask about <strong>Dedicated workspace rental</strong> options for ongoing projects or gear.</li>\n\t\t\t\t\t<li>Combine coworking time with access to our wood shop, metal shop, electronics lab, and 3D printers.</li>\n\t\t\t\t</ul>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-232",
+    "html": "<section class=\"section\" id=\"coworking-kalamazoo-hours\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-8\">\n\t\t\t\t<div class=\"title text-center\">\n\t\t\t\t\t<h2>Coworking Hours &amp; Access in Kalamazoo</h2>\n\t\t\t\t\t<p>Hours for coworking and hackerspace access at Kalamazoo Makerspace are managed centrally so this page always stays up to date.</p>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t\t<div class=\"row justify-content-center mt-4\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<div id=\"hours-homepage-section\">\n\t\t\t\t\t<!-- Hours will be dynamically loaded -->\n\t\t\t\t\t<p>Loading hours...</p>\n\t\t\t\t</div>\n\t\t\t\t<p class=\"mt-3\">If you need to visit outside of regular open hours—such as for a specific project, <strong>Dedicated bench rental</strong> setup, or <strong>Dedicated workspace rental</strong> discussion—reach out through our <a href=\"/contact\">contact page</a> so we can coordinate.</p>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-233",
+    "html": "<section class=\"section\" id=\"coworking-kalamazoo-how-it-works\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-10\">\n\t\t\t\t<div class=\"title text-center\">\n\t\t\t\t\t<h2>How Coworking at a Hackerspace Works</h2>\n\t\t\t\t\t<p><strong>If you've only used traditional coworking spaces, a makerspace-style coworking model is a little different—but very flexible.</strong></p>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t\t<div class=\"row mt-4\">\n\t\t\t<div class=\"col-lg-12\">\n\t\t\t\t<ol>\n\t\t\t\t\t<li><strong>Schedule a tour.</strong> Walk through the quiet desks, noisy shop areas, and tool zones to see where you would work.</li>\n\t\t\t\t\t<li><strong>Pick a membership.</strong> Choose the membership level that fits how often you plan to use the coworking hackerspace (starting around $5/month).</li>\n\t\t\t\t\t<li><strong>Complete orientation.</strong> Learn basic safety and how to respect both quiet and noisy work zones.</li>\n\t\t\t\t\t<li><strong>Claim your spot.</strong> Use open desks for casual coworking, or talk with volunteers about dedicated bench or dedicated workspace options.</li>\n\t\t\t\t\t<li><strong>Build, code, and collaborate.</strong> Use the free Wi‑Fi, community tools, and other members' experience to move your projects forward.</li>\n\t\t\t\t</ol>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  },
+  {
+   "type": "HtmlSection",
+   "props": {
+    "id": "HtmlSection-234",
+    "html": "<section class=\"section\" id=\"coworking-kalamazoo-faq\">\n\t<div class=\"container\">\n\t\t<div class=\"row justify-content-center\">\n\t\t\t<div class=\"col-lg-8\">\n\t\t\t\t<div class=\"title text-center\">\n\t\t\t\t\t<h2>Coworking Hackerspace FAQ</h2>\n\t\t\t\t\t<div class=\"border\"></div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t\t<div class=\"row mt-4\">\n\t\t\t<div class=\"col-lg-10 mx-auto\">\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>Is this a quiet coworking space or a noisy workshop?</h4>\n\t\t\t\t\t<p>Both. We intentionally separate <strong>quiet coworking areas</strong> from <strong>noisy hackerspace build areas</strong>. If you need focus, you can work from the quiet side. When it’s time to solder, 3D print, or collaborate loudly, you can move to the more active zones.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>Do you really offer coworking for around $5/month?</h4>\n\t\t\t\t\t<p>Yes. Because we are a nonprofit and volunteer-driven, entry-level membership that includes coworking-style access can be as low as about <strong>$5 per month</strong>. Check the <a href=\"/pricing\">pricing page</a> for current details and any additional options.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>What is Dedicated bench rental?</h4>\n\t\t\t\t\t<p><strong>Dedicated bench rental</strong> refers to having a more permanent bench or desk area inside the makerspace where you can leave some tools or ongoing work, instead of clearing everything away each visit. Availability and details may change over time, so ask during your tour.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>Do you offer Dedicated workspace rental for teams?</h4>\n\t\t\t\t\t<p>For small teams or long-running projects, we sometimes offer <strong>Dedicated workspace rental</strong> style arrangements inside the hackerspace. These are typically handled on a case-by-case basis depending on space, safety, and project needs.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>Can I use tools while coworking, or is it just desks?</h4>\n\t\t\t\t\t<p>Part of the appeal of a coworking hackerspace in Kalamazoo is that your laptop work and hands-on work can live in the same place. With the appropriate training and safety orientation, you can move from your desk to areas like the electronics lab, 3D printing lab, wood shop, or metal shop.</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"mb-4\">\n\t\t\t\t\t<h4>How do I get started?</h4>\n\t\t\t\t\t<p>The best way to begin is to <a href=\"/tours\">schedule a tour</a>. You’ll see where people sit to work quietly, where the noisy shop activity happens, and what membership option makes sense for your coworking and hackerspace goals.</p>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</section>"
+   }
+  }
+ ],
+ "zones": {}
+}

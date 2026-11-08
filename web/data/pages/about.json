@@ -1,0 +1,25 @@
+{
+ "root": {
+  "props": {
+   "title": "About Kzoo Makers",
+   "description": "Learn about Kzoo Makers - Kalamazoo's community-driven 501(c)(3) nonprofit makerspace. Discover our volunteer-run workshop, meet our board members, and see how we support makers with tools, equipment, and collaborative workspace in Michigan."
+  }
+ },
+ "content": [
+  {
+   "type": "PageHeader",
+   "props": {
+    "id": "PageHeader-0",
+    "title": "About Us"
+   }
+  },
+  {
+   "type": "Guided",
+   "props": {
+    "id": "Guided-1",
+    "kind": "about"
+   }
+  }
+ ],
+ "zones": {}
+}

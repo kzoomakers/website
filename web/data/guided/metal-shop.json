@@ -1,0 +1,167 @@
+{
+ "galleryTitle": "Metal Shop Gallery",
+ "galleryText": "Explore our professional metalworking facility featuring mills, lathes, and equipment for precision machining and metal fabrication projects.",
+ "slides": [
+  {
+   "image": "/images/metal-shop/metalshop_1.webp",
+   "alt": "Bridgeport Mill",
+   "caption": ""
+  },
+  {
+   "image": "/images/metal-shop/metalshop_2.webp",
+   "alt": "Bridgeport Mill 2",
+   "caption": ""
+  },
+  {
+   "image": "/images/metal-shop/metalshop_3.webp",
+   "alt": "Mill Bits",
+   "caption": ""
+  },
+  {
+   "image": "/images/metal-shop/metalshop_4.webp",
+   "alt": "Cleaning Brush",
+   "caption": ""
+  },
+  {
+   "image": "/images/metal-shop/metalshop_5.webp",
+   "alt": "Mill Sleave",
+   "caption": ""
+  },
+  {
+   "image": "/images/metal-shop/metalshop_7.webp",
+   "alt": "Some things",
+   "caption": ""
+  },
+  {
+   "image": "/images/metal-shop/metalshop_10.webp",
+   "alt": "Metal Lathe",
+   "caption": ""
+  },
+  {
+   "image": "/images/metal-shop/metalshop_9.webp",
+   "alt": "Mill Tooling",
+   "caption": ""
+  }
+ ],
+ "sections": [
+  {
+   "look": "Columns of text",
+   "background": "White",
+   "title": "Professional Metalworking & Machining Facility",
+   "intro": "Our metal shop is equipped with professional-grade mills, lathes, and fabrication equipment for precision metalworking and machining projects.",
+   "columns": "2",
+   "items": [
+    {
+     "icon": "none",
+     "heading": "Major Equipment",
+     "text": "- **Herco Mill** - Professional milling machine for precision metalwork\n- **Bridgeport Mill** - Industry-standard vertical milling machine\n- **Metal Lathes** - Precision turning for cylindrical metal parts\n- **Metal Band Saw** - Accurate cutting of metal stock and materials"
+    },
+    {
+     "icon": "none",
+     "heading": "Additional Tools & Equipment",
+     "text": "- **Drill Press** - Precision drilling for metal projects\n- **Grinding Equipment** - Surface finishing and sharpening\n- **Measuring Tools** - Calipers, micrometers, and precision gauges\n- **Hand Tools** - Complete selection of metalworking hand tools\n- **Vises & Clamps** - Secure workholding for machining operations\n- **Safety Equipment** - Eye protection, gloves, and safety gear\n- **Work Benches** - Dedicated spaces for assembly and fabrication\n- **Storage** - Organized tool and material storage systems"
+    }
+   ],
+   "buttons": []
+  },
+  {
+   "look": "Columns of text",
+   "background": "White",
+   "title": "",
+   "intro": "",
+   "columns": "1",
+   "items": [
+    {
+     "icon": "none",
+     "heading": "What Makes Our Metal Shop Special",
+     "text": "At Kalamazoo Makerspace, our metal shop provides access to professional machining equipment that enables members to work with metal in ways that would otherwise require expensive commercial shop access. Whether you're creating custom parts, repairing equipment, or building metal projects from scratch, our facility has the tools you need.\n\nOur metal shop features both the Herco Mill and Bridgeport Mill, giving members access to versatile milling capabilities for a wide range of projects. Combined with our metal lathes for turning operations and a metal band saw for cutting stock, you have the core equipment needed for most metalworking and machining tasks.\n\nThe metal shop is designed for members who have experience with metalworking equipment or are willing to learn. While limited training is available, members are expected to have or develop the knowledge necessary to operate the equipment safely and effectively. The space includes proper workholding equipment, measuring tools, and safety gear to support professional-quality metalworking."
+    }
+   ],
+   "buttons": []
+  },
+  {
+   "look": "Centered call-to-action",
+   "background": "White",
+   "title": "",
+   "intro": "",
+   "columns": "1",
+   "items": [
+    {
+     "icon": "none",
+     "heading": "Ready to Start Your Next Metalworking Project?",
+     "text": "Join Kalamazoo Makerspace and gain access to our professional metal shop facility."
+    }
+   ],
+   "buttons": [
+    {
+     "label": "View Membership Options",
+     "href": "/pricing"
+    },
+    {
+     "label": "Schedule a Tour",
+     "href": "/tours"
+    }
+   ]
+  },
+  {
+   "look": "Icon cards",
+   "background": "Grey",
+   "title": "Safety & Training",
+   "intro": "",
+   "columns": "3",
+   "items": [
+    {
+     "icon": "check",
+     "heading": "Limited Training Available",
+     "text": "Basic safety orientation is provided. Members should have prior metalworking experience or be prepared to learn independently with available resources."
+    },
+    {
+     "icon": "people",
+     "heading": "Community Knowledge",
+     "text": "Experienced members may be available to provide guidance and share their expertise with fellow metalworkers."
+    },
+    {
+     "icon": "star",
+     "heading": "Safety First",
+     "text": "All members must follow safety protocols and use appropriate personal protective equipment when working in the metal shop."
+    }
+   ],
+   "buttons": []
+  },
+  {
+   "look": "Columns of text",
+   "background": "White",
+   "title": "Frequently Asked Questions",
+   "intro": "",
+   "columns": "1",
+   "items": [
+    {
+     "icon": "none",
+     "heading": "Do I need to bring my own metal materials?",
+     "text": "Yes, members provide their own materials for projects. We may have some scrap metal available, but plan to source your own stock for most projects."
+    },
+    {
+     "icon": "none",
+     "heading": "What experience level do I need?",
+     "text": "Members should have prior metalworking experience or be committed to learning independently. Limited training is available, so familiarity with mills, lathes, and metalworking safety is beneficial."
+    },
+    {
+     "icon": "none",
+     "heading": "What types of projects can I work on?",
+     "text": "The metal shop supports a wide range of projects including custom parts fabrication, repairs, prototyping, and general metalworking. Projects should be appropriate for the available equipment."
+    },
+    {
+     "icon": "none",
+     "heading": "How do I get access to the metal shop?",
+     "text": "After becoming a member, you'll need to complete a safety orientation. Due to limited training availability, prior experience with metalworking equipment is recommended."
+    },
+    {
+     "icon": "none",
+     "heading": "What are the metal shop hours?",
+     "text": "The metal shop is available during makerspace open hours. Check our calendar or contact us for current hours and any scheduled maintenance times."
+    }
+   ],
+   "buttons": []
+  }
+ ]
+}

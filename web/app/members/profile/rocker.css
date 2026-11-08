@@ -1,0 +1,29 @@
+/* Rocker power switch, scaled down from a 130x250 design to sit beside a label. */
+.rk { --rk-light: rgba(255,142,142,.8); --rk-s: .2; position: relative; flex: none; display: block;
+  width: calc((130px + 32px) * var(--rk-s)); height: calc((250px + 32px) * var(--rk-s)); }
+.rk input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 1; }
+.rk input:focus-visible ~ .rk-frame { outline: 3px solid #4c9ffe; outline-offset: 14px; }
+.rk-frame { position: absolute; left: calc(16px * var(--rk-s)); top: calc(16px * var(--rk-s)); width: 130px; height: 250px;
+  transform: scale(var(--rk-s)); transform-origin: 0 0; background: #000; border-radius: 2px;
+  box-shadow: 0 0 0 7px #000, 0 0 0 9px #323232, 0 0 0 13px #6d6d6d, 0 -1px 2px 16px #8d8b8b; }
+.rk-c > span:first-child { color: rgba(255,255,255,.737); overflow: hidden; font: 800 70px "Courier New", Courier, monospace; }
+.rk-sw { position: absolute; top: 0; width: 100%; height: 100%; transform: perspective(55em) rotateX(0deg);
+  transform-style: preserve-3d; transition: all .7s cubic-bezier(1,0,0,1.1); }
+.rk input:checked ~ .rk-frame .rk-sw { transform: perspective(55em) rotateX(45deg); }
+.rk input:checked ~ .rk-frame :is(.rk-top, .rk-bottom, .rk-top-back, .rk-bottom-back) { background: #ff0d0d; text-shadow: 0 0 5px #fff; }
+.rk input:checked ~ .rk-frame :is(.rk-lt, .rk-lb) { box-shadow: 0 0 18px -2px #ff5c5c; }
+.rk-c { display: flex; align-items: center; justify-content: center; }
+.rk-lt, .rk-lb { transition: all .7s cubic-bezier(1,0,0,1.1); position: absolute; width: 100%; height: 100%; }
+.rk-lt { bottom: 0; } .rk-lb { top: 0; }
+.rk-top, .rk-bottom { position: absolute; width: 100%; height: 50%; transform-style: preserve-3d; transform-origin: bottom;
+  transition: all .7s cubic-bezier(1,0,0,1.1); background: #bb0c00; }
+.rk-top { top: 0; transform: rotateX(-45deg);
+  box-shadow: 0 11px 8px -8px var(--rk-light) inset, -11px 0 8px -8px var(--rk-light) inset, 0 30px 50px -20px rgba(0,0,0,.5) inset, 11px 0 8px -8px var(--rk-light) inset; }
+.rk-bottom { bottom: 0; transform: rotateX(0deg);
+  box-shadow: 0 -11px 8px -8px var(--rk-light) inset, -11px 0 8px -8px var(--rk-light) inset, 0 -30px 50px -20px rgba(0,0,0,.5) inset, 11px 0 8px -8px var(--rk-light) inset; }
+.rk-top-back, .rk-bottom-back { position: absolute; width: 100%; height: 40%; transition: all .7s cubic-bezier(1,0,0,1.1); }
+.rk-top-back { top: 0; background: #d30e00; transform: rotateX(-80deg); transform-origin: top;
+  box-shadow: 0 -8px 8px -4px #000 inset, 0 10px 8px -8px var(--rk-light) inset, -11px 0 8px -8px var(--rk-light) inset, 0 0 50px 2px rgba(0,0,0,.5) inset, 11px 0 8px -8px var(--rk-light) inset; }
+.rk-bottom-back { bottom: .5px; background: #bb0c00; transform: rotateX(80deg); transform-origin: bottom;
+  box-shadow: 0 8px 8px -4px #000 inset, 0 -10px 8px -8px var(--rk-light) inset, -11px 0 8px -8px var(--rk-light) inset, 0 0 50px 2px rgba(0,0,0,.5) inset, 11px 0 8px -8px var(--rk-light) inset; }
+@media (prefers-reduced-motion: reduce) { .rk * { transition: none !important; } }
