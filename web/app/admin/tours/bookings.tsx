@@ -29,6 +29,7 @@ export default function Bookings({ initial }: { initial: Booking[] }) {
             <a className="tag" href={`mailto:${b.email}`}>{b.email}</a><a className="tag" href={`tel:${b.phone}`}>{b.phone}</a>
             {b.guide_name && <span className="tag">Guide: {b.guide_name}</span>}
             {(b.interest || b.heard) && <div className="sub" style={{ margin: "4px 0" }}>{b.interest && `Interested in: ${b.interest}. `}{b.heard && `Heard about us: ${b.heard}.`}</div>}
+            {(b.client_ip || b.user_agent || b.screen) && <div className="sub" style={{ margin: "4px 0", fontSize: 12 }}>Device: {[b.client_ip, b.screen, b.user_agent].filter(Boolean).join(" · ")}</div>}
             {b.visitor_notes && <div className="sub" style={{ margin: "4px 0" }}>Visitor's notes: {b.visitor_notes}</div>}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginTop: 6 }}>
               {b.status === "cancelled" ? <span className="tag" style={{ fontWeight: 600 }}>Cancelled</span> : (

@@ -39,6 +39,7 @@ export default function Walkups({ initial, email, name }: { initial: WalkupReque
               <a className="tag" href={`mailto:${r.email}`}>{r.email}</a><a className="tag" href={`tel:${r.phone}`}>{r.phone}</a><span className="tag">Zip {r.zip}</span><span className="tag">Prefers: {r.contact_method}</span>
             </div>
             {r.interest && <div className="sub" style={{ margin: "4px 0" }}>Interested in: {r.interest}</div>}
+            {(r.client_ip || r.user_agent || r.screen) && <div className="sub" style={{ margin: "4px 0", fontSize: 12 }}>Device: {[r.client_ip, r.screen, r.user_agent].filter(Boolean).join(" · ")}</div>}
             {r.notes && <div className="sub" style={{ margin: "4px 0" }}>Notes: {r.notes}</div>}
             {r.decline_note && r.status === "open" && <div className="sub" style={{ margin: "4px 0" }}>Last reply: “{r.decline_note}”</div>}
             {r.status === "offered" && <ul className="sub" style={{ margin: "4px 0" }}>{r.offers.map((o) => <li key={o.date + o.start}>{o.date} {o.start}–{o.end}</li>)}</ul>}

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 
 type Slot = { block: number; date: string; start: string; end: string; left: number };
+const SCREEN = () => `${screen.width}x${screen.height}`;
 const day = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 const time = (t: string) => new Date(`2000-01-01T${t}`).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 const CSS = `.tb label{display:block;margin-bottom:14px;font-weight:600}.tb input:not([type=checkbox]),.tb select,.tb textarea{display:block;width:100%;margin-top:6px;padding:10px 12px;border:1px solid #d5d9de;border-radius:8px;font:inherit}
@@ -18,14 +19,14 @@ export default function Booking() {
     setBusy(true); setErr("");
     const f = new FormData(e.currentTarget);
     const r = await fetch("/api/tours", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({
-      block: pick.block, start: pick.start, name: f.get("name"), email: f.get("email"), phone: f.get("phone"), heard: f.get("heard"), notes: f.get("notes"), website: f.get("website"), areas: f.getAll("areas") }) }).catch(() => null);
+      block: pick.block, start: pick.start, name: f.get("name"), email: f.get("email"), phone: f.get("phone"), heard: f.get("heard"), notes: f.get("notes"), website: f.get("website"), screen: SCREEN(), areas: f.getAll("areas") }) }).catch(() => null);
     setBusy(false);
     if (r?.ok) setDone(pick); else setErr(r ? await r.text() : "Couldn't reach the server. Please try again.");
   };
   const sendReq = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); setBusy(true); setErr("");
     const f = new FormData(e.currentTarget);
-    const r = await fetch("/api/tours", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ request: true, first: f.get("first"), last: f.get("last"), email: f.get("email"), phone: f.get("phone"), zip: f.get("zip"), contact: f.get("contact"), notes: f.get("notes"), website: f.get("website"), areas: f.getAll("areas") }) }).catch(() => null);
+    const r = await fetch("/api/tours", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ request: true, first: f.get("first"), last: f.get("last"), email: f.get("email"), phone: f.get("phone"), zip: f.get("zip"), contact: f.get("contact"), notes: f.get("notes"), website: f.get("website"), screen: SCREEN(), areas: f.getAll("areas") }) }).catch(() => null);
     setBusy(false);
     if (r?.ok) setAsked(true); else setErr(r ? await r.text() : "Couldn't reach the server. Please try again.");
   };
@@ -39,7 +40,7 @@ export default function Booking() {
       <style>{CSS}</style>
       {!pick && (ask || !days.length) ? (
         <form onSubmit={sendReq}>
-          <p>{days.length ? "Can't find a time that works? Tell us a bit about yourself and a volunteer will offer you some dates." : "There are no open tour times right now. Tell us a bit about yourself and a volunteer will email you some dates that work for them. You pick the one you like."}</p>
+          <p>{days.length ? "Can't find a time that works? Tell us a bit about yourself and a volunteer will offer you some dates." : "Tell us a bit about yourself and a volunteer will email you some dates that work for them. You pick the one you like."}</p>
           <div className="tb-row"><label>First name<input name="first" required maxLength={60} autoComplete="given-name" /></label><label>Last name<input name="last" required maxLength={60} autoComplete="family-name" /></label></div>
           <label>Email<input name="email" type="email" required maxLength={200} autoComplete="email" /></label>
           <div className="tb-row"><label>Phone<input name="phone" type="tel" required maxLength={30} autoComplete="tel" placeholder="269 555 0123" /></label><label>Zip code<input name="zip" required inputMode="numeric" pattern="\d{5}(-\d{4})?" maxLength={10} autoComplete="postal-code" /></label></div>
@@ -49,6 +50,7 @@ export default function Booking() {
           {notes}
           <div className="tb-hp" aria-hidden><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
           {err && <p className="tb-err" role="alert">{err}</p>}
+          <p><small>We keep your IP address, browser and screen size to prevent abuse.</small></p>
           <button className="btn btn-main" disabled={busy}>{busy ? "Sending…" : "Request a tour"}</button>
           {days.length > 0 && <> <button type="button" className="btn" onClick={() => { setAsk(false); setErr(""); }}>← Back to open times</button></>}
         </form>
@@ -71,7 +73,7 @@ export default function Booking() {
           <label>How did you hear about us? <small>(optional)</small><select name="heard" defaultValue=""><option value="">Select…</option>{data.heard.map((h) => <option key={h}>{h}</option>)}</select></label>
           {notes}
           <div className="tb-hp" aria-hidden><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
-          <p><small>By booking you agree to get emails about this tour.</small></p>
+          <p><small>By booking you agree to get emails about this tour. We keep your IP address, browser and screen size to prevent abuse.</small></p>
           {err && <p className="tb-err" role="alert">{err}</p>}
           <button className="btn btn-main" disabled={busy}>{busy ? "Booking…" : "Book this tour"}</button>
         </form>
