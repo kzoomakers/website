@@ -15,6 +15,18 @@ export const poolFor = (c: Pick<Cfg, "databaseUrl" | "databaseCa">) =>
 
 // Creates the table and, if it is brand new/empty, loads the migrated pages from data/pages.
 export async function ensureSchema(pool: Pool) {
+  // One process migrates at a time: a second one starting together waits here, then finds everything already done (the welcomed_at backfill must run once).
+  const lock = await pool.connect();
+  try {
+    await lock.query("SELECT pg_advisory_lock(7351902)");
+    await migrate(pool);
+  } finally {
+    await lock.query("SELECT pg_advisory_unlock(7351902)").catch(() => {});
+    lock.release();
+  }
+}
+
+async function migrate(pool: Pool) {
   await pool.query(`CREATE TABLE IF NOT EXISTS pages (
     slug text PRIMARY KEY, data jsonb NOT NULL, updated_at timestamptz NOT NULL DEFAULT now())`);
   await pool.query("CREATE TABLE IF NOT EXISTS settings (key text PRIMARY KEY, data jsonb NOT NULL)");
@@ -76,6 +88,8 @@ export async function ensureSchema(pool: Pool) {
     created_at timestamptz NOT NULL DEFAULT now())`);
   await pool.query("CREATE INDEX IF NOT EXISTS emergency_contacts_user ON emergency_contacts (user_id)");
   await pool.query("ALTER TABLE site_users ADD COLUMN IF NOT EXISTS session_version int NOT NULL DEFAULT 0");
+  // welcomed_at: set when they finish the welcome wizard. Added with every approved member already through onboarding counted as welcomed (people still waiting for approval are not), so only new approvals see it.
+  await pool.query("DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'site_users' AND column_name = 'welcomed_at') THEN ALTER TABLE site_users ADD COLUMN welcomed_at timestamptz; UPDATE site_users SET welcomed_at = now() WHERE onboarding = 'done' AND approval = 'approved'; END IF; END $$");
   await pool.query("ALTER TABLE site_users ADD COLUMN IF NOT EXISTS member_listed_at timestamptz"); // set once, when they first join the Members mailing list; an admin removing them later sticks
   await pool.query("CREATE TABLE IF NOT EXISTS login_fails (email text NOT NULL, at timestamptz NOT NULL DEFAULT now())");
   await pool.query("ALTER TABLE login_fails ADD COLUMN IF NOT EXISTS ip text NOT NULL DEFAULT ''"); // lockouts are per address + visitor, so a stranger can't lock someone out

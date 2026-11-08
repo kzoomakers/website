@@ -36,6 +36,12 @@ export async function sign(u: { id: number; name: string; email: string }, signa
   await joinMembersIfDone(u.id);
 }
 
+/** The wizard's last screen was reached: it never opens again. Only once the required steps are done. */
+export async function welcomed(userId: number) {
+  if ((await getStep(userId)) !== "done") throw new Error("Finish the earlier steps first.");
+  await (await conn()).query("UPDATE site_users SET welcomed_at = now() WHERE id = $1 AND welcomed_at IS NULL", [userId]);
+}
+
 export async function handbookRead(userId: number) { await advance(userId, "handbook"); }
 
 /** The rules for an ID upload; throws a message the member can act on. */

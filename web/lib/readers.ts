@@ -111,8 +111,8 @@ export async function afterSignIn(userId: number, next: string) {
   const u = (await (await conn()).query(`SELECT u.approval, ${STEP_SQL} AS onboarding, u.phone = '' OR u.address1 = '' AS thin, NOT EXISTS (SELECT 1 FROM emergency_contacts WHERE user_id = $1) AS no_contact FROM site_users u WHERE u.id = $1`, [userId])).rows[0];
   if (u?.approval !== "approved") return "/members";
   await joinMembersIfDone(userId); // also catches up people who finished before the Members list existed
-  if (u.onboarding !== "done") return "/members/onboarding";
-  return u.thin || u.no_contact ? `/account?setup=1&next=${encodeURIComponent(safeNext(next))}` : safeNext(next);
+  if (u.onboarding === "resign") return "/members/onboarding";
+  return u.onboarding !== "done" || u.thin || u.no_contact ? "/members" : safeNext(next); // first-time steps (and missing details) are the welcome wizard on /members
 }
 
 /** A one-time sign-in link that lands on `next` (used by message emails). It works once; whoever holds it gets into that account until then, so it's short-lived and only meant for the person it was sent to. */
@@ -191,13 +191,13 @@ export async function setPassword(userId: number, password: string, current = ""
 }
 
 /** The user in the signed session cookie, whatever their approval state (verified and not disabled). Only the applicant pages use this; everything else wants currentVerified. */
-export async function currentApplicant(): Promise<(Reader & { approval: string; onboarding: string }) | null> {
+export async function currentApplicant(): Promise<(Reader & { approval: string; onboarding: string; fresh: boolean }) | null> {
   if (!db()) return null;
   const [id, exp, ver, sig] = ((await cookies()).get(COOKIE_NAME)?.value ?? "").split(".");
   if (!sig || Number(exp) < Date.now()) return null;
   const want = mac(`${id}.${exp}.${ver}`);
   if (sig.length !== want.length || !timingSafeEqual(Buffer.from(sig), Buffer.from(want))) return null;
-  return (await (await conn()).query(`SELECT u.id, u.email, u.name, u.approval, ${STEP_SQL} AS onboarding FROM site_users u WHERE u.id = $1 AND u.session_version = $2 AND u.verified_at IS NOT NULL AND u.disabled_at IS NULL`, [Number(id), Number(ver)])).rows[0] ?? null;
+  return (await (await conn()).query(`SELECT u.id, u.email, u.name, u.approval, ${STEP_SQL} AS onboarding, u.welcomed_at IS NULL AS fresh FROM site_users u WHERE u.id = $1 AND u.session_version = $2 AND u.verified_at IS NOT NULL AND u.disabled_at IS NULL`, [Number(id), Number(ver)])).rows[0] ?? null;
 }
 
 /** Signed-in, verified and not rejected, approved or not: enough for blog comments and the Account page. Members-only features must use currentMember instead. */

@@ -12,7 +12,8 @@ const when = (s: string) => new Date(s).toLocaleString([], { dateStyle: "medium"
 // Home for everyone signed in. Until someone is approved it is the only members page they get: their application status and the conversation with the team.
 export default async function Members() {
   const a = await currentApplicant().catch(() => null);
-  if (a?.approval === "approved" && a.onboarding !== "done") redirect("/members/onboarding");
+  if (a?.approval === "approved" && a.onboarding === "resign") redirect("/members/onboarding");
+  if (a?.approval === "approved" && a.onboarding !== "done") return <h1>Welcome</h1>; // the welcome wizard is open over this
   if (a && a.approval !== "approved") return <><h1>Welcome</h1><Status /></>;
   return (
     <MembersShell title="Home" path="/members">
