@@ -6,6 +6,7 @@ import { baseUrl } from "@/lib/mail";
 import { me } from "@/lib/guard";
 import * as t from "@/lib/tours";
 import * as n from "@/lib/tours-notify";
+import { activateWalkup } from "@/lib/approvals";
 
 // Tours admin RPC: POST { op, ...args }. Reads need Tours view access, everything else Tours edit access.
 export const dynamic = "force-dynamic";
@@ -31,6 +32,14 @@ export async function POST(req: Request) {
       case "subAdd": await n.subscribe(a.event, a.topic); break;
       case "subRemove": await n.unsubscribe(a.event, a.topic); break;
       case "offer": await t.offerTimes(id, a.offers, { name: String(a.guide_name ?? ""), email: String(a.guide_email ?? "") }, await baseUrl(req)); break;
+      case "activate": { // approves a member, so it needs CRM write too
+        if (!(await editingAllowed("crm", "write"))) return new NextResponse("Activating someone approves them as a member, which needs CRM access.", { status: 403 });
+        const base = await baseUrl(req), r = await activateWalkup(id, who, base);
+        await t.setRequestStatus(id, "closed");
+        await t.postStaff("request", id, `Activated as a member on site by ${who}.`, true, who, base).catch(() => {});
+        await logAudit(who, "tour.activate", String(id));
+        return NextResponse.json(r);
+      }
       case "reopen": case "close": await t.setRequestStatus(id, a.op === "close" ? "closed" : "open"); break;
       case "saveBlock": await t.saveBlock(a.block ?? {}, who); break;
       case "deleteBlocks": { const r = await t.deleteBlocks(a.ids, await baseUrl(req)); await logAudit(who, "tour.deleteBlocks", `${r.blocks} blocks, ${r.people} people`); return NextResponse.json(r); }

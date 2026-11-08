@@ -145,6 +145,25 @@ export async function move(id: number, from: string, to: string, who: string, r:
   return { emailed: false };
 }
 
+/** Staff activate a walk-up on the spot (they showed up early): make or find their account, approve it and put them at the waiver step, then email the sign-in link. Idempotent for someone already approved. */
+export async function activateWalkup(requestId: number, who: string, base: string) {
+  const c = await conn(), r = (await c.query("SELECT first_name, last_name, email, phone, status FROM tour_requests WHERE id = $1", [requestId])).rows[0];
+  if (!r) throw new Error("No such request.");
+  if (r.status !== "open" && r.status !== "offered") throw new Error("This request is already scheduled or dismissed.");
+  const email = String(r.email).trim().toLowerCase(), name = `${r.first_name} ${r.last_name}`.trim();
+  const old = (await c.query("SELECT id, approval, disabled_at FROM site_users WHERE email = $1", [email])).rows[0];
+  if (old?.disabled_at) throw new Error("This person's account is disabled. Enable it in the CRM first.");
+  if (old?.approval === "rejected") throw new Error("This person was turned down earlier. Change that in CRM > Approvals first.");
+  const id: number = old?.id ?? (await c.query("INSERT INTO site_users (email, name, first_name, last_name, phone, approval, verified_at) VALUES ($1,$2,$3,$4,$5,'approved', now()) ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email RETURNING id", [email, name, r.first_name, r.last_name, r.phone])).rows[0].id;
+  const was = old?.approval ?? "new";
+  await c.query("UPDATE site_users SET approval = 'approved', verified_at = COALESCE(verified_at, now()), phone = CASE WHEN phone = '' THEN $2 ELSE phone END WHERE id = $1", [id, r.phone]);
+  await c.query("UPDATE site_users SET onboarding = 'waiver' WHERE id = $1 AND NOT EXISTS (SELECT 1 FROM sign_docs WHERE user_id = $1 AND kind = 'waiver' AND status = 'complete')", [id]);
+  if (was !== "approved") await addEvent(c, id, who, false, "state", "approved", "Activated on site from a walk-up request");
+  await logAudit(who, "crm.approval", `${email}: ${was} → approved (activated from a walk-up request)`);
+  await addRegistered(email, name, base).catch(() => {});
+  return { emailed: await mailTo({ id, email, name }, "Welcome to Kzoo Makers: sign your agreement", "You're activated! Sign in to sign our liability waiver, read the membership handbook, upload a photo ID and finish setting up your profile.", "", "Get started", "/members", base) };
+}
+
 /** The applicant answers. Waiting becomes Pending again, which puts them back at the top of the queue. */
 export async function reply(id: number, bodyIn: string) {
   const body = clip(bodyIn, 2000), c = await conn();

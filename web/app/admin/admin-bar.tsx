@@ -10,11 +10,11 @@ export default function AdminBar({ allowed }: { allowed: string[] }) {
   const here = usePathname();
   const tabs = TABS.filter(([, , , s]) => allowed.includes(s));
   const cur = tabs.find(([h]) => h === tabOf(here));
-  // Waiting items per tab (reviews, comments, held messages, applicants), refreshed every minute and when you move to another page.
+  // Waiting items per tab (reviews, comments, held messages, applicants, walk-ups), refreshed every minute and when you move to another page.
   const [n, setN] = useState<Record<string, number>>({});
   useEffect(() => {
     let live = true;
-    const poll = () => fetch("/api/webmaster/alerts", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((d) => live && d && setN({ "/admin/webmaster": d.reviews, "/admin/blog": d.comments, "/admin/forms": d.forms, "/admin/crm": d.applicants }), () => {});
+    const poll = () => fetch("/api/webmaster/alerts", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((d) => live && d && setN({ "/admin/webmaster": d.reviews, "/admin/blog": d.comments, "/admin/forms": d.forms, "/admin/crm": d.applicants, "/admin/tours": d.walkups }), () => {});
     poll();
     const t = setInterval(poll, 60_000);
     return () => { live = false; clearInterval(t); };

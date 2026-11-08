@@ -1,7 +1,7 @@
 "use client";
 import Notice from "@/components/notice";
 import { useState } from "react";
-import { confirmDialog } from "@/components/dialog";
+import { alertDialog, confirmDialog } from "@/components/dialog";
 import type { Offer, WalkupRequest } from "@/lib/tours";
 import { AdminThread } from "@/components/tour-thread";
 import { tours } from "../rpc";
@@ -22,6 +22,12 @@ export default function Walkups({ initial, email, name }: { initial: WalkupReque
   const send = async (r: WalkupRequest) => { if (await run(() => tours("offer", { id: r.id, offers, ...g }))) setOpen(0); };
   const close = async (r: WalkupRequest) => { if (await confirmDialog(`Dismiss ${r.first_name} ${r.last_name}'s request? They will not be emailed.`, { ok: "Dismiss", danger: true })) run(() => tours("close", { id: r.id })); };
   const takeBack = async (r: WalkupRequest) => { if (await confirmDialog(`Take back the offer to ${r.first_name}? Their emailed links stop working and the request returns to the queue.`, { ok: "Take back" })) run(() => tours("reopen", { id: r.id })); };
+  const activate = async (r: WalkupRequest) => {
+    if (!(await confirmDialog(`Activate ${r.first_name} ${r.last_name} now? This approves ${r.email} as a member right away, emails them a sign-in link to sign the membership agreement, read the handbook and upload an ID, and takes this request off the list.`, { ok: "Activate now", title: "Activate now" }))) return;
+    setMsg(""); setBusy(true);
+    try { const j = await tours("activate", { id: r.id }); await load(); await alertDialog(j.emailed ? `${r.first_name} is activated. The sign-in link was emailed to ${r.email}.` : `${r.first_name} is activated, but the email could not be sent. Have them sign in with ${r.email} on the sign-in page; the agreement will be waiting.`); }
+    catch (e: any) { setMsg(e.message); } finally { setBusy(false); }
+  };
   return (
     <>
       <h1>Walk-ups</h1>
@@ -66,6 +72,7 @@ export default function Walkups({ initial, email, name }: { initial: WalkupReque
             ) : r.status === "open" || r.status === "offered" ? (
               <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
                 <button className="pri" onClick={() => start(r)}>{r.status === "offered" ? "Change times" : "Offer times"}</button>
+                <button disabled={busy} onClick={() => activate(r)}>Activate now</button>
                 {r.status === "offered" && <button onClick={() => takeBack(r)}>Take back</button>}
                 <button className="danger" onClick={() => close(r)}>Dismiss</button>
               </div>
