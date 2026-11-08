@@ -561,8 +561,8 @@ async function loadCalendar() {
   const container = document.getElementById('events-list-container');
 
   try {
-    // Use a CORS proxy to fetch the ICS file
-    const response = await fetch('https://kzoomakers.org/cal.ics');
+    // Same-origin proxy of the feed set in Admin > Webmaster > Calendar (cached server-side)
+    const response = await fetch('/api/webmaster/calendar');
 
     if (!response.ok) {
       throw new Error('Failed to fetch calendar');

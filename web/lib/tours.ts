@@ -10,7 +10,7 @@ import { getMailCfg, mailReady, sendQueued as send } from "./mail";
 export { TZ };
 export const MIN_ADVANCE_H = 4, WINDOW_DAYS = 28;
 export const AREAS = ["Wood shop", "Metal shop", "Laser shop", "3D printing", "Craft room", "Electronics", "Meeting space"];
-export const CONTACT = ["Email", "Phone call", "Text message"];
+export const CONTACT = ["Text message", "Phone call"];
 export const HEARD = ["Friend or member", "Web search", "Social media", "Event or class", "Flyer or poster", "Other"];
 export const STATUSES = ["booked", "no_show", "signed_up", "sign_up_later", "maybe_later", "no_interest"] as const;
 
@@ -291,7 +291,7 @@ export async function requestTour(x: Record<string, unknown>, ipHash: string, de
   if (!r.first || !r.last || !EMAIL_OK.test(r.email)) throw new Error("Please enter your first and last name and a valid email address.");
   if (r.phone.replace(/\D/g, "").length < 10) throw new Error("Please enter a phone number with 10 digits.");
   if (!/^\d{5}(-\d{4})?$/.test(r.zip)) throw new Error("Please enter a 5-digit zip code.");
-  const interest = (Array.isArray(x.areas) ? (x.areas as unknown[]) : []).filter((a): a is string => typeof a === "string" && AREAS.includes(a)).join(", "), contact = CONTACT_PREFS.has(r.contact) ? r.contact : "Email";
+  const interest = (Array.isArray(x.areas) ? (x.areas as unknown[]) : []).filter((a): a is string => typeof a === "string" && AREAS.includes(a)).join(", "), contact = CONTACT_PREFS.has(r.contact) ? r.contact : "Text message";
   const c = await conn();
   const recent = (await c.query("SELECT count(*) FILTER (WHERE ip_hash = $1)::int AS mine, count(*)::int AS everyone FROM tour_requests WHERE created_at > now() - interval '1 hour'", [ipHash])).rows[0];
   if (recent.mine >= 5 || recent.everyone >= 40) throw new Error("Too many requests right now. Please try again later.");

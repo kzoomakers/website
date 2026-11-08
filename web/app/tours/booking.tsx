@@ -44,13 +44,13 @@ export default function Booking() {
           <div className="tb-row"><label>First name<input name="first" required maxLength={60} autoComplete="given-name" /></label><label>Last name<input name="last" required maxLength={60} autoComplete="family-name" /></label></div>
           <label>Email<input name="email" type="email" required maxLength={200} autoComplete="email" /></label>
           <div className="tb-row"><label>Phone<input name="phone" type="tel" required maxLength={30} autoComplete="tel" placeholder="269 555 0123" /></label><label>Zip code<input name="zip" required inputMode="numeric" pattern="\d{5}(-\d{4})?" maxLength={10} autoComplete="postal-code" /></label></div>
-          <label>Preferred contact method<select name="contact" defaultValue="Email">{data.contact.map((c) => <option key={c}>{c}</option>)}</select></label>
+          <label>Preferred contact method<select name="contact" defaultValue="Text message">{data.contact.map((c) => <option key={c}>{c}</option>)}</select></label>
           <fieldset className="tb-areas" style={{ border: 0, padding: 0, margin: "0 0 14px" }}><legend style={{ fontWeight: 600 }}>Which areas interest you? <small>(optional)</small></legend>
             {data.areas.map((a) => <label key={a}><input type="checkbox" name="areas" value={a} /> {a}</label>)}</fieldset>
           {notes}
           <div className="tb-hp" aria-hidden><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
           {err && <p className="tb-err" role="alert">{err}</p>}
-          <p><small>We keep your IP address, browser and screen size to prevent abuse.</small></p>
+          <p><small>You consent to emails strictly to coordinate booking or scheduling this tour.</small></p>
           <button className="btn btn-main" disabled={busy}>{busy ? "Sending…" : "Request a tour"}</button>
           {days.length > 0 && <> <button type="button" className="btn" onClick={() => { setAsk(false); setErr(""); }}>← Back to open times</button></>}
         </form>
@@ -73,7 +73,7 @@ export default function Booking() {
           <label>How did you hear about us? <small>(optional)</small><select name="heard" defaultValue=""><option value="">Select…</option>{data.heard.map((h) => <option key={h}>{h}</option>)}</select></label>
           {notes}
           <div className="tb-hp" aria-hidden><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
-          <p><small>By booking you agree to get emails about this tour. We keep your IP address, browser and screen size to prevent abuse.</small></p>
+          <p><small>You consent to emails strictly to coordinate booking or scheduling this tour.</small></p>
           {err && <p className="tb-err" role="alert">{err}</p>}
           <button className="btn btn-main" disabled={busy}>{busy ? "Booking…" : "Book this tour"}</button>
         </form>
