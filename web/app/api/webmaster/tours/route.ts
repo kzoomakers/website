@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { actor, editingAllowed } from "@/lib/guard";
 import { logAudit } from "@/lib/store";
+import { baseUrl } from "@/lib/mail";
+import { me } from "@/lib/guard";
 import * as t from "@/lib/tours";
 
 // Tours admin RPC: POST { op, ...args }. Reads need Tours view access, everything else Tours edit access.
 export const dynamic = "force-dynamic";
-const READS = new Set(["blocks", "bookings"]);
+const READS = new Set(["blocks", "bookings", "requests", "thread"]);
 
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
@@ -16,10 +18,14 @@ export async function POST(req: Request) {
     switch (a.op) {
       case "blocks": return NextResponse.json(await t.listBlocks(!!a.past));
       case "bookings": return NextResponse.json(await t.listBookings(!!a.past));
+      case "requests": return NextResponse.json(await t.listRequests(!!a.all));
+      case "offer": await t.offerTimes(id, a.offers, { name: String(a.guide_name ?? ""), email: String(a.guide_email ?? "") }, await baseUrl(req)); break;
+      case "reopen": case "close": await t.setRequestStatus(id, a.op === "close" ? "closed" : "open"); break;
       case "saveBlock": await t.saveBlock(a.block ?? {}, who); break;
-      case "deleteBlock": await t.deleteBlock(id); break;
+      case "deleteBlocks": { const r = await t.deleteBlocks(a.ids, await baseUrl(req)); await logAudit(who, "tour.deleteBlocks", `${r.blocks} blocks, ${r.people} people`); return NextResponse.json(r); }
+      case "thread": return NextResponse.json(await t.thread(String(a.kind), id));
+      case "post": { const m = await me(); await t.postStaff(String(a.kind), id, String(a.body ?? ""), !!a.internal, m?.name || who, await baseUrl(req)); break; }
       case "setStatus": await t.setStatus(id, String(a.status)); break;
-      case "setNotes": await t.setNotes(id, String(a.notes ?? "")); break;
       case "cancel": await t.cancelBooking(id); break;
       default: return new NextResponse("unknown op", { status: 400 });
     }

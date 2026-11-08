@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { confirmDialog } from "@/components/dialog";
 import type { Booking } from "@/lib/tours";
+import { AdminThread } from "@/components/tour-thread";
 import { tours } from "./rpc";
 
 const STATUS: [string, string][] = [["booked", "Booked"], ["no_show", "No-show"], ["signed_up", "Signed up"], ["sign_up_later", "Will sign up later"], ["maybe_later", "Maybe later"], ["no_interest", "Not interested"]];
@@ -16,7 +17,7 @@ export default function Bookings({ initial }: { initial: Booking[] }) {
   return (
     <>
       <h1>Tour bookings</h1>
-      <p className="sub">People who booked a tour on the website. Set what happened afterwards, add notes, or cancel a booking (the visitor is emailed).</p>
+      <p className="sub">People who booked a tour on the website. Set what happened afterwards, message the visitor or leave private notes, or cancel a booking (the visitor is emailed).</p>
       <nav className="bar">
         <label><input type="checkbox" checked={past} onChange={(e) => load(e.target.checked)} /> Include past tours</label>
         {msg && <span className="sub" role="alert" style={{ margin: 0 }}>{msg}</span>}
@@ -28,6 +29,7 @@ export default function Bookings({ initial }: { initial: Booking[] }) {
             <a className="tag" href={`mailto:${b.email}`}>{b.email}</a><a className="tag" href={`tel:${b.phone}`}>{b.phone}</a>
             {b.guide_name && <span className="tag">Guide: {b.guide_name}</span>}
             {(b.interest || b.heard) && <div className="sub" style={{ margin: "4px 0" }}>{b.interest && `Interested in: ${b.interest}. `}{b.heard && `Heard about us: ${b.heard}.`}</div>}
+            {b.visitor_notes && <div className="sub" style={{ margin: "4px 0" }}>Visitor's notes: {b.visitor_notes}</div>}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginTop: 6 }}>
               {b.status === "cancelled" ? <span className="tag" style={{ fontWeight: 600 }}>Cancelled</span> : (
                 <>
@@ -35,8 +37,8 @@ export default function Bookings({ initial }: { initial: Booking[] }) {
                   <button className="danger" onClick={() => cancel(b)}>Cancel tour</button>
                 </>
               )}
-              <input aria-label="Notes" placeholder="Notes" defaultValue={b.notes} maxLength={2000} style={{ flex: "1 1 220px" }} onBlur={(e) => e.target.value !== b.notes && run("setNotes", { id: b.id, notes: e.target.value })} />
             </div>
+            <AdminThread kind="booking" id={b.id} name={b.name} msgs={b.msgs} lastFrom={b.last_from} />
           </div>
         ))}
         {!rows.length && <p className="sub">No tours booked yet.</p>}
