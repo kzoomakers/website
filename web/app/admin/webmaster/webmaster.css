@@ -163,7 +163,6 @@
   .adm h1{font-size:21px}
   .adm input,.adm select,.adm textarea{font-size:16px!important;min-width:0!important;max-width:100%!important}
   .adm input:not([type=checkbox]):not([type=radio]):not([type=color]):not([type=file]),.adm select{min-height:44px}
-  .adm input[type=checkbox],.adm input[type=radio]{width:22px;height:22px}
   .adm button:not(.link):not(.x):not(.env-btn),.adm .btn,.adm a.btn{min-height:44px;padding:9px 14px}
   .adm .btn-sm{padding:9px 12px}
   .adm .bar>input,.adm .bar>select,.adm .aud-search{flex:1 1 100%}
@@ -174,4 +173,45 @@
   .adm .env-pop{position:fixed;left:8px;right:8px;top:56px;width:auto;max-width:none}
   .adm .savebar{bottom:env(safe-area-inset-bottom)}
   .adm .pf{flex-wrap:wrap}.adm .pk{width:auto}
+}
+
+/* Every checkbox in /admin, /members, /account wears the round push switch from the member directory (the hand-built .tgl-sw/.rk ones keep their own markup). */
+.adm input[type=checkbox]:not(.tgl-sw input):not(.rk input){-webkit-appearance:none;appearance:none;position:relative;flex:none;display:inline-block;vertical-align:middle;width:30px;height:30px;min-width:30px;margin:0;padding:0;cursor:pointer;border:0;border-radius:50%;
+  background:linear-gradient(180deg,#444,#222);box-shadow:0 0 0 2px rgba(0,0,0,.1),0 0 2px 1px #000,inset 0 2px 2px -1px rgba(255,255,255,.4);transition:box-shadow .2s}
+.adm input[type=checkbox]:not(.tgl-sw input):not(.rk input)::before{content:"";position:absolute;left:4px;right:4px;top:4px;height:16px;border-radius:50% 50% 45% 45%/60% 60% 40% 40%;background:#2c2c2c;
+  box-shadow:inset 0 -2px 1px -1px rgba(200,200,200,.5),0 2px 2px -1px #000,inset 0 -12px 8px -8px rgba(255,255,255,.2);transition:all .15s}
+.adm input[type=checkbox]:not(.tgl-sw input):not(.rk input):checked::before{top:8px;height:16px;border-radius:45% 45% 50% 50%/40% 40% 60% 60%;background:#202020 radial-gradient(circle closest-corner at 50% 15%,rgba(0,0,0,.3),transparent);
+  box-shadow:inset 0 2px 3px -1px #000,0 -1px 4px -2px rgba(250,250,250,.4)}
+.adm input[type=checkbox]:not(.tgl-sw input):not(.rk input):checked{box-shadow:0 0 0 2px rgba(0,0,0,.1),0 0 2px 1px #000,0 0 0 3px var(--ok),0 0 8px 2px var(--ok)}
+.adm input[type=checkbox]:not(.tgl-sw input):not(.rk input):focus-visible{outline:3px solid #4c9ffe;outline-offset:3px}
+.adm input[type=checkbox]:not(.tgl-sw input):not(.rk input):disabled{opacity:.4;cursor:default}
+@media (prefers-reduced-motion:reduce){.adm input[type=checkbox]{transition:none!important}.adm input[type=checkbox]::before{transition:none!important}}
+/* a label holding a checkbox is a tap-friendly row: switch left, text wraps beside it */
+.adm label:has(>input[type=checkbox]){display:flex;align-items:center;gap:10px;min-height:40px;cursor:pointer}
+.adm label>input[type=checkbox]{display:inline-block;width:30px;margin-top:0}
+.adm td>input[type=checkbox],.adm th>input[type=checkbox]{width:26px;height:26px;min-width:26px}
+.adm td>input[type=checkbox]::before,.adm th>input[type=checkbox]::before{left:3px;right:3px;top:3px;height:14px}
+.adm td>input[type=checkbox]:checked::before,.adm th>input[type=checkbox]:checked::before{top:7px}
+
+/* Forms: one column that fills the screen, fields stack, action buttons wrap, labels stay above inputs */
+.adm form,.adm .card{max-width:100%}
+.adm fieldset{min-width:0;border:1px solid var(--line);border-radius:10px;padding:8px 14px 12px;margin:0 0 14px}
+.adm legend{font-weight:600;padding:0 6px}
+.adm input:not([type=checkbox]):not([type=radio]):not([type=color]):not([type=file]),.adm textarea,.adm select{max-width:100%}
+.adm textarea{width:100%;min-height:96px;resize:vertical}
+.adm input:not([type=checkbox]):focus,.adm textarea:focus,.adm select:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-bg);outline:0}
+.adm :is(input,textarea,select):user-invalid{border-color:var(--bad)}
+.adm :is(input,textarea,select):disabled{opacity:.6;background:var(--bg)}
+.adm .field{display:block;margin:0 0 14px}.adm .field>span{display:block;font-weight:600;font-size:13px;margin-bottom:4px}
+.adm .help,.adm small{color:var(--mut)}
+@media (min-width:721px){.adm .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0 16px}}
+@media (max-width:720px){
+  .adm form .bar,.adm .savebar{flex-direction:column;align-items:stretch}
+  .adm form .bar>button,.adm .savebar>button,.adm .savebar .pri{width:100%}
+  .adm .row>input,.adm .row>select{flex:1 1 100%}
+  .adm fieldset{padding:6px 10px 10px}
+  .adm input[type=checkbox]:not(.tgl-sw input):not(.rk input){width:34px;height:34px;min-width:34px}
+  .adm input[type=checkbox]:not(.tgl-sw input):not(.rk input)::before{left:5px;right:5px;top:5px;height:18px}
+  .adm input[type=checkbox]:not(.tgl-sw input):not(.rk input):checked::before{top:10px}
+  .adm td>input[type=checkbox],.adm th>input[type=checkbox]{width:30px;height:30px;min-width:30px}
 }
