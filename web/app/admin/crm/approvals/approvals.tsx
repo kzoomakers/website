@@ -68,6 +68,7 @@ export default function Approvals({ initial, canEdit, open, compact }: { initial
           <div className="card" style={{ flex: "2 1 360px", minWidth: 0 }}>
             <h3 style={{ marginTop: 0 }}>{d.name} <span className="tag">{LABEL[d.approval]}</span></h3>
             <p className="sub" style={{ marginTop: 0 }}>{d.email}{d.phone ? ` · ${d.phone}` : " · no phone yet"}{d.address ? ` · ${d.address}` : ""}</p>
+            {d.approval === "approved" && <p className="sub" style={{ marginTop: 0 }}>Onboarding: {d.onboarding === "done" ? "complete" : `waiting on ${d.onboarding}`} · {d.waiver_id ? <a href={`/api/webmaster/member-file?pdf=${d.waiver_id}`}>Signed waiver (PDF)</a> : "no waiver yet"} · {d.has_id ? <a href={`/api/webmaster/member-file?id=${d.id}`} target="_blank" rel="noreferrer">View photo ID (logged)</a> : "no ID yet"}</p>}
             <ol aria-label="Thread" style={{ listStyle: "none", margin: "0 0 12px", padding: 0, display: "grid", gap: 8, maxHeight: 360, overflowY: "auto" }}>
               {d.events.map((e) => e.kind === "state"
                 ? <li key={e.id} className="sub" style={{ margin: 0, textAlign: "center" }}>{e.by_applicant && e.to_state === "pending" && e.body === "Applied for membership" ? "Applied" : e.by_applicant ? "They replied: back to Pending" : `${e.actor} moved to ${LABEL[e.to_state ?? ""]}`} · {when(e.at)}{e.body && !e.by_applicant ? <em> · {e.body}</em> : null}</li>

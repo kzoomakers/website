@@ -6,7 +6,7 @@ import { currentMember } from "./readers";
 
 // Admin RBAC. Each top-level admin page is a section; a user has no access, "read" (view only) or "write" (view + change) to each.
 // "admin" is the Admin page itself (users and access); admin:write is a full admin and implies write everywhere.
-export const SECTIONS = ["webmaster", "mail", "blog", "forms", "crm", "tours", "admin"] as const;
+export const SECTIONS = ["webmaster", "mail", "blog", "forms", "crm", "board", "tours", "chores", "admin"] as const;
 export type Section = (typeof SECTIONS)[number];
 export type Level = "read" | "write";
 export type Me = { email: string; name: string; image?: string; perms: Partial<Record<Section, Level>> };

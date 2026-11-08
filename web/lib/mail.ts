@@ -1,3 +1,4 @@
+import { debugLog } from "./debug";
 import nodemailer from "nodemailer";
 import { randomBytes, randomUUID } from "crypto";
 import { clickOk, same, sign } from "./signing";
@@ -401,19 +402,25 @@ export const subscriberActivity = (subscriberId: number) => q(`SELECT c.id AS ca
 let tx: { url: string; t: nodemailer.Transporter } | undefined;
 const smtp = (c: MailCfg) => (tx?.url === c.smtpUrl ? tx : (tx = { url: c.smtpUrl, t: nodemailer.createTransport(c.smtpUrl) })).t;
 
-type Msg = { to: string; subject: string; html?: string; text?: string; from?: string; headers?: Record<string, string> };
+type Msg = { to: string; subject: string; html?: string; text?: string; from?: string; headers?: Record<string, string>; attachments?: { filename: string; content: Buffer; type: string }[] };
 const fromHeader = (name: string, addr: string) => (name ? `${name.replace(/[<>"\r\n]/g, "")} <${addr}>` : addr);
 /** One send path: SMTP2GO's HTTP API when an SMTP2GO key is saved, otherwise plain SMTP. */
 export async function send(m: Msg, c: MailCfg) {
   const from = m.from ?? fromHeader(c.fromName, c.from), headers = { ...(c.replyTo ? { "Reply-To": c.replyTo } : {}), ...m.headers };
-  if (!c.smtp2goKey) return void (await smtp(c).sendMail({ from, to: m.to, subject: m.subject, html: m.html, text: m.text, headers }));
-  const r = await fetch("https://api.smtp2go.com/v3/email/send", {
-    method: "POST", headers: { "content-type": "application/json", accept: "application/json", "X-Smtp2go-Api-Key": c.smtp2goKey },
-    body: JSON.stringify({ sender: from, to: [m.to], subject: m.subject, html_body: m.html, text_body: m.text,
-      custom_headers: Object.entries(headers).map(([header, value]) => ({ header, value })) }),
-  });
-  const j: any = await r.json().catch(() => ({}));
-  if (!r.ok || !(j.data?.succeeded > 0)) throw new Error(j.data?.error ?? j.data?.failures?.[0] ?? "SMTP2GO rejected the message (" + r.status + ")");
+  if (!c.smtp2goKey) return void (await smtp(c).sendMail({ from, to: m.to, subject: m.subject, html: m.html, text: m.text, headers, attachments: m.attachments?.map((a) => ({ filename: a.filename, content: a.content, contentType: a.type })) }));
+  const t0 = Date.now(), meta = { to: m.to, from, subject: m.subject, attachments: m.attachments?.map((a) => `${a.filename} (${a.content.length} bytes)`) };
+  await debugLog("smtp2go", "send request", meta);
+  let r: Response;
+  try {
+    r = await fetch("https://api.smtp2go.com/v3/email/send", {
+      method: "POST", headers: { "content-type": "application/json", accept: "application/json", "X-Smtp2go-Api-Key": c.smtp2goKey },
+      body: JSON.stringify({ sender: from, to: [m.to], subject: m.subject, html_body: m.html, text_body: m.text, attachments: m.attachments?.map((a) => ({ filename: a.filename, fileblob: a.content.toString("base64"), mimetype: a.type })),
+        custom_headers: Object.entries(headers).map(([header, value]) => ({ header, value })) }),
+    });
+  } catch (e: any) { await debugLog("smtp2go", "network error", { ...meta, error: String(e?.message ?? e), ms: Date.now() - t0 }, "error"); throw e; }
+  const j: any = await r.json().catch(() => ({})), ok = r.ok && j.data?.succeeded > 0;
+  await debugLog("smtp2go", ok ? "accepted" : "REJECTED", { to: m.to, status: r.status, response: j, ms: Date.now() - t0 }, ok ? "info" : "error");
+  if (!ok) throw new Error(j.data?.error ?? j.data?.failures?.[0] ?? "SMTP2GO rejected the message (" + r.status + ")");
 }
 
 // Signed click links: without the signature our /mail/click endpoint would be an open redirect.

@@ -11,6 +11,6 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
   const s = await searchParams;
   // Signed in but not approved yet: the only place for them is their Home, which shows the approval status (otherwise every members-only redirect would loop back here).
   const ap = await currentApplicant().catch(() => null);
-  if (ap && ap.approval !== "approved") redirect("/members");
+  if (ap && (ap.approval !== "approved" || ap.onboarding !== "done")) redirect("/members"); // and /members sends approved-but-unfinished people to their next step
   return <LoginScreen next={safeNext(s.next)} expired={!!s.expired} denied={s.denied ? (await me())?.email : undefined} google={!!process.env.AUTH_GOOGLE_ID} />;
 }

@@ -2,6 +2,7 @@ import { Pool } from "pg";
 import { readdir, readFile } from "fs/promises";
 import path from "path";
 import boardSeed from "@/data/board.json";
+import waiverSeed from "@/data/waiver-2025.1.json";
 import { getConfig, type Cfg } from "./config";
 
 /** Pages managed by their own admin screen: not listed, not editable in Puck. */
@@ -103,6 +104,52 @@ export async function ensureSchema(pool: Pool) {
   await pool.query(`CREATE TABLE IF NOT EXISTS notifications (id serial PRIMARY KEY, user_id int NOT NULL REFERENCES site_users ON DELETE CASCADE, kind text NOT NULL,
     title text NOT NULL, body text NOT NULL DEFAULT '', url text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now(), read_at timestamptz)`);
   await pool.query("CREATE INDEX IF NOT EXISTS notifications_user ON notifications (user_id, id DESC)");
+  // Member onboarding after approval: waiver -> handbook -> photo ID -> done. Existing members stay 'done'.
+  await pool.query("ALTER TABLE site_users ADD COLUMN IF NOT EXISTS onboarding text NOT NULL DEFAULT 'done' CHECK (onboarding IN ('waiver','handbook','id','done'))");
+  // Photo IDs, AES-256-GCM encrypted before they reach the database (see lib/vault.ts).
+  await pool.query("CREATE TABLE IF NOT EXISTS member_ids (user_id int PRIMARY KEY REFERENCES site_users ON DELETE CASCADE, kind text NOT NULL, expires_on date, data bytea NOT NULL, uploaded_at timestamptz NOT NULL DEFAULT now())");
+  // E-signature documents (member waivers and board papers). `pdf` is the final signed PDF, encrypted. Signer links are emailed; only their hash is stored.
+  await pool.query("CREATE TABLE IF NOT EXISTS sign_buckets (id serial PRIMARY KEY, name text NOT NULL)");
+  await pool.query("CREATE UNIQUE INDEX IF NOT EXISTS sign_buckets_name ON sign_buckets ((lower(name)))");
+  await pool.query(`CREATE TABLE IF NOT EXISTS sign_docs (id serial PRIMARY KEY, kind text NOT NULL DEFAULT 'board', user_id int REFERENCES site_users ON DELETE SET NULL, bucket_id int REFERENCES sign_buckets ON DELETE SET NULL,
+    title text NOT NULL, body text NOT NULL, tags text[] NOT NULL DEFAULT '{}', present text[] NOT NULL DEFAULT '{}', needed int NOT NULL DEFAULT 0, status text NOT NULL DEFAULT 'open' CHECK (status IN ('open','complete','void','expired')),
+    due_at timestamptz, created_by text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now(), completed_at timestamptz, sha text NOT NULL DEFAULT '', pdf bytea)`);
+  await pool.query("CREATE INDEX IF NOT EXISTS sign_docs_kind ON sign_docs (kind, id DESC)");
+  await pool.query(`CREATE TABLE IF NOT EXISTS sign_signers (id serial PRIMARY KEY, doc_id int NOT NULL REFERENCES sign_docs ON DELETE CASCADE, name text NOT NULL, email text NOT NULL, token text NOT NULL,
+    sent_at timestamptz, signed_at timestamptz, signature text NOT NULL DEFAULT '', drawn text NOT NULL DEFAULT '', ip text NOT NULL DEFAULT '', ua text NOT NULL DEFAULT '', declined_at timestamptz, decline_reason text NOT NULL DEFAULT '')`);
+  await pool.query("CREATE UNIQUE INDEX IF NOT EXISTS sign_signers_token ON sign_signers (token)");
+  // The membership agreement/waiver, one immutable row per published version (kept forever for review). `mandatory` = every member must sign this version; `summary` is the plain-language "what changed".
+  await pool.query(`CREATE TABLE IF NOT EXISTS waiver_versions (id serial PRIMARY KEY, revision text NOT NULL UNIQUE, title text NOT NULL, sections jsonb NOT NULL, closing text NOT NULL DEFAULT '',
+    summary text NOT NULL DEFAULT '', mandatory boolean NOT NULL DEFAULT false, created_by text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now())`);
+  await pool.query("ALTER TABLE sign_docs ADD COLUMN IF NOT EXISTS version_id int REFERENCES waiver_versions");
+  await pool.query("ALTER TABLE sign_signers ADD COLUMN IF NOT EXISTS initials text NOT NULL DEFAULT ''");
+  // Uploaded PDFs with placed fields, recipient roles/order/access, per-document customisation, and reusable templates (all additive; text-only papers keep working).
+  for (const q of [
+    "ALTER TABLE sign_docs ADD COLUMN IF NOT EXISTS source bytea", // the uploaded PDF, encrypted
+    "ALTER TABLE sign_docs ADD COLUMN IF NOT EXISTS message text NOT NULL DEFAULT ''",
+    "ALTER TABLE sign_docs ADD COLUMN IF NOT EXISTS redirect_url text NOT NULL DEFAULT ''",
+    "ALTER TABLE sign_docs ADD COLUMN IF NOT EXISTS hide_audit boolean NOT NULL DEFAULT false",
+    "ALTER TABLE sign_docs ADD COLUMN IF NOT EXISTS sequential boolean NOT NULL DEFAULT false",
+    "ALTER TABLE sign_signers ADD COLUMN IF NOT EXISTS role text NOT NULL DEFAULT 'signer'", // signer | approver | viewer | cc
+    "ALTER TABLE sign_signers ADD COLUMN IF NOT EXISTS ord int NOT NULL DEFAULT 1",
+    "ALTER TABLE sign_signers ADD COLUMN IF NOT EXISTS pw_hash text NOT NULL DEFAULT ''",
+    "ALTER TABLE sign_signers ADD COLUMN IF NOT EXISTS verify_email boolean NOT NULL DEFAULT false",
+    "ALTER TABLE sign_signers ADD COLUMN IF NOT EXISTS code_hash text NOT NULL DEFAULT ''",
+    "ALTER TABLE sign_signers ADD COLUMN IF NOT EXISTS code_exp timestamptz",
+    "ALTER TABLE sign_signers ADD COLUMN IF NOT EXISTS tries int NOT NULL DEFAULT 0",
+    `CREATE TABLE IF NOT EXISTS sign_fields (id serial PRIMARY KEY, doc_id int NOT NULL REFERENCES sign_docs ON DELETE CASCADE, signer_id int NOT NULL REFERENCES sign_signers ON DELETE CASCADE,
+      type text NOT NULL, page int NOT NULL, x real NOT NULL, y real NOT NULL, w real NOT NULL, h real NOT NULL, label text NOT NULL DEFAULT '', options text[] NOT NULL DEFAULT '{}', required boolean NOT NULL DEFAULT true, value text NOT NULL DEFAULT '')`,
+    "CREATE INDEX IF NOT EXISTS sign_fields_doc ON sign_fields (doc_id)",
+    "ALTER TABLE sign_signers ADD COLUMN IF NOT EXISTS viewed_at timestamptz",
+    "CREATE TABLE IF NOT EXISTS sign_contacts (email text PRIMARY KEY, name text NOT NULL, last_used timestamptz NOT NULL DEFAULT now())", // remembered for 6 months after last use
+    // A template is the whole setup of a paper (text or PDF, recipients, fields, options). recipients/fields are JSON; a recipient with a blank email is a slot a public-link visitor fills.
+    `CREATE TABLE IF NOT EXISTS sign_templates (id serial PRIMARY KEY, title text NOT NULL, body text NOT NULL DEFAULT '', source bytea, setup jsonb NOT NULL, direct_token text UNIQUE, created_by text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now())`,
+  ]) await pool.query(q);
+  await pool.query("INSERT INTO waiver_versions (revision, title, sections, closing, summary, created_by) SELECT $1,$2,$3,$4,'First version (imported from the paper agreement).','system' WHERE NOT EXISTS (SELECT 1 FROM waiver_versions)",
+    [waiverSeed.revision, waiverSeed.title, JSON.stringify(waiverSeed.sections), waiverSeed.closing]);
+  // Debug trap: only filled while a stream is switched on in Admin > Debug (see lib/debug.ts).
+  await pool.query("CREATE TABLE IF NOT EXISTS debug_log (id bigserial PRIMARY KEY, at timestamptz NOT NULL DEFAULT now(), stream text NOT NULL, level text NOT NULL DEFAULT 'info', message text NOT NULL, data jsonb)");
+  await pool.query("CREATE INDEX IF NOT EXISTS debug_log_stream ON debug_log (stream, id DESC)");
   // First start: stage the built-in board and calendar link in Postgres (plus a baseline revision to roll back to). Admin screens replace them.
   for (const [key, data, action] of [["board", boardSeed, "board.import"], ["calendar", { url: CAL_DEFAULT }, "calendar.import"],
     ...(await Promise.all(GUIDED_SEEDS.map(async (g) => [`guided:${g}`, JSON.parse(await readFile(path.join(process.cwd(), "data", "guided", g + ".json"), "utf8")), `guided.${g}.import`] as const)))] as const)

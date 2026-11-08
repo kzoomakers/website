@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { authsFor, memberships, upcomingClasses } from "@/lib/crm";
 import { currentApplicant } from "@/lib/readers";
 import Status from "../pending/status";
@@ -10,6 +11,7 @@ const when = (s: string) => new Date(s).toLocaleString([], { dateStyle: "medium"
 // Home for everyone signed in. Until someone is approved it is the only members page they get: their application status and the conversation with the team.
 export default async function Members() {
   const a = await currentApplicant().catch(() => null);
+  if (a?.approval === "approved" && a.onboarding !== "done") redirect("/members/onboarding");
   if (a && a.approval !== "approved") return <><h1>Welcome</h1><Status /></>;
   return (
     <MembersShell title="Members area" path="/members">

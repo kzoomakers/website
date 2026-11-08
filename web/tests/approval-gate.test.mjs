@@ -14,7 +14,7 @@ test("members-only code never accepts an unapproved sign-in", () => {
 });
 
 test("every API route that identifies the user is classified", () => {
-  const OPEN = new Set(["app/api/blog/comments/route.ts", "app/api/blog/comments/like/route.ts", "app/api/blog/auth/route.ts", "app/api/account/route.ts", "app/api/pending/route.ts"]);
+  const OPEN = new Set(["app/api/blog/comments/route.ts", "app/api/blog/comments/like/route.ts", "app/api/blog/auth/route.ts", "app/api/account/route.ts", "app/api/pending/route.ts", "app/api/onboarding/route.ts", "app/api/account/waiver/route.ts", "app/api/onboarding/id/route.ts"]);
   for (const f of walk("app/api").filter((f) => /route\.ts$/.test(f))) {
     const s = readFileSync(f, "utf8");
     if (/currentVerified|currentApplicant/.test(s)) assert.ok(OPEN.has(f), `${f} lets unapproved people in: add it to OPEN only if that is intended`);

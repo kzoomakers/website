@@ -7,6 +7,7 @@ import Approvals from "../crm/approvals/approvals";
 import { getConfig } from "@/lib/config";
 import { listUsers } from "@/lib/users";
 import Users from "./users";
+import ApiKeys from "./api-keys";
 
 export const dynamic = "force-dynamic";
 
@@ -18,5 +19,6 @@ export default async function UsersPage() {
     <SignupLimit used={await signupsThisHour()} limit={SIGNUPS_PER_HOUR} canEdit={level === "write"} />
     {crm && <Approvals compact initial={{ rows: await listApplicants("pending"), counts: await counts() }} canEdit={crm === "write"} />}
     <Users initial={await listUsers("")} canEdit={level === "write"} />
+    <ApiKeys canEdit={level === "write"} />
   </>;
 }

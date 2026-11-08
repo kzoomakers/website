@@ -7,7 +7,7 @@ import "../admin/webmaster/webmaster.css";
 
 // Members area wears the admin chrome: framed page, top bar, left menu with your account at the bottom.
 export default async function MembersLayout({ children }: { children: ReactNode }) {
-  const u = await currentApplicant().catch(() => null), ok = u?.approval === "approved";
+  const u = await currentApplicant().catch(() => null), ok = u?.approval === "approved" && u.onboarding === "done";
   return (
     <div className="adm adm-root">
       <Frame /><Bar signedIn={ok} />

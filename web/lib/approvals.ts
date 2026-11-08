@@ -78,12 +78,13 @@ export async function counts(): Promise<Record<State, number>> {
   return out;
 }
 
-export type Detail = { id: number; name: string; first_name: string; last_name: string; email: string; phone: string; address: string; approval: State; events: ApprovalEvent[] };
+export type Detail = { id: number; name: string; first_name: string; last_name: string; email: string; phone: string; address: string; approval: State; events: ApprovalEvent[]; waiver_id: number | null; has_id: boolean; onboarding: string };
 
 /** One applicant with their thread. The applicant's own view (forApplicant) leaves out staff notes. */
 export async function detail(id: number, forApplicant = false): Promise<Detail | null> {
   const c = await conn();
   const u = (await c.query(`SELECT id, name, first_name, last_name, email, phone, approval,
+    onboarding, (SELECT id FROM sign_docs WHERE user_id = site_users.id AND kind = 'waiver' AND status = 'complete' ORDER BY id DESC LIMIT 1) AS waiver_id, EXISTS (SELECT 1 FROM member_ids WHERE user_id = site_users.id) AS has_id,
     btrim(concat_ws(', ', NULLIF(address1, ''), NULLIF(address2, ''), NULLIF(city, ''), NULLIF(concat_ws(' ', NULLIF(state, ''), NULLIF(zip, '')), ''))) AS address
     FROM site_users WHERE id = $1 AND verified_at IS NOT NULL`, [id])).rows[0];
   if (!u) return null;
@@ -128,6 +129,7 @@ export async function move(id: number, from: string, to: string, who: string, r:
   const reason = clip(r.reason, 500);
   // Flip first (a lost race changes nothing); if the corrected details are refused, put the state back.
   if (!(await c.query("UPDATE site_users SET approval = $3 WHERE id = $1 AND approval = $2", [id, from, to])).rowCount) throw stale();
+  if (to === "approved") await c.query("UPDATE site_users SET onboarding = 'waiver' WHERE id = $1 AND NOT EXISTS (SELECT 1 FROM sign_docs WHERE user_id = $1 AND kind = 'waiver' AND status = 'complete')", [id]);
   if (to === "approved" && r.edit) {
     try { await updateProfile(id, r.edit, ["first_name", "last_name", "phone"], who); }
     catch (e) { await c.query("UPDATE site_users SET approval = $2 WHERE id = $1 AND approval = $3", [id, from, to]); throw e; }
@@ -137,7 +139,7 @@ export async function move(id: number, from: string, to: string, who: string, r:
   const fresh = (await c.query("SELECT id, email, name FROM site_users WHERE id = $1", [id])).rows[0];
   if (to === "approved") {
     await addRegistered(fresh.email, fresh.name, base).catch(() => {});
-    return { emailed: await mailTo(fresh, "Welcome to Kzoo Makers: you're approved", "Good news: your Kzoo Makers account has been approved. Sign in to finish setting up your profile.", "", "Get started", await afterSignIn(id, "/members"), base) };
+    return { emailed: await mailTo(fresh, "Welcome to Kzoo Makers: you're approved", "Good news: your Kzoo Makers account has been approved. When you sign in you'll sign our liability waiver, read the membership handbook and upload a photo ID, then finish setting up your profile.", "", "Get started", await afterSignIn(id, "/members"), base) };
   }
   if (to === "rejected") return { emailed: await mailTo(fresh, "Your Kzoo Makers application", "We're sorry, but we couldn't approve your Kzoo Makers account.", reason, "See details", "/members", base) };
   return { emailed: false };

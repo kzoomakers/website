@@ -2,10 +2,11 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import DisableButton from "../disable-button";
+import { confirmDialog } from "@/components/dialog";
 
 type Level = "read" | "write";
 type Row = { id: number; email: string; name: string; perms: Record<string, Level>; founder: boolean; disabled: boolean };
-const COLS = [["webmaster", "Webmaster"], ["mail", "Postmaster"], ["blog", "Blog"], ["forms", "Forms"], ["crm", "CRM"], ["tours", "Tours"], ["admin", "Admin"]] as const;
+const COLS = [["webmaster", "Webmaster"], ["mail", "Postmaster"], ["blog", "Blog"], ["forms", "Forms"], ["crm", "CRM"], ["board", "Signed Docs"], ["tours", "Tours"], ["chores", "Chores"], ["admin", "Admin"]] as const;
 
 // Who can open each top-level admin page: none, view only, or view + change. Search finds ordinary site accounts to grant access to.
 export default function Users({ initial, canEdit }: { initial: Row[]; canEdit: boolean }) {
@@ -21,6 +22,13 @@ export default function Users({ initial, canEdit }: { initial: Row[]; canEdit: b
     const r = await fetch("/api/webmaster/users", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ userId: u.id, section, level }) });
     if (!r.ok) return setErr(await r.text());
     setRows((rs) => rs.map((x) => { if (x.id !== u.id) return x; const perms = { ...x.perms }; if (level) perms[section] = level as Level; else delete perms[section]; return { ...x, perms }; }));
+  };
+  const del = async (u: Row) => {
+    if (!(await confirmDialog(`Are you sure you want to delete ${u.name} (${u.email})?\n\nThis permanently removes their account, profile, photo ID, comments, emergency contacts and access. Their signed waiver PDFs are kept for the record. This cannot be undone.`, { ok: "Delete account", danger: true }))) return;
+    setErr("");
+    const r = await fetch(`/api/webmaster/users/${u.id}`, { method: "DELETE" });
+    if (!r.ok) return setErr(await r.text());
+    setRows((rs) => rs.filter((x) => x.id !== u.id));
   };
   return (
     <>
@@ -42,7 +50,7 @@ export default function Users({ initial, canEdit }: { initial: Row[]; canEdit: b
                       </select>
                     </td>
                   ))}
-                  <td style={{ padding: "8px" }}>{canEdit && !u.founder && <DisableButton id={u.id} name={u.name} disabled={u.disabled} onChange={(d) => setRows((rs) => rs.map((x) => (x.id === u.id ? { ...x, disabled: d } : x)))} />}</td>
+                  <td style={{ padding: "8px" }}>{canEdit && !u.founder && <DisableButton id={u.id} name={u.name} disabled={u.disabled} onChange={(d) => setRows((rs) => rs.map((x) => (x.id === u.id ? { ...x, disabled: d } : x)))} />}{canEdit && !u.founder && <button type="button" onClick={() => del(u)} style={{ marginLeft: 6, color: "var(--bad)" }}>Delete</button>}</td>
                 </tr>
               ))}
               {!rows.length && <tr><td colSpan={COLS.length + 2} className="sub" style={{ padding: 16 }}>No one found.</td></tr>}

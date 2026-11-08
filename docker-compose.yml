@@ -31,6 +31,9 @@ services:
     #   Storage:  http://rustfs:9000  bucket uploads  keys rustfsadmin / rustfsadmin
     environment:
       AUTH_SECRET: ${AUTH_SECRET:?copy .env.example to .env}
+      PII_CRYPTO_SECRET: ${PII_CRYPTO_SECRET:?copy .env.example to .env}
+      SIGN_P12_BASE64: ${SIGN_P12_BASE64:-}
+      SIGN_P12_PASSPHRASE: ${SIGN_P12_PASSPHRASE:-}
       AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID:?}
       AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET:?}
       ADMIN_EMAILS: ${ADMIN_EMAILS:?}

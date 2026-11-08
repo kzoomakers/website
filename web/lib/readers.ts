@@ -2,6 +2,7 @@ import { createHash, createHmac, randomBytes, scrypt, timingSafeEqual } from "cr
 import { promisify } from "util";
 import { cookies } from "next/headers";
 import { db } from "./db";
+import { STEP_SQL } from "./waiver";
 import { addRegistered, getMailCfg, mailReady, send } from "./mail";
 
 // Site accounts (readers): passwordless. Registering and signing in are the same step: we email a one-time link,
@@ -88,8 +89,9 @@ export async function consumeLink(token: string, base: string) {
 
 /** Where to send someone who just signed in: applicants to their approval page, then members through any unfinished first-time steps (details + emergency contact). Add later onboarding steps here. */
 export async function afterSignIn(userId: number, next: string) {
-  const u = (await (await conn()).query("SELECT approval, phone = '' OR address1 = '' AS thin, NOT EXISTS (SELECT 1 FROM emergency_contacts WHERE user_id = $1) AS no_contact FROM site_users WHERE id = $1", [userId])).rows[0];
+  const u = (await (await conn()).query(`SELECT u.approval, ${STEP_SQL} AS onboarding, u.phone = '' OR u.address1 = '' AS thin, NOT EXISTS (SELECT 1 FROM emergency_contacts WHERE user_id = $1) AS no_contact FROM site_users u WHERE u.id = $1`, [userId])).rows[0];
   if (u?.approval !== "approved") return "/members";
+  if (u.onboarding !== "done") return "/members/onboarding";
   return u.thin || u.no_contact ? `/account?setup=1&next=${encodeURIComponent(safeNext(next))}` : safeNext(next);
 }
 
@@ -160,13 +162,13 @@ export async function setPassword(userId: number, password: string, current = ""
 }
 
 /** The user in the signed session cookie, whatever their approval state (verified and not disabled). Only the applicant pages use this; everything else wants currentVerified. */
-export async function currentApplicant(): Promise<(Reader & { approval: string }) | null> {
+export async function currentApplicant(): Promise<(Reader & { approval: string; onboarding: string }) | null> {
   if (!db()) return null;
   const [id, exp, sig] = ((await cookies()).get(COOKIE_NAME)?.value ?? "").split(".");
   if (!sig || Number(exp) < Date.now()) return null;
   const want = mac(`${id}.${exp}`);
   if (sig.length !== want.length || !timingSafeEqual(Buffer.from(sig), Buffer.from(want))) return null;
-  return (await (await conn()).query("SELECT id, email, name, approval FROM site_users WHERE id = $1 AND verified_at IS NOT NULL AND disabled_at IS NULL", [Number(id)])).rows[0] ?? null;
+  return (await (await conn()).query(`SELECT u.id, u.email, u.name, u.approval, ${STEP_SQL} AS onboarding FROM site_users u WHERE u.id = $1 AND u.verified_at IS NOT NULL AND u.disabled_at IS NULL`, [Number(id)])).rows[0] ?? null;
 }
 
 /** Signed-in, verified and not rejected, approved or not: enough for blog comments and the Account page. Members-only features must use currentMember instead. */
@@ -178,5 +180,5 @@ export async function currentVerified(): Promise<Reader | null> {
 /** A signed-in, approved member. Everything members-only (directory, classes, tools, inbox, alerts, reviews, admin access) uses this, so people still in the approval queue are left out, now and for any feature added later. */
 export async function currentMember(): Promise<Reader | null> {
   const u = await currentApplicant();
-  return u?.approval === "approved" ? { id: u.id, email: u.email, name: u.name } : null;
+  return u?.approval === "approved" && u.onboarding === "done" ? { id: u.id, email: u.email, name: u.name } : null;
 }
