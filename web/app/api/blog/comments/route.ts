@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { currentVerified } from "@/lib/readers";
 import { addComment, hashIp } from "@/lib/comments";
 import { baseUrl } from "@/lib/mail";
@@ -13,6 +14,6 @@ export async function POST(req: Request) {
   try {
     return NextResponse.json(await addComment({ postId: b.postId, userId: u.id, body: b.body, parentId: b.parentId, ipHash: hashIp(req), base: await baseUrl(req) }));
   } catch (e: any) {
-    return new NextResponse(e.message, { status: 400 });
+    return new NextResponse(errMsg(e), { status: 400 });
   }
 }

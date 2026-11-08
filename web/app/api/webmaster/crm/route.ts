@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { actor, editingAllowed } from "@/lib/guard";
 import { logAudit } from "@/lib/store";
 import * as c from "@/lib/crm";
@@ -50,6 +51,6 @@ export async function POST(req: Request) {
     if (res.ok && !READS.has(a.op) && !["setLevels", "grant", "revoke", "setMinDays", "applicantSay", "applicantNote", "applicantMove"].includes(a.op)) await logAudit(who, "crm." + a.op, String(a.name ?? a.form?.name ?? a.campaign?.subject ?? a.subscriber?.email ?? a.tool?.name ?? a.klass?.name ?? a.id ?? a.value ?? ""));
     return res;
   } catch (e: any) {
-    return new NextResponse(e.message ?? "failed", { status: 400 });
+    return new NextResponse(errMsg(e), { status: 400 });
   }
 }

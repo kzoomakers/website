@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { hashIp } from "@/lib/comments";
 import { COOKIE_NAME, afterSignIn, passwordLogin, safeNext } from "@/lib/readers";
 
@@ -14,6 +15,6 @@ export async function POST(req: Request) {
     res.cookies.set(COOKIE_NAME, s.cookie, { httpOnly: true, sameSite: "lax", secure: new URL(req.url).protocol === "https:", path: "/", maxAge: s.maxAge });
     return res;
   } catch (e: any) {
-    return new NextResponse(e.message, { status: 400 });
+    return new NextResponse(errMsg(e), { status: 400 });
   }
 }

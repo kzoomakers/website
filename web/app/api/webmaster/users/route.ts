@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { actor, editingAllowed } from "@/lib/guard";
 import { listUsers, setAccess } from "@/lib/users";
 
@@ -21,6 +22,6 @@ export async function PUT(req: Request) {
     if (!email) return off();
     return NextResponse.json({ ok: true });
   } catch (e: any) {
-    return new NextResponse(e.message, { status: 400 });
+    return new NextResponse(errMsg(e), { status: 400 });
   }
 }

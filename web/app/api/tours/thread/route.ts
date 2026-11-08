@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { postVisitor, visitorThread } from "@/lib/tours";
 import { baseUrl } from "@/lib/mail";
 
 export const dynamic = "force-dynamic";
-const fail = (e: any) => new NextResponse(e.message, { status: 400 });
+const fail = (e: any) => new NextResponse(errMsg(e), { status: 400 });
 
 // GET ?token: the conversation as the visitor sees it (internal notes left out). POST { token, body }: the visitor replies. The emailed token is the credential.
 export async function GET(req: Request) {

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { allComments, counts, deleteComment, emptySpam, getSettings, saveSettings, setStatus } from "@/lib/comments";
 import { baseUrl } from "@/lib/mail";
 import { actor, editingAllowed } from "@/lib/guard";
@@ -22,7 +23,7 @@ export async function PATCH(req: Request) {
     await logAudit(await actor(), "comment." + b.status, `comment ${b.id}`);
     return NextResponse.json({ ok: true });
   } catch (e: any) {
-    return new NextResponse(e.message, { status: 400 });
+    return new NextResponse(errMsg(e), { status: 400 });
   }
 }
 

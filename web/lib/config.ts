@@ -30,3 +30,9 @@ export function saveConfig(c: Cfg) {
   fs.mkdirSync(path.dirname(FILE), { recursive: true });
   fs.writeFileSync(FILE, JSON.stringify(c, null, 2), { mode: 0o600 });
 }
+
+/** pg parses ?sslmode= after (and over) the `ssl` option, which silently drops our CA and fails with SELF_SIGNED_CERT_IN_CHAIN on Aiven. With a CA, drop sslmode and verify against the CA instead. */
+export const pgConnection = (c: Pick<Cfg, "databaseUrl" | "databaseCa">) =>
+  c.databaseCa
+    ? { connectionString: c.databaseUrl.replace(/([?&])sslmode=[^&]*&?/, "$1").replace(/[?&]$/, ""), ssl: { ca: c.databaseCa } }
+    : { connectionString: c.databaseUrl };

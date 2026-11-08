@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { actor, editingAllowed } from "@/lib/guard";
 import { logAudit } from "@/lib/store";
 import * as n from "@/lib/ntfy";
@@ -33,5 +34,5 @@ export async function POST(req: Request) {
     }
     await logAudit(who, "ntfy." + a.op, target); // the token itself is never logged
     return NextResponse.json(out);
-  } catch (e: any) { return new NextResponse(e.message ?? "failed", { status: 400 }); }
+  } catch (e: any) { return new NextResponse(errMsg(e), { status: 400 }); }
 }

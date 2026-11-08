@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { decideMessage, deleteMessage, listMessages, messageCounts } from "@/lib/contact";
 import { actor, editingAllowed } from "@/lib/guard";
 import { logAudit } from "@/lib/store";
@@ -23,7 +24,7 @@ export async function PATCH(req: Request) {
     await logAudit(who, "form." + b.action, `message ${b.id}`);
     return NextResponse.json({ ok: true });
   } catch (e: any) {
-    return new NextResponse(e.message, { status: 400 });
+    return new NextResponse(errMsg(e), { status: 400 });
   }
 }
 

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { actor, editingAllowed } from "@/lib/guard";
 import { baseUrl } from "@/lib/mail";
 import * as w from "@/lib/waiver";
@@ -18,5 +19,5 @@ export async function POST(req: Request) {
       case "aiSummary": return NextResponse.json({ text: await w.aiSummary(a.draft ?? {}) });
       default: return new NextResponse("unknown op", { status: 400 });
     }
-  } catch (e: any) { return new NextResponse(e.message ?? "failed", { status: 400 }); }
+  } catch (e: any) { return new NextResponse(errMsg(e), { status: 400 }); }
 }

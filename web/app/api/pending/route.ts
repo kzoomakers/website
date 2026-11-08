@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { currentApplicant } from "@/lib/readers";
 import { detail, reply } from "@/lib/approvals";
 
@@ -21,5 +22,5 @@ export async function POST(req: Request) {
   const u = await currentApplicant().catch(() => null), b = await req.json().catch(() => null);
   if (!u) return new NextResponse("Sign in first.", { status: 401 });
   if (typeof b?.body !== "string") return new NextResponse("bad request", { status: 400 });
-  try { await reply(u.id, b.body); return NextResponse.json(await view(u.id)); } catch (e: any) { return new NextResponse(e.message ?? "failed", { status: 400 }); }
+  try { await reply(u.id, b.body); return NextResponse.json(await view(u.id)); } catch (e: any) { return new NextResponse(errMsg(e), { status: 400 }); }
 }

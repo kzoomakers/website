@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { logAudit } from "@/lib/store";
 import { decideReview, deleteReview, listReviews, reviewCounts } from "@/lib/reviews";
 import { actor, editingAllowed } from "@/lib/guard";
@@ -20,7 +21,7 @@ export async function PATCH(req: Request) {
     await decideReview(b.id, b.action, { name: s(b.name), role: s(b.role), text: s(b.text) }, await actor());
     return NextResponse.json({ ok: true });
   } catch (e: any) {
-    return new NextResponse(e.message, { status: 400 });
+    return new NextResponse(errMsg(e), { status: 400 });
   }
 }
 

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { currentVerified } from "@/lib/readers";
 import { toggleLike } from "@/lib/comments";
 
@@ -10,6 +11,6 @@ export async function POST(req: Request) {
   try {
     return NextResponse.json(await toggleLike(b.id, u.id));
   } catch (e: any) {
-    return new NextResponse(e.message, { status: 400 });
+    return new NextResponse(errMsg(e), { status: 400 });
   }
 }

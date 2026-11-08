@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { actor, editingAllowed } from "@/lib/guard";
 import { logAudit } from "@/lib/store";
 import { generateSeal, removeSeal, sealInfo, uploadSeal } from "@/lib/pdf-seal";
@@ -26,5 +27,5 @@ export async function POST(req: Request) {
     }
     await logAudit(await actor(), "seal." + a.op, "");
     return NextResponse.json(await sealInfo());
-  } catch (e: any) { return new NextResponse(e.message ?? "failed", { status: 400 }); }
+  } catch (e: any) { return new NextResponse(errMsg(e), { status: 400 }); }
 }

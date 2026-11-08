@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { me } from "@/lib/guard";
 import { addExtraTopic, createToken, deleteExtraTopic, deleteToken, ensureUserTopic, listExtraTopics, listLinks, listTokens, publish } from "@/lib/ntfy";
 import { logAudit } from "@/lib/store";
@@ -42,7 +43,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ token });
       }
     }
-  } catch (e: any) { return new NextResponse(e.message, { status: 400 }); }
+  } catch (e: any) { return new NextResponse(errMsg(e), { status: 400 }); }
 }
 export async function DELETE(req: Request) {
   const email = await who();

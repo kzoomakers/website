@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { currentMember } from "@/lib/readers";
 import { submitReview } from "@/lib/reviews";
 
@@ -12,6 +13,6 @@ export async function POST(req: Request) {
     await submitReview(u, text, typeof role === "string" ? role : "", photo instanceof File ? photo : null);
     return NextResponse.json({ ok: true });
   } catch (e: any) {
-    return new NextResponse(e.message, { status: 400 });
+    return new NextResponse(errMsg(e), { status: 400 });
   }
 }

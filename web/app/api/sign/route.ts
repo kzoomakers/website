@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { baseUrl } from "@/lib/mail";
 import { clientIp, hashIp } from "@/lib/comments";
 import { hit } from "@/lib/limit";
@@ -27,5 +28,5 @@ export async function POST(req: Request) {
       await signByToken(a.token, { signature: str(a.signature), drawn: str(a.drawn), initials: str(a.initials), values: a.values && typeof a.values === "object" ? a.values : {} }, proof, await baseUrl(req), !!f && unlocked(f.signer.id, cookieOf(req, "su" + f.signer.id)));
     }
     return NextResponse.json({ ok: true });
-  } catch (e: any) { return new NextResponse(e.message ?? "failed", { status: 400 }); }
+  } catch (e: any) { return new NextResponse(errMsg(e), { status: 400 }); }
 }

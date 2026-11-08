@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { actor, editingAllowed } from "@/lib/guard";
 import { baseUrl } from "@/lib/mail";
 import { db } from "@/lib/db";
@@ -42,5 +43,5 @@ export async function POST(req: Request) {
       default: return new NextResponse("unknown op", { status: 400 });
     }
     return NextResponse.json({ ok: true });
-  } catch (e: any) { return new NextResponse(e.message ?? "failed", { status: 400 }); }
+  } catch (e: any) { return new NextResponse(errMsg(e), { status: 400 }); }
 }

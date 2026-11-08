@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { actor, editingAllowed } from "@/lib/guard";
 import { logAudit } from "@/lib/store";
 import * as c from "@/lib/chores";
@@ -35,5 +36,5 @@ export async function POST(req: Request) {
     }
     await logAudit(who, "chore." + a.op, String(a.chore?.name ?? a.achievement?.title ?? a.id ?? a.chore_id ?? ""));
     return NextResponse.json({ ok: true, id: a.id });
-  } catch (e: any) { return new NextResponse(e.message ?? "failed", { status: 400 }); }
+  } catch (e: any) { return new NextResponse(errMsg(e), { status: 400 }); }
 }

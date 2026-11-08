@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { deleteLookup, listAuthors, listCategories, saveAuthor, saveCategory } from "@/lib/blog";
 import { actor, editingAllowed } from "@/lib/guard";
 
@@ -20,7 +21,7 @@ export async function POST(req: Request) {
       ? await saveAuthor({ id: b.id, name: str("name"), email: str("email"), bio: str("bio"), image: str("image") }, await actor())
       : await saveCategory({ id: b.id, name: str("name"), slug: str("slug"), description: str("description") }, await actor()));
   } catch (e: any) {
-    return new NextResponse(e.code === "23505" ? "That slug is already used." : e.message, { status: 400 });
+    return new NextResponse(e.code === "23505" ? "That slug is already used." : errMsg(e), { status: 400 });
   }
 }
 

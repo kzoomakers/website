@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { baseUrl, publicForms, publicSubscribe } from "@/lib/mail";
 import { clientIp } from "@/lib/comments";
 
@@ -16,6 +17,6 @@ export async function POST(req: Request) {
     const ip = clientIp(req);
     return NextResponse.json({ result: await publicSubscribe(Number(b?.form), String(b?.email ?? "").trim(), String(b?.name ?? "").trim(), await baseUrl(req), ip) });
   } catch (e: any) {
-    return new NextResponse(e.message ?? "failed", { status: 400 });
+    return new NextResponse(errMsg(e), { status: 400 });
   }
 }

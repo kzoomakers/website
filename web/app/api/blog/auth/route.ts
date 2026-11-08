@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { COOKIE_NAME, currentVerified, requestLink, safeNext, setPassword } from "@/lib/readers";
 import { baseUrl } from "@/lib/mail";
 import { hashIp } from "@/lib/comments";
@@ -17,7 +18,7 @@ export async function POST(req: Request) {
     await requestLink(b.email, typeof b.name === "string" ? b.name : "", safeNext(b.next), await baseUrl(req), hashIp(req));
     return NextResponse.json({ ok: true });
   } catch (e: any) {
-    return new NextResponse(e.message, { status: 400 });
+    return new NextResponse(errMsg(e), { status: 400 });
   }
 }
 
@@ -38,6 +39,6 @@ export async function PUT(req: Request) {
     res.cookies.set(COOKIE_NAME, s.cookie, { httpOnly: true, sameSite: "lax", secure: new URL(req.url).protocol === "https:", path: "/", maxAge: s.maxAge }); // the old cookie just stopped working
     return res;
   } catch (e: any) {
-    return new NextResponse(e.message, { status: 400 });
+    return new NextResponse(errMsg(e), { status: 400 });
   }
 }

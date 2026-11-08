@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { currentMember } from "@/lib/readers";
 import { baseUrl } from "@/lib/mail";
 import * as c from "@/lib/crm";
@@ -23,6 +24,6 @@ export async function POST(req: Request) {
     }
     return NextResponse.json({ ok: true });
   } catch (e: any) {
-    return new NextResponse(e.message ?? "failed", { status: 400 });
+    return new NextResponse(errMsg(e), { status: 400 });
   }
 }

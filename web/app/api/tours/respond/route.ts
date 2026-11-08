@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { requestByToken, respond } from "@/lib/tours";
 import { baseUrl } from "@/lib/mail";
 
 export const dynamic = "force-dynamic";
-const fail = (e: any) => new NextResponse(e.message, { status: 400 });
+const fail = (e: any) => new NextResponse(errMsg(e), { status: 400 });
 
 // GET ?token: the times on offer. POST { token, pick?, note? }: pick an option, or omit pick to ask for other times (the token is the credential).
 export async function GET(req: Request) {

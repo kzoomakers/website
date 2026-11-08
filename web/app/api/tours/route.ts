@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { book, openSlots, requestTour, AREAS, HEARD, CONTACT } from "@/lib/tours";
 import { baseUrl } from "@/lib/mail";
 import { clientIp, hashIp } from "@/lib/comments";
 
 export const dynamic = "force-dynamic";
-const fail = (e: any) => new NextResponse(e.message === "not configured" ? "Booking isn't available right now." : e.message, { status: 400 });
+const fail = (e: any) => new NextResponse(e.message === "not configured" ? "Booking isn't available right now." : errMsg(e), { status: 400 });
 
 // GET: open tours in the next four weeks, plus the form's choices.
 export async function GET() {

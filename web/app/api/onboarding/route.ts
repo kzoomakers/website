@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { currentApplicant } from "@/lib/readers";
 import { baseUrl } from "@/lib/mail";
 import { clientIp } from "@/lib/comments";
@@ -16,5 +17,5 @@ export async function POST(req: Request) {
     else if (a?.step === "handbook" && a.read === true) await o.handbookRead(u.id);
     else return new NextResponse("bad request", { status: 400 });
     return NextResponse.json({ step: await o.getStep(u.id) });
-  } catch (e: any) { return new NextResponse(e.message ?? "failed", { status: 400 }); }
+  } catch (e: any) { return new NextResponse(errMsg(e), { status: 400 }); }
 }

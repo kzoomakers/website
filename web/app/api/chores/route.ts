@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { keyAllows } from "@/lib/api-keys";
 import * as c from "@/lib/chores";
 
@@ -36,5 +37,5 @@ export async function POST(req: Request) {
       case "log": return NextResponse.json({ id: await c.logTime(Number(a.chore_id), member, Number(a.minutes), a.date ? String(a.date) : undefined, "api", String(a.said ?? ""), who) });
       default: return fail("unknown op");
     }
-  } catch (e: any) { return fail(e.message ?? "failed"); }
+  } catch (e: any) { return fail(errMsg(e)); }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { actor, editingAllowed } from "@/lib/guard";
 import { logAudit } from "@/lib/store";
 import { baseUrl } from "@/lib/mail";
@@ -31,5 +32,5 @@ export async function POST(req: Request) {
     }
     await logAudit(who, "tour." + a.op, String(a.block?.date ?? a.id ?? ""));
     return NextResponse.json({ ok: true });
-  } catch (e: any) { return new NextResponse(e.message ?? "failed", { status: 400 }); }
+  } catch (e: any) { return new NextResponse(errMsg(e), { status: 400 }); }
 }

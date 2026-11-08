@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { exportBlog, importBlog } from "@/lib/blog-io";
 import { actor, editingAllowed } from "@/lib/guard";
 
@@ -19,6 +20,6 @@ export async function POST(req: Request) {
   try {
     return NextResponse.json(await importBlog(b, await actor()));
   } catch (e: any) {
-    return new NextResponse(e.message, { status: 400 });
+    return new NextResponse(errMsg(e), { status: 400 });
   }
 }

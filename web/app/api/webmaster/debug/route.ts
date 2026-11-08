@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { actor, editingAllowed } from "@/lib/guard";
 import { logAudit } from "@/lib/store";
 import { STREAMS, clearLog, enabled, recent, setStream } from "@/lib/debug";
@@ -21,5 +22,5 @@ export async function POST(req: Request) {
     else if (a?.op === "clear") { await clearLog(String(a.stream ?? "")); await logAudit(who, "debug.clear", String(a.stream ?? "all")); }
     else return new NextResponse("bad request", { status: 400 });
     return NextResponse.json({ ok: true });
-  } catch (e: any) { return new NextResponse(e.message ?? "failed", { status: 400 }); }
+  } catch (e: any) { return new NextResponse(errMsg(e), { status: 400 }); }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { errMsg } from "@/lib/errmsg";
 import { submitContact } from "@/lib/contact";
 import { hashIp } from "@/lib/comments";
 
@@ -12,6 +13,6 @@ export async function POST(req: Request) {
     await submitContact(b.kind, { name: s(b.name), email: s(b.email), subject: s(b.subject), message: s(b.message) }, hashIp(req));
     return NextResponse.json({ ok: true });
   } catch (e: any) {
-    return new NextResponse(e.message === "not configured" ? "The form isn't available right now." : e.message, { status: 400 });
+    return new NextResponse(e.message === "not configured" ? "The form isn't available right now." : errMsg(e), { status: 400 });
   }
 }
