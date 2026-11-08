@@ -74,6 +74,13 @@ export async function ensureSchema(pool: Pool) {
   await pool.query(`CREATE TABLE IF NOT EXISTS login_tokens (hash text PRIMARY KEY, user_id int NOT NULL REFERENCES site_users ON DELETE CASCADE, next text NOT NULL DEFAULT '/blog',
     expires_at timestamptz NOT NULL, created_at timestamptz NOT NULL DEFAULT now())`);
   await pool.query("ALTER TABLE login_tokens ADD COLUMN IF NOT EXISTS reset boolean NOT NULL DEFAULT false"); // an admin-sent password reset link
+  // Sign-up approval. New accounts start 'pending' (existing ones are 'approved'); staff move them between pending / waiting (for the applicant's reply) / rejected / approved.
+  // approval_events is the dialog thread: messages both ways, staff-only notes, and every state change with who did it.
+  await pool.query("ALTER TABLE site_users ADD COLUMN IF NOT EXISTS approval text NOT NULL DEFAULT 'approved' CHECK (approval IN ('pending','waiting','rejected','approved'))");
+  await pool.query("UPDATE site_users SET approval = 'pending' WHERE verified_at IS NULL AND approval = 'approved'"); // never-verified sign-ups must not skip the queue by verifying later
+  await pool.query(`CREATE TABLE IF NOT EXISTS approval_events (id serial PRIMARY KEY, user_id int NOT NULL REFERENCES site_users ON DELETE CASCADE, actor text NOT NULL, by_applicant boolean NOT NULL DEFAULT false,
+    kind text NOT NULL CHECK (kind IN ('message','note','state')), to_state text, body text NOT NULL DEFAULT '', at timestamptz NOT NULL DEFAULT now())`);
+  await pool.query("CREATE INDEX IF NOT EXISTS approval_events_user ON approval_events (user_id, id)");
   // Admin RBAC: one row per (user, top-level admin section). No row = no access. admin:write = full admin (and may grant access).
   await pool.query(`CREATE TABLE IF NOT EXISTS user_perms (user_id int NOT NULL REFERENCES site_users ON DELETE CASCADE, section text NOT NULL,
     level text NOT NULL CHECK (level IN ('read','write')), PRIMARY KEY (user_id, section))`);

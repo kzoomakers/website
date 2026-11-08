@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { currentReader } from "@/lib/readers";
+import { currentVerified } from "@/lib/readers";
 import { addComment, hashIp } from "@/lib/comments";
 import { baseUrl } from "@/lib/mail";
 
 export async function POST(req: Request) {
-  const u = await currentReader();
+  const u = await currentVerified();
   if (!u) return new NextResponse("Please sign in to comment.", { status: 401 });
   const b = await req.json().catch(() => null);
   if (!Number.isInteger(b?.postId) || typeof b?.body !== "string" || (b.parentId != null && !Number.isInteger(b.parentId))) return new NextResponse("bad request", { status: 400 });

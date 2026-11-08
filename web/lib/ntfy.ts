@@ -1,3 +1,4 @@
+import { tokenAllows } from "./ntfy-token";
 import { createHash, randomBytes } from "crypto";
 import { db } from "./db";
 import { isAdmin } from "@/auth";
@@ -76,6 +77,21 @@ export async function ensureUserTopic(email: string) {
   return userTopicName(email);
 }
 
+// Extra personal topics: "<your topic>-<name>", kind 'extra', never public. Max 10 per person.
+export const EXTRA_MAX = 10;
+export const listExtraTopics = (email: string) => q("SELECT name, description, created_at FROM ntfy_topics WHERE kind = 'extra' AND owner = $1 ORDER BY name", [email.toLowerCase()]);
+export async function addExtraTopic(email: string, suffix: string) {
+  const s = suffix.trim().toLowerCase(), base = await ensureUserTopic(email), name = `${base}-${s}`;
+  if (!/^[a-z0-9_-]{1,30}$/.test(s)) throw new Error("Use 1-30 lowercase letters, numbers, - or _.");
+  if (name.length > 64) throw new Error("That name is too long.");
+  if ((await listExtraTopics(email)).length >= EXTRA_MAX) throw new Error(`You can have up to ${EXTRA_MAX} extra topics.`);
+  if (!(await q("INSERT INTO ntfy_topics (name, kind, owner, description, created_by) VALUES ($1,'extra',$2,'Extra personal topic',$2) ON CONFLICT DO NOTHING RETURNING 1", [name, email.toLowerCase()])).length) throw new Error("You already have that topic.");
+  return name;
+}
+export async function deleteExtraTopic(email: string, name: string) {
+  if (!(await q("DELETE FROM ntfy_topics WHERE name = $1 AND kind = 'extra' AND owner = $2 RETURNING 1", [name, email.toLowerCase()])).length) throw new Error("No such topic.");
+}
+
 // ---- iOS: apps can't hold a connection open, so Apple push is triggered by a "poll request" sent to an upstream ntfy server (ntfy.sh),
 // keyed by sha256(<base url>/<topic>). The app then fetches the real message from us. Off until an admin turns it on.
 export type NtfyCfg = { baseUrl: string; upstream: string; upstreamToken: string };
@@ -128,18 +144,18 @@ const listTopics2 = () => q(`SELECT t.*, (SELECT count(*)::int FROM ntfy_message
   (SELECT count(*)::int FROM ntfy_clients c WHERE c.topic = t.name) AS connections, (SELECT count(*)::int FROM ntfy_clients c WHERE c.topic = t.name AND c.at > now() - interval '1 day') AS connections_24h,
   (SELECT count(*)::int FROM ntfy_clients c WHERE c.topic = t.name AND c.at > now() - interval '7 days') AS connections_7d, (SELECT max(at) FROM ntfy_clients c WHERE c.topic = t.name) AS last_connected,
   (SELECT count(*)::int FROM ntfy_clients c WHERE c.topic = t.name AND NOT c.closed AND c.last_seen > now() - interval '2 minutes') AS live
-  FROM ntfy_topics t ORDER BY (kind = 'user'), builtin DESC, name`);
+  FROM ntfy_topics t ORDER BY (kind <> 'shared'), builtin DESC, name`);
 
 export async function saveTopic(x: any, who: string) {
   const name = String(x.name ?? "").trim(), days = Number(x.retention_days);
   if (!TOPIC_OK.test(name) || RESERVED.includes(name)) throw new Error("Topic names are 1-64 letters, numbers, - or _ (and can't be a reserved word like 'docs').");
   if (!Number.isInteger(days) || days < 1 || days > MAX_RETENTION) throw new Error(`Keep messages for 1 to ${MAX_RETENTION} days.`);
   const f = [String(x.description ?? "").slice(0, 300), !!x.public_read, !!x.public_write];
-  if (x.existing) { if (!(await q("UPDATE ntfy_topics SET description=$2, public_read=public_read AND kind <> 'user' AND $3, public_write=public_write AND kind <> 'user' AND $4, retention_days=$5 WHERE name=$1 RETURNING 1", [name, ...f, days])).length) throw new Error("No such topic."); return; }
+  if (x.existing) { if (!(await q("UPDATE ntfy_topics SET description=$2, public_read=public_read AND kind = 'shared' AND $3, public_write=public_write AND kind = 'shared' AND $4, retention_days=$5 WHERE name=$1 RETURNING 1", [name, ...f, days])).length) throw new Error("No such topic."); return; }
   if (!(await q("INSERT INTO ntfy_topics (name, description, public_read, public_write, retention_days, created_by) VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT DO NOTHING RETURNING 1", [name, ...f, days, who])).length) throw new Error("That topic already exists.");
 }
 export async function deleteTopic(name: string) {
-  if (!(await q("DELETE FROM ntfy_topics WHERE name = $1 AND NOT builtin AND kind <> 'user' RETURNING 1", [name])).length) throw new Error("Built-in and personal topics can't be deleted.");
+  if (!(await q("DELETE FROM ntfy_topics WHERE name = $1 AND NOT builtin AND kind = 'shared' RETURNING 1", [name])).length) throw new Error("Built-in and personal topics can't be deleted.");
 }
 export const topicMessages = (name: string, before: number | null) => q(
   "SELECT seq, id, time, title, message, priority, tags, click, sender, origin FROM ntfy_messages WHERE topic = $1 AND ($2::bigint IS NULL OR seq < $2) ORDER BY seq DESC LIMIT 100", [name, before]);
@@ -179,8 +195,10 @@ export async function authorize(req: Request, topics: string[], write: boolean) 
   if (rows.every((t) => (write ? t.public_write : t.public_read))) return "anonymous";
   const tok = tokenFrom(req);
   if (!tok) return null;
-  const t = (await q("UPDATE ntfy_tokens SET last_used_at = now() WHERE hash = $1 AND (expires_at IS NULL OR expires_at > now()) RETURNING label, topics, scopes", [sha(tok)]))[0];
-  if (!t || !t.scopes.includes(write ? "publish" : "read") || (t.topics.length && !topics.every((n) => t.topics.includes(n)))) return null;
+  const t = (await q("SELECT label, topics, scopes FROM ntfy_tokens WHERE hash = $1 AND (expires_at IS NULL OR expires_at > now())", [sha(tok)]))[0];
+  if (!t || !tokenAllows(t, topics, write)) return null;
+  // At most one write a minute per token: a phone polling every few seconds shouldn't rewrite the row each time.
+  q("UPDATE ntfy_tokens SET last_used_at = now() WHERE hash = $1 AND (last_used_at IS NULL OR last_used_at < now() - interval '1 minute')", [sha(tok)]).catch(() => {});
   return t.label as string;
 }
 
@@ -239,8 +257,16 @@ export type Fmt = keyof typeof CT;
 const encode = (fmt: Fmt, m: Msg) => fmt === "json" ? JSON.stringify(m) + "\n" : fmt === "sse" ? `event: ${m.event}\ndata: ${JSON.stringify(m)}\n\n` : m.event === "message" ? (m.message ?? "").replace(/\r?\n/g, " ") + "\n" : "\n";
 
 /** The response for GET /{topics}/json|sse|raw. Polls once and ends with poll=true, otherwise stays open until the client leaves. */
+// Open streams each poll the database, so they are capped per address and in total (a flood would otherwise use up the connection pool).
+// shortcut: counted per process; with several server processes the real limits are multiplied by their number.
+const MAX_STREAMS_PER_IP = 5, MAX_STREAMS = 50, MAX_CONNECTS_PER_MIN = 60;
+const streams = new Map<string, number>();
+let streamsOpen = 0;
+
 export async function subscribe(req: Request, topics: string[], fmt: Fmt, since: number, poll: boolean, who: string, ipHash: string, f: Filter = {}) {
   await sweep();
+  if (!poll && ((streams.get(ipHash) ?? 0) >= MAX_STREAMS_PER_IP || streamsOpen >= MAX_STREAMS)) throw new Error("limit reached: too many open connections");
+  if ((await q("SELECT count(*)::int n FROM ntfy_clients WHERE ip_hash = $1 AND at > now() - interval '1 minute'", [ipHash]))[0].n >= MAX_CONNECTS_PER_MIN) throw new Error("limit reached: too many requests");
   const headers = { "content-type": CT[fmt] + "; charset=utf-8", "cache-control": "no-cache, no-transform", "x-accel-buffering": "no", "access-control-allow-origin": "*" };
   const ua = (req.headers.get("user-agent") ?? "").slice(0, 200);
   const ids: number[] = (await q("INSERT INTO ntfy_clients (topic, poll, ip_hash, ua, who) SELECT unnest($1::text[]), $2, $3, $4, $5 RETURNING id", [topics, poll, ipHash, ua, who])).map((r) => +r.id);
@@ -249,10 +275,12 @@ export async function subscribe(req: Request, topics: string[], fmt: Fmt, since:
   if (poll) { const rows = await after(topics, since); await done(); return new Response(rows.map(wire).filter((m) => pass(m, f)).map((m) => encode(fmt, m)).join(""), { headers }); }
   const enc = new TextEncoder();
   let alive = true;
+  streams.set(ipHash, (streams.get(ipHash) ?? 0) + 1); streamsOpen++;
+  const end = () => { if (!alive) return; alive = false; done(); streamsOpen--; const n = (streams.get(ipHash) ?? 1) - 1; if (n > 0) streams.set(ipHash, n); else streams.delete(ipHash); };
   return new Response(new ReadableStream({
     async start(ctrl) {
       let last = since, ping = Date.now();
-      const stop = () => { if (alive) { alive = false; done(); try { ctrl.close(); } catch {} } };
+      const stop = () => { if (alive) { end(); try { ctrl.close(); } catch {} } };
       req.signal.addEventListener("abort", stop);
       const out = (m: Msg) => { try { ctrl.enqueue(enc.encode(encode(fmt, m))); } catch { stop(); } };
       out(event("open", label));
@@ -264,6 +292,6 @@ export async function subscribe(req: Request, topics: string[], fmt: Fmt, since:
         }
       } catch { stop(); }
     },
-    cancel() { if (alive) { alive = false; done(); } },
+    cancel() { end(); },
   }), { headers });
 }

@@ -9,8 +9,13 @@ export async function GET(_: Request, { params }: { params: Promise<{ key: strin
   if (!store) return new Response("not found", { status: 404 });
   try {
     const o = await store.client.send(new GetObjectCommand({ Bucket: store.bucket, Key: key }));
+    const type = o.ContentType ?? "application/octet-stream";
     return new Response(o.Body!.transformToWebStream(), {
-      headers: { "content-type": o.ContentType ?? "application/octet-stream", "cache-control": "public, max-age=31536000, immutable" },
+      headers: {
+        "content-type": type, "cache-control": "public, max-age=31536000, immutable", "x-content-type-options": "nosniff",
+        // An SVG or HTML file opened directly could run script on our origin; sandboxed, it can't. (Images in <img> are unaffected.)
+        ...(/svg|html|xml/i.test(type) && { "content-security-policy": "sandbox; default-src 'none'; style-src 'unsafe-inline'" }),
+      },
     });
   } catch {
     return new Response("not found", { status: 404 });

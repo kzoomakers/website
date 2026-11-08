@@ -1,3 +1,4 @@
+import { cleanHtml } from "./sanitize";
 import { db } from "./db";
 import { logAudit } from "./store";
 
@@ -47,7 +48,7 @@ export async function getPost(key: string | number, all = false): Promise<Post |
 export async function savePost(p: PostInput, who: string, action = "post.save", target = ""): Promise<Post> {
   const slug = slugify(p.slug || p.title);
   if (!slug || !p.title.trim()) throw new Error("title required");
-  const v = [slug, p.title.trim(), p.excerpt, p.body, p.image, p.tags, p.status, p.publish_at || null, p.author_id || null, p.category_ids];
+  const v = [slug, p.title.trim(), p.excerpt, cleanHtml(p.body), p.image, p.tags, p.status, p.publish_at || null, p.author_id || null, p.category_ids];
   const c = await conn();
   const r = p.id
     ? await c.query(`UPDATE posts SET slug=$1, title=$2, excerpt=$3, body=$4, image=$5, tags=$6, status=$7, publish_at=$8, author_id=$9, category_ids=$10, updated_at=now() WHERE id=$11 RETURNING ${COLS}`, [...v, p.id])

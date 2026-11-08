@@ -1,5 +1,6 @@
 import { me } from "@/lib/guard";
-import { safeNext } from "@/lib/readers";
+import { redirect } from "next/navigation";
+import { currentApplicant, safeNext } from "@/lib/readers";
 import LoginScreen from "@/components/login-screen";
 import "./login.css";
 
@@ -8,5 +9,8 @@ export const metadata = { title: "Sign in | Kzoo Makers", robots: { index: false
 
 export default async function Login({ searchParams }: { searchParams: Promise<{ next?: string; expired?: string; denied?: string }> }) {
   const s = await searchParams;
+  // Signed in but not approved yet: the only place for them is their Home, which shows the approval status (otherwise every members-only redirect would loop back here).
+  const ap = await currentApplicant().catch(() => null);
+  if (ap && ap.approval !== "approved") redirect("/members");
   return <LoginScreen next={safeNext(s.next)} expired={!!s.expired} denied={s.denied ? (await me())?.email : undefined} google={!!process.env.AUTH_GOOGLE_ID} />;
 }

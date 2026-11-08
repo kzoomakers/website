@@ -2,10 +2,10 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
-type A = { reviews: number; reviewMax: number; comments: number; commentMax: number; forms: number; formMax: number };
+type A = { reviews: number; reviewMax: number; comments: number; commentMax: number; forms: number; formMax: number; applicants: number; applicantMax: number };
 const KEY = "admin-alert-ack"; // newest pending ids this browser has acknowledged; anything newer pops up again
 
-const read = (): { r: number; c: number; f: number } => { try { return { r: 0, c: 0, f: 0, ...JSON.parse(localStorage.getItem(KEY) ?? "{}") }; } catch { return { r: 0, c: 0, f: 0 }; } };
+const read = (): { r: number; c: number; f: number; a: number } => { try { return { r: 0, c: 0, f: 0, a: 0, ...JSON.parse(localStorage.getItem(KEY) ?? "{}") }; } catch { return { r: 0, c: 0, f: 0, a: 0 }; } };
 
 // A pop-up on every admin page whenever new reviews or comments are waiting, until someone acknowledges it.
 export default function Alerts() {
@@ -17,12 +17,12 @@ export default function Alerts() {
     const t = setInterval(poll, 60_000);
     return () => { live = false; clearInterval(t); };
   }, [path]);
-  const ack = read(), newR = !!a && a.reviews > 0 && a.reviewMax > ack.r, newC = !!a && a.comments > 0 && a.commentMax > ack.c, newF = !!a && a.forms > 0 && a.formMax > ack.f;
-  const show = (newR || newC || newF) && !path.startsWith("/admin/webmaster/reviews") && !path.startsWith("/admin/blog/comments") && !path.startsWith("/admin/forms");
+  const ack = read(), newR = !!a && a.reviews > 0 && a.reviewMax > ack.r, newC = !!a && a.comments > 0 && a.commentMax > ack.c, newF = !!a && a.forms > 0 && a.formMax > ack.f, newA = !!a && a.applicants > 0 && a.applicantMax > ack.a;
+  const show = (newR || newC || newF || newA) && !path.startsWith("/admin/webmaster/reviews") && !path.startsWith("/admin/blog/comments") && !path.startsWith("/admin/forms") && !path.startsWith("/admin/crm/approvals");
   useEffect(() => { if (show) ok.current?.focus(); }, [show]);
   if (!a || !show) return null;
   // Acknowledge everything shown, or only the kind being opened so the other keeps nagging.
-  const done = (only?: "r" | "c" | "f") => { try { localStorage.setItem(KEY, JSON.stringify(only ? { ...ack, [only]: { r: a.reviewMax, c: a.commentMax, f: a.formMax }[only] } : { r: a.reviewMax, c: a.commentMax, f: a.formMax })); } catch {} setA({ ...a }); };
+  const done = (only?: "r" | "c" | "f" | "a") => { try { localStorage.setItem(KEY, JSON.stringify(only ? { ...ack, [only]: { r: a.reviewMax, c: a.commentMax, f: a.formMax, a: a.applicantMax }[only] } : { r: a.reviewMax, c: a.commentMax, f: a.formMax, a: a.applicantMax })); } catch {} setA({ ...a }); };
   return (
     <div role="alertdialog" aria-modal="true" aria-labelledby="adm-alert-t" onKeyDown={(e) => e.key === "Escape" && done()}
       style={{ position: "fixed", inset: 0, zIndex: 100000, background: "rgba(0,0,0,.45)", display: "grid", placeItems: "center", padding: 16 }}>
@@ -32,11 +32,12 @@ export default function Alerts() {
         <ul style={{ paddingLeft: 20 }}>
           {newR && <li><strong>{a.reviews}</strong> review{a.reviews === 1 ? "" : "s"} waiting for approval</li>}
           {newC && <li><strong>{a.comments}</strong> comment{a.comments === 1 ? "" : "s"} waiting for moderation</li>}
+          {newA && <li><strong>{a.applicants}</strong> new member{a.applicants === 1 ? "" : "s"} waiting for approval</li>}
           {newF && <li><strong>{a.forms}</strong> contact message{a.forms === 1 ? "" : "s"} held by the spam filter</li>}
         </ul>
         <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", flexWrap: "wrap" }}>
           <button ref={ok} onClick={() => done()}>Got it</button>
-          <a href={newR ? "/admin/webmaster/reviews" : newC ? "/admin/blog/comments" : "/admin/forms"} onClick={() => done(newR ? "r" : newC ? "c" : "f")}><button className="pri">Review now</button></a>
+          <a href={newA ? "/admin/crm/approvals" : newR ? "/admin/webmaster/reviews" : newC ? "/admin/blog/comments" : "/admin/forms"} onClick={() => done(newA ? "a" : newR ? "r" : newC ? "c" : "f")}><button className="pri">Review now</button></a>
         </div>
       </div>
     </div>

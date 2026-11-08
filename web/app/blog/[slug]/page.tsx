@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAuthor, getPost } from "@/lib/blog";
 import { Body } from "@/lib/blog-body";
-import { currentReader } from "@/lib/readers";
+import { currentVerified } from "@/lib/readers";
 import { getSettings, listThread } from "@/lib/comments";
 import Shell from "../shell";
 import Comments from "../comments";
@@ -19,7 +19,7 @@ export default async function Post({ params }: P) {
   const slug = (await params).slug;
   const p = await getPost(slug);
   if (!p) notFound();
-  const me = await currentReader();
+  const me = await currentVerified();
   const [comments, author, cs] = await Promise.all([listThread(p.id, me?.id ?? null), p.author_id ? getAuthor(p.author_id) : null, getSettings()]);
   const closed = cs.closeAfterDays > 0 && Date.now() - new Date(p.publish_at ?? p.updated_at).getTime() > cs.closeAfterDays * 864e5;
   return (

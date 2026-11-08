@@ -32,7 +32,7 @@ const MAIL: Item[] = [
   { href: "/admin/mail/subscribers", icon: "👥", label: "Subscribers" }, { href: "/admin/mail/lists", icon: "📋", label: "Lists" }, { href: "/admin/mail/settings", icon: "⚙️", label: "Settings" },
 ];
 const FORMS: Item[] = [{ href: "/admin/forms", icon: "📬", label: "Inbox" }];
-const CRM: Item[] = [{ href: "/admin/crm", icon: "👥", label: "People" }, { href: "/admin/crm/skills", icon: "🛠️", label: "Skills" }, { href: "/admin/crm/values", icon: "🏷️", label: "Profile values" }, { href: "/admin/crm/tools", icon: "🔧", label: "Tools & authorizations" }, { href: "/admin/crm/classes", icon: "🎓", label: "Classes" }];
+const CRM: Item[] = [{ href: "/admin/crm", icon: "👥", label: "People" }, { href: "/admin/crm/approvals", icon: "✅", label: "New members" }, { href: "/admin/crm/skills", icon: "🛠️", label: "Skills" }, { href: "/admin/crm/values", icon: "🏷️", label: "Profile values" }, { href: "/admin/crm/tools", icon: "🔧", label: "Tools & authorizations" }, { href: "/admin/crm/classes", icon: "🎓", label: "Classes" }];
 const TOURS: Item[] = [{ href: "/admin/tours", icon: "🗓️", label: "Bookings", exact: true }, { href: "/admin/tours/availability", icon: "🕙", label: "Availability" }];
 const USERS: Item[] = [{ href: "/admin/users", icon: "🔑", label: "People & access" }, { href: "/admin/services", icon: "⚙️", label: "Services", exact: true }, { href: "/admin/services/audit", icon: "🕘", label: "Audit log" }, { href: "/admin/services/ntfy", icon: "🔔", label: "Notifications (ntfy)" }];
 const MENUS: [string, Item[]][] = [["/admin/webmaster", WEBMASTER], ["/admin/blog", BLOG], ["/admin/mail", MAIL], ["/admin/forms", FORMS], ["/admin/crm", CRM], ["/admin/tours", TOURS], ["/admin/users", USERS], ["/admin/services", USERS]];

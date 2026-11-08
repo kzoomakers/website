@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Envelope from "./envelope";
 
-const MENU = [["/members", "🏠", "Home"], ["/members/directory", "🔎", "Directory"], ["/members/classes", "🎓", "Classes"], ["/members/profile", "👤", "My Profile"], ["/members/inbox", "✉️", "Inbox"], ["/account", "⚙️", "Account"]] as const;
+const MENU = [["/members", "🏠", "Home"], ["/members/directory", "🔎", "Directory"], ["/members/classes", "🎓", "Classes"], ["/members/profile", "👤", "My Profile"], ["/members/inbox", "✉️", "Inbox"], ["/members/notifications", "📱", "Phone alerts"], ["/account", "⚙️", "Account"]] as const;
 
 // Same bar and sidebar as the admin area (styles come from admin's webmaster.css), with the members links.
 export function Bar({ signedIn }: { signedIn: boolean }) {
@@ -21,11 +21,12 @@ export function Bar({ signedIn }: { signedIn: boolean }) {
   );
 }
 
-export function Side({ user }: { user: ReactNode }) {
+// `limited`: not approved yet, so only Home and Account.
+export function Side({ user, limited }: { user: ReactNode; limited?: boolean }) {
   const here = usePathname();
   return (
     <aside className="adm-side">
-      {MENU.map(([href, icon, label]) => {
+      {MENU.filter(([href]) => !limited || href === "/members" || href === "/account").map(([href, icon, label]) => {
         const on = href === "/members" ? here === href : here === href || here.startsWith(href + "/");
         return <Link key={href} href={href} className="adm-link" aria-current={on ? "page" : undefined}><span aria-hidden>{icon}</span>{label}</Link>;
       })}

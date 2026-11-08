@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { currentReader } from "@/lib/readers";
+import { currentMember } from "@/lib/readers";
 import { listNotes, markRead } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
-const who = () => currentReader().catch(() => null);
+const who = () => currentMember().catch(() => null);
 
 // The signed-in member's notifications and unread count.
 export async function GET() {

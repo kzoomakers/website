@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { COOKIE_NAME, currentReader, requestLink, safeNext, setPassword } from "@/lib/readers";
+import { COOKIE_NAME, currentVerified, requestLink, safeNext, setPassword } from "@/lib/readers";
 import { baseUrl } from "@/lib/mail";
 
 // GET returns the signed-in reader (or null) so any page can show account state.
 export async function GET() {
-  const u = await currentReader().catch(() => null);
+  const u = await currentVerified().catch(() => null);
   return NextResponse.json(u && { name: u.name }, { headers: { "cache-control": "no-store" } });
 }
 
@@ -28,7 +28,7 @@ export async function DELETE() {
 
 // PUT { name?, password?, current? } sets or changes the signed-in reader's password (changing an existing one needs `current`).
 export async function PUT(req: Request) {
-  const [u, b] = await Promise.all([currentReader().catch(() => null), req.json().catch(() => null)]);
+  const [u, b] = await Promise.all([currentVerified().catch(() => null), req.json().catch(() => null)]);
   if (!u) return new NextResponse("Sign in first.", { status: 401 });
   if (typeof b?.password !== "string") return new NextResponse("bad request", { status: 400 });
   try {

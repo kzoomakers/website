@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { currentReader } from "@/lib/readers";
+import { currentVerified } from "@/lib/readers";
 import { SELF_FIELDS, deleteContact, getProfile, listContacts, saveContact, updateProfile } from "@/lib/profiles";
 
 export const dynamic = "force-dynamic";
 
-const who = async () => (await currentReader().catch(() => null)) ?? null;
+const who = async () => (await currentVerified().catch(() => null)) ?? null;
 const fail = (e: any) => new NextResponse(e?.message ?? "failed", { status: 400 });
 const noAuth = () => new NextResponse("Sign in first.", { status: 401 });
 

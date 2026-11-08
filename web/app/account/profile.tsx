@@ -38,10 +38,11 @@ export default function Profile({ profile, contacts: c0, relationships, next, se
   const [p, setP] = useState(profile), [contacts, setContacts] = useState(c0), [edit, setEdit] = useState<number | "new" | null>(null);
   const [m1, setM1] = useState(""), [m2, setM2] = useState(""), [cur, setCur] = useState(""), [pw, setPw] = useState(""), [has, setHas] = useState(profile.has_password && !reset), [busy, setBusy] = useState(false);
   const f = (k: keyof P) => ({ value: String(p[k] ?? ""), onChange: (e: React.ChangeEvent<HTMLInputElement>) => setP({ ...p, [k]: e.target.value }) });
-  const need = !contacts.length;
+  const [saved, setSaved] = useState(profile), need = !contacts.length, thin = !saved.phone || !saved.address1, done = !need && !thin;
   return (
     <div style={{ display: "grid", gap: 36, maxWidth: 520 }}>
-      {need && <p role="status" style={{ background: "#fff4d6", color: "#4a3500", padding: "10px 14px", borderRadius: 8, margin: 0 }}>{setup ? "Welcome! " : ""}Please add an emergency contact: someone we can call if something happens while you're at the space.</p>}
+      {setup && !done && <p role="status" style={{ background: "#fff4d6", color: "#4a3500", padding: "10px 14px", borderRadius: 8, margin: 0 }}>Welcome! Two quick things before you start: {thin ? "your phone number and address" : ""}{thin && need ? ", and " : ""}{need ? "an emergency contact (someone we can call if something happens while you're at the space)" : ""}. It takes about a minute.</p>}
+      {!setup && need && <p role="status" style={{ background: "#fff4d6", color: "#4a3500", padding: "10px 14px", borderRadius: 8, margin: 0 }}>Please add an emergency contact: someone we can call if something happens while you're at the space.</p>}
       {reset && <p role="status" style={{ background: "#e6f4ea", color: "#14532d", padding: "10px 14px", borderRadius: 8, margin: 0 }}>Your password was reset. Choose a new one below.</p>}
 
       <section style={grid}>
@@ -62,13 +63,13 @@ export default function Profile({ profile, contacts: c0, relationships, next, se
         {edit === "new" || (need && edit === null)
           ? <ContactForm init={{}} relationships={relationships} onCancel={need ? undefined : () => setEdit(null)} onSaved={(l) => { setContacts(l); setEdit(null); }} />
           : <div><button className="btn btn-sm" onClick={() => setEdit("new")}>+ Add another contact</button></div>}
-        {setup && !need && <p><a className="btn btn-main" href={next}>Continue</a></p>}
+        
       </section>
 
       <form style={grid} onSubmit={async (e) => {
         e.preventDefault(); setBusy(true); setM1("");
         const r = await send("PUT", p).catch(() => null);
-        setBusy(false); setM1(r?.ok ? "Saved." : r ? await r.text() : "Network error. Try again.");
+        setBusy(false); if (r?.ok) setSaved(p); setM1(r?.ok ? "Saved." : r ? await r.text() : "Network error. Try again.");
       }}>
         <h2>Your details</h2>
         <label>Email<input value={p.email} disabled /></label>
@@ -76,8 +77,8 @@ export default function Profile({ profile, contacts: c0, relationships, next, se
           <label>First name<input required maxLength={80} {...f("first_name")} /></label>
           <label>Last name<input maxLength={80} {...f("last_name")} /></label>
         </div>
-        <label>Phone<input type="tel" maxLength={30} {...f("phone")} /></label>
-        <label>Address<input maxLength={120} autoComplete="address-line1" {...f("address1")} /></label>
+        <label>Phone{setup ? " *" : ""}<input type="tel" required={setup} maxLength={30} autoComplete="tel" {...f("phone")} /></label>
+        <label>Address{setup ? " *" : ""}<input required={setup} maxLength={120} autoComplete="address-line1" {...f("address1")} /></label>
         <label>Address line 2<input maxLength={120} autoComplete="address-line2" {...f("address2")} /></label>
         <div style={{ display: "grid", gap: 10, gridTemplateColumns: "2fr 1fr 1fr" }}>
           <label>City<input maxLength={120} {...f("city")} /></label>
@@ -86,6 +87,7 @@ export default function Profile({ profile, contacts: c0, relationships, next, se
         </div>
         <button className="btn btn-main" type="submit" disabled={busy}>Save details</button>
         {m1 && <p role="status" style={{ margin: 0 }}>{m1}</p>}
+        {setup && done && <a className="btn btn-main" href={next}>All set: continue</a>}
       </form>
 
       <form style={grid} onSubmit={async (e) => {

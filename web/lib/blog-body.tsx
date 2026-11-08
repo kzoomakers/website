@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { cleanHtml } from "./sanitize";
 
 // Posts written in the rich editor are HTML (authored only by signed-in admins, like the site's other HTML sections).
 // Older posts are plain text with "## " headings, [text](url) links and ![alt](url) images; React escapes those.
@@ -11,5 +12,5 @@ const inline = (t: string): ReactNode[] =>
   });
 
 export const Body = ({ text }: { text: string }) => /^\s*</.test(text)
-  ? <div className="blog-body" dangerouslySetInnerHTML={{ __html: text }} />
+  ? <div className="blog-body" dangerouslySetInnerHTML={{ __html: cleanHtml(text) }} />
   : <>{text.split(/\n\s*\n/).filter((b) => b.trim()).map((b, i) => (b.startsWith("## ") ? <h2 key={i}>{inline(b.slice(3))}</h2> : <p key={i}>{inline(b.trim())}</p>))}</>;

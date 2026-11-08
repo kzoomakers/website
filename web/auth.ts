@@ -20,7 +20,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     signIn: ({ profile }) => {
       if (!profile?.email_verified || !isAdmin(profile.email)) return false;
       const exact = list().includes(profile.email!.toLowerCase());
-      return exact || (profile as any).hd === profile.email!.split("@")[1].toLowerCase();
+      if (!exact && (profile as any).hd !== profile.email!.split("@")[1].toLowerCase()) return false;
+      // Domain admins can't be listed up front, so their personal ntfy topic is made when they sign in (best effort, never blocks login).
+      import("@/lib/ntfy").then((n) => n.ensureUserTopic(profile.email!)).catch(() => {});
+      return true;
     },
   },
 });

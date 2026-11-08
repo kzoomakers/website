@@ -2,7 +2,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { auth, isAdmin } from "@/auth";
 import { db } from "./db";
-import { currentReader } from "./readers";
+import { currentMember } from "./readers";
 
 // Admin RBAC. Each top-level admin page is a section; a user has no access, "read" (view only) or "write" (view + change) to each.
 // "admin" is the Admin page itself (users and access); admin:write is a full admin and implies write everywhere.
@@ -18,7 +18,7 @@ export const me = cache(async (): Promise<Me | null> => {
   if (process.env.NODE_ENV !== "production" && !process.env.AUTH_GOOGLE_ID) return { email: "dev", name: "dev", perms: ROOT };
   const g = (await auth())?.user;
   if (g?.email && isAdmin(g.email)) return { email: g.email, name: g.name ?? g.email, image: g.image ?? undefined, perms: ROOT };
-  const r = await currentReader().catch(() => null);
+  const r = await currentMember().catch(() => null);
   const d = db();
   if (!r || !d) return null;
   await d.ready;

@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { currentReader } from "@/lib/readers";
+import { currentMember } from "@/lib/readers";
 import { setMyPhoto } from "@/lib/crm";
 
 export const dynamic = "force-dynamic";
 
 // POST (multipart "file") sets the signed-in member's directory photo, replacing the old one; DELETE removes it.
 export async function POST(req: Request) {
-  const u = await currentReader().catch(() => null);
+  const u = await currentMember().catch(() => null);
   if (!u) return new NextResponse("Sign in first.", { status: 401 });
   const file = (await req.formData().catch(() => null))?.get("file");
   if (!(file instanceof File)) return new NextResponse("Choose a photo.", { status: 400 });
@@ -14,7 +14,7 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE() {
-  const u = await currentReader().catch(() => null);
+  const u = await currentMember().catch(() => null);
   if (!u) return new NextResponse("Sign in first.", { status: 401 });
   await setMyPhoto(u.id, null);
   return NextResponse.json({ ok: true });

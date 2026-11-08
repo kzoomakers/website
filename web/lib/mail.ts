@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
-import { createHmac, randomBytes, randomUUID } from "crypto";
+import { randomBytes, randomUUID } from "crypto";
+import { clickOk, same, sign } from "./signing";
 import { db } from "./db";
 import { cleanDesign, fill, renderEmail, TEMPLATES, type Design } from "./mail-render";
 
@@ -21,7 +22,7 @@ const SECRETS = ["smtp2goKey", "smtpUrl", "deepseekKey"] as const;
 /** For the admin screen: secrets are never sent back to the browser, only whether they are set. */
 export async function publicMailCfg() {
   const c = await getMailCfg();
-  return { ...c, ...Object.fromEntries(SECRETS.map((k) => [k, ""])), webhookKey: await secret(), isSet: Object.fromEntries(SECRETS.map((k) => [k, !!c[k]])), mail: mailReady(c), ai: !!c.deepseekKey };
+  return { ...c, ...Object.fromEntries(SECRETS.map((k) => [k, ""])), webhookKey: await webhookKey(), isSet: Object.fromEntries(SECRETS.map((k) => [k, !!c[k]])), mail: mailReady(c), ai: !!c.deepseekKey };
 }
 /** A blank secret means "keep what is stored"; "-" clears it. */
 export async function saveMailCfg(x: Partial<MailCfg>) {
@@ -297,7 +298,12 @@ async function welcome(token: string, base: string) {
 }
 
 // ---- SMTP2GO webhook: hard bounces and spam complaints stop all future mail to that address
-export async function webhookKeyOk(k: string) { return k.length > 0 && k === (await secret()); }
+// Its own random key: it sits in a URL (SMTP2GO settings, logs), so it must not be the secret that signs click links.
+async function webhookKey() {
+  await q("INSERT INTO settings (key, data) VALUES ('mail:webhook_key', $1) ON CONFLICT DO NOTHING", [JSON.stringify({ v: randomBytes(24).toString("hex") })]);
+  return (await q("SELECT data FROM settings WHERE key='mail:webhook_key'"))[0].data.v as string;
+}
+export async function webhookKeyOk(k: string) { return k.length > 0 && same(k, await webhookKey()); }
 export async function handleWebhook(b: any) {
   const ev = String(b?.event ?? "").toLowerCase(), raw = String(b?.email ?? b?.rcpt ?? b?.recipient ?? ""), email = raw.match(/[^\s<>"]+@[^\s<>"]+/)?.[0]?.toLowerCase();
   if (!email) return;
@@ -415,7 +421,6 @@ async function secret() {
   await q("INSERT INTO settings (key, data) VALUES ('mail:secret', $1) ON CONFLICT DO NOTHING", [JSON.stringify({ v: randomBytes(32).toString("hex") })]);
   return (await q("SELECT data FROM settings WHERE key='mail:secret'"))[0].data.v as string;
 }
-const sign = (sec: string, token: string, url: string) => createHmac("sha256", sec).update(token + "|" + url).digest("hex").slice(0, 32);
 
 function track(html: string, base: string, token: string, sec: string) {
   const out = html.replace(/href="(https?:\/\/[^"]+)"/g, (m, u: string) => {
@@ -427,7 +432,7 @@ function track(html: string, base: string, token: string, sec: string) {
 export async function trackOpen(token: string) { await q("UPDATE mail_sends SET opened_at = COALESCE(opened_at, now()), opens = opens + 1 WHERE token=$1", [token]); }
 /** Returns the destination if the signature is valid. */
 export async function trackClick(token: string, url: string, sig: string) {
-  if (!/^https?:\/\//i.test(url) || sig !== sign(await secret(), token, url)) return null;
+  if (!clickOk(await secret(), token, url, sig)) return null;
   const r = await q("UPDATE mail_sends SET clicks = clicks + 1, opened_at = COALESCE(opened_at, now()) WHERE token=$1 RETURNING id, campaign_id", [token]);
   if (r[0]) await q("INSERT INTO mail_clicks (campaign_id, send_id, url) VALUES ($1,$2,$3)", [r[0].campaign_id, r[0].id, url.slice(0, 1000)]);
   return url;

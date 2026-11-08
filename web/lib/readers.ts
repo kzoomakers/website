@@ -53,7 +53,9 @@ export async function requestLink(emailIn: string, nameIn: string, next: string,
     if (password && pwProblem(password)) throw new Error(pwProblem(password));
     if (!name) return; // same answer as a sent link, so the form can't be used to find out who has an account
     // The password only counts for a brand-new account (never overwrites an existing one), and works once the emailed link has verified the address.
-    u = (await c.query("INSERT INTO site_users (email, name, first_name, last_name, password_hash) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email RETURNING id, name", [email, name, name.split(" ")[0], name.split(" ").slice(1).join(" "), password ? await hashPw(password) : null])).rows[0];
+    // shortcut: check-then-insert, so a burst can overshoot the cap by a few; fine for a spam brake.
+    if ((await signupsThisHour()) >= SIGNUPS_PER_HOUR) throw new Error("We're getting a lot of sign-ups right now. Please try again in a little while.");
+    u = (await c.query("INSERT INTO site_users (email, name, first_name, last_name, password_hash, approval) VALUES ($1, $2, $3, $4, $5, 'pending') ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email RETURNING id, name", [email, name, name.split(" ")[0], name.split(" ").slice(1).join(" "), password ? await hashPw(password) : null])).rows[0];
   }
   // shortcut: limits only per address (one email a minute); add per-IP limiting if someone abuses the form to spam other people's inboxes.
   if ((await c.query("SELECT 1 FROM login_tokens WHERE user_id = $1 AND created_at > now() - interval '60 seconds'", [u.id])).rowCount) return;
@@ -74,19 +76,21 @@ export async function consumeLink(token: string, base: string) {
   // First verification = registration: join the "Registered users" mailing list (a failure here must not block sign-in).
   const u = (await c.query("UPDATE site_users u SET verified_at = COALESCE(u.verified_at, now()) FROM (SELECT id, verified_at AS was FROM site_users WHERE id = $1) o WHERE u.id = o.id RETURNING u.email, u.name, o.was", [r.rows[0].user_id])).rows[0];
   if (u && !u.was) {
-    // The very first verified account on a fresh site becomes the admin. shortcut: two simultaneous first verifications could both miss; a Google ADMIN_EMAILS admin can grant access instead.
-    await (await conn()).query("INSERT INTO user_perms (user_id, section, level, locked) SELECT $1, 'admin', 'write', true WHERE NOT EXISTS (SELECT 1 FROM site_users WHERE verified_at IS NOT NULL AND id <> $1)", [r.rows[0].user_id]);
-    await addRegistered(u.email, u.name, base).catch(() => {});
+    // The very first verified account on a fresh site becomes the admin (and is approved). shortcut: two simultaneous first verifications could both miss; a Google ADMIN_EMAILS admin can grant access instead.
+    const founder = (await (await conn()).query("INSERT INTO user_perms (user_id, section, level, locked) SELECT $1, 'admin', 'write', true WHERE NOT EXISTS (SELECT 1 FROM site_users WHERE verified_at IS NOT NULL AND id <> $1)", [r.rows[0].user_id])).rowCount;
+    if (founder) { await (await conn()).query("UPDATE site_users SET approval = 'approved' WHERE id = $1", [r.rows[0].user_id]); await addRegistered(u.email, u.name, base).catch(() => {}); }
+    else await import("./approvals").then((a) => a.applied(r.rows[0].user_id)).catch(() => {}); // joins the "Registered users" list once approved
   }
   // An admin-sent reset link also retires the old password, so the account page offers "set a password" without asking for the current one.
   if (r.rows[0].reset) await c.query("UPDATE site_users SET password_hash = NULL WHERE id = $1", [r.rows[0].user_id]);
   return { next: r.rows[0].reset ? "/account?reset=1" : await afterSignIn(r.rows[0].user_id, r.rows[0].next), ...session(r.rows[0].user_id) };
 }
 
-/** Where to send someone who just signed in: members with no emergency contact on file are asked to add one first. */
+/** Where to send someone who just signed in: applicants to their approval page, then members through any unfinished first-time steps (details + emergency contact). Add later onboarding steps here. */
 export async function afterSignIn(userId: number, next: string) {
-  const none = !(await (await conn()).query("SELECT 1 FROM emergency_contacts WHERE user_id = $1", [userId])).rowCount;
-  return none ? `/account?setup=1&next=${encodeURIComponent(safeNext(next))}` : safeNext(next);
+  const u = (await (await conn()).query("SELECT approval, phone = '' OR address1 = '' AS thin, NOT EXISTS (SELECT 1 FROM emergency_contacts WHERE user_id = $1) AS no_contact FROM site_users WHERE id = $1", [userId])).rows[0];
+  if (u?.approval !== "approved") return "/members";
+  return u.thin || u.no_contact ? `/account?setup=1&next=${encodeURIComponent(safeNext(next))}` : safeNext(next);
 }
 
 /** A one-time sign-in link that lands on `next` (used by message emails). It works once; whoever holds it gets into that account until then, so it's short-lived and only meant for the person it was sent to. */
@@ -133,6 +137,15 @@ export async function passwordLogin(emailIn: string, password: string) {
   return { ...session(u.id), userId: u.id as number };
 }
 
+export const SIGNUPS_PER_HOUR = 3;
+/** New accounts made in the last hour (or since an admin pressed reset, if later). */
+export async function signupsThisHour() {
+  return (await (await conn()).query("SELECT count(*)::int n FROM site_users WHERE created_at > GREATEST(now() - interval '1 hour', COALESCE((SELECT (data->>'at')::timestamptz FROM settings WHERE key = 'signup:reset'), '-infinity'))")).rows[0].n as number;
+}
+export async function resetSignups() {
+  await (await conn()).query("INSERT INTO settings (key, data) VALUES ('signup:reset', $1) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data", [JSON.stringify({ at: new Date().toISOString() })]);
+}
+
 export async function hasPassword(userId: number) {
   return !!(await (await conn()).query("SELECT 1 FROM site_users WHERE id = $1 AND password_hash IS NOT NULL", [userId])).rowCount;
 }
@@ -146,11 +159,24 @@ export async function setPassword(userId: number, password: string, current = ""
   await (await conn()).query("UPDATE site_users SET password_hash = $2 WHERE id = $1", [userId, await hashPw(password)]);
 }
 
-export async function currentReader(): Promise<Reader | null> {
+/** The user in the signed session cookie, whatever their approval state (verified and not disabled). Only the applicant pages use this; everything else wants currentVerified. */
+export async function currentApplicant(): Promise<(Reader & { approval: string }) | null> {
   if (!db()) return null;
   const [id, exp, sig] = ((await cookies()).get(COOKIE_NAME)?.value ?? "").split(".");
   if (!sig || Number(exp) < Date.now()) return null;
   const want = mac(`${id}.${exp}`);
   if (sig.length !== want.length || !timingSafeEqual(Buffer.from(sig), Buffer.from(want))) return null;
-  return (await (await conn()).query("SELECT id, email, name FROM site_users WHERE id = $1 AND verified_at IS NOT NULL AND disabled_at IS NULL", [Number(id)])).rows[0] ?? null;
+  return (await (await conn()).query("SELECT id, email, name, approval FROM site_users WHERE id = $1 AND verified_at IS NOT NULL AND disabled_at IS NULL", [Number(id)])).rows[0] ?? null;
+}
+
+/** Signed-in, verified and not rejected, approved or not: enough for blog comments and the Account page. Members-only features must use currentMember instead. */
+export async function currentVerified(): Promise<Reader | null> {
+  const u = await currentApplicant();
+  return u && u.approval !== "rejected" ? { id: u.id, email: u.email, name: u.name } : null;
+}
+
+/** A signed-in, approved member. Everything members-only (directory, classes, tools, inbox, alerts, reviews, admin access) uses this, so people still in the approval queue are left out, now and for any feature added later. */
+export async function currentMember(): Promise<Reader | null> {
+  const u = await currentApplicant();
+  return u?.approval === "approved" ? { id: u.id, email: u.email, name: u.name } : null;
 }

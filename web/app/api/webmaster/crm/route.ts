@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { actor, editingAllowed } from "@/lib/guard";
 import { logAudit } from "@/lib/store";
 import * as c from "@/lib/crm";
+import * as ap from "@/lib/approvals";
+import { baseUrl } from "@/lib/mail";
 
 // One CRM admin RPC endpoint: POST { op, ...args }. Reads need CRM view access, everything else CRM edit access.
 export const dynamic = "force-dynamic";
-const READS = new Set(["member", "plans", "skills", "fieldValues", "tools", "classes", "roster", "proposals", "classRules"]);
+const READS = new Set(["member", "plans", "skills", "fieldValues", "tools", "classes", "roster", "proposals", "classRules", "applicants", "applicant"]);
 
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
@@ -36,11 +38,16 @@ export async function POST(req: Request) {
       case "classRules": return NextResponse.json({ minDays: await c.classMinDays() });
       case "setMinDays": await c.setClassMinDays(a.days, who); break;
       case "decide": await c.decideProposal(Number(a.id), a.action === "approve" ? "approve" : "decline", a.edit, String(a.reason ?? ""), who); break;
+      case "applicants": return NextResponse.json({ rows: await ap.listApplicants(String(a.state ?? "pending")), counts: await ap.counts() });
+      case "applicant": return NextResponse.json(await ap.detail(Number(a.id)));
+      case "applicantSay": return NextResponse.json(await ap.say(Number(a.id), who, String(a.body ?? ""), !!a.wait, await baseUrl(req)));
+      case "applicantNote": await ap.note(Number(a.id), who, String(a.body ?? "")); break;
+      case "applicantMove": return NextResponse.json(await ap.move(Number(a.id), String(a.from), String(a.to), who, { confirmed: a.confirmed === true, reason: a.reason, edit: a.edit }, await baseUrl(req)));
       case "roster": return NextResponse.json(await c.roster(a.id));
       default: return new NextResponse("unknown op", { status: 400 });
     } return NextResponse.json({ ok: true }); })();
     // Every successful change is logged (crm.<op>); the target is whatever names the thing changed.
-    if (res.ok && !READS.has(a.op) && !["setLevels", "grant", "revoke", "setMinDays"].includes(a.op)) await logAudit(who, "crm." + a.op, String(a.name ?? a.form?.name ?? a.campaign?.subject ?? a.subscriber?.email ?? a.tool?.name ?? a.klass?.name ?? a.id ?? a.value ?? ""));
+    if (res.ok && !READS.has(a.op) && !["setLevels", "grant", "revoke", "setMinDays", "applicantSay", "applicantNote", "applicantMove"].includes(a.op)) await logAudit(who, "crm." + a.op, String(a.name ?? a.form?.name ?? a.campaign?.subject ?? a.subscriber?.email ?? a.tool?.name ?? a.klass?.name ?? a.id ?? a.value ?? ""));
     return res;
   } catch (e: any) {
     return new NextResponse(e.message ?? "failed", { status: 400 });

@@ -31,8 +31,10 @@ export async function saveSettings(x: Partial<Settings>): Promise<Settings> {
 }
 
 /** The visitor's address as our own proxy saw it. The FIRST X-Forwarded-For entry is whatever the visitor typed, so it is never used. */
+// Only headers our own proxy sets can be believed: Fly's on Fly, otherwise the last X-Forwarded-For entry (the one the single proxy in front of us appended).
+// shortcut: assumes exactly one trusted proxy; with none, or more than one, limits are per-"unknown" or per-proxy. Put the app behind one.
 export const clientIp = (req: Request) =>
-  (req.headers.get("fly-client-ip") || req.headers.get("x-forwarded-for")?.split(",").at(-1) || req.headers.get("x-real-ip") || "unknown").trim();
+  ((process.env.FLY_APP_NAME && req.headers.get("fly-client-ip")) || req.headers.get("x-forwarded-for")?.split(",").at(-1) || "unknown").trim();
 /** Hashed so we can rate-limit per address without storing it. */
 export const hashIp = (req: Request) => createHash("sha256").update((process.env.AUTH_SECRET ?? "") + "|ip|" + clientIp(req)).digest("hex").slice(0, 24);
 

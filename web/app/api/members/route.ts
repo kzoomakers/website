@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { currentReader } from "@/lib/readers";
+import { currentMember } from "@/lib/readers";
 import { baseUrl } from "@/lib/mail";
 import * as c from "@/lib/crm";
 
@@ -7,7 +7,7 @@ import * as c from "@/lib/crm";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
-  const [u, a] = await Promise.all([currentReader().catch(() => null), req.json().catch(() => null)]);
+  const [u, a] = await Promise.all([currentMember().catch(() => null), req.json().catch(() => null)]);
   if (!u) return new NextResponse("Sign in first.", { status: 401 });
   if (!a?.op) return new NextResponse("bad request", { status: 400 });
   try {

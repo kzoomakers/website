@@ -3,7 +3,7 @@ import { useState } from "react";
 import { signOut } from "next-auth/react";
 
 // Signed-in Google account (photo, name) at the bottom of the sidebar; click for the email and Log out.
-export default function UserMenu({ name, email, image }: { name: string; email: string; image?: string }) {
+export default function UserMenu({ name, email, image, limited }: { name: string; email: string; image?: string; limited?: boolean }) {
   const [open, setOpen] = useState(false);
   const [broken, setBroken] = useState(false);
   const pic = image && !broken
@@ -15,7 +15,7 @@ export default function UserMenu({ name, email, image }: { name: string; email: 
         <div role="menu" style={{ position: "absolute", bottom: "100%", left: 0, right: 0, marginBottom: 6, background: "var(--card)", border: "1px solid var(--line)", borderRadius: 10, boxShadow: "0 6px 24px rgba(0,0,0,.12)", padding: 12 }}>
           <div style={{ fontWeight: 600 }}>{name}</div>
           <div style={{ fontSize: 12, opacity: 0.7, wordBreak: "break-all", marginBottom: 10 }}>{email}</div>
-          <a role="menuitem" href="/notifications" style={{ display: "block", marginBottom: 8, fontSize: 13 }}>Phone notifications</a>
+          {!limited && <a role="menuitem" href="/notifications" style={{ display: "block", marginBottom: 8, fontSize: 13 }}>Phone notifications</a>}
           <button role="menuitem" style={{ width: "100%" }} onClick={() => fetch("/api/blog/auth", { method: "DELETE" }).then(() => signOut({ callbackUrl: "/" }))}>Log out</button>
         </div>
       )}

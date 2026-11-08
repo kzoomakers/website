@@ -1,11 +1,16 @@
 import { authsFor, memberships, upcomingClasses } from "@/lib/crm";
+import { currentApplicant } from "@/lib/readers";
+import Status from "../pending/status";
 import MembersShell from "./shell";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Members | Kzoo Makers", robots: { index: false } };
 const when = (s: string) => new Date(s).toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
 
-export default function Members() {
+// Home for everyone signed in. Until someone is approved it is the only members page they get: their application status and the conversation with the team.
+export default async function Members() {
+  const a = await currentApplicant().catch(() => null);
+  if (a && a.approval !== "approved") return <><h1>Welcome</h1><Status /></>;
   return (
     <MembersShell title="Members area" path="/members">
       {async (u) => {
@@ -29,7 +34,7 @@ export default function Members() {
               {mine.length ? <ul>{mine.map((c) => <li key={c.id}><strong>{c.title}</strong>, {when(c.starts_at)} {c.mine === "waitlist" && <em>(waitlist)</em>}</li>)}</ul>
                 : <p>You're not signed up for anything. <a href="/members/classes">See upcoming classes</a>.</p>}
             </section>
-            <p><a href="/members/directory">Find a member with a skill</a> · <a href="/members/profile">Edit your profile and skills</a></p>
+            <p><a href="/members/directory">Find a member with a skill</a> · <a href="/members/profile">Edit your profile and skills</a> · <a href="/members/notifications">Phone notifications</a></p>
           </div>
         );
       }}
