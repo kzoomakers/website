@@ -10,6 +10,7 @@ primary_region = 'ord'
 
 [env]
   AUTH_URL = 'https://kzoomakers.org' # behind Fly's proxy Next sees itself as localhost:3000, which broke the Google redirect URI; change to the real domain when it goes live
+  SITE_URL = 'https://kzoomakers.org' # base for emailed links and sign-in redirects
 
 [http_service]
   internal_port = 3000
