@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCalUrl, logAudit, revertSetting, setCalUrl, settingHistory } from "@/lib/store";
-import { cachedAt, getFeed, resetFeed } from "@/lib/calendar-feed";
+import { cachedAt, DOWN_MSG, downAWhile, getFeed, resetFeed } from "@/lib/calendar-feed";
 import { actor, editingAllowed } from "@/lib/guard";
 
 // Admin side of the calendar feed (the public feed is /api/calendar, which shares the same cache).
@@ -15,7 +15,8 @@ export async function GET(req: Request) {
     return NextResponse.json({ url: await getCalUrl(), cachedAt: cachedAt() });
   }
   const text = await getFeed();
-  return text ? new NextResponse(text, { headers: { "content-type": "text/calendar; charset=utf-8" } }) : new NextResponse("calendar unavailable", { status: 502 });
+  if (text) return new NextResponse(text, { headers: { "content-type": "text/calendar; charset=utf-8" } });
+  return downAWhile() ? new NextResponse(DOWN_MSG, { status: 503 }) : new NextResponse("calendar unavailable", { status: 502 });
 }
 
 export async function PUT(req: Request) {

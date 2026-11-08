@@ -49,3 +49,27 @@ test("a failed refresh (error or bad status) keeps serving the old copy, includi
   assert.equal(await getFeed(true), "BEGIN:VCALENDAR new"); // and replaces it when Google answers
   mock.timers.reset();
 });
+
+test("an address change during a fetch: the old fetch's events are not kept", async () => {
+  reset("old");
+  const slow = getFeed(true); // fetch for the old address is in flight
+  resetFeed(); // admin saves a new address
+  await slow;
+  mode = "new";
+  assert.equal(await getFeed(), "BEGIN:VCALENDAR new");
+});
+
+test("a copy over 4 weeks old is no longer served, and downAWhile says so", async () => {
+  const { downAWhile } = await import("../lib/calendar-feed.ts");
+  reset();
+  mock.timers.enable({ apis: ["Date"], now: 1e12 });
+  assert.equal(await getFeed(), "BEGIN:VCALENDAR ok");
+  mode = "down";
+  mock.timers.tick(27 * 864e5);
+  assert.equal(await getFeed(), "BEGIN:VCALENDAR ok");
+  assert.equal(downAWhile(), false);
+  mock.timers.tick(2 * 864e5);
+  assert.equal(await getFeed(true), null);
+  assert.equal(downAWhile(), true);
+  mock.timers.reset();
+});

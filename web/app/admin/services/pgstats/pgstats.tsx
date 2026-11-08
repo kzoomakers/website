@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import type { Query } from "@/lib/pgstats";
 
 type Stat = Record<"numbackends" | "commit" | "rollback" | "blks_read" | "blks_hit" | "returned" | "fetched" | "inserted" | "updated" | "deleted" | "deadlocks" | "temp_bytes", number>;
-type Snap = { at: number; source: string; stat: Stat; conns: { state: string; n: number }[]; size: number; queries: Query[] };
-const EVERY = 3000, KEEP = 60;
+type Snap = { at: number; source: string; errors: string[]; stat: Stat; conns: { state: string; n: number }[]; size: number; queries: Query[] };
+const EVERY = 5000, KEEP = 60;
 const n = (v: number, d = 0) => v.toLocaleString(undefined, { maximumFractionDigits: d });
 const bytes = (b: number) => (b >= 2 ** 30 ? n(b / 2 ** 30, 2) + " GB" : b >= 2 ** 20 ? n(b / 2 ** 20, 1) + " MB" : n(b / 1024) + " KB");
 const ms = (v: number | null) => (v == null ? "–" : v >= 1000 ? n(v / 1000, 2) + " s" : n(v, 2) + " ms");
@@ -48,7 +48,7 @@ export default function PgStats() {
   return (
     <div style={{ padding: 16, maxWidth: 1200 }}>
       <h1>Postgres stats</h1>
-      <p style={{ opacity: 0.7 }}>Updates every 3 seconds{document.hidden ? " (paused: tab hidden)" : ""}. Counters are since the last stats reset. {err && <b style={{ color: "#d64545" }}>Last refresh failed: {err}</b>}</p>
+      <p style={{ opacity: 0.7 }}>Updates every 5 seconds{document.hidden ? " (paused: tab hidden)" : ""}. Counters are since the last stats reset. {err && <b style={{ color: "#d64545" }}>Last refresh failed: {err}</b>}</p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 12 }}>
         {tiles.map(([label, val, k]) => (
           <div key={label} style={{ border: "1px solid #8884", borderRadius: 8, padding: 12 }}>
@@ -59,6 +59,7 @@ export default function PgStats() {
       <h2 style={{ marginTop: 24 }}>Sessions</h2>
       <p>{cur.conns.map((c) => `${c.state}: ${c.n}`).join(" · ")}</p>
       <h2>Slowest statements <small style={{ fontWeight: 400, opacity: 0.7 }}>by total time · source: {cur.source}</small></h2>
+      {cur.errors.map((e) => <code key={e} style={{ display: "block", margin: "6px 0", color: "#d64545" }}>{e}</code>)}
       {cur.source === "none" ? <p>Neither pg_stat_monitor nor pg_stat_statements is available on this server, so only the counters above are shown.</p> : (
         <div style={{ overflowX: "auto" }}>
           <table style={{ borderCollapse: "collapse", width: "100%", fontSize: 13 }}>

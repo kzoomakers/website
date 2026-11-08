@@ -48,10 +48,15 @@ async function maintain() {
       id bigserial, at timestamptz NOT NULL DEFAULT now(), ip text NOT NULL DEFAULT '', method text NOT NULL, host text NOT NULL DEFAULT '', path text NOT NULL,
       query text NOT NULL DEFAULT '', params jsonb NOT NULL DEFAULT '{}', ua text NOT NULL DEFAULT '', referer text NOT NULL DEFAULT '', "user" text NOT NULL DEFAULT ''
     ) PARTITION BY RANGE (at)`);
-    await p.query(`ALTER TABLE ${TABLE} DROP COLUMN IF EXISTS headers`);
-    await p.query(`ALTER TABLE ${TABLE} ADD COLUMN IF NOT EXISTS status smallint NOT NULL DEFAULT 0`); // response code; 0 = rows from before it was recorded
-    for (const ix of ["(at DESC)", "(path, at DESC)", "(ip, at DESC)", "(host, at DESC)", "(\"user\", at DESC)", "(status, at DESC)"])
-      await p.query(`CREATE INDEX IF NOT EXISTS ${TABLE}_${ix.replace(/\W+/g, "_")}_ix ON ${TABLE} ${ix}`);
+    // ALTER / CREATE INDEX take table locks even when they change nothing (and wait behind long queries), so only run them when something is missing.
+    const cols = new Set((await p.query("SELECT column_name FROM information_schema.columns WHERE table_name = $1", [TABLE])).rows.map((r) => r.column_name));
+    if (cols.has("headers")) await p.query(`ALTER TABLE ${TABLE} DROP COLUMN headers`);
+    if (!cols.has("status")) await p.query(`ALTER TABLE ${TABLE} ADD COLUMN status smallint NOT NULL DEFAULT 0`); // response code; 0 = rows from before it was recorded
+    const have = new Set((await p.query("SELECT indexname FROM pg_indexes WHERE tablename = $1", [TABLE])).rows.map((r) => r.indexname));
+    for (const ix of ["(at DESC)", "(path, at DESC)", "(ip, at DESC)", "(host, at DESC)", "(\"user\", at DESC)", "(status, at DESC)"]) {
+      const name = `${TABLE}_${ix.replace(/\W+/g, "_")}_ix`;
+      if (!have.has(name)) await p.query(`CREATE INDEX ${name} ON ${TABLE} ${ix}`);
+    }
     for (let i = 0; i < 3; i++) {
       const a = new Date(now.getTime() + i * 864e5), b = new Date(a.getTime() + 864e5);
       await p.query(`CREATE TABLE IF NOT EXISTS ${part(dayStr(a))} PARTITION OF ${TABLE} FOR VALUES FROM ('${dayStr(a)} 00:00:00+00') TO ('${dayStr(b)} 00:00:00+00')`);
