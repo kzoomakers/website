@@ -46,3 +46,12 @@ export function summarize(ch: Change[]) {
 /** The whole agreement as plain text (what gets stored on each signed copy). */
 export const fullText = (v: Pick<Version, "title" | "revision" | "sections" | "closing">) =>
   `${v.title}\nRevision ${v.revision}\n\n${v.sections.map((s) => `${s.heading}: ${s.body}`).join("\n\n")}\n\n${v.closing}`;
+
+/** The changes as plain text for an AI to explain: what each section said before and after. Throws if it is too long to send. */
+export function changesPrompt(ch: Change[]) {
+  const out = ch.map((c) => c.kind === "changed"
+    ? `EDITED "${c.heading}"\nBEFORE: ${c.words!.filter((w) => w.t !== "+").map((w) => w.s).join("")}\nAFTER: ${c.words!.filter((w) => w.t !== "-").map((w) => w.s).join("")}`
+    : `${c.kind === "added" ? "NEW" : "REMOVED"} SECTION "${c.heading}": ${c.body}`).join("\n\n");
+  if (out.length > 60000) throw new Error("The changes are too long to summarize in one go. Summarize it yourself, or publish in smaller steps.");
+  return out;
+}

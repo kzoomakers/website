@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { tours } from "@/app/admin/tours/rpc";
 import type { Msg } from "@/lib/tours";
 
-const CSS = `.tt{display:grid;gap:10px;font:inherit}.tt-m{max-width:min(560px,92%);padding:9px 13px;border-radius:12px;background:#eef0f3;justify-self:start}
+const CSS = `.tt{display:grid;gap:10px;font:inherit}.tt-m{color:#1a1a1a;max-width:min(560px,92%);padding:9px 13px;border-radius:12px;background:#eef0f3;justify-self:start}
 .tt-m.me{background:#e3efff;justify-self:end}.tt-m.note{background:#fff8dc;border:1px dashed #d9b84a;justify-self:stretch;max-width:none}
 .tt-w{font-size:12.5px;color:#555;margin-bottom:3px}.tt-w b{color:#1a1a1a}.tt-b{white-space:pre-wrap;overflow-wrap:anywhere}
 .tt-f textarea{display:block;width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #d5d9de;border-radius:8px;font:inherit}.tt-f .tt-bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:8px}`;
@@ -38,7 +38,7 @@ function Convo({ load, send, staff, other }: { load: () => Promise<Msg[]>; send:
       <div ref={end} />
       <form className="tt-f" onSubmit={go}>
         <textarea aria-label={staff ? "Message" : "Your reply"} rows={3} maxLength={4000} value={body} placeholder={staff ? (note ? "Private note for the team. The visitor won't see this." : `Message to ${other}. They'll get it by email with a link to reply.`) : "Write your reply…"}
-          onChange={(e) => setBody(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) go(); }} style={note ? { background: "#fff8dc" } : undefined} />
+          onChange={(e) => setBody(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) go(); }} style={note ? { background: "#fff8dc", color: "#1a1a1a" } : undefined} />
         <div className="tt-bar">
           {staff && <label style={{ margin: 0, fontWeight: 400 }}><input type="checkbox" checked={note} onChange={(e) => setNote(e.target.checked)} /> Internal note only (not emailed)</label>}
           {err && <span role="alert" style={{ color: "#b3261e" }}>{err}</span>}

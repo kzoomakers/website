@@ -14,15 +14,21 @@ const rpc = async <T,>(op: string, args: Record<string, unknown> = {}): Promise<
 const when = (s: string) => new Date(s).toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
 const nextRev = (r: string) => r.replace(/(\d+)$/, (n) => String(Number(n) + 1));
 
-export default function WaiverAdmin({ initial, canEdit }: { initial: V[]; canEdit: boolean }) {
+export default function WaiverAdmin({ initial, canEdit, ai }: { initial: V[]; canEdit: boolean; ai: boolean }) {
   const [vs, setVs] = useState(initial), [tab, setTab] = useState<"edit" | "versions" | "members">("edit"), cur = vs[0];
   const [d, setD] = useState({ revision: nextRev(cur.revision), title: cur.title, closing: cur.closing, sections: cur.sections.map((s) => ({ ...s })) as Section[], summary: "", mandatory: true });
-  const [msg, setMsg] = useState(""), [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState(""), [busy, setBusy] = useState(false), [thinking, setThinking] = useState(false);
   const [mem, setMem] = useState<M[] | null>(null), [mf, setMf] = useState({ q: "", version: "" });
   const changes = diffVersions(cur, d), set = (i: number, k: keyof Section, v: string) => setD({ ...d, sections: d.sections.map((s, j) => (j === i ? { ...s, [k]: v } : s)) });
   const move = (i: number, by: number) => { const a = [...d.sections], j = i + by; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; setD({ ...d, sections: a }); };
   const loadMembers = async (f = mf) => { setMf(f); setMem(await rpc<M[]>("members", f).catch(() => [])); };
   const show = (t: typeof tab) => { setTab(t); if (t === "members" && !mem) loadMembers(); };
+  const summarizeAi = async () => {
+    if (d.summary.trim() && !(await confirmDialog("Replace what you've written below with an AI summary?", { ok: "Replace" }))) return;
+    setThinking(true); setMsg("");
+    try { setD({ ...d, summary: (await rpc<{ text: string }>("aiSummary", { draft: d })).text }); setMsg("AI wrote a draft. Read it and fix anything before you publish."); } catch (e: any) { setMsg(e.message); }
+    setThinking(false);
+  };
   const publish = async () => {
     const n = d.mandatory ? ` Every approved member will be emailed and must sign it at their next sign-in.` : " Members who already signed are not asked again.";
     if (!(await confirmDialog(`Publish revision ${d.revision}? It can never be edited or deleted afterwards; changes mean a new revision.${n}`, { ok: "Publish" }))) return;
@@ -60,6 +66,7 @@ export default function WaiverAdmin({ initial, canEdit }: { initial: V[]; canEdi
             <Changes changes={changes} />
             <label>Explain it in plain language: members read this in the email and when they sign again
               <textarea value={d.summary} onChange={(e) => setD({ ...d, summary: e.target.value })} rows={4} placeholder="e.g. Membership dues can now be paid up to the 15th instead of the 10th. We also clarified the guest rule." style={{ width: "100%", boxSizing: "border-box" }} /></label>
+            {ai && canEdit && <><button type="button" className="pri" disabled={thinking || !changes.length} onClick={summarizeAi}>{thinking ? "Writing…" : "✨ Summarize with AI"}</button>{" "}</>}
             <button type="button" onClick={() => setD({ ...d, summary: d.summary || `Changes: ${summarize(changes)}` })}>Start from the automatic list</button>
             <label style={{ display: "block", marginTop: 10 }}><input type="checkbox" checked={d.mandatory} onChange={(e) => setD({ ...d, mandatory: e.target.checked })} /> Require every member to sign this version (they're emailed and must agree at their next sign-in)</label>
           </section>

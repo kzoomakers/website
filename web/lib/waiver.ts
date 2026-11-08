@@ -1,7 +1,8 @@
 import { db } from "./db";
 import { logAudit } from "./store";
 import { getMailCfg, mailReady, sendQueued as send } from "./mail";
-import { diffVersions, summarize, type Change, type Section, type Version } from "./waiver-diff";
+import { complete } from "./ai";
+import { changesPrompt, diffVersions, summarize, type Change, type Section, type Version } from "./waiver-diff";
 
 // Versions of the membership agreement. Published versions are never edited or deleted (legal/technical review); a change is a new version.
 async function conn() {
@@ -39,7 +40,7 @@ export type Draft = { revision: string; title: string; sections: Section[]; clos
 
 /** Publishes a new version. If `mandatory`, every approved member is emailed and must sign it at their next sign-in. */
 export async function publish(d: Draft, who: string, base: string) {
-  const c = await conn(), revision = clip(d.revision, 40), title = clip(d.title, 200), closing = clip(d.closing, 3000), summary = clip(d.summary, 3000), sections = check(d.sections);
+  const c = await conn(), revision = clip(d.revision, 40), title = clip(d.title, 200), closing = clip(d.closing, 3000), summary = clip(d.summary, 6000), sections = check(d.sections);
   if (!revision || !title || !closing) throw new Error("Revision, title and closing statement are required.");
   const prev = await latestVersion();
   if (!diffVersions(prev, { sections, closing }).length && title === prev.title) throw new Error("Nothing has changed from the current version.");
@@ -114,4 +115,15 @@ export async function accountView(userId: number) {
       return { ...s, prevRevision: prev?.revision ?? null, changes: prev ? diffVersions(prev, s.version) : [], notes: prev ? all.filter((v) => v.id > prev.id && v.id <= s.version.id) : [] };
     }).reverse(),
   };
+}
+
+const SYSTEM = `You explain changes to a makerspace's membership agreement to its members, in plain friendly words (8th-grade reading level, no legal jargon).
+For each change write one bullet that starts with "- " and the section name, a colon, then 1 to 3 short sentences: what is different and what it means for a member.
+Use only what the text says: never invent rules, dates or amounts. If a change is just wording or a typo fix, say so in one short sentence. No intro, no outro, no markdown besides the "- " bullets.`;
+
+/** A plain-language summary of what this draft changes compared with the current version, written by the AI model chosen for this job. */
+export async function aiSummary(d: Draft) {
+  const prev = await latestVersion(), ch = diffVersions(prev, { sections: check(d.sections), closing: clip(d.closing, 3000) });
+  if (!ch.length) throw new Error("Nothing has changed yet, so there is nothing to summarize.");
+  return complete("agreement-summary", SYSTEM, `Here are the changes from the current agreement to the new draft:\n\n${changesPrompt(ch)}`);
 }

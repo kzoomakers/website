@@ -9,12 +9,13 @@ export const dynamic = "force-dynamic";
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
   if (!a?.op) return new NextResponse("bad request", { status: 400 });
-  if (!(await editingAllowed("crm", a.op === "publish" ? "write" : "read"))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("crm", a.op === "publish" || a.op === "aiSummary" ? "write" : "read"))) return new NextResponse("not found", { status: 404 });
   try {
     switch (a.op) {
       case "versions": return NextResponse.json(await w.listVersions());
       case "members": return NextResponse.json(await w.members(String(a.q ?? ""), String(a.version ?? "")));
       case "publish": return NextResponse.json({ id: await w.publish(a.draft ?? {}, await actor(), await baseUrl(req)) });
+      case "aiSummary": return NextResponse.json({ text: await w.aiSummary(a.draft ?? {}) });
       default: return new NextResponse("unknown op", { status: 400 });
     }
   } catch (e: any) { return new NextResponse(e.message ?? "failed", { status: 400 }); }
