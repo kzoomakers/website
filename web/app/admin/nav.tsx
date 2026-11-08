@@ -1,7 +1,9 @@
 "use client";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
+import Collapse from "./collapse";
 
 type Item = { href: string; icon: string; label: string; exact?: boolean } | { icon: string; label: string; items: Item[] };
 
@@ -46,13 +48,14 @@ const current = (href: string, here: string, all: string[]) =>
   (here === href || here.startsWith(href + "/")) && !all.some((o) => o.length > href.length && (here === o || here.startsWith(o + "/")));
 
 function Node({ item, here, all }: { item: Item; here: string; all: string[] }) {
+  const [open, setOpen] = useState(false); // tap toggles on phones (no hover there; iOS doesn't focus buttons); hooks stay above the early return
   if (!("items" in item))
     return <Link href={item.href} className="adm-link" aria-current={(item.exact ? here === item.href : current(item.href, here, all)) ? "page" : undefined}><span aria-hidden>{item.icon}</span>{item.label}</Link>;
   // Hover or keyboard focus opens the flyout; the group is highlighted while one of its pages is open.
   const active = hrefs(item).some((h) => current(h, here, all));
   return (
-    <div className="adm-group">
-      <button className="adm-link" aria-haspopup="true" aria-current={active ? "true" : undefined}><span aria-hidden>{item.icon}</span>{item.label}<span className="adm-caret" aria-hidden>▸</span></button>
+    <div className={"adm-group" + (open ? " open" : "")}>
+      <button className="adm-link" aria-haspopup="true" onClick={() => setOpen(!open)} aria-current={active ? "true" : undefined}><span aria-hidden>{item.icon}</span>{item.label}<span className="adm-caret" aria-hidden>▸</span></button>
       <div className="adm-fly">{item.items.map((c) => <Node key={c.label} item={c} here={here} all={all} />)}</div>
     </div>
   );
@@ -64,11 +67,11 @@ export default function Nav({ admin, user }: { admin: boolean; user: ReactNode }
   const links = (MENUS.find(([p]) => here.startsWith(p))?.[1] ?? []).filter((l) => admin || !("href" in l && l.href.endsWith("/services")));
   const all = links.flatMap(hrefs);
   return (
-    <>
+    <Collapse>
       {links.map((l) => <Node key={l.label} item={l} here={here} all={all} />)}
       <span className="adm-sp" />
       <a className="adm-link" href="/" target="_blank">↗ View site</a>
       {user}
-    </>
+    </Collapse>
   );
 }

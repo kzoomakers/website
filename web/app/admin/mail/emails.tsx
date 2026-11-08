@@ -109,7 +109,7 @@ export function NewEmail({ s }: { s: State }) {
     try { const r = await rpc("saveCampaign", { campaign: { name: t.name === "Blank" ? "Untitled email" : t.name, design: t.design } }); router.push("/admin/mail/email/" + r.id); } catch (e: any) { setMsg(e.message); }
   };
   return (
-    <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+    <div>
       <h1>Pick a template</h1>
       <p className="sub">You can change everything afterwards. Your own templates (saved from the editor) are listed with these.</p>
       <p><Link href="/admin/mail/emails">← Back to emails</Link> {msg && <span className="err">{msg}</span>}</p>

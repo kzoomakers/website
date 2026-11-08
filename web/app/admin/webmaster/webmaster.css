@@ -5,7 +5,7 @@
 .adm a{color:var(--acc);text-decoration:none}
 .adm{--bevel:hsl(0 0% 95%) 0px 1px,hsl(0 0% 83%) 1px 2px,hsl(0 0% 71%) 2px 3px,hsl(0 0% 59%) 3px 4px,hsl(0 0% 47%) 4px 5px,hsl(0 0% 35%) 5px 6px,hsl(0 0% 23%) 6px 7px,hsl(0 0% 11%) 7px 8px}
 .adm-side{z-index:20;background:var(--card);padding:20px 12px;display:flex;flex-direction:column;gap:4px;position:sticky;top:68px;height:calc(100vh - 76px)}
-.adm-body{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 76px);margin-top:8px}
+.adm-body{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:calc(100vh - 76px);margin-top:8px}
 .adm-top{display:flex;align-items:center;gap:28px;height:52px;padding:0 20px;background:var(--card);position:sticky;top:8px;z-index:30}
 .adm-brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:17px;color:var(--ink)!important}
 .adm-top nav{display:flex;gap:4px}.adm-top nav a{padding:6px 14px;border-radius:8px;font-weight:600;color:var(--ink)!important}.adm-top nav a:hover{background:var(--bg)}.adm-top nav a[aria-current]{background:var(--acc-bg);color:var(--acc)!important}
@@ -20,7 +20,7 @@
 .adm-caret{margin-left:auto;opacity:.6}
 .adm-fly{display:none;position:absolute;left:calc(100% - 4px);top:-6px;min-width:170px;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.12);padding:6px;flex-direction:column;gap:2px;z-index:10}
 .adm-group:hover>.adm-fly,.adm-group:focus-within>.adm-fly{display:flex}
-.adm-main{padding:32px clamp(16px,4vw,48px);max-width:960px;width:100%}
+.adm-main{padding:32px clamp(16px,3vw,48px);width:100%;min-width:0}
 .adm h1{font-size:24px;margin:0 0 4px}
 .adm h2{font-size:16px;margin:24px 0 4px}
 .adm .sub{color:var(--mut);margin:0 0 20px}
@@ -39,7 +39,7 @@
 .adm .danger:hover:not(:disabled){color:var(--bad);border-color:var(--bad)}
 .adm .row{display:flex;align-items:center;gap:8px;padding:10px 0;border-top:1px solid var(--line)}
 .adm .row:first-child{border-top:0}
-.adm .row>a:first-child,.adm .row .grow{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.adm .row>a:first-child,.adm .row .grow{flex:1;min-width:0;overflow-wrap:anywhere}
 .adm .err{color:var(--bad)}.adm .ok{color:var(--ok)}
 .adm .tree{list-style:none;margin:0;padding:0}
 .adm .tree .tree{margin-left:20px;padding-left:12px;border-left:2px solid var(--line)}
@@ -48,7 +48,7 @@
 .adm .tag{font-size:12px;color:var(--mut);padding:0 8px}
 .adm .tag.pri{background:var(--acc-bg);color:var(--acc);font-weight:600;padding:4px 10px;border-radius:8px}
 .adm .toast{color:var(--ok);font-weight:500}
-@media (max-width:720px){.adm-fly{position:static;box-shadow:none;border:0;padding:0 0 0 12px}.adm-body{grid-template-columns:1fr!important}.adm-side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;border-right:0;border-bottom:1px solid var(--line)}.adm-top{gap:12px;padding:0 12px}.adm-sp{display:none}.adm-side::after{display:none}.adm-top::after{clip-path:none!important}.adm-root:has(.adm-side) .adm-top::after{left:0!important}}
+
 .adm .diff{margin:0 0 12px;border:1px solid var(--line);border-radius:8px;overflow:hidden;font:13px/1.6 ui-monospace,Menlo,monospace}
 .adm .diffsum{padding:6px 12px;background:var(--bg);border-bottom:1px solid var(--line);font-family:system-ui}
 .adm .dl{display:flex;gap:10px;padding:0 12px;white-space:pre-wrap}
@@ -109,7 +109,6 @@
 .adm-side::after{clip-path:polygon(0 0,0 100%,100% 100%,100% 8px)}
 .adm-root:has(.adm-side) .adm-top::after{clip-path:polygon(0 0,100% 0,100% 100%,8px 100%)}
 
-.adm-main:has(.mp-wide){max-width:1400px}
 
 /* Audit log */
 .adm .aud-bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 10px}
@@ -139,3 +138,40 @@
 .adm .btn,.adm a.btn{display:inline-block;font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink)!important;border-radius:8px;padding:7px 12px;cursor:pointer}
 .adm .btn-main{background:var(--acc);border-color:var(--acc);color:#fff!important}.adm .btn-sm{padding:4px 10px;font-size:14px}
 .adm select,.adm .adm-main select{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+
+/* Sidebar links: inline on desktop, behind a Menu button on phones */
+.adm-links{display:contents}.adm-burger{display:none}
+.adm table{max-width:100%}.adm pre{overflow-x:auto;max-width:100%}.adm img{max-width:100%}
+
+/* Phones: full-bleed page, no decorative frame/ribbon/bevels, scrolling section tabs, 44px touch targets, 16px inputs (no iOS zoom) */
+@media (max-width:720px){
+  .adm{min-height:100vh;min-height:100dvh}
+  .adm-frame,.adm-ribbon,.adm-side::after,.adm-top::after{display:none!important}
+  .adm-body{grid-template-columns:minmax(0,1fr)!important;margin-top:0;min-height:0}
+  .adm-top{top:0;gap:8px;padding:0 8px 0 12px;height:52px;border-bottom:1px solid var(--line)}
+  .adm-brand{font-size:0;gap:0;flex:none}.adm-brand img{width:28px;height:28px}
+  .adm-top nav{flex:1;min-width:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}.adm-top nav::-webkit-scrollbar{display:none}
+  .adm-top nav a{white-space:nowrap;padding:10px 12px}
+  .adm-sp{display:none}
+  .adm-side{position:static;height:auto;padding:6px 8px;border-bottom:1px solid var(--line);gap:2px}
+  .adm-burger{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;font-weight:600}
+  .adm-links{display:none;flex-direction:column;gap:2px;padding-top:4px}.adm-links[data-open]{display:flex}
+  .adm-link{min-height:44px}
+  .adm-fly{position:static;box-shadow:none;border:0;padding:0 0 0 14px;min-width:0}
+  .adm-group:hover>.adm-fly,.adm-group:focus-within>.adm-fly{display:none}.adm-group.open>.adm-fly{display:flex}
+  .adm-main{padding:16px 12px 32px}
+  .adm h1{font-size:21px}
+  .adm input,.adm select,.adm textarea{font-size:16px!important;min-width:0!important;max-width:100%!important}
+  .adm input:not([type=checkbox]):not([type=radio]):not([type=color]):not([type=file]),.adm select{min-height:44px}
+  .adm input[type=checkbox],.adm input[type=radio]{width:22px;height:22px}
+  .adm button:not(.link):not(.x):not(.env-btn),.adm .btn,.adm a.btn{min-height:44px;padding:9px 14px}
+  .adm .btn-sm{padding:9px 12px}
+  .adm .bar>input,.adm .bar>select,.adm .aud-search{flex:1 1 100%}
+  .adm .row{flex-wrap:wrap;padding:12px 0}
+  .adm table{min-width:100%;display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .adm .card{padding:6px 12px}
+  .adm .modal-bg{align-items:end;padding:0}.adm .modal{max-width:none!important;border-radius:16px 16px 0 0;max-height:92dvh;overflow:auto;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
+  .adm .env-pop{position:fixed;left:8px;right:8px;top:56px;width:auto;max-width:none}
+  .adm .savebar{bottom:env(safe-area-inset-bottom)}
+  .adm .pf{flex-wrap:wrap}.adm .pk{width:auto}
+}

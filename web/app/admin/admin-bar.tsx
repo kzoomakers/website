@@ -12,13 +12,13 @@ export default function AdminBar({ allowed }: { allowed: string[] }) {
   return (
     <>
       <header className="adm-top">
-        <Link href="/admin" className="adm-brand"><img src="/images/favicon.png" alt="" width={24} height={24} />Kzoo Makers</Link>
+        <Link href="/admin" className="adm-brand" aria-label="Kzoo Makers admin home"><img src="/images/favicon.png" alt="" width={24} height={24} />Kzoo Makers</Link>
         <nav aria-label="Admin sections">
           {tabs.map(([href, label]) => <Link key={href} href={href} aria-current={cur?.[0] === href ? "page" : undefined}>{label}</Link>)}
         </nav>
       </header>
       {cur && (
-        <div style={{ position: "fixed", top: 0, right: 0, width: 150, height: 150, overflow: "hidden", pointerEvents: "none", zIndex: 99999 }}>
+        <div className="adm-ribbon" style={{ position: "fixed", top: 0, right: 0, width: 150, height: 150, overflow: "hidden", pointerEvents: "none", zIndex: 99999 }}>
           <Link href={cur[0]} style={{ position: "absolute", top: 34, right: -44, width: 200, padding: "6px 0", textAlign: "center", transform: "rotate(45deg)", background: cur[2], color: "#fff", font: "700 13px/1.2 sans-serif", letterSpacing: 1.5, textDecoration: "none", boxShadow: "0 2px 6px rgba(0,0,0,.4)", pointerEvents: "auto", textTransform: "uppercase" }}>{cur[1]}</Link>
         </div>
       )}
