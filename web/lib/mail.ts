@@ -3,6 +3,7 @@ import nodemailer from "nodemailer";
 import { randomBytes, randomUUID } from "crypto";
 import { clickOk, same, sign } from "./signing";
 import { db } from "./db";
+import { backoffMinutes, MAX_MAIL_TRIES } from "./rules";
 import { cleanDesign, fill, renderEmail, TEMPLATES, type Design } from "./mail-render";
 
 // ---- settings (settings table, key "mail:config"; edited on /mailadmin/settings)
@@ -87,6 +88,8 @@ async function init(p: import("pg").Pool) {
   await run("CREATE INDEX IF NOT EXISTS mail_sends_campaign ON mail_sends (campaign_id, status)");
   await run(`CREATE TABLE IF NOT EXISTS mail_clicks (id serial PRIMARY KEY, campaign_id int NOT NULL REFERENCES mail_campaigns ON DELETE CASCADE, url text NOT NULL, at timestamptz NOT NULL DEFAULT now())`);
   await run("ALTER TABLE mail_clicks ADD COLUMN IF NOT EXISTS send_id int REFERENCES mail_sends ON DELETE CASCADE");
+  // Outgoing one-off emails that failed (or were queued in bulk): retried with exponential backoff, see sendQueued.
+  await run("CREATE TABLE IF NOT EXISTS mail_queue (id serial PRIMARY KEY, msg jsonb NOT NULL, tries int NOT NULL DEFAULT 0, next_at timestamptz NOT NULL DEFAULT now(), last_error text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now())");
   await run("CREATE TABLE IF NOT EXISTS mail_templates (id serial PRIMARY KEY, name text NOT NULL, design jsonb NOT NULL)");
   await run(`CREATE TABLE IF NOT EXISTS mail_forms (id serial PRIMARY KEY, name text NOT NULL, kind text NOT NULL DEFAULT 'popup', enabled boolean NOT NULL DEFAULT true,
     lists int[] NOT NULL DEFAULT '{}', heading text NOT NULL DEFAULT '', body text NOT NULL DEFAULT '', button text NOT NULL DEFAULT 'Subscribe', success text NOT NULL DEFAULT '',
@@ -248,7 +251,7 @@ export async function publicSubscribe(formId: number, email: string, name: strin
   const cfg = await getMailCfg();
   if (!cfg.doubleOptIn || !mailReady(cfg)) { await q("UPDATE mail_subscribers SET status='subscribed', confirmed_at=now() WHERE id=$1", [s.id]); void welcome(s.token, base); return "subscribed"; }
   await q("UPDATE mail_subscribers SET status='unconfirmed' WHERE id=$1", [s.id]);
-  await send({ to: email, subject: cfg.confirmSubject, text: cfg.confirmBody.replace(/\{\{link\}\}/g, `${base}/mail/confirm?t=${s.token}`) }, cfg);
+  await sendQueued({ to: email, subject: cfg.confirmSubject, text: cfg.confirmBody.replace(/\{\{link\}\}/g, `${base}/mail/confirm?t=${s.token}`) }, cfg);
   return "confirm";
 }
 
@@ -300,7 +303,7 @@ async function welcome(token: string, base: string) {
     const s = (await q("UPDATE mail_subscribers SET welcomed=true WHERE token=$1 AND NOT welcomed AND status='subscribed' RETURNING email, name", [token]))[0];
     if (!s) return;
     const text = cfg.welcomeBody.replace(/\{\{name\}\}/g, s.name || "friend") + `\n\nManage your preferences: ${base}/mail/preferences?t=${token}\nUnsubscribe: ${base}/mail/unsubscribe?t=${token}`;
-    await send({ to: s.email, subject: cfg.welcomeSubject, text, headers: { "List-Unsubscribe": `<${base}/mail/unsubscribe?t=${token}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } }, cfg);
+    await sendQueued({ to: s.email, subject: cfg.welcomeSubject, text, headers: { "List-Unsubscribe": `<${base}/mail/unsubscribe?t=${token}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } }, cfg);
   } catch { /* a failed welcome must not break signup */ }
 }
 
@@ -429,6 +432,31 @@ export async function send(m: Msg, c: MailCfg) {
   if (!ok) throw new Error(j.data?.error ?? j.data?.failures?.[0] ?? "SMTP2GO rejected the message (" + r.status + ")");
 }
 
+// ---- retry queue
+const pack = (m: Msg) => ({ ...m, attachments: m.attachments?.map((a) => ({ ...a, content: a.content.toString("base64") })) });
+const unpack = (j: any): Msg => ({ ...j, attachments: j.attachments?.map((a: any) => ({ ...a, content: Buffer.from(a.content, "base64") })) });
+/** Puts a message on the queue; the next tick delivers it, or `delayMin` minutes from now. */
+export const enqueueMail = (m: Msg, tries = 0, error = "", delayMin = 0) =>
+  q("INSERT INTO mail_queue (msg, tries, last_error, next_at) VALUES ($1,$2,$3, now() + make_interval(mins => $4))", [JSON.stringify(pack(m)), tries, error.slice(0, 300), delayMin]);
+/** Like send, but a failure never reaches the caller: the message waits in the queue and is retried (2, 4, 8 ... minutes, up to MAX_MAIL_TRIES). */
+export async function sendQueued(m: Msg, c: MailCfg) {
+  await send(m, c).catch((e) => enqueueMail(m, 1, String(e?.message ?? e), backoffMinutes(1)));
+}
+/** Delivers what is due. A row is leased for 10 minutes while it is tried, so two servers never send the same message. */
+async function flushQueue() {
+  const rows = await q("UPDATE mail_queue SET next_at = now() + interval '10 minutes' WHERE id IN (SELECT id FROM mail_queue WHERE next_at <= now() AND tries < $1 ORDER BY id LIMIT 50 FOR UPDATE SKIP LOCKED) RETURNING id, msg, tries", [MAX_MAIL_TRIES]);
+  if (!rows.length) return;
+  const cfg = await getMailCfg();
+  if (!mailReady(cfg)) return;
+  for (const r of rows) {
+    try { await send(unpack(r.msg), cfg); await q("DELETE FROM mail_queue WHERE id=$1", [r.id]); }
+    catch (e: any) { await q("UPDATE mail_queue SET tries = tries + 1, last_error = $2, next_at = now() + make_interval(mins => $3) WHERE id=$1", [r.id, String(e?.message ?? e).slice(0, 300), backoffMinutes(r.tries + 1)]); }
+  }
+}
+export const listQueue = () => q("SELECT id, msg->>'to' AS recipient, msg->>'subject' AS subject, tries, next_at, last_error, created_at, tries >= $1 AS gave_up FROM mail_queue ORDER BY id LIMIT 500", [MAX_MAIL_TRIES]);
+/** Deletes the given messages, or every queued message when `ids` is omitted. */
+export const dropQueued = async (ids?: number[]) => (ids ? await q("DELETE FROM mail_queue WHERE id = ANY($1) RETURNING id", [ids]) : await q("DELETE FROM mail_queue RETURNING id")).length;
+
 // Signed click links: without the signature our /mail/click endpoint would be an open redirect.
 async function secret() {
   await q("INSERT INTO settings (key, data) VALUES ('mail:secret', $1) ON CONFLICT DO NOTHING", [JSON.stringify({ v: randomBytes(32).toString("hex") })]);
@@ -537,6 +565,7 @@ async function work(id: number) {
 /** Starts due scheduled emails and resumes any that were interrupted by a restart. Called every minute from instrumentation.ts. */
 export async function tick() {
   if (!db()) return;
+  await flushQueue().catch(() => {});
   for (const c of await q("SELECT id, base FROM mail_campaigns WHERE status='scheduled' AND scheduled_at <= now()")) await begin(c.id, c.base);
   for (const c of await q("SELECT id FROM mail_campaigns WHERE status='sending'")) void work(c.id);
 }

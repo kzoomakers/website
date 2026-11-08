@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { getMailCfg, mailReady, send } from "./mail";
+import { getMailCfg, mailReady, sendQueued as send } from "./mail";
 import { judge } from "./spam";
 
 export type Kind = "contact" | "board";

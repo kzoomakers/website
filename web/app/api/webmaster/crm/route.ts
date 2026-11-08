@@ -37,7 +37,7 @@ export async function POST(req: Request) {
       case "proposals": return NextResponse.json({ rows: await c.listProposals(String(a.status ?? "pending")), counts: await c.proposalCounts() });
       case "classRules": return NextResponse.json({ minDays: await c.classMinDays() });
       case "setMinDays": await c.setClassMinDays(a.days, who); break;
-      case "decide": await c.decideProposal(Number(a.id), a.action === "approve" ? "approve" : "decline", a.edit, String(a.reason ?? ""), who); break;
+      case "decide": return NextResponse.json({ emailed: await c.decideProposal(Number(a.id), a.action === "approve" ? "approve" : "decline", a.edit, String(a.reason ?? ""), who, a.announce ? { base: await baseUrl(req) } : undefined) });
       case "applicants": return NextResponse.json({ rows: await ap.listApplicants(String(a.state ?? "pending")), counts: await ap.counts() });
       case "applicant": return NextResponse.json(await ap.detail(Number(a.id)));
       case "applicantSay": return NextResponse.json(await ap.say(Number(a.id), who, String(a.body ?? ""), !!a.wait, await baseUrl(req)));

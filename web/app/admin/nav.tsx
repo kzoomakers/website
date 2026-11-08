@@ -29,7 +29,7 @@ const BLOG: Item[] = [
 ];
 const MAIL: Item[] = [
   { href: "/admin/mail", icon: "🏠", label: "Home", exact: true }, { href: "/admin/mail/emails", icon: "✉️", label: "Emails" }, { href: "/admin/mail/forms", icon: "📝", label: "Forms" },
-  { href: "/admin/mail/subscribers", icon: "👥", label: "Subscribers" }, { href: "/admin/mail/lists", icon: "📋", label: "Lists" }, { href: "/admin/mail/settings", icon: "⚙️", label: "Settings" },
+  { href: "/admin/mail/subscribers", icon: "👥", label: "Subscribers" }, { href: "/admin/mail/lists", icon: "📋", label: "Lists" }, { href: "/admin/mail/queue", icon: "⏳", label: "Queue" }, { href: "/admin/mail/settings", icon: "⚙️", label: "Settings" },
 ];
 const FORMS: Item[] = [{ href: "/admin/forms", icon: "📬", label: "Inbox" }];
 const CRM: Item[] = [{ href: "/admin/crm", icon: "👥", label: "People" }, { href: "/admin/crm/approvals", icon: "✅", label: "New members" }, { href: "/admin/crm/waiver", icon: "📜", label: "Membership agreement" }, { href: "/admin/crm/skills", icon: "🛠️", label: "Skills" }, { href: "/admin/crm/values", icon: "🏷️", label: "Profile values" }, { href: "/admin/crm/tools", icon: "🔧", label: "Tools & authorizations" }, { href: "/admin/crm/classes", icon: "🎓", label: "Classes" }];

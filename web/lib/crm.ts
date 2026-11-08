@@ -1,13 +1,14 @@
 import { db } from "./db";
 import { getGuided, logAudit } from "./store";
-import { getMailCfg, mailReady, send } from "./mail";
+import { enqueueMail, getMailCfg, mailReady, sendQueued as send } from "./mail";
 import { loginLink } from "./readers";
+import { MIN_CLASS_DAYS, noticeDays } from "./rules";
 import { dropPhoto, storePhoto } from "./reviews";
 import { notifyUser } from "./notifications";
 import { s3 } from "./s3";
 import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { randomUUID } from "crypto";
-import { FIELDS, type Fields } from "./fields";
+import { FIELDS, SOCIALS, cleanField, cleanSocial, cleanTitle, isFacet, type FieldKey, type Fields } from "./fields";
 import sharp from "sharp";
 
 async function conn() {
@@ -43,7 +44,7 @@ export type MySkill = { name: string; level: (typeof SKILL_LEVELS)[number]; note
 
 export async function mySkills(userId: number) {
   const c = await conn();
-  const u = (await c.query("SELECT directory_optin AS optin, show_phone, show_email, bio, photo FROM site_users WHERE id = $1", [userId])).rows[0];
+  const u = (await c.query("SELECT directory_optin AS optin, show_phone, show_email, discord, show_discord, socials, show_socials, created_at AS since, bio, photo FROM site_users WHERE id = $1", [userId])).rows[0];
   const skills: MySkill[] = (await c.query("SELECT s.name, m.level, m.note FROM member_skills m JOIN skills s ON s.id = m.skill_id WHERE m.user_id = $1 ORDER BY lower(s.name)", [userId])).rows;
   return { ...u, skills, fields: await myFields(userId) };
 }
@@ -56,7 +57,7 @@ async function myFields(userId: number): Promise<Fields> {
 }
 
 /** Replaces a member's listing: opt-in, bio and skill list (new skill names are added to the shared list; admins tidy it later). */
-export async function setMySkills(userId: number, b: { optin?: unknown; show_phone?: unknown; show_email?: unknown; bio?: unknown; skills?: unknown; fields?: unknown }) {
+export async function setMySkills(userId: number, b: { optin?: unknown; show_phone?: unknown; show_email?: unknown; discord?: unknown; show_discord?: unknown; socials?: unknown; show_socials?: unknown; bio?: unknown; skills?: unknown; fields?: unknown }) {
   const items = (Array.isArray(b.skills) ? b.skills : []) as any[];
   if (items.length > 20) throw new Error("That's the maximum of 20 skills.");
   const seen = new Set<string>(), rows: MySkill[] = [];
@@ -67,18 +68,29 @@ export async function setMySkills(userId: number, b: { optin?: unknown; show_pho
     seen.add(name.toLowerCase());
     rows.push({ name, level: (SKILL_LEVELS as readonly string[]).includes(i?.level) ? i.level : "competent", note: clip(i?.note, 140) });
   }
-  const fieldRows: [string, string][] = [];
-  for (const k of Object.keys(FIELDS) as (keyof typeof FIELDS)[]) {
-    const raw = (b.fields as any)?.[k], vals = [...new Map((Array.isArray(raw) ? raw : []).map((v) => clip(v, 60).replace(/\s+/g, " ")).filter(Boolean).map((v) => [v.toLowerCase(), v])).values()];
-    if (vals.length > (FIELDS[k].multi ? 20 : 1)) throw new Error(`Too many entries for ${FIELDS[k].label}.`);
-    for (const v of vals) fieldRows.push([k, v]);
+  // Discord usernames are 2-32 lowercase letters, digits, "_" or "."; a leading "@" is dropped.
+  const discord = clip(b.discord, 40).replace(/^@/, "").toLowerCase();
+  if (discord && !/^[a-z0-9_.]{2,32}$/.test(discord)) throw new Error("Discord usernames use 2 to 32 letters, numbers, _ or . (no #1234 or spaces).");
+  const socials: Record<string, string> = {};
+  for (const k of Object.keys(SOCIALS) as (keyof typeof SOCIALS)[]) { const v = cleanSocial(k, (b.socials as any)?.[k]); if (v) socials[k] = v; }
+  const fieldRows: [string, string][] = [], pool = await conn();
+  for (const k of Object.keys(FIELDS) as FieldKey[]) {
+    const raw = (b.fields as any)?.[k], vals = new Map<string, string>();
+    for (const x of Array.isArray(raw) ? raw : []) {
+      let v = cleanField(k, x);
+      // Reuse the spelling another member already entered ("CNC Router" rather than "Cnc Router"), if that spelling is itself tidy.
+      if (v && FIELDS[k].kind === "title") v = (await pool.query("SELECT value FROM member_fields WHERE field = $1 AND lower(value) = lower($2) GROUP BY value ORDER BY count(*) DESC", [k, v])).rows.map((r) => r.value as string).find((e) => cleanTitle(e) === e) ?? v;
+      if (v) vals.set(v.toLowerCase(), v);
+    }
+    if (vals.size > (FIELDS[k].multi ? 20 : 1)) throw new Error(`Too many entries for ${FIELDS[k].label}.`);
+    for (const v of vals.values()) fieldRows.push([k, v]);
   }
   const cl = await (await conn()).connect();
   try {
     await cl.query("BEGIN");
     await cl.query("DELETE FROM member_fields WHERE user_id = $1", [userId]);
     for (const [f, v] of fieldRows) await cl.query("INSERT INTO member_fields (user_id, field, value) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING", [userId, f, v]);
-    await cl.query("UPDATE site_users SET directory_optin = $2, bio = $3, show_phone = $4, show_email = $5 WHERE id = $1", [userId, !!b.optin, clip(b.bio, 500), !!b.show_phone, !!b.show_email]);
+    await cl.query("UPDATE site_users SET directory_optin = $2, bio = $3, show_phone = $4, show_email = $5, discord = $6, show_discord = $7, socials = $8, show_socials = $9 WHERE id = $1", [userId, !!b.optin, clip(b.bio, 500), !!b.show_phone, !!b.show_email, discord, b.show_discord !== false, JSON.stringify(socials), b.show_socials !== false]);
     await cl.query("DELETE FROM member_skills WHERE user_id = $1", [userId]);
     for (const r of rows) {
       await cl.query("INSERT INTO skills (name) VALUES ($1) ON CONFLICT ((lower(name))) DO NOTHING", [r.name]);
@@ -90,7 +102,7 @@ export async function setMySkills(userId: number, b: { optin?: unknown; show_pho
 
 export const skillNames = async (): Promise<string[]> => (await (await conn()).query("SELECT name FROM skills ORDER BY lower(name) LIMIT 1000")).rows.map((r) => r.name);
 
-export type Listing = { id: number; name: string; bio: string; photo: string; phone: string; email: string; skills: MySkill[]; fields: Fields };
+export type Listing = { id: number; name: string; bio: string; photo: string; phone: string; email: string; discord: string; socials: Record<string, string>; since: string; skills: MySkill[]; fields: Fields };
 const LISTED = "u.directory_optin AND u.disabled_at IS NULL AND u.verified_at IS NOT NULL";
 
 /** Members who opted in. Only first name + last initial, bio, skills and profile facts are shown (plus phone/email if that member ticked them); contact goes through a message relay.
@@ -104,7 +116,7 @@ export async function searchDirectory(q: string, level: string, filters: Record<
   }
   return (await (await conn()).query(
     `SELECT u.id, btrim(u.first_name || ' ' || left(u.last_name, 1) || CASE WHEN u.last_name = '' THEN '' ELSE '.' END) AS name, u.bio, u.photo,
-       CASE WHEN u.show_phone THEN u.phone ELSE '' END AS phone, CASE WHEN u.show_email THEN u.email ELSE '' END AS email,
+       CASE WHEN u.show_phone THEN u.phone ELSE '' END AS phone, CASE WHEN u.show_email THEN u.email ELSE '' END AS email, CASE WHEN u.show_discord THEN u.discord ELSE '' END AS discord, CASE WHEN u.show_socials THEN u.socials ELSE '{}'::jsonb END AS socials, u.created_at AS since,
        COALESCE((SELECT json_agg(json_build_object('name', s.name, 'level', m.level, 'note', m.note) ORDER BY lower(s.name)) FROM member_skills m JOIN skills s ON s.id = m.skill_id WHERE m.user_id = u.id), '[]') AS skills,
        COALESCE((SELECT json_object_agg(field, vals) FROM (SELECT field, json_agg(value ORDER BY lower(value)) AS vals FROM member_fields WHERE user_id = u.id GROUP BY field) x), '{}') AS fields
      FROM site_users u
@@ -124,7 +136,7 @@ export async function directoryFacets() {
     c.query(`SELECT f.field, f.value FROM member_fields f JOIN site_users u ON u.id = f.user_id WHERE ${LISTED} GROUP BY f.field, f.value ORDER BY f.field, lower(f.value) LIMIT 500`),
     c.query(`SELECT 1 FROM member_skills m JOIN site_users u ON u.id = m.user_id WHERE ${LISTED} LIMIT 1`)]);
   const fields: Fields = {};
-  for (const r of f.rows) if (r.field in FIELDS) (fields[r.field] ??= []).push(r.value);
+  for (const r of f.rows) if (isFacet(r.field)) (fields[r.field] ??= []).push(r.value);
   return { fields, skills: !!sk.rowCount };
 }
 
@@ -310,15 +322,14 @@ export async function storeArt(file: File): Promise<string> {
 }
 const dropArt = async (url: string) => { const st = s3(); if (st && artUrl(url)) await st.client.send(new DeleteObjectCommand({ Bucket: st.bucket, Key: url.replace(/^\/uploads\//, "") })).catch(() => {}); };
 
-/** How many days ahead a member must propose a class (CRM-admin setting, default 30). */
+/** How many days ahead a member must propose a class (CRM-admin setting, never below 45). */
 export async function classMinDays(): Promise<number> {
   const r = await (await conn()).query("SELECT data FROM settings WHERE key = 'class_rules'");
-  const n = Number(r.rows[0]?.data?.minDays);
-  return Number.isFinite(n) && n >= 0 ? n : 30;
+  return noticeDays(r.rows[0]?.data?.minDays);
 }
 export async function setClassMinDays(n: unknown, who: string) {
   const d = Math.floor(Number(n));
-  if (!(d >= 0 && d <= 365)) throw new Error("Enter a number of days from 0 to 365.");
+  if (!(d >= MIN_CLASS_DAYS && d <= 365)) throw new Error(`Enter a number of days from ${MIN_CLASS_DAYS} to 365.`);
   await (await conn()).query("INSERT INTO settings (key, data) VALUES ('class_rules', $1) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data", [JSON.stringify({ minDays: d })]);
   await logAudit(who, "crm.classMinDays", `${d} days`);
 }
@@ -353,15 +364,16 @@ export async function withdrawProposal(userId: number, id: number) {
 }
 
 /** Admin decision. Approving creates the class (the admin may adjust anything first) and tells the proposer. */
-export async function decideProposal(id: number, action: "approve" | "decline", edit: any, reason: string, who: string) {
+export async function decideProposal(id: number, action: "approve" | "decline", edit: any, reason: string, who: string, announce?: { base: string }): Promise<number> {
   const c = await conn(), p = (await c.query(`SELECT ${PCOLS} FROM class_proposals p JOIN site_users u ON u.id = p.user_id WHERE p.id = $1`, [id])).rows[0] as Proposal | undefined;
   if (!p || p.status !== "pending") throw new Error("That proposal was already decided.");
+  if (announce && action === "approve" && !mailReady(await getMailCfg())) throw new Error("Email isn't set up yet (see the mail Settings), so the members can't be emailed. Untick the email box, or set up email first. Nothing was approved.");
   if (action === "decline") {
     const why = clip(reason, 500);
     if (!why) throw new Error("Say why, so the member can improve it.");
     await c.query("UPDATE class_proposals SET status='declined', reason=$2, decided_at=now(), decided_by=$3 WHERE id=$1", [id, why, who]);
     await notifyUser(p.user_id, { kind: "class.declined", title: `Your class “${p.title}” wasn't approved`, body: why, url: "/members/classes" });
-    return;
+    return 0;
   }
   const e = edit ?? {}, starts = new Date(e.starts_at ?? p.starts_at);
   if (isNaN(+starts)) throw new Error("Check the start time.");
@@ -370,4 +382,39 @@ export async function decideProposal(id: number, action: "approve" | "decline", 
     capacity: e.capacity ?? p.capacity, price: e.price ?? p.price, image: p.image, level: p.level, prerequisites: p.prerequisites, materials: p.materials })) as number;
   await c.query("UPDATE class_proposals SET status='approved', class_id=$2, decided_at=now(), decided_by=$3 WHERE id=$1", [id, classId, who]);
   await notifyUser(p.user_id, { kind: "class.approved", title: `Your class “${p.title}” is approved!`, body: `It's on the schedule for ${starts.toLocaleDateString([], { dateStyle: "long" })}. Members can sign up now.`, url: "/members/classes" });
+  return announce ? announceClass(classId, p.image, announce.base, who) : 0;
+}
+
+/** Emails every approved member a teaser of the class with a one-time sign-in link (valid 90 days) that opens the classes page. Returns how many were queued; the mail queue delivers them (with retries) within a minute or so. */
+async function announceClass(classId: number, image: string, base: string, who: string): Promise<number> {
+  const c = await conn();
+  const k = (await c.query("SELECT * FROM classes WHERE id = $1", [classId])).rows[0];
+  const people = (await c.query("SELECT id, email, first_name, name FROM site_users WHERE approval = 'approved' AND verified_at IS NOT NULL AND disabled_at IS NULL")).rows;
+  const when = new Date(k.starts_at).toLocaleString("en-US", { dateStyle: "full", timeStyle: "short", timeZone: "America/Detroit" });
+  const blurb = esc(k.summary || String(k.description).slice(0, 220)), hero = image ? (image.startsWith("http") ? image : base + image) : "";
+  const row = (l: string, v: string) => v ? `<tr><td style="padding:6px 14px 6px 0;color:#8a8f98;font-size:13px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap">${l}</td><td style="padding:6px 0;color:#1b1f27;font-size:15px">${esc(v)}</td></tr>` : "";
+  const html = (link: string, name: string) => `<!doctype html><html><body style="margin:0;background:#f3f1ec;padding:28px 12px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif">
+<span style="display:none;max-height:0;overflow:hidden">${blurb}</span>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 6px 24px rgba(20,24,32,.10)">
+<tr><td style="background:#1b1f27;padding:16px 28px;color:#f5b73b;font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase">New class &middot; Kzoo Makers</td></tr>
+${hero ? `<tr><td><img src="${esc(hero)}" alt="" width="600" style="display:block;width:100%;height:auto;border:0"></td></tr>` : ""}
+<tr><td style="padding:30px 32px 8px"><p style="margin:0 0 6px;color:#8a8f98;font-size:14px">Hi ${esc(name)}, there's something new on the calendar:</p>
+<h1 style="margin:0 0 12px;font-size:28px;line-height:1.2;color:#1b1f27">${esc(k.title)}</h1>
+<p style="margin:0 0 20px;font-size:16px;line-height:1.55;color:#3a4150">${blurb}</p>
+<table role="presentation" cellpadding="0" cellspacing="0" style="border-top:1px solid #ece9e2;border-bottom:1px solid #ece9e2;width:100%;margin-bottom:26px">
+${row("When", when)}${row("Where", k.location)}${row("Taught by", k.instructor)}${row("Cost", k.price)}${row("Seats", k.capacity ? String(k.capacity) + " (first come, first served)" : "")}${row("Before you come", k.prerequisites)}
+</table>
+<p style="margin:0 0 26px;text-align:center"><a href="${link}" style="display:inline-block;background:#f5b73b;color:#1b1f27;font-weight:700;font-size:17px;text-decoration:none;padding:15px 34px;border-radius:999px">Reserve my spot &rarr;</a></p>
+<p style="margin:0 0 28px;text-align:center;color:#8a8f98;font-size:13px;line-height:1.5">This button signs you in and takes you straight to the class.<br>It's just for you and works once, for 90 days.</p></td></tr>
+<tr><td style="background:#faf8f4;padding:18px 32px;color:#8a8f98;font-size:12px;text-align:center">You're getting this because you're a Kzoo Makers member. Please don't forward it; the link signs in as you.</td></tr>
+</table></td></tr></table></body></html>`;
+  for (const u of people) {
+    const link = await loginLink(u.id, "/members/classes", base, 90);
+    await enqueueMail({ to: u.email, subject: `New class: ${k.title}`,
+    text: `Hi ${u.first_name || u.name},\n\nNew class: ${k.title}\n${when}${k.location ? "\n" + k.location : ""}\n\n${k.summary || String(k.description).slice(0, 220)}\n\nReserve your spot (this link signs you in, works once, for 90 days):\n${link}\n`,
+    html: html(link, u.first_name || u.name) });
+  }
+  await logAudit(who, "crm.classAnnounced", `${k.title}: ${people.length} emails queued`);
+  return people.length;
 }

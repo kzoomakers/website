@@ -6,6 +6,7 @@ import Editor from "./editor";
 import { Emails, NewEmail, SendStep } from "./emails";
 import Subscribers from "./subscribers";
 import Forms from "./forms";
+import { alertDialog, confirmDialog } from "@/components/dialog";
 
 export type Props = { s: State; reload: () => void };
 
@@ -30,6 +31,7 @@ export default function MailAdmin({ slug }: { slug: string[] }) {
         {a === "emails" && <Emails s={s} reload={reload} />}
         {a === "forms" && <Forms s={s} reload={reload} />}
         {a === "subscribers" && <Subscribers s={s} reload={reload} />}
+        {a === "queue" && <Queue />}
         {a === "lists" && <Lists s={s} reload={reload} />}
         {a === "settings" && <Settings s={s} reload={reload} />}
       </div>
@@ -134,6 +136,26 @@ function Settings({ s, reload }: Props) {
         <div className="bar"><button className="pri" onClick={async () => { try { await rpc("saveCfg", { cfg: f }); setF({ ...f, smtp2goKey: "", smtpUrl: "", deepseekKey: "" }); setMsg("Settings saved."); reload(); } catch (e: any) { setMsg(e.message); } }}>Save settings</button>
           {msg && <span className="sub" style={{ margin: 0 }} role="status">{msg}</span>}</div>
       </div>
+    </>
+  );
+}
+
+/** Emails waiting to be (re)sent. Each failed try waits twice as long as the one before; after 8 tries a message stays here as "gave up" until someone deletes it. */
+function Queue() {
+  const [rows, setRows] = useState<any[] | null>(null);
+  const load = useCallback(() => rpc<any[]>("queue").then(setRows, (e) => alertDialog(e.message)), []);
+  useEffect(() => { load(); const t = setInterval(load, 15000); return () => clearInterval(t); }, [load]);
+  const drop = (args: object) => rpc("dropQueued", args).then(load, (e) => alertDialog(e.message));
+  return (
+    <>
+      <h1>Queue {!!rows?.length && <button style={{ color: "var(--bad)" }} onClick={async () => { if (await confirmDialog(`Delete all ${rows.length} queued emails? They will never be sent.`)) drop({ all: true }); }}>Delete all</button>}</h1>
+      <p className="sub">Emails that are waiting to go out, or failed and are being retried (after 2, 4, 8 minutes and so on, up to 8 tries).</p>
+      {!rows ? <p>Loading…</p> : !rows.length ? <p className="sub">Nothing is waiting. 🎉</p> : (
+        <table className="mp-table">
+          <thead><tr><th>To</th><th>Subject</th><th>Tries</th><th>Next try</th><th>Last error</th><th /></tr></thead>
+          <tbody>{rows.map((r) => <tr key={r.id}><td>{r.recipient}</td><td>{r.subject}</td><td>{r.tries}</td><td>{r.gave_up ? <b style={{ color: "var(--bad)" }}>gave up</b> : when(r.next_at)}</td><td><small>{r.last_error}</small></td>
+            <td><button onClick={async () => { if (await confirmDialog(`Delete the email to ${r.recipient}?`)) drop({ ids: [r.id] }); }}>Delete</button></td></tr>)}</tbody>
+        </table>)}
     </>
   );
 }

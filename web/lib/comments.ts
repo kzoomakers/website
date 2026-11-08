@@ -1,7 +1,7 @@
 import { notifyUser } from "./notifications";
 import { createHash } from "crypto";
 import { db } from "./db";
-import { getMailCfg, mailReady, send } from "./mail";
+import { getMailCfg, mailReady, sendQueued as send } from "./mail";
 import { judge, type Mode } from "./spam";
 import type { Item } from "./comment-tree";
 

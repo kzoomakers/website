@@ -4,7 +4,7 @@ import { promisify } from "util";
 import { cookies } from "next/headers";
 import { db } from "./db";
 import { STEP_SQL } from "./waiver";
-import { addRegistered, getMailCfg, mailReady, send } from "./mail";
+import { addRegistered, getMailCfg, mailReady, sendQueued as send } from "./mail";
 
 // Site accounts (readers): passwordless. Registering and signing in are the same step: we email a one-time link,
 // clicking it verifies the address and starts a session (signed cookie). Only verified users can comment.
@@ -49,7 +49,7 @@ export async function requestLink(emailIn: string, nameIn: string, next: string,
   if (ip && !hit("link:" + ip, 5, 600_000)) throw new Error("Too many requests from your connection. Please try again in a few minutes.");
   const c = await conn();
   // At most 60 links an hour for the whole site, so the form can't be used to mail-bomb other people.
-  if ((await c.query("SELECT count(*)::int AS n FROM login_tokens WHERE created_at > now() - interval '1 hour' AND next NOT LIKE '/members/inbox/%'")).rows[0].n >= 60) throw new Error("Too many sign-in requests right now. Please try again later.");
+  if ((await c.query("SELECT count(*)::int AS n FROM login_tokens WHERE created_at > now() - interval '1 hour' AND next NOT LIKE '/members/inbox/%' AND next <> '/members/classes'")).rows[0].n >= 60) throw new Error("Too many sign-in requests right now. Please try again later.");
   let u = (await c.query("SELECT id, name, disabled_at, disabled_reason FROM site_users WHERE email = $1", [email])).rows[0];
   if (u?.disabled_at) throw new Error(disabledMsg(u.disabled_reason));
   if (!u) {

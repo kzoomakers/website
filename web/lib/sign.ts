@@ -4,7 +4,7 @@ import { checkPw, hashPw } from "./sign-access";
 export { cookieOf, unlockCookie, unlocked } from "./sign-access";
 import { db } from "./db";
 import { logAudit } from "./store";
-import { getMailCfg, mailReady, send } from "./mail";
+import { getMailCfg, mailReady, sendQueued as send } from "./mail";
 import { open, seal, sha256 } from "./vault";
 import { buildAgreementPdf, buildFieldPdf, buildPdf } from "./sign-pdf";
 import { sealPdf } from "./pdf-seal";

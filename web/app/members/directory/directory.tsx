@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import "./directory.css";
 import type { Listing } from "@/lib/crm";
-import { FIELDS, type Fields } from "@/lib/fields";
+import { FIELDS, SOCIALS, isFacet, socialHref, type Fields } from "@/lib/fields";
 
 const LABEL: Record<string, string> = Object.fromEntries(Object.entries(FIELDS).map(([k, f]) => [k, f.label]));
 const api = (body: unknown) => fetch("/api/members", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
@@ -26,7 +26,7 @@ export default function Directory({ initial, listed, facets }: { initial: Listin
       <div className="dr-bar">
         <input type="search" aria-label="Search" placeholder="Search a name, skill, interest, job, company or place" value={q} onChange={(e) => setQ(e.target.value)} style={{ flex: "1 1 280px" }} />
         {facets.skills && <select aria-label="Level" value={level} onChange={(e) => setLevel(e.target.value)}><option value="">Any level</option><option value="help">Can help (knows it or teaches)</option><option value="teach">Can teach</option></select>}
-        {Object.keys(FIELDS).filter((k) => facets.fields[k]).map((k) => (
+        {Object.keys(FIELDS).filter((k) => isFacet(k) && facets.fields[k]).map((k) => (
           <select key={k} aria-label={LABEL[k]} value={filters[k] ?? ""} onChange={(e) => setFilters({ ...filters, [k]: e.target.value })}><option value="">Any {LABEL[k].toLowerCase()}</option>{facets.fields[k].map((v) => <option key={v}>{v}</option>)}</select>
         ))}
         {active && <button type="button" className="btn btn-sm" onClick={() => { setQ(""); setLevel(""); setFilters({}); }}>Clear</button>}
@@ -38,16 +38,22 @@ export default function Directory({ initial, listed, facets }: { initial: Listin
           <article key={m.id} className="dr-card">
             {m.photo ? <img className="dr-pic" src={m.photo} alt={m.name} loading="lazy" /> : <span className="dr-pic" aria-hidden>{m.name[0]}</span>}
             <div className="dr-main">
-              <div className="dr-name">{m.name}</div>
+              <div className="dr-name">{m.name}{f(m, "pronouns") && <small className="dr-pro"> {f(m, "pronouns")}</small>}</div>
               {(f(m, "occupation") || f(m, "company")) && <div className="dr-line"><b>{join(f(m, "occupation"), f(m, "company"))}</b></div>}
               {(f(m, "industry") || f(m, "neighborhood") || f(m, "city")) && <div className="dr-line">{join(f(m, "industry"), join(f(m, "neighborhood"), f(m, "city")).replace(" · ", ", "))}</div>}
+              {m.since && <div className="dr-line">Member since {new Date(m.since).toLocaleDateString([], { month: "short", year: "numeric" })}</div>}
+              {f(m, "working_on") && <div className="dr-line">🔨 <b>Working on:</b> {f(m, "working_on")}</div>}
+              {f(m, "looking_for") && <div className="dr-line">🔎 <b>Looking for:</b> {f(m, "looking_for")}</div>}
               {m.bio && <p className={"dr-bio" + (open === m.id ? " open" : "")} onClick={() => setOpen(open === m.id ? null : m.id)} title="Click to expand" style={{ cursor: "pointer" }}>{m.bio}</p>}
-              {(m.skills.length > 0 || m.fields.interests) && <div className="dr-chips">
+              {(m.skills.length > 0 || m.fields.interests || m.fields.machine || m.fields.open_to) && <div className="dr-chips">
+                {m.fields.open_to?.map((v) => <span key={v} className="dr-chip open" title="Open to">🤝 {v}</span>)}
+                {m.fields.machine?.map((v) => <span key={v} className="dr-chip mach" title="Favorite machine or area">🛠️ {v}</span>)}
                 {m.skills.map((s) => <span key={s.name} className={"dr-chip" + (s.level === "teach" ? " teach" : "")} title={s.note || undefined}>{s.name} <small>{LEVEL[s.level]}</small></span>)}
                 {m.fields.interests?.map((v) => <span key={v} className="dr-chip int">{v}</span>)}
               </div>}
               <div className="dr-foot">
-                {m.phone && <a href={`tel:${m.phone}`}>{m.phone}</a>}{m.email && <a href={`mailto:${m.email}`}>{m.email}</a>}
+                {m.phone && <a href={`tel:${m.phone}`}>{m.phone}</a>}{m.email && <a href={`mailto:${m.email}`}>{m.email}</a>}{m.discord && <span>Discord: {m.discord}</span>}
+                {(Object.keys(SOCIALS) as (keyof typeof SOCIALS)[]).filter((k) => m.socials?.[k]).map((k) => <a key={k} href={socialHref(k, m.socials[k])} target="_blank" rel="noopener noreferrer nofollow">{SOCIALS[k].label}</a>)}
                 {to?.id !== m.id && <button className="btn btn-sm" onClick={() => { setTo(m); setMsg(""); }}>Message {m.name.split(" ")[0]}</button>}
               </div>
             </div>

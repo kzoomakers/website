@@ -1,7 +1,7 @@
 import { randomBytes } from "crypto";
 import { db } from "./db";
 import { notify, TOURS_TOPIC } from "./ntfy";
-import { getMailCfg, mailReady, send } from "./mail";
+import { getMailCfg, mailReady, sendQueued as send } from "./mail";
 
 // Tour scheduling, ported from kzoomakers/schedulingapp (tours only). Guides publish availability blocks; slots are derived from
 // block start/end/length instead of stored, and visitors book a slot. Skipped from the original: SMS, surveys, ban list, reCAPTCHA.

@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { logAudit } from "./store";
-import { getMailCfg, mailReady, send } from "./mail";
+import { getMailCfg, mailReady, sendQueued as send } from "./mail";
 import { diffVersions, summarize, type Change, type Section, type Version } from "./waiver-diff";
 
 // Versions of the membership agreement. Published versions are never edited or deleted (legal/technical review); a change is a new version.

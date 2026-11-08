@@ -7,7 +7,7 @@ import * as m from "@/lib/mail";
 export const dynamic = "force-dynamic";
 
 // Ops that only look; every other op changes something (or sends mail) and needs write access.
-const READS = new Set(["state", "forms", "subscribers", "dashboard", "exportPerson", "exportSubscribers", "emails", "campaign", "recipients", "activity", "stats"]);
+const READS = new Set(["state", "forms", "subscribers", "dashboard", "exportPerson", "exportSubscribers", "emails", "campaign", "recipients", "activity", "stats", "queue"]);
 
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
@@ -41,6 +41,8 @@ export async function POST(req: Request) {
       case "deleteTemplate": await m.deleteTemplate(a.id); break;
       case "test": await m.sendTest(a.id, a.to, await m.baseUrl(req)); break;
       case "send": return NextResponse.json({ recipients: await m.sendCampaign(a.id, await m.baseUrl(req), a.at) });
+      case "queue": return NextResponse.json(await m.listQueue());
+      case "dropQueued": return NextResponse.json({ deleted: await m.dropQueued(a.all ? undefined : (a.ids ?? []).map(Number)) });
       case "ai": return NextResponse.json(await m.composeWithAI(String(a.prompt ?? ""), a.current));
       default: return new NextResponse("unknown op", { status: 400 });
     } return NextResponse.json({ ok: true }); })();

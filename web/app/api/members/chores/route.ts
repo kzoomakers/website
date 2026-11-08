@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   if (!a?.op) return new NextResponse("bad request", { status: 400 });
   try {
     switch (a.op) {
-      case "overview": return NextResponse.json({ chores: await c.listing(), mine: await c.openShifts(u.id), hours: await c.hours(String(a.period ?? "this_month")) });
+      case "overview": return NextResponse.json({ me: u.id, name: u.name, chores: await c.listing(), mine: await c.openShifts(u.id), hours: await c.hours(String(a.period ?? "this_month")) });
       case "stats": return NextResponse.json(await c.statsAll());
       case "achievements": return NextResponse.json(await c.achievementsAll());
       case "start": await c.startShift(Number(a.chore_id), u.id, "web", u.email); break;

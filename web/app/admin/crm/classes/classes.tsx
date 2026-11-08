@@ -13,15 +13,15 @@ const dt = (s: string) => new Date(s).toLocaleString([], { dateStyle: "medium", 
 
 /** Member class proposals waiting for a decision; approving creates the class (date, place, size and price can be adjusted first). */
 function Proposals({ canEdit, onChange }: { canEdit: boolean; onChange: () => void }) {
-  const [rows, setRows] = useState<Proposal[]>([]), [minDays, setMin] = useState(30), [open, setOpen] = useState(0), [e, setE] = useState<any>({}), [why, setWhy] = useState("");
+  const [rows, setRows] = useState<Proposal[]>([]), [minDays, setMin] = useState(45), [announce, setAnn] = useState(false), [open, setOpen] = useState(0), [e, setE] = useState<any>({}), [why, setWhy] = useState("");
   const load = useCallback(() => crm<{ rows: Proposal[] }>("proposals", { status: "pending" }).then((r) => setRows(r.rows), (x) => alertDialog(x.message)), []);
   useEffect(() => { load(); crm<{ minDays: number }>("classRules").then((r) => setMin(r.minDays)); }, [load]);
   const decide = (p: Proposal, action: "approve" | "decline") =>
-    crm("decide", { id: p.id, action, reason: why, edit: { ...e, starts_at: e.starts_at ? new Date(e.starts_at).toISOString() : undefined } }).then(() => { setOpen(0); setWhy(""); load(); onChange(); }, (x) => alertDialog(x.message));
+    crm<{ emailed: number }>("decide", { id: p.id, action, reason: why, announce: announce && action === "approve", edit: { ...e, starts_at: e.starts_at ? new Date(e.starts_at).toISOString() : undefined } }).then((r) => { if (r.emailed) alertDialog(`Scheduled. Emailing ${r.emailed} members now.`); setOpen(0); setWhy(""); load(); onChange(); }, (x) => alertDialog(x.message));
   return (
     <section style={{ marginBottom: 24 }}>
       <h2 style={{ fontSize: 18 }}>Proposed by members {rows.length > 0 && <span className="tag">{rows.length} waiting</span>}</h2>
-      <div className="bar"><label>Members must propose at least <input type="number" min={0} max={365} value={minDays} disabled={!canEdit} style={{ width: 70 }} onChange={(x) => setMin(Number(x.target.value))}
+      <div className="bar"><label>Members must propose at least <input type="number" min={45} max={365} value={minDays} disabled={!canEdit} style={{ width: 70 }} onChange={(x) => setMin(Number(x.target.value))}
         onBlur={() => canEdit && crm("setMinDays", { days: minDays }).catch((x) => alertDialog(x.message))} /> days ahead</label></div>
       <div className="card">
         {rows.map((p) => (
@@ -44,6 +44,7 @@ function Proposals({ canEdit, onChange }: { canEdit: boolean; onChange: () => vo
                   <label>Price<input value={e.price ?? ""} onChange={(x) => setE({ ...e, price: x.target.value })} style={{ width: "100%" }} /></label>
                 </div>
                 <label>If declining, tell them why<input value={why} onChange={(x) => setWhy(x.target.value)} style={{ width: "100%" }} /></label>
+                <label style={{ display: "flex", gap: 8, alignItems: "center" }}><input type="checkbox" checked={announce} onChange={(x) => setAnn(x.target.checked)} /> Email all members a preview with a one-click sign-in link (valid 90 days) so they can book right away</label>
                 <div className="bar"><button className="pri" onClick={() => decide(p, "approve")}>Approve & schedule</button><button style={{ color: "var(--bad)" }} onClick={() => decide(p, "decline")}>Decline</button></div>
               </>}
             </div>}

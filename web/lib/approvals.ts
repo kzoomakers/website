@@ -1,7 +1,7 @@
 import { db } from "./db";
 import { logAudit } from "./store";
 import { notifyUser } from "./notifications";
-import { addRegistered, getMailCfg, mailReady, send } from "./mail";
+import { addRegistered, getMailCfg, mailReady, sendQueued as send } from "./mail";
 import { afterSignIn, loginLink } from "./readers";
 import { updateProfile } from "./profiles";
 

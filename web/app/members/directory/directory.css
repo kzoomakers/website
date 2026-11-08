@@ -16,3 +16,6 @@
 .dr-msg { grid-column: 1 / -1; display: grid; gap: 6px; }
 .dr-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 @media (max-width: 480px) { .dr-grid { grid-template-columns: 1fr; } .dr-card { grid-template-columns: 88px 1fr; } .dr-pic { width: 88px; height: 88px; font-size: 32px; } }
+.dr-pro { font-weight: 400; font-size: 12px; color: var(--mut, #888); }
+.dr-chip.open { background: var(--acc-bg, rgba(76,159,254,.12)); }
+.dr-chip.mach { border-color: var(--ok, #3a3); }
