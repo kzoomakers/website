@@ -3,7 +3,7 @@ import { tracedFetch } from "./debug";
 import { getMailCfg } from "./mail";
 import { open, seal } from "./vault";
 import { cleanHtml } from "./sanitize";
-import { BASE_PROMPT, FORMAT_RULES, TONES, MAX_PRICE, isCheap, promptOverride, tidyOutput } from "./ai-prompts";
+import { BASE_PROMPT, FORMAT_RULES, SEO_PROMPT, SEO_FORMAT, parseSeo, TONES, MAX_PRICE, isCheap, promptOverride, tidyOutput } from "./ai-prompts";
 
 // Pluggable AI for "explain this in plain words" jobs. Providers speak the OpenAI chat format; each job (scenario) is pinned to one provider + model chosen in Admin > Services > AI.
 // Models are discovered from the provider's /models list, so new ones appear without a code change. Add a scenario to SCENARIOS and call complete(id, ...) to add another AI feature.
@@ -15,10 +15,11 @@ export type ProviderId = keyof typeof PROVIDERS;
 export const SCENARIOS = [
   { id: "agreement-summary", label: "Membership agreement: plain-language summary of what changed", hint: "Short text in, short text out: a cheap model is plenty." },
   { id: "blog-enhance", label: "Blog posts: Enhance with AI (rewrite in a chosen personality)", hint: "Rewrites a whole post, so choose the best of the cheap models. Style prompts are edited in section 3." },
+  { id: "page-seo", label: "Page editor: Suggest description, AI summary and FAQs", hint: "Reads one page and writes short metadata: a cheap model is plenty. The prompt is edited in section 4." },
 ] as const;
 
 export type Model = { id: string; name: string; price?: number; outPrice?: number }; // price: US dollars per million input tokens, when the provider says
-type Cfg = { keys: Partial<Record<ProviderId, string>>; models: Partial<Record<ProviderId, { at: string; list: Model[] }>>; use: Record<string, { provider: ProviderId; model: string }>; prompts?: { base?: string; tones?: Record<string, string> } };
+type Cfg = { keys: Partial<Record<ProviderId, string>>; models: Partial<Record<ProviderId, { at: string; list: Model[] }>>; use: Record<string, { provider: ProviderId; model: string }>; prompts?: { base?: string; tones?: Record<string, string>; seo?: string } };
 
 async function pool() {
   const d = db();
@@ -42,14 +43,14 @@ export async function adminView() {
   return {
     providers: await Promise.all((Object.keys(PROVIDERS) as ProviderId[]).map(async (id) => ({ id, name: PROVIDERS[id].name, keysUrl: PROVIDERS[id].keys, hasKey: !!(await token(c, id)), viaMail: !c.keys[id] && !!(await token(c, id)), models: (c.models[id]?.list ?? []).filter(isCheap), at: c.models[id]?.at ?? null }))),
     scenarios: SCENARIOS.map((s) => ({ ...s, use: c.use[s.id] ?? null })),
-    prompts: { base: c.prompts?.base || BASE_PROMPT, defaultBase: BASE_PROMPT, tones: TONES.map((t) => ({ id: t.id, label: t.label, text: c.prompts?.tones?.[t.id] || t.prompt, defaultText: t.prompt })) },
+    prompts: { base: c.prompts?.base || BASE_PROMPT, defaultBase: BASE_PROMPT, seo: c.prompts?.seo || SEO_PROMPT, defaultSeo: SEO_PROMPT, tones: TONES.map((t) => ({ id: t.id, label: t.label, text: c.prompts?.tones?.[t.id] || t.prompt, defaultText: t.prompt })) },
   };
 }
 
 /** Saves the blog style prompts. A blank or unchanged-from-default prompt is stored as "use the default". */
-export async function savePrompts(base: unknown, tones: unknown) {
+export async function savePrompts(base: unknown, tones: unknown, seo: unknown) {
   const c = await load(), t = (tones ?? {}) as Record<string, unknown>;
-  c.prompts = { base: promptOverride(base, BASE_PROMPT), tones: Object.fromEntries(TONES.map((x) => [x.id, promptOverride(t[x.id], x.prompt)])) };
+  c.prompts = { seo: promptOverride(seo, SEO_PROMPT), base: promptOverride(base, BASE_PROMPT), tones: Object.fromEntries(TONES.map((x) => [x.id, promptOverride(t[x.id], x.prompt)])) };
   await store(c);
 }
 
@@ -64,6 +65,14 @@ export async function enhancePost(tone: unknown, html: unknown) {
   const c = await load();
   const system = [c.prompts?.base || BASE_PROMPT, c.prompts?.tones?.[t.id] || t.prompt, FORMAT_RULES].join("\n\n");
   return cleanHtml(tidyOutput(await complete("blog-enhance", system, html, 8000, 180000)));
+}
+
+/** Suggests a description, AI summary and FAQs from a page's text, for the editor to review. Nothing is saved here. */
+export async function suggestSeo(title: unknown, text: unknown) {
+  if (typeof text !== "string" || text.trim().length < 40) throw new Error("This page has too little text to summarize yet.");
+  if (text.length > 30000) throw new Error("This page is too long to summarize in one go.");
+  const c = await load();
+  return parseSeo(await complete("page-seo", [c.prompts?.seo || SEO_PROMPT, SEO_FORMAT].join("\n\n"), `Page title: ${String(title ?? "").slice(0, 200)}\n\nPage text:\n${text}`, 1200));
 }
 
 /** "-" clears the token; anything else replaces it. */

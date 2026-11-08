@@ -28,3 +28,25 @@ export function promptOverride(v: unknown, dflt: string) {
 }
 /** Strips a ```html fence and swaps em/en dashes for commas, since models ignore the no-dash rule. */
 export const tidyOutput = (s: string) => s.replace(/^```(?:html)?\s*|\s*```$/g, "").trim().replace(/(^|>)([^<]*)/g, (_, a, t) => a + t.replace(/\s*[\u2013\u2014]\s*/g, ", ")); // text only, so link addresses and tags stay intact
+
+// "Suggest with AI" in the page editor: description, AI summary and FAQs for search engines and AI assistants.
+export const SEO_PROMPT = `You write search and AI-assistant metadata for a makerspace's website page.
+Rules, always:
+- Use only facts stated in the page text. Never invent prices, dates, hours, names, claims or answers. If the page doesn't say it, leave it out.
+- Plain, factual, natural wording. No hype, no emojis. Never use em dashes or en dashes.
+- description: one sentence, at most 155 characters, saying what the page offers.
+- summary: 2 to 3 factual sentences that an AI assistant could quote to answer "what is this page about?".
+- faqs: up to 5 questions a visitor would really ask, each answered only from the page text. Use an empty list if the page doesn't support any.`;
+export const SEO_FORMAT = `Output rules: reply with only a JSON object, no code fences and no other text: {"description": string, "summary": string, "faqs": [{"question": string, "answer": string}]}`;
+
+const noDash = (s: string) => s.replace(/\s*[\u2013\u2014]\s*/g, ", ").trim();
+/** Reads the model's JSON reply into the three editor fields. Throws a plain message when it isn't usable. */
+export function parseSeo(text: string) {
+  let j: any;
+  try { j = JSON.parse(text.replace(/^```(?:json)?\s*|\s*```$/g, "").trim()); } catch { throw new Error("The AI's answer wasn't in the expected form. Try again."); }
+  const str = (v: unknown, max: number) => (typeof v === "string" ? noDash(v).slice(0, max) : "");
+  const faqs = (Array.isArray(j?.faqs) ? j.faqs : []).slice(0, 5).map((f: any) => ({ question: str(f?.question, 200), answer: str(f?.answer, 800) })).filter((f: any) => f.question && f.answer);
+  const out = { description: str(j?.description, 160), aiSummary: str(j?.summary, 600), aiFaqs: faqs };
+  if (!out.description && !out.aiSummary) throw new Error("The AI didn't suggest anything for this page. Try again.");
+  return out;
+}

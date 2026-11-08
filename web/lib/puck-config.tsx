@@ -1,5 +1,6 @@
 import type { Config } from "@puckeditor/core";
 import ParentPicker from "@/components/parent-picker";
+import AiSuggest from "@/components/ai-suggest";
 import { ImageInput } from "@/components/image-field";
 import { GuidedPage } from "@/components/guided";
 import { ContactForm } from "@/components/contact-form";
@@ -49,13 +50,20 @@ export type Props = {
   CallToAction: { heading: string; text: string; buttons: { label: string; href: string }[] };
 };
 
-export type RootProps = { parent: string; title: string; description: string; bare: boolean; inline: { code: string }[]; bodyClass: string; refresh: string; css: string; styles: { href: string }[]; scripts: { src: string }[] };
+export type RootProps = { parent: string; title: string; description: string; bare: boolean; inline: { code: string }[]; bodyClass: string; refresh: string; aiSuggest?: never; aiSummary: string; aiFaqs: { question: string; answer: string }[]; schemaType: string; canonical: string; noindex: boolean; aiExclude: boolean; css: string; styles: { href: string }[]; scripts: { src: string }[] };
 
 export const config: Config<Props, RootProps> = {
   root: {
     fields: {
       parent: { type: "custom", label: "Where in the sitemap (only for pages not in the menu)", render: ({ value, onChange }: any) => <ParentPicker value={value} onChange={onChange} /> },
       title: { type: "text" }, description: { type: "textarea" },
+      aiSuggest: { type: "custom", label: "AI suggestions", render: () => <AiSuggest /> },
+      aiSummary: { type: "textarea", label: "AI summary: 2-3 factual sentences for search and AI assistants (blank = use the description)" },
+      aiFaqs: { type: "array", label: "AI: questions and answers (becomes FAQ markup)", arrayFields: { question: { type: "text" }, answer: { type: "textarea" } }, getItemSummary: (i: any) => i.question },
+      schemaType: { type: "select", label: "AI: structured data type", options: [{ label: "Automatic", value: "auto" }, { label: "Local business", value: "LocalBusiness" }, { label: "Article", value: "Article" }, { label: "Course", value: "Course" }, { label: "Event", value: "Event" }, { label: "None", value: "none" }] },
+      canonical: { type: "text", label: "AI/SEO: canonical address if different (blank = this page)" },
+      noindex: { type: "radio", label: "SEO: ask search engines not to list this page", options: [{ label: "No", value: false }, { label: "Yes", value: true }] },
+      aiExclude: { type: "radio", label: "AI: hide from AI assistants (llms.txt, and AI crawlers in robots.txt)", options: [{ label: "No", value: false }, { label: "Yes", value: true }] },
       bare: { type: "radio", label: "Standalone page (no site header/footer/legacy scripts)", options: [{ label: "No", value: false }, { label: "Yes", value: true }] },
       inline: { type: "array", label: "Page scripts (advanced; run after the page loads)", arrayFields: { code: { type: "textarea" } }, getItemSummary: (i: any) => (i.code || "").slice(0, 40) },
       bodyClass: { type: "text", label: "Body class (advanced)" },
@@ -64,7 +72,7 @@ export const config: Config<Props, RootProps> = {
       styles: { type: "array", label: "Extra stylesheets", arrayFields: { href: { type: "text" } }, getItemSummary: (i: any) => i.href },
       scripts: { type: "array", label: "Extra scripts (advanced)", arrayFields: { src: { type: "text" } }, getItemSummary: (i: any) => i.src },
     },
-    defaultProps: { parent: "", title: "Kzoo Makers", description: "", bare: false, inline: [], bodyClass: "", refresh: "", css: "", styles: [], scripts: [] },
+    defaultProps: { parent: "", title: "Kzoo Makers", description: "", aiSummary: "", aiFaqs: [], schemaType: "auto", canonical: "", noindex: false, aiExclude: false, bare: false, inline: [], bodyClass: "", refresh: "", css: "", styles: [], scripts: [] },
     render: ({ children, css, styles, bare, puck }) => bare ? (
       <>{css && <style dangerouslySetInnerHTML={{ __html: css }} />}{children}</>
     ) : (

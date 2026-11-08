@@ -4,6 +4,8 @@ import { getAuthor, getPost } from "@/lib/blog";
 import { Body } from "@/lib/blog-body";
 import { currentVerified } from "@/lib/readers";
 import { getSettings, listThread } from "@/lib/comments";
+import { absUrl, articleLd, ldScript } from "@/lib/aiseo";
+import { SITE, urlOf } from "@/lib/sitemap";
 import Shell from "../shell";
 import Comments from "../comments";
 
@@ -12,7 +14,7 @@ type P = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: P) {
   const p = await getPost((await params).slug);
-  return p && { title: `${p.title} | Kzoo Makers`, description: p.excerpt, openGraph: p.image ? { images: [p.image] } : undefined };
+  return p && { title: `${p.title} | Kzoo Makers`, description: p.excerpt, alternates: { canonical: urlOf("blog/" + p.slug) }, openGraph: { type: "article", title: p.title, description: p.excerpt, url: urlOf("blog/" + p.slug), ...(p.image && { images: [absUrl(SITE, p.image)] }) } };
 }
 
 export default async function Post({ params }: P) {
@@ -24,6 +26,7 @@ export default async function Post({ params }: P) {
   const closed = cs.closeAfterDays > 0 && Date.now() - new Date(p.publish_at ?? p.updated_at).getTime() > cs.closeAfterDays * 864e5;
   return (
     <Shell title={p.title}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldScript(articleLd({ title: p.title, excerpt: p.excerpt, image: p.image, date: new Date(p.publish_at ?? p.updated_at).toISOString(), modified: new Date(p.updated_at).toISOString(), author: p.author_name, url: urlOf("blog/" + slug) }, SITE)) }} />
       <small>{new Date(p.publish_at ?? p.updated_at).toLocaleDateString("en-US", { dateStyle: "long" })}
         {p.author_name && <> · <Link href={`/blog?author=${p.author_id}`}>{p.author_name}</Link></>}
         {p.categories.map((c) => <span key={c.slug}> · <Link href={`/blog?category=${c.slug}`}>{c.name}</Link></span>)}</small>

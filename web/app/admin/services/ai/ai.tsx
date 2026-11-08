@@ -15,7 +15,7 @@ const usd = (p?: number) => (p == null ? "" : p < 0.005 ? " · free" : ` · $${p
 export default function Ai({ initial, canEdit }: { initial: View; canEdit: boolean }) {
   const [v, setV] = useState(initial), [msg, setMsg] = useState(""), [busy, setBusy] = useState(""), [keys, setKeys] = useState<Record<string, string>>({});
   const [pick, setPick] = useState<Record<string, { provider: string; model: string }>>(Object.fromEntries(initial.scenarios.map((s) => [s.id, s.use ?? { provider: "", model: "" }])));
-  const [base, setBase] = useState(initial.prompts.base), [tones, setTones] = useState(Object.fromEntries(initial.prompts.tones.map((t) => [t.id, t.text])));
+  const [seo, setSeo] = useState(initial.prompts.seo), [base, setBase] = useState(initial.prompts.base), [tones, setTones] = useState(Object.fromEntries(initial.prompts.tones.map((t) => [t.id, t.text])));
   const run = async (tag: string, fn: () => Promise<unknown>, ok: string) => { setBusy(tag); setMsg(""); try { const r = await fn(); setV(await rpc("view")); setMsg(typeof r === "string" ? r : ok); } catch (e: any) { setMsg(e.message); } setBusy(""); };
   return (
     <div style={{ maxWidth: 820 }}>
@@ -66,8 +66,8 @@ export default function Ai({ initial, canEdit }: { initial: View; canEdit: boole
         );
       })}
 
-      <h2>3. Blog writing style</h2>
-      <p className="sub">Used by "Enhance with AI" in the blog editor. The style rules apply to every personality; each personality adds its own voice. Blank restores the default.</p>
+      <h2>3. Writing prompts</h2>
+      <p className="sub">The blog style below is used by "Enhance with AI" in the blog editor. The style rules apply to every personality; each personality adds its own voice. Blank restores the default.</p>
       <section className="card" style={{ padding: 14, marginBottom: 12 }}>
         <strong>Style rules (all personalities)</strong>
         <textarea rows={9} aria-label="Style rules" maxLength={6000} disabled={!canEdit} value={base} onChange={(e) => setBase(e.target.value)} style={area} />
@@ -77,9 +77,14 @@ export default function Ai({ initial, canEdit }: { initial: View; canEdit: boole
             <textarea rows={4} aria-label={`${t.label} personality`} maxLength={6000} disabled={!canEdit} value={tones[t.id]} onChange={(e) => setTones({ ...tones, [t.id]: e.target.value })} style={area} />
           </div>
         ))}
+        <div style={{ marginTop: 14 }}>
+          <strong>4. Page editor: Suggest with AI</strong>
+          <p className="sub">Rules for the description, AI summary and FAQs the page editor suggests. The answer format is fixed and added automatically.</p>
+          <textarea rows={8} aria-label="Page suggestion rules" maxLength={6000} disabled={!canEdit} value={seo} onChange={(e) => setSeo(e.target.value)} style={area} />
+        </div>
         {canEdit && <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-          <button className="pri" disabled={!!busy} onClick={() => run("prompts", () => rpc("savePrompts", { base, tones }), "Prompts saved.")}>Save prompts</button>
-          <button disabled={!!busy} onClick={() => { setBase(v.prompts.defaultBase); setTones(Object.fromEntries(v.prompts.tones.map((t) => [t.id, t.defaultText]))); }}>Reset to defaults</button>
+          <button className="pri" disabled={!!busy} onClick={() => run("prompts", () => rpc("savePrompts", { base, tones, seo }), "Prompts saved.")}>Save prompts</button>
+          <button disabled={!!busy} onClick={() => { setBase(v.prompts.defaultBase); setSeo(v.prompts.defaultSeo); setTones(Object.fromEntries(v.prompts.tones.map((t) => [t.id, t.defaultText]))); }}>Reset to defaults</button>
         </div>}
       </section>
     </div>

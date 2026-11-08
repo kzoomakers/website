@@ -17,7 +17,7 @@ export async function POST(req: Request) {
       case "saveKey": await ai.saveKey(a.provider, String(a.key ?? "")); break;
       case "discover": await ai.discover(a.provider); break;
       case "saveScenario": await ai.saveScenario(a.id, a.provider, a.model); break;
-      case "savePrompts": await ai.savePrompts(a.base, a.tones); break;
+      case "savePrompts": await ai.savePrompts(a.base, a.tones, a.seo); break;
       case "test": return NextResponse.json({ text: await ai.complete(String(a.id), "Reply with the single word: ready", "ping", 20) });
       default: return new NextResponse("unknown op", { status: 400 });
     }

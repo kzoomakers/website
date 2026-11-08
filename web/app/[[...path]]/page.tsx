@@ -5,6 +5,8 @@ import { fillAddress } from "@/lib/hours";
 import { getBoard, getHours, getGuided, getMenu, getPage, slugOf } from "@/lib/store";
 import { listPosts } from "@/lib/blog";
 import { siteTree } from "@/lib/sitemap";
+import { canonicalOf, jsonLd, ldScript } from "@/lib/aiseo";
+import { SITE } from "@/lib/sitemap";
 import LegacyScripts from "@/components/legacy-scripts";
 
 export const dynamic = "force-dynamic"; // POC: always read fresh; Phase 2 moves to ISR + revalidate on publish
@@ -12,13 +14,15 @@ export const dynamic = "force-dynamic"; // POC: always read fresh; Phase 2 moves
 type P = { params: Promise<{ path?: string[] }> };
 
 export async function generateMetadata({ params }: P) {
-  const data = fillAddress(await getPage(slugOf((await params).path)), (await getHours()).contact.address);
+  const slug = slugOf((await params).path);
+  const data = fillAddress(await getPage(slug), (await getHours()).contact.address);
   const r: any = data?.root?.props ?? {};
-  return { title: r.title, description: r.description };
+  const url = canonicalOf(slug, data, SITE);
+  return { title: r.title, description: r.description, ...(r.noindex && { robots: { index: false } }), alternates: { canonical: url }, openGraph: { title: r.title, description: r.description, url, siteName: "Kzoo Makers", type: "website" }, twitter: { card: "summary", title: r.title, description: r.description } };
 }
 
 export default async function Page({ params }: P) {
-  const address = (await getHours()).contact.address;
+  const contact = (await getHours()).contact, address = contact.address;
   const data = fillAddress(await getPage(slugOf((await params).path)), address);
   if (!data) notFound();
   const bodyClass = ((data.root?.props as any)?.bodyClass ?? "").replace(/[^\w\- ]/g, "");
@@ -27,6 +31,7 @@ export default async function Page({ params }: P) {
   const refresh = rp.refresh;
   return (
     <>
+      {!bare && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldScript(jsonLd(slugOf((await params).path), data, contact, SITE)) }} />}
       {refresh && <meta httpEquiv="refresh" content={refresh} />}
       {/* Inline script runs during parse, so the body class is set before first paint (no flash). */}
       {bodyClass && <script dangerouslySetInnerHTML={{ __html: `document.body.className+=" ${bodyClass}"` }} />}

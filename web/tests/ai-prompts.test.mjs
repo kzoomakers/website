@@ -22,3 +22,14 @@ test("output loses code fences and dashes", () => {
   assert.equal(tidyOutput("```html\n<p>a — b</p>\n```"), "<p>a, b</p>");
   assert.equal(tidyOutput("<p>1–2</p>"), "<p>1, 2</p>");
 });
+
+const { parseSeo } = await import("../lib/ai-prompts.ts");
+test("parseSeo reads the model's JSON, trims, drops dashes and bad FAQs", () => {
+  const r = parseSeo('```json\n{"description":"Learn to weld — safely","summary":"S","faqs":[{"question":"Q?","answer":"A"},{"question":"","answer":"x"}]}\n```');
+  assert.deepEqual(r, { description: "Learn to weld, safely", aiSummary: "S", aiFaqs: [{ question: "Q?", answer: "A" }] });
+  assert.equal(parseSeo(JSON.stringify({ description: "a".repeat(300), summary: "" })).description.length, 160);
+});
+test("parseSeo rejects non-JSON and empty answers", () => {
+  assert.throws(() => parseSeo("Sure! Here you go"), /expected form/);
+  assert.throws(() => parseSeo('{"description":"","summary":"","faqs":[]}'), /didn't suggest/);
+});
