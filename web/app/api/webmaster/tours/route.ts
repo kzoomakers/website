@@ -9,7 +9,7 @@ import * as n from "@/lib/tours-notify";
 
 // Tours admin RPC: POST { op, ...args }. Reads need Tours view access, everything else Tours edit access.
 export const dynamic = "force-dynamic";
-const READS = new Set(["blocks", "bookings", "requests", "thread", "notifyGet", "calendar", "timeline"]);
+const READS = new Set(["blocks", "bookings", "requests", "thread", "notifyGet", "calendar", "timeline", "stats"]);
 
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
@@ -22,6 +22,7 @@ export async function POST(req: Request) {
       case "bookings": return NextResponse.json(await t.listBookings(!!a.past));
       case "requests": return NextResponse.json(await t.listRequests(!!a.all));
       case "calendar": return NextResponse.json(await t.calendar(String(a.from), String(a.to)));
+      case "stats": return NextResponse.json(await t.stats(Number(a.days) || 0));
       case "timeline": return NextResponse.json(await t.timeline({ before: Number(a.before) || undefined, groups: Array.isArray(a.groups) ? a.groups.map(String) : [], q: typeof a.q === "string" ? a.q : "" }));
       case "notifyGet": return NextResponse.json(await n.overview());
       case "emailAdd": await n.addEmail(a.event, a.email); break;

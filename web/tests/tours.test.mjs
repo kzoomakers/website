@@ -36,3 +36,14 @@ test("notification settings reject bad emails and day counts", () => {
   assert.throws(() => cleanDays(91), /0 \(off\) to 90/);
   assert.throws(() => cleanDays(1.5), /whole number/);
 });
+
+const { summarize } = await import("../lib/tours-fmt.ts");
+const row = (o) => ({ day: "2026-11-06", dow: 5, hr: 10, status: "booked", cancelled: false, held: true, walkup: false, interest: "", heard: "", guide: "Sam", guide_email: "sam@x.org", close_days: null, est: false, ...o });
+test("stats: rates count held tours only, guides group by email, empty days are filled", () => {
+  const s = summarize([row({ status: "signed_up", close_days: 2 }), row({ status: "signed_up", close_days: 4, guide: "Sam K.", est: true }), row({ held: false }), row({ cancelled: true }), row({ day: "2026-11-08", status: "no_show", guide: "Lee", guide_email: "" })], 7, "2026-11-08");
+  assert.equal(s.held, 3); assert.equal(s.won, 2); assert.equal(s.noShow, 1); assert.equal(s.days, 3); assert.equal(s.estimated, 1);
+  assert.deepEqual(s.closers.map((c) => [c.name, c.tours, c.won]), [["Sam", 2, 2], ["Lee", 1, 0]]);
+  assert.equal(s.series.length, 7); assert.deepEqual(s.series.at(-1), ["2026-11-08", 1]); assert.equal(s.series[0][0], "2026-11-02");
+  assert.equal(summarize([], 30, "2026-11-08").days, null);
+  assert.equal(summarize([], 365, "2026-11-08").weekly, true);
+});

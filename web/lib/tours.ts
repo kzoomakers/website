@@ -1,7 +1,7 @@
 import { randomBytes } from "crypto";
 import { db } from "./db";
 import { notify, TOURS_TOPIC } from "./ntfy";
-import { checkOffers, DATE, fmtOffer, mins, reminderDue, TIME, TZ, type Offer } from "./tours-fmt";
+import { checkOffers, DATE, summarize, fmtOffer, mins, reminderDue, TIME, TZ, type Offer } from "./tours-fmt";
 import { announce, getCfg as notifyCfg } from "./tours-notify";
 import { getMailCfg, mailReady, sendQueued as send } from "./mail";
 
@@ -47,6 +47,7 @@ async function conn() {
       booking_id int, ip_hash text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now())`);
     for (const t of ["tour_bookings", "tour_requests"]) await p.query(`ALTER TABLE ${t} ADD COLUMN IF NOT EXISTS client_ip text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS user_agent text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS screen text NOT NULL DEFAULT ''`);
     await p.query("ALTER TABLE tour_requests ADD COLUMN IF NOT EXISTS stale_notified_at timestamptz");
+    await p.query("ALTER TABLE tour_bookings ADD COLUMN IF NOT EXISTS status_at timestamptz");
     // The timeline: one row per thing that happened. `dedupe` makes a row fire once (reminders), whichever machine gets there first.
     await p.query(`CREATE TABLE IF NOT EXISTS tour_events (id bigserial PRIMARY KEY, at timestamptz NOT NULL DEFAULT now(), kind text NOT NULL, title text NOT NULL, detail text NOT NULL DEFAULT '',
       actor text NOT NULL DEFAULT '', guide text NOT NULL DEFAULT '', dedupe text UNIQUE)`);
@@ -162,9 +163,22 @@ export async function listBookings(past: boolean): Promise<Booking[]> {
 
 export async function setStatus(id: number, status: string) {
   if (!(STATUSES as readonly string[]).includes(status)) throw new Error("bad status");
-  const r = (await (await conn()).query("UPDATE tour_bookings SET status = $2 WHERE id = $1 AND NOT cancelled RETURNING name", [id, status])).rows[0];
+  const r = (await (await conn()).query("UPDATE tour_bookings SET status = $2, status_at = CASE WHEN $2 = 'signed_up' AND status = 'signed_up' THEN status_at ELSE now() END WHERE id = $1 AND NOT cancelled RETURNING name", [id, status])).rows[0];
   if (!r) throw new Error("That booking is cancelled or gone.");
   await logEvent("status", `${r.name}'s tour marked ${status.replace(/_/g, " ")}`);
+}
+
+/** Stats for bookings made in the last `days` days (0 = all time); the maths is `summarize`. Time to close runs from booking to the moment the status was first set to signed up
+ *  (older rows without that stamp fall back to the tour's start, and the page says how many). */
+export async function stats(days: number) {
+  const c = await conn(), d = Math.max(0, Math.min(3650, Math.floor(days) || 0)), today = localNow().slice(0, 10);
+  const rows = (await c.query(`SELECT k.status, k.cancelled, k.interest, k.heard, b.guide_name AS guide, b.guide_email, b.created_by = 'walk-up' AS walkup, k.status_at IS NULL AS est,
+      (b.date || ' ' || k.start_time) <= $3 AS held,
+      extract(epoch FROM (COALESCE(k.status_at, (b.date || ' ' || k.start_time)::timestamp AT TIME ZONE $2) - k.created_at)) / 86400 AS close_days,
+      extract(dow FROM k.created_at AT TIME ZONE $2)::int AS dow, extract(hour FROM k.created_at AT TIME ZONE $2)::int AS hr, to_char(k.created_at AT TIME ZONE $2, 'YYYY-MM-DD') AS day
+    FROM tour_bookings k JOIN tour_blocks b ON b.id = k.block_id WHERE $1::int = 0 OR k.created_at > now() - make_interval(days => $1::int) ORDER BY k.created_at`, [d, TZ, localNow()])).rows;
+  const rq = (await c.query("SELECT count(*)::int AS n, count(*) FILTER (WHERE status = 'scheduled')::int AS done FROM tour_requests WHERE $1::int = 0 OR created_at > now() - make_interval(days => $1::int)", [d])).rows[0];
+  return { ...summarize(rows.map((r) => ({ ...r, close_days: r.close_days == null ? null : +r.close_days })), d, today), requests: rq.n, requestsBooked: rq.done };
 }
 
 // ---- timeline (best effort, like email: a log failure never fails the thing being logged)
