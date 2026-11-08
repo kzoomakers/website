@@ -100,6 +100,13 @@ export async function getMenu(): Promise<MenuItem[]> {
   return r.rows[0]?.data ?? seed;
 }
 
+/** The menu as visitors see it: "Financials" joins the Learn More dropdown only once a PDF is uploaded. */
+export async function getPublicMenu(): Promise<MenuItem[]> {
+  const m = await getMenu();
+  if (!db() || !(await (await conn()).query("SELECT 1 FROM financials LIMIT 1")).rowCount) return m;
+  return m.map((i) => i.label === "Learn More" && i.items ? { ...i, items: [...i.items, { label: "Financials", href: "/financials" }] } : i);
+}
+
 export async function logAudit(who: string, action: string, target = "", data?: unknown) {
   if (!db()) return;
   await (await conn()).query("INSERT INTO audit (actor, action, target, data) VALUES ($1,$2,$3,$4)", [who, action, target, data === undefined ? null : JSON.stringify(data)]);

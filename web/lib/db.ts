@@ -113,6 +113,8 @@ export async function ensureSchema(pool: Pool) {
   await pool.query("ALTER TABLE site_users ADD COLUMN IF NOT EXISTS onboarding text NOT NULL DEFAULT 'done' CHECK (onboarding IN ('waiver','handbook','id','done'))");
   // Photo IDs, AES-256-GCM encrypted before they reach the database (see lib/vault.ts).
   await pool.query("CREATE TABLE IF NOT EXISTS member_ids (user_id int PRIMARY KEY REFERENCES site_users ON DELETE CASCADE, kind text NOT NULL, expires_on date, data bytea NOT NULL, uploaded_at timestamptz NOT NULL DEFAULT now())");
+  // Public financial PDFs (one per year; replacing keeps the first upload date).
+  await pool.query("CREATE TABLE IF NOT EXISTS financials (year int PRIMARY KEY, filename text NOT NULL, data bytea NOT NULL, uploaded_at timestamptz NOT NULL DEFAULT now(), replaced_at timestamptz)");
   // E-signature documents (member waivers and board papers). `pdf` is the final signed PDF, encrypted. Signer links are emailed; only their hash is stored.
   await pool.query("CREATE TABLE IF NOT EXISTS sign_buckets (id serial PRIMARY KEY, name text NOT NULL)");
   await pool.query("CREATE UNIQUE INDEX IF NOT EXISTS sign_buckets_name ON sign_buckets ((lower(name)))");
