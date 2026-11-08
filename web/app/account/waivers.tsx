@@ -9,10 +9,10 @@ export default async function Waivers({ userId }: { userId: number }) {
   const v = await accountView(userId);
   if (!v) return null;
   return (
-    <section aria-labelledby="waiver-h" style={{ marginTop: 32, display: "grid", gap: 12, maxWidth: 760 }}>
-      <h2 id="waiver-h" style={{ marginBottom: 0 }}>Membership agreement &amp; liability waiver</h2>
+    <section id="agreement" aria-labelledby="waiver-h" style={{ marginTop: 32, display: "grid", gap: 12, maxWidth: 760 }}>
+      <h2 id="waiver-h" style={{ marginBottom: 0 }}>Membership agreement</h2>
       <p role="status" className="card" style={{ margin: 0, borderLeft: `4px solid ${v.current ? "#1b7f3b" : "#d6a21f"}` }}>
-        {v.current ? <>✅ You're on the current agreement (revision {v.latest}).</> : <>⚠️ A newer agreement (revision {v.latest}) is available. You'll be asked to sign it.</>} Every version you've signed is kept below.
+        <span className="tag pri">{v.current ? "Up to date" : "New revision to sign"}</span> {v.current ? <>You're on the current agreement (revision {v.latest}).</> : <>Revision {v.latest} is available and you'll be asked to sign it. <a href="/members">Review and sign</a></>} Every version you've signed is kept below.
       </p>
       {v.items.map((s, i) => (
         <details key={s.doc_id} className="card" open={i === 0}>

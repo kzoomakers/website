@@ -39,7 +39,7 @@ export default function WaiverAdmin({ initial, canEdit, ai }: { initial: V[]; ca
   };
   return (
     <>
-      <h1>Membership agreement &amp; liability waiver</h1>
+      <h1>Membership agreement</h1>
       <p className="sub">New members sign this after approval. Publishing a change makes a new numbered version: the old ones are kept forever, along with every member's signed copy.</p>
       <nav className="bar" role="tablist">
         {([["edit", "Edit & publish"], ["versions", `Versions (${vs.length})`], ["members", "Who signed what"]] as const).map(([t, l]) => <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? "pri" : ""} onClick={() => show(t)}>{l}</button>)}

@@ -19,17 +19,17 @@ export default function Envelope() {
   const hot = d.unread > 0;
   return (
     <div className="env" ref={box}>
-      <button className="env-btn" aria-label={hot ? `${d.unread} unread notifications` : "Notifications"} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>
+      <button className="env-btn" aria-label={hot ? `${d.unread} unread, activity` : "Activity"} aria-expanded={open} aria-controls="env-pop" onClick={() => setOpen(!open)}>
         <svg width="26" height="26" viewBox="0 0 24 24" fill={hot ? "#f59e0b" : "none"} stroke={hot ? "#d97706" : "currentColor"} strokeWidth="1.5" strokeLinejoin="round" style={{ opacity: hot ? 1 : 0.55 }}>
           <rect x="2.5" y="5" width="19" height="14" rx="2" /><path d="M3 6.5l9 6.5 9-6.5" fill="none" stroke={hot ? "#fff" : "currentColor"} />
         </svg>
         {hot && <span className="env-n">{d.unread > 9 ? "9+" : d.unread}</span>}
       </button>
       {open && (
-        <div className="env-pop" role="menu">
-          <div className="env-h"><b>Notifications</b>{hot && <button onClick={() => read({ all: true })}>Mark all read</button>}</div>
+        <div className="env-pop" id="env-pop" onKeyDown={(e) => { if (e.key === "Escape") { setOpen(false); box.current?.querySelector<HTMLElement>(".env-btn")?.focus(); } }}>
+          <div className="env-h"><b>Activity</b>{hot && <button onClick={() => read({ all: true })}>Mark all read</button>}</div>
           {d.notes.slice(0, 8).map((n) => (
-            <a key={n.id} role="menuitem" href={n.url || "/members/inbox"} className={n.read ? "env-i" : "env-i new"} onClick={() => n.read || read({ ids: [n.id] })}>
+            <a key={n.id} href={n.url || "/members/inbox"} className={n.read ? "env-i" : "env-i new"} onClick={() => n.read || read({ ids: [n.id] })}>
               <span>{n.title}</span>{n.body && <small>{n.body.slice(0, 80)}</small>}<small>{ago(n.at)}</small>
             </a>
           ))}

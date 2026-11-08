@@ -19,7 +19,7 @@ export default function Debug({ canEdit }: { canEdit: boolean }) {
       <div className="card">
         {Object.entries(s.streams).map(([k, d]) => (
           <label key={k} style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "6px 0" }}>
-            <input type="checkbox" disabled={!canEdit} checked={!!s.on[k]} onChange={(e) => post({ op: "set", stream: k, on: e.target.checked })} />
+            <input type="checkbox" disabled={!canEdit} checked={!!s.on[k]} onChange={(e) => { const on = e.target.checked; setS((x: any) => x && { ...x, on: { ...x.on, [k]: on } }); post({ op: "set", stream: k, on }); }} />
             <span><span className="tag">{k}</span> {d}{s.on[k] && <strong style={{ color: "var(--bad)" }}> · recording</strong>}</span>
           </label>
         ))}

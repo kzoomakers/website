@@ -1,4 +1,5 @@
 "use client";
+import { useDirtyGuard } from "@/components/dirty-guard";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { confirmDialog } from "@/components/dialog";
@@ -16,6 +17,7 @@ export default function PostEditor({ initial, authors, categories, me, tones }: 
   const [tags, setTags] = useState((initial?.tags ?? []).join(", "));
   const [msg, setMsg] = useState("");
   const [saved, setSaved] = useState(0);
+  useDirtyGuard([p, tags], saved);
   const [enh, setEnh] = useState(false), [ev, setEv] = useState(0); // ev remounts the editor so it picks up AI text
   const router = useRouter();
   const set = (x: Partial<typeof p>) => setP({ ...p, ...x });

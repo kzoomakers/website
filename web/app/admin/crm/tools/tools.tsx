@@ -13,7 +13,7 @@ export default function Tools({ canEdit }: { canEdit: boolean }) {
   useEffect(() => { load(); }, [load]);
   return (
     <>
-      <h1>Tools &amp; authorizations</h1>
+      <h1>Tools &amp; sign-offs</h1>
       <p className="sub">List the machines that need a sign-off (laser, table saw, MIG welder…). Group them with a category such as the shop name. Then grant them to people from their page under People.</p>
       {canEdit && <div className="bar"><button className="pri" onClick={() => setF({ ...BLANK })}>+ New tool</button></div>}
       {f && (

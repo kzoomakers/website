@@ -14,7 +14,7 @@ export default function Values({ canEdit }: { canEdit: boolean }) {
   const run = (p: Promise<unknown>) => p.then(load, (e) => alertDialog(e.message));
   return (
     <>
-      <h1>Profile values</h1>
+      <h1>Profile options</h1>
       <p className="sub">Tidy what members typed into their profiles. Renaming a value to one that already exists merges the two.</p>
       <div className="bar"><input type="search" aria-label="Filter" placeholder="Filter values" value={q} onChange={(e) => setQ(e.target.value)} /></div>
       {(Object.keys(FIELDS) as (keyof typeof FIELDS)[]).filter((f) => FIELDS[f].kind !== "text" && FIELDS[f].kind !== "pick").map((f) => {

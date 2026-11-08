@@ -1,4 +1,5 @@
 "use client";
+import { useDirtyGuard } from "@/components/dirty-guard";
 import { useRef, useState } from "react";
 import PdfPages, { readPages } from "@/components/pdf-pages";
 import { detect } from "@/lib/pdf-detect";
@@ -19,6 +20,7 @@ export default function NewPaper({ buckets, templates }: { buckets: { id: number
   const [all, setAll] = useState(true), [needed, setNeeded] = useState(1), [signers, setSigners] = useState<P[]>([]), [q, setQ] = useState(""), [found, setFound] = useState<{ name: string; email: string }[]>([]), [manual, setManual] = useState({ name: "", email: "" });
   const [fields, setFields] = useState<F[]>([]), [note, setNote] = useState(""), [tool, setTool] = useState(""), [cur, setCur] = useState(0), [sel, setSel] = useState(-1);
   const [busy, setBusy] = useState(false), [err, setErr] = useState(""), [done, setDone] = useState(""), pdfKey = useRef(0);
+  useDirtyGuard(done ? 0 : [title, body, !!pdf, signers, fields, message, tags]);
   const actors = signers.map((s, i) => [s, i] as const).filter(([s]) => s.role === "signer" || s.role === "approver");
   const add = (p: { name: string; email: string }, role = "signer") => { if (p.name && (p.email || role === "slot") && !signers.some((s) => p.email && s.email.toLowerCase() === p.email.toLowerCase())) setSigners([...signers, { ...p, role: role === "slot" ? "signer" : role, ord: 1, password: "", verify: false }]); };
   const setP = (i: number, v: Partial<P>) => setSigners(signers.map((s, j) => (j === i ? { ...s, ...v } : s)));

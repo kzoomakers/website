@@ -32,7 +32,7 @@ export default function Users({ initial, canEdit }: { initial: Row[]; canEdit: b
   };
   return (
     <>
-        <h1>People &amp; access</h1>
+        <h1>Access</h1>
         <p className="sub">Click a name to open them in CRM. Choose who can open each admin page. <strong>View only</strong> lets someone look but not change; <strong>Can edit</strong> lets them change things. Admin + Can edit is a full administrator who can also grant access. Anyone who has registered on the site can be found below; the first person to register is made the founding administrator, whose access can never be changed. At least 3 administrators must always remain.</p>
         <div className="bar"><input type="search" aria-label="Search people" placeholder="Search by name or email" value={q} onChange={(e) => setQ(e.target.value)} style={{ minWidth: 280 }} /></div>
         {err && <p role="alert" style={{ color: "var(--bad)" }}>{err}</p>}
@@ -57,7 +57,7 @@ export default function Users({ initial, canEdit }: { initial: Row[]; canEdit: b
             </tbody>
           </table>
         </div>
-        <p className="sub" style={{ marginTop: 16 }}>Google logins listed in ADMIN_EMAILS are always full administrators and don't appear here. You can't change your own Admin access.</p>
+        <p className="sub" style={{ marginTop: 16 }}>Some administrators are set up outside this list; they always have full access and don't appear here. You can't change your own Admin access.</p>
     </>
   );
 }

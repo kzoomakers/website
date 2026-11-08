@@ -1,4 +1,5 @@
 "use client";
+import { useDirtyGuard } from "@/components/dirty-guard";
 import { useState } from "react";
 import { confirmDialog } from "@/components/dialog";
 import { ImageInput } from "@/components/image-field";
@@ -11,6 +12,7 @@ export default function BoardAdmin({ initial }: { initial: Board }) {
   const [b, setB] = useState(initial);
   const [msg, setMsg] = useState("");
   const [saved, setSaved] = useState(0);
+  useDirtyGuard(b, saved);
   const set = (members: Member[]) => setB({ ...b, members });
   const upd = (i: number, p: Partial<Member>) => set(b.members.map((m, j) => (j === i ? { ...m, ...p } : m)));
   const move = (i: number, d: number) => { const l = [...b.members]; const [x] = l.splice(i, 1); l.splice(i + d, 0, x); set(l); };

@@ -1,4 +1,5 @@
 "use client";
+import { confirmDialog, promptDialog } from "@/components/dialog";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -33,7 +34,7 @@ export function Emails({ s }: { s: State; reload: () => void }) {
             <tr key={c.id}>
               <td><b>{c.subject || <i className="mut">(no subject)</i>}</b><br /><small>{c.name}</small>
                 <div className="mp-act">
-                  {status === "trash" ? <><button onClick={() => act(c.id, "restore")}>Restore</button><button className="bad" onClick={() => confirm("Delete this email forever?") && act(c.id, "delete")}>Delete permanently</button></> : <>
+                  {status === "trash" ? <><button onClick={() => act(c.id, "restore")}>Restore</button><button className="bad" onClick={async () => (await confirmDialog("Delete this email permanently? You won't be able to get it back.", { ok: "Delete email", danger: true })) && act(c.id, "delete")}>Delete permanently</button></> : <>
                     {c.status === "draft" && <Link href={"/admin/mail/email/" + c.id}>Edit</Link>}
                     {c.status === "scheduled" && <button onClick={() => act(c.id, "unschedule")}>Unschedule to edit</button>}
                     {(c.status === "sent" || c.status === "sending") && <button onClick={async () => setModal({ kind: "stats", st: await rpc("stats", { id: c.id }) })}>Statistics</button>}
@@ -118,7 +119,7 @@ export function NewEmail({ s }: { s: State }) {
           <div className="card" style={{ padding: 8 }} key={t.id}>
             <iframe title={t.name} sandbox="" scrolling="no" srcDoc={renderEmail(t.design, location.origin)} style={{ width: "100%", height: 260, border: 0, pointerEvents: "none" }} />
             <div className="bar" style={{ margin: "6px 0 0" }}><b style={{ flex: 1 }}>{t.name}</b>
-              {t.id > 0 && <button className="danger" onClick={async () => { if (confirm("Delete this template?")) { await rpc("deleteTemplate", { id: t.id }); location.reload(); } }}>Delete</button>}
+              {t.id > 0 && <button className="danger" onClick={async () => { if (await confirmDialog("Delete this template? Emails already made from it are not affected.", { ok: "Delete template", danger: true })) { await rpc("deleteTemplate", { id: t.id }); router.refresh(); } }}>Delete</button>}
               <button className="pri" onClick={() => use(t)}>Select</button></div>
           </div>))}
       </div>
@@ -169,10 +170,10 @@ export function SendStep({ id, s }: { id: number; s: State }) {
         {msg && <p className="err" role="alert">{msg}</p>}
         <div className="bar">
           <button disabled={busy} onClick={() => go(async () => { await rpc("saveCampaign", { campaign: settings }); setMsg("Saved."); })}>Save as draft</button>
-          <button disabled={busy} onClick={() => go(async () => { const to = prompt("Send a test to which address?"); if (!to) return; await rpc("saveCampaign", { campaign: settings }); await rpc("test", { id, to }); setMsg("Test sent to " + to); })}>Send test</button>
+          <button disabled={busy} onClick={() => go(async () => { const to = await promptDialog("Send a test to which address?"); if (!to) return; await rpc("saveCampaign", { campaign: settings }); await rpc("test", { id, to }); setMsg("Test sent to " + to); })}>Send test</button>
           <button className="pri" disabled={busy} onClick={() => go(async () => {
             if (when_ === "later" && !at) throw new Error("Pick a date and time");
-            if (when_ === "now" && !confirm(`Send "${c.subject}" to about ${reach} people now? This can't be undone.`)) return;
+            if (when_ === "now" && !(await confirmDialog(`"${c.subject}" goes out immediately to about ${reach} people and can't be recalled.`, { title: `Send to about ${reach} people?`, ok: `Send to ${reach}`, cancelLabel: "Not yet", danger: true }))) return;
             await rpc("saveCampaign", { campaign: settings });
             await rpc("send", { id, at: when_ === "later" ? new Date(at).toISOString() : undefined });
             router.push("/admin/mail/emails");

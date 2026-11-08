@@ -215,3 +215,30 @@
   .adm input[type=checkbox]:not(.tgl-sw input):not(.rk input):checked::before{top:10px}
   .adm td>input[type=checkbox],.adm th>input[type=checkbox]{width:30px;height:30px;min-width:30px}
 }
+
+/* Button vocabulary: .pri / .primary / .btn-main = primary; .danger / .bad = destructive (red at rest). */
+.adm .primary,.adm button.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+@media (prefers-color-scheme:dark){.adm .primary{color:#0b1020;font-weight:600}}
+.adm .primary:hover:not(:disabled){background:var(--acc);filter:brightness(1.1)}
+.adm .danger,.adm .bad{color:var(--bad)}
+.adm .danger:hover:not(:disabled),.adm .bad:hover:not(:disabled){border-color:var(--bad)}
+/* Colours that clear AA (white text) */
+.adm .env-n{background:#b45309}
+.adm .sub{color:#5b6472}
+@media (prefers-color-scheme:dark){.adm .sub{color:var(--mut)}}
+/* Inline links in running text are underlined so they don't rely on colour alone */
+.adm-main p a:not(.btn):not(.pri):not(.tag),.adm-main li a:not(.btn):not(.pri):not(.tag){text-decoration:underline}
+/* Section badges in the top bar */
+.adm-top nav a .adm-n{margin-left:6px;background:#b45309;color:#fff;border-radius:99px;font:700 11px/1 system-ui;padding:3px 6px}
+/* Skeleton while a page loads */
+.adm-skel{display:grid;gap:12px}.adm-skel i{display:block;height:20px;border-radius:8px;background:linear-gradient(90deg,var(--line),var(--card),var(--line));background-size:200% 100%;animation:adm-shim 1.2s infinite}
+@keyframes adm-shim{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.adm-skel i{animation:none}}
+.adm .notice{padding:8px 12px;border-radius:8px;margin:8px 0;display:flex;gap:8px;align-items:flex-start}
+.adm .notice.error{background:color-mix(in srgb,var(--bad) 14%,var(--card));color:var(--bad)}
+.adm .notice.success{background:color-mix(in srgb,var(--ok) 14%,var(--card));color:var(--ok)}
+.adm .notice.info{background:var(--acc-bg)}
+.adm .notice button{margin-left:auto;padding:0 8px}
+.adm .needs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:16px 0}
+.adm .needs a.card{display:block;padding:14px 16px;color:var(--ink)}.adm .needs a.card b{font-size:26px;display:block}
+.adm .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}

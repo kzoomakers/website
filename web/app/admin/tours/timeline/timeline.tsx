@@ -21,7 +21,7 @@ export default function Timeline({ initial }: { initial: TimelineEvent[] }) {
   let lastDay = "";
   return (
     <>
-      <h1>Tour timeline</h1>
+      <h1>Timeline</h1>
       <p className="sub">Everything that happens with tours, newest first: bookings and cancellations, walk-up requests and who took them, conversations, and a reminder line when an appointment is 6 hours, 3 hours and 1 hour away and when it is due.</p>
       <div className="bar">
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search names, guides, messages…" aria-label="Search" style={{ minWidth: 260 }} />

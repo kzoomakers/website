@@ -8,7 +8,7 @@ export default function Buckets({ initial }: { initial: { id: number; name: stri
   const run = async (op: string, args: Record<string, unknown>) => { setMsg(""); try { await board(op, args); setRows(await board("buckets")); } catch (e: any) { setMsg(e.message); } };
   return (
     <>
-      <h1>Buckets</h1>
+      <h1>Folders</h1>
       <p className="sub">Folders for signed papers, like Board Resolutions or Meeting Minutes. Deleting a bucket keeps its papers; they just become unfiled.</p>
       <form className="bar" onSubmit={async (e) => { e.preventDefault(); await run("addBucket", { name }); setName(""); }}>
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="New bucket name" maxLength={80} required /><button className="pri">Add bucket</button>

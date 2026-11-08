@@ -46,7 +46,7 @@ function Home({ s }: { s: State }) {
   const stat = (n: number, label: string, href = "") => <Link href={"/admin/mail/subscribers" + href} className="card" style={{ padding: 14, minWidth: 130, textAlign: "center" }}><b style={{ fontSize: 26 }}>{n}</b><br /><small>{label}</small></Link>;
   return (
     <>
-      <h1>Home <Link href="/admin/mail/email/new" className="pri">New email</Link></h1>
+      <h1>Overview <Link href="/admin/mail/email/new" className="pri">New email</Link></h1>
       <div className="bar" style={{ flexWrap: "wrap" }}>
         {stat(d.subscribed, "subscribed")}{stat(d.new30, "joined in 30 days")}{stat(d.unsubscribed30, "left in 30 days")}{stat(d.unconfirmed, "unconfirmed")}
         {stat(d.inactive, "inactive (never open)", "?status=inactive")}{stat(d.bounced + d.complained, "bounced / complained", "?status=bounced")}
@@ -84,7 +84,7 @@ function Lists({ s, reload }: Props) {
             <tr key={l.id}>
               <td><b>{l.name}</b><br /><small>{l.description}</small>
                 <div className="mp-act"><button onClick={() => setF({ id: l.id, name: l.name, description: l.description })}>Edit</button><Link href={"/admin/mail/subscribers?list=" + l.id}>View subscribers</Link>
-                  <button className="bad" onClick={async () => { if (confirm(`Delete the list "${l.name}"? Its subscribers stay; only the list goes.`)) { await rpc("deleteList", { id: l.id }); reload(); } }}>Delete</button></div></td>
+                  <button className="bad" onClick={async () => { if (await confirmDialog(`Delete the list "${l.name}"? Its subscribers stay; only the list goes.`, { ok: "Delete", danger: true })) { await rpc("deleteList", { id: l.id }); reload(); } }}>Delete</button></div></td>
               <td>{l.subscribed}</td><td>{l.unconfirmed}</td><td>{l.unsubscribed}</td><td>{when(l.created_at)}</td>
             </tr>))}
         </tbody>
@@ -148,7 +148,7 @@ function Queue() {
   const drop = (args: object) => rpc("dropQueued", args).then(load, (e) => alertDialog(e.message));
   return (
     <>
-      <h1>Queue {!!rows?.length && <button style={{ color: "var(--bad)" }} onClick={async () => { if (await confirmDialog(`Delete all ${rows.length} queued emails? They will never be sent.`)) drop({ all: true }); }}>Delete all</button>}</h1>
+      <h1>Queue {!!rows?.length && <button style={{ color: "var(--bad)" }} onClick={async () => { if (await confirmDialog(`Delete all ${rows.length} queued emails? They will never be sent.`, { ok: "Delete all", danger: true })) drop({ all: true }); }}>Delete all</button>}</h1>
       <p className="sub">Emails that are waiting to go out, or failed and are being retried (after 2, 4, 8 minutes and so on, up to 8 tries).</p>
       {!rows ? <p>Loading…</p> : !rows.length ? <p className="sub">Nothing is waiting. 🎉</p> : (
         <table className="mp-table">

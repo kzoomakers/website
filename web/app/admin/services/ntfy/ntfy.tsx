@@ -54,7 +54,8 @@ export default function Ntfy({ initial }: { initial: T[] }) {
   const saveCfg = (e: React.FormEvent) => { e.preventDefault(); run(async () => { await rpc("saveConfig", { config: cfg }); setMsg({ t: "Saved.", ok: true }); setCfg({ ...cfg, upstreamToken: "", clearToken: false }); }); };
   const older = () => run(async () => { const r = await rpc("messages", { name: open!.name, before: Number((rows[rows.length - 1] as M).seq) }); setRows([...rows, ...r]); setMore(r.length === 100); });
   const save = (e: React.FormEvent) => { e.preventDefault(); run(async () => { await rpc("saveTopic", { topic: form }); setMsg({ t: form.existing ? "Topic saved." : "Topic created.", ok: true }); setForm(BLANK); await reload(); }); };
-  const flip = (t: T, p: Partial<T>) => run(async () => { await rpc("saveTopic", { topic: { ...t, ...p, existing: true } }); await reload(); });
+  // The switch moves at once; the server answer (or a reload, if it failed) settles it.
+  const flip = (t: T, p: Partial<T>) => { setTopics((ts) => ts.map((x) => (x.name === t.name ? { ...x, ...p } : x))); return run(async () => { try { await rpc("saveTopic", { topic: { ...t, ...p, existing: true } }); } finally { await reload(); } }); };
   const del = (t: T) => run(async () => { if (await confirmDialog(`Delete topic "${t.name}" with its ${t.messages} message(s)? Apps subscribed to it will stop working.`, { ok: "Delete", danger: true })) { await rpc("deleteTopic", { name: t.name }); setOpen(null); await reload(); } });
   const test = (t: T) => run(async () => { const text = await promptDialog(`Enter text to send to ${t.name}`, "Hello from the admin page", { multiline: true, ok: "Send" }); if (!text?.trim()) return; await rpc("send", { name: t.name, title: "Test", message: text }); setMsg({ t: `Test sent to ${t.name}.`, ok: true }); await reload(); if (open?.name === t.name && open.tab === "messages") await show(t.name, "messages"); });
   const edit = (t: T) => { setForm({ name: t.name, description: t.description, public_read: t.public_read, public_write: t.public_write, retention_days: t.retention_days, existing: true }); formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }); };
@@ -69,7 +70,7 @@ export default function Ntfy({ initial }: { initial: T[] }) {
   const topicPicks = topics.filter((t) => showUsers || t.kind === "shared");
   return (
     <div className="nt">
-      <div className="nt-head"><div><h1>Notifications (ntfy)</h1>
+      <div className="nt-head"><div><h1>Alert delivery</h1>
         <p className="sub" style={{ margin: 0, maxWidth: 760 }}>Our own <a href="https://ntfy.sh" target="_blank" rel="noreferrer">ntfy</a> server. In the ntfy app set the server to <code>{base}/ntfy</code>, add a subscription, and sign in with any username and an access token as the password. Publish with <code>curl -H "Authorization: Bearer TOKEN" -d "hello" {base}/ntfy/TOPIC</code>.</p></div></div>
       <div className="nt-stats">
         {([[shared, "Shared topics"], [users, "Personal topics"], [sum("messages"), "Messages kept"], [sum("live"), "Connected now"], [sum("connections_24h"), "Connections 24h"]] as const).map(([n, l]) => <div className="nt-stat" key={l}><b>{n}</b><span>{l}</span></div>)}

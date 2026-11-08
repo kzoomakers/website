@@ -34,7 +34,7 @@ export default function Stats({ initial }: { initial: S }) {
   const W = 700, H = 120, bw = W / Math.max(chart.length, 1);
   return (
     <>
-      <h1>Tour stats</h1>
+      <h1>Stats</h1>
       <p className="sub">How tours turn into members. “Closed” means a visitor was marked <em>signed up</em>; the closer is the tour’s guide. Ranges look at when the tour was booked.</p>
       <div className="bar">
         {RANGES.map(([d, l]) => <button key={d} type="button" className={days === d ? "pri" : ""} aria-pressed={days === d} onClick={() => pick(d)}>{l}</button>)}

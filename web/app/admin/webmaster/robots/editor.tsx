@@ -13,7 +13,7 @@ export default function RobotsEditor({ initial }: { initial: string }) {
   };
   return (
     <>
-      <h1>robots.txt</h1>
+      <h1>Search engine settings</h1>
       <p className="sub">Tells search engines what they may crawl. Published at <a href="/robots.txt" target="_blank">/robots.txt</a>. A mistake here can hide the whole site from Google, so save carefully; every change can be reverted below.</p>
       {msg && <p className="sub" role="status">{msg}</p>}
       <div className="card" style={{ padding: 12 }}>

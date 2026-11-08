@@ -1,4 +1,5 @@
 "use client";
+import { confirmDialog, promptDialog } from "@/components/dialog";
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { rpc, when, type State } from "./api";
@@ -31,9 +32,9 @@ export default function Subscribers({ s, reload }: { s: State; reload: () => voi
   const doBulk = async () => {
     if (!bulk || !sel.length) return;
     const [action, l] = bulk.split(":");
-    if (action === "erase") { if (!confirm(`Permanently erase ${sel.length} people and everything we hold about them? This can't be undone.`)) return; try { for (const id of sel) await rpc("erasePerson", { id }); setBulk(""); after(); } catch (e: any) { setMsg(e.message); } return; }
-    if (action === "addTag" || action === "removeTag") { const tg = prompt("Tag name?"); if (!tg) return; try { await rpc("bulkSubscribers", { ids: sel, action, tag: tg }); setBulk(""); after(); } catch (e: any) { setMsg(e.message); } return; }
-    if (action === "delete" && !confirm(`Permanently delete ${sel.length} people?`)) return;
+    if (action === "erase") { if (!(await confirmDialog(`Permanently erase ${sel.length} ${sel.length === 1 ? 'person' : 'people'} and everything we hold about them? This can't be undone.`, { ok: `Erase ${sel.length}`, danger: true }))) return; try { for (const id of sel) await rpc("erasePerson", { id }); setBulk(""); after(); } catch (e: any) { setMsg(e.message); } return; }
+    if (action === "addTag" || action === "removeTag") { const tg = await promptDialog("Tag name?"); if (!tg) return; try { await rpc("bulkSubscribers", { ids: sel, action, tag: tg }); setBulk(""); after(); } catch (e: any) { setMsg(e.message); } return; }
+    if (action === "delete" && !(await confirmDialog(`Permanently delete ${sel.length} ${sel.length === 1 ? 'person' : 'people'}?`, { ok: `Delete ${sel.length}`, danger: true }))) return;
     try { await rpc("bulkSubscribers", { ids: sel, action, list: Number(l) || undefined }); setBulk(""); after(); } catch (e: any) { setMsg(e.message); }
   };
   const names = (ids: number[]) => ids.map((i) => s.lists.find((l) => l.id === i)?.name).filter(Boolean).join(", ");

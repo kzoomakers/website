@@ -13,7 +13,7 @@ export default function Todo({ initial, members }: { initial: Row[]; members: { 
   const run = async (f: () => Promise<unknown>) => { setMsg(""); try { await f(); await load(); } catch (e: any) { setMsg(e.message); } };
   const save = (e: React.FormEvent) => { e.preventDefault(); run(async () => { await chores("save", { chore: { ...form, id: form.id || undefined } }); setForm(BLANK); }); };
   const edit = (r: Row) => setForm({ id: r.id, name: r.name, every_days: r.every_days ? String(r.every_days) : "", aliases: r.aliases.join(", "), notes: r.notes });
-  const del = async (r: Row) => { if (await confirmDialog(`Put away "${r.name}"? The hours people gave to it stay counted.`, { ok: "Put away", danger: true })) run(() => chores("delete", { id: r.id })); };
+  const del = async (r: Row) => { if (await confirmDialog(`Delete "${r.name}"? The hours people gave to it stay counted.`, { ok: "Delete", danger: true })) run(() => chores("delete", { id: r.id })); };
   const finish = (e: React.FormEvent) => { e.preventDefault(); run(async () => { await chores("logTime", { chore_id: done!.id, user_id: Number(done!.user), minutes: Number(done!.minutes) }); setDone(null); }); };
   return (
     <>

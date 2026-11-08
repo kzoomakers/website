@@ -1,4 +1,5 @@
 "use client";
+import { useDirtyGuard } from "@/components/dirty-guard";
 import { useState } from "react";
 import Revisions from "../revisions";
 import { DAYS, type Hours } from "@/lib/hours";
@@ -9,6 +10,7 @@ export default function HoursEditor({ initial }: { initial: Hours }) {
   const [f, setF] = useState(fields(initial));
   const [msg, setMsg] = useState("");
   const [saved, setSaved] = useState(0);
+  useDirtyGuard(f, saved);
   const set = (p: Partial<typeof f>) => { setMsg(""); setF({ ...f, ...p }); };
   const save = async () => {
     const r = await fetch("/api/webmaster/hours", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(f) });

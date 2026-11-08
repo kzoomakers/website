@@ -31,7 +31,7 @@ export default function Availability({ initial, email, name }: { initial: Block[
   const set = (k: keyof typeof blank, v: string) => setF({ ...f, [k]: typeof blank[k] === "number" ? Number(v) : v });
   return (
     <>
-      <h1>Tour availability</h1>
+      <h1>Availability</h1>
       <p className="sub">When a guide can give tours. The block is cut into tours of the length you choose, and visitors pick one on the Tours page. Guides get an email for each booking.</p>
       <form className="card" onSubmit={save} style={{ padding: 16, marginBottom: 16, display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))" }}>
         <label>Date<input type="date" required value={f.date} onChange={(e) => set("date", e.target.value)} /></label>

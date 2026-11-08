@@ -47,7 +47,7 @@ export default function PgStats() {
     ["Cache hit", n(hit, 2) + " %"], ["Database size", bytes(cur.size)], ["Rollbacks", n(s.rollback)], ["Deadlocks", n(s.deadlocks)], ["Temp files", bytes(s.temp_bytes)]];
   return (
     <div style={{ padding: 16 }}>
-      <h1>Postgres stats <small style={{ fontWeight: 400, opacity: 0.7 }}>database: {cur.dbName} · schemas: {cur.schemas.join(", ")}</small></h1>
+      <h1>Database stats <small style={{ fontWeight: 400, opacity: 0.7 }}>database: {cur.dbName} · schemas: {cur.schemas.join(", ")}</small></h1>
       <p style={{ opacity: 0.7 }}>Updates every 5 seconds{document.hidden ? " (paused: tab hidden)" : ""}. Counters are since the last stats reset. {err && <b style={{ color: "#d64545" }}>Last refresh failed: {err}</b>}</p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 12 }}>
         {tiles.map(([label, val, k]) => (

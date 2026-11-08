@@ -1,4 +1,5 @@
 "use client";
+import { useDirtyGuard } from "@/components/dirty-guard";
 import { useEffect, useState } from "react";
 import { confirmDialog } from "@/components/dialog";
 import { ago } from "../ago";
@@ -49,7 +50,8 @@ function Diff({ before, after }: { before: MenuItem[]; after: MenuItem[] }) {
 
 export default function MenuEditor({ initial }: { initial: MenuItem[] }) {
   const [menu, setMenu] = useState(initial);
-  const [msg, setMsg] = useState("");
+  const [msg, setMsg] = useState(""), [savedN, setSavedN] = useState(0);
+  useDirtyGuard(menu, savedN);
   const [open, setOpen] = useState<number | null>(null);
   const [revs, setRevs] = useState<Rev[]>([]);
   const loadRevs = () => fetch("/api/webmaster/menu?history").then((r) => r.json()).then(setRevs).catch(() => {});
@@ -57,6 +59,7 @@ export default function MenuEditor({ initial }: { initial: MenuItem[] }) {
   const save = async () => {
     const r = await fetch("/api/webmaster/menu", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(menu) });
     setMsg(r.ok ? "Saved" : await r.text());
+    if (r.ok) setSavedN((n) => n + 1);
     loadRevs();
   };
   const revert = async (id: number) => {

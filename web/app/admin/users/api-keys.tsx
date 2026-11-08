@@ -20,9 +20,10 @@ export default function ApiKeys({ canEdit }: { canEdit: boolean }) {
   const make = (e: React.FormEvent) => { e.preventDefault(); run(async () => { setFresh((await rpc("create", { key: f })).key); setF({ ...f, label: "" }); }); };
   const del = async (k: K) => { if (await confirmDialog(`Delete the key "${k.label}"? Whatever uses it will stop working immediately.`, { ok: "Delete key", danger: true })) run(() => rpc("delete", { hash: k.hash, label: k.label })); };
   return (
-    <section style={{ marginTop: 32 }}>
-      <h2>API keys</h2>
-      <p className="sub">Let another system use part of this site, with only the access you tick. For YAMNet, make a key with both chores boxes ticked, then paste it into YAMNet's Settings › System as <code>CHORES_API_KEY</code>, with this site's address as <code>CHORES_API_URL</code>. The key is shown once, here, right after you make it.</p>
+    <section>
+      <h1>API keys</h1>
+      <p className="sub">Let another system use part of this site, with only the access you tick. A key is shown once, right after you make it.</p>
+      <details style={{ margin: "0 0 16px" }}><summary>Setting up YAMNet</summary><p>Make a key with both chores boxes ticked, then paste it into YAMNet's Settings › System as <code>CHORES_API_KEY</code>, and put this site's address in <code>CHORES_API_URL</code>.</p></details>
       {err && <p role="alert" style={{ color: "var(--bad)" }}>{err}</p>}
       {fresh && <div className="card" role="status"><strong>Copy this key now. It can't be shown again.</strong><br /><code style={{ wordBreak: "break-all", userSelect: "all" }}>{fresh}</code> <button onClick={() => navigator.clipboard?.writeText(fresh)}>Copy</button> <button onClick={() => setFresh("")}>Done</button></div>}
       {canEdit && (

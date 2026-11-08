@@ -13,10 +13,10 @@ export default function Bookings({ initial }: { initial: Booking[] }) {
   const [rows, setRows] = useState(initial), [past, setPast] = useState(false), [msg, setMsg] = useState("");
   const load = async (p = past) => { setPast(p); setRows(await tours("bookings", { past: p })); };
   const run = async (op: string, args: Record<string, unknown>) => { setMsg(""); try { await tours(op, args); await load(); } catch (e: any) { setMsg(e.message); } };
-  const cancel = async (b: Booking) => { if (await confirmDialog(`Cancel ${b.name}'s tour? They will be emailed.`, { ok: "Cancel tour", danger: true })) run("cancel", { id: b.id }); };
+  const cancel = async (b: Booking) => { if (await confirmDialog(`Cancel ${b.name}'s tour? They will be emailed.`, { ok: "Cancel tour", cancelLabel: "Keep tour", danger: true })) run("cancel", { id: b.id }); };
   return (
     <>
-      <h1>Tour bookings</h1>
+      <h1>Bookings</h1>
       <p className="sub">People who booked a tour on the website. Set what happened afterwards, message the visitor or leave private notes, or cancel a booking (the visitor is emailed).</p>
       <nav className="bar">
         <label><input type="checkbox" checked={past} onChange={(e) => load(e.target.checked)} /> Include past tours</label>

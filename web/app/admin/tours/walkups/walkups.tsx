@@ -23,7 +23,7 @@ export default function Walkups({ initial, email, name }: { initial: WalkupReque
   const takeBack = async (r: WalkupRequest) => { if (await confirmDialog(`Take back the offer to ${r.first_name}? Their emailed links stop working and the request returns to the queue.`, { ok: "Take back" })) run(() => tours("reopen", { id: r.id })); };
   return (
     <>
-      <h1>Walk-up tour requests</h1>
+      <h1>Walk-ups</h1>
       <p className="sub">People who asked for a tour when no time was open. Click <b>Offer times</b>, add the dates and time blocks you could give a tour, and we email them the choices. When they pick one, it appears under Bookings. If none work, the request comes back here.</p>
       <nav className="bar">
         <label><input type="checkbox" checked={all} onChange={(e) => load(e.target.checked)} /> Include scheduled and dismissed</label>

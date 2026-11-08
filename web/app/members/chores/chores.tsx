@@ -12,7 +12,7 @@ const rpc = async (op: string, args: Record<string, unknown> = {}) => {
   return r.json();
 };
 const PERIODS = [["this_week", "This week"], ["this_month", "This month"], ["this_year", "This year"], ["all_time", "All time"]];
-const TABS = [["todo", "🧹 To do"], ["hours", "⏱️ Hours"], ["fame", "🏆 Achievements"], ["stats", "✨ Standouts"]];
+const TABS = [["todo", "🧹 To do"], ["hours", "⏱️ Hours"], ["fame", "🏆 Achievements"], ["stats", "📊 Stats"]];
 const FILTERS = [["all", "All"], ["late", "Overdue"], ["soon", "Due soon"], ["free", "Nobody's on it"]];
 const CHEERS = ["Nice work! 🎉", "You're a legend! 🌟", "The space thanks you! 💛", "Look at you go! 🚀", "Spotless! ✨", "High five! 🙌", "Makers gonna make! 🛠️"];
 const MEDALS = ["🥇", "🥈", "🥉"];

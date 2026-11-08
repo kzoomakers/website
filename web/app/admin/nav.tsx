@@ -4,42 +4,43 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Collapse from "./collapse";
+import { tabOf } from "./tabs";
 
 type Item = { href: string; icon: string; label: string; exact?: boolean } | { icon: string; label: string; items: Item[] };
 
 const WEBMASTER: Item[] = [
-  { icon: "📄", label: "Pages", items: [
-    { href: "/admin/webmaster", icon: "✏️", label: "Custom" },
-    { icon: "🧭", label: "Guided", items: [{ href: "/admin/webmaster/guided/index", icon: "🏠", label: "Homepage" }, { href: "/admin/webmaster/calendar", icon: "📅", label: "Calendar" }, { href: "/admin/webmaster/board", icon: "👥", label: "Board" },
-      { icon: "📖", label: "Learn More", items: [{ href: "/admin/webmaster/guided/about", icon: "ℹ️", label: "About Us" }, { href: "/admin/webmaster/guided/pricing", icon: "💲", label: "Pricing" }, { href: "/admin/webmaster/guided/team", icon: "🙌", label: "The Team" }, { href: "/admin/webmaster/guided/what_is_a_makerspace", icon: "💭", label: "Maker Philosophy" }, { href: "/admin/webmaster/guided/history", icon: "📜", label: "History" }, { href: "/admin/webmaster/guided/how-to", icon: "📚", label: "How To / Guides" }, { href: "/admin/webmaster/guided/why-kzoo-makers", icon: "🌟", label: "Why join us?" }, { href: "/admin/webmaster/financials", icon: "💰", label: "Financials" }] },
-      { href: "/admin/webmaster/guided/handbook", icon: "📘", label: "Handbook" },
-      { icon: "📣", label: "Reach Out", items: [{ href: "/admin/webmaster/guided/contact", icon: "✉️", label: "Contact Us" }, { href: "/admin/webmaster/guided/tools-we-are-seeking-donations-kalamazoo", icon: "🧰", label: "Donate Tools" }] },
-      { href: "/admin/webmaster/guided/other-makerspaces", icon: "🗺️", label: "Other makerspaces" },
-      { icon: "🧭", label: "Explore Us", items: [{ href: "/admin/webmaster/guided/laser-shop", icon: "🔥", label: "Laser shop" }, { href: "/admin/webmaster/guided/wood-shop", icon: "🪵", label: "Wood shop" }, { href: "/admin/webmaster/guided/metal-shop", icon: "🔩", label: "Metal shop" }, { href: "/admin/webmaster/guided/3d-printing", icon: "🖨️", label: "3D printing" }, { href: "/admin/webmaster/guided/craft-room-kalamazoo", icon: "🧵", label: "Craft room" }, { href: "/admin/webmaster/guided/meeting-space", icon: "🤝", label: "Meeting space" }] }] },
-  ] },
-  { icon: "🛠️", label: "Site Config", items: [
-    { href: "/admin/webmaster/hours", icon: "🕙", label: "Hours & address" },
-    { href: "/admin/webmaster/menu", icon: "☰", label: "Menu" },
-    { href: "/admin/webmaster/robots", icon: "🤖", label: "robots.txt" },
-  ] },
+  { href: "/admin/webmaster", icon: "📄", label: "Pages", exact: true },
+  { icon: "🧭", label: "Guided pages", items: [{ href: "/admin/webmaster/guided/index", icon: "🏠", label: "Homepage" }, { href: "/admin/webmaster/guided/about", icon: "ℹ️", label: "About Us" }, { href: "/admin/webmaster/guided/pricing", icon: "💲", label: "Pricing" }, { href: "/admin/webmaster/guided/team", icon: "🙌", label: "The Team" }, { href: "/admin/webmaster/guided/what_is_a_makerspace", icon: "💭", label: "Maker Philosophy" }, { href: "/admin/webmaster/guided/history", icon: "📜", label: "History" }, { href: "/admin/webmaster/guided/how-to", icon: "📚", label: "How To / Guides" }, { href: "/admin/webmaster/guided/why-kzoo-makers", icon: "🌟", label: "Why join us?" }, { href: "/admin/webmaster/guided/handbook", icon: "📘", label: "Handbook" }, { href: "/admin/webmaster/guided/contact", icon: "✉️", label: "Contact Us" }, { href: "/admin/webmaster/guided/tools-we-are-seeking-donations-kalamazoo", icon: "🧰", label: "Donate Tools" }, { href: "/admin/webmaster/guided/other-makerspaces", icon: "🗺️", label: "Other makerspaces" }, { href: "/admin/webmaster/guided/laser-shop", icon: "🔥", label: "Laser shop" }, { href: "/admin/webmaster/guided/wood-shop", icon: "🪵", label: "Wood shop" }, { href: "/admin/webmaster/guided/metal-shop", icon: "🔩", label: "Metal shop" }, { href: "/admin/webmaster/guided/3d-printing", icon: "🖨️", label: "3D printing" }, { href: "/admin/webmaster/guided/craft-room-kalamazoo", icon: "🧵", label: "Craft room" }, { href: "/admin/webmaster/guided/meeting-space", icon: "🤝", label: "Meeting space" }] },
+  { href: "/admin/webmaster/calendar", icon: "📅", label: "Calendar" }, { href: "/admin/webmaster/board", icon: "👥", label: "Board" }, { href: "/admin/webmaster/financials", icon: "💰", label: "Financials" },
+  { href: "/admin/webmaster/hours", icon: "🕙", label: "Hours & address" }, { href: "/admin/webmaster/menu", icon: "☰", label: "Menu" },
+  { href: "/admin/services/privacy", icon: "🔒", label: "Privacy statement" }, { href: "/admin/services/links", icon: "🔗", label: "External links" },
+  { href: "/admin/webmaster/robots", icon: "🤖", label: "Search engine settings" },
   { href: "/admin/webmaster/reviews", icon: "⭐", label: "Reviews" },
 ];
 
 const BLOG: Item[] = [
-  { href: "/admin/blog", icon: "📝", label: "Posts" }, { href: "/admin/blog/categories", icon: "🏷️", label: "Categories" }, { href: "/admin/blog/authors", icon: "✍️", label: "Authors" },
+  { href: "/admin/blog", icon: "📝", label: "Posts", exact: true }, { href: "/admin/blog/categories", icon: "🏷️", label: "Categories" }, { href: "/admin/blog/authors", icon: "✍️", label: "Authors" },
   { href: "/admin/blog/media", icon: "🖼️", label: "Media" }, { href: "/admin/blog/comments", icon: "💬", label: "Comments" },
 ];
 const MAIL: Item[] = [
-  { href: "/admin/mail", icon: "🏠", label: "Home", exact: true }, { href: "/admin/mail/emails", icon: "✉️", label: "Emails" }, { href: "/admin/mail/forms", icon: "📝", label: "Forms" },
+  { href: "/admin/mail", icon: "📊", label: "Overview", exact: true }, { href: "/admin/mail/emails", icon: "✉️", label: "Emails" }, { href: "/admin/mail/forms", icon: "📝", label: "Signup forms" },
   { href: "/admin/mail/subscribers", icon: "👥", label: "Subscribers" }, { href: "/admin/mail/lists", icon: "📋", label: "Lists" }, { href: "/admin/mail/queue", icon: "⏳", label: "Queue" }, { href: "/admin/mail/settings", icon: "⚙️", label: "Settings" },
 ];
-const FORMS: Item[] = [{ href: "/admin/forms", icon: "📬", label: "Inbox" }];
-const CRM: Item[] = [{ href: "/admin/crm", icon: "👥", label: "People" }, { href: "/admin/crm/approvals", icon: "✅", label: "New members" }, { href: "/admin/crm/waiver", icon: "📜", label: "Membership agreement" }, { href: "/admin/crm/skills", icon: "🛠️", label: "Skills" }, { href: "/admin/crm/values", icon: "🏷️", label: "Profile values" }, { href: "/admin/crm/tools", icon: "🔧", label: "Tools & authorizations" }, { href: "/admin/crm/classes", icon: "🎓", label: "Classes" }];
-const SIGNED: Item[] = [{ href: "/admin/signed-docs", icon: "📄", label: "Papers", exact: true }, { href: "/admin/signed-docs/new", icon: "➕", label: "New paper" }, { href: "/admin/signed-docs/templates", icon: "📑", label: "Templates" }, { href: "/admin/signed-docs/buckets", icon: "🗂️", label: "Buckets" }];
-const TOURS: Item[] = [{ href: "/admin/tours", icon: "🗓️", label: "Bookings", exact: true }, { href: "/admin/tours/walkups", icon: "🚶", label: "Walk-ups" }, { href: "/admin/tours/availability", icon: "🕙", label: "Availability" }, { href: "/admin/tours/stats", icon: "📊", label: "Stats" }, { href: "/admin/tours/timeline", icon: "🕘", label: "Timeline" }, { href: "/admin/tours/notifications", icon: "🔔", label: "Notifications" }];
-const CHORES: Item[] = [{ href: "/admin/chores", icon: "🧹", label: "To do", exact: true }, { href: "/admin/chores/log", icon: "⏱️", label: "Hours log" }, { href: "/admin/chores/stats", icon: "📊", label: "Stats" }, { href: "/admin/chores/achievements", icon: "🏅", label: "Achievements" }];
-const USERS: Item[] = [{ href: "/admin/users", icon: "🔑", label: "People & access" }, { href: "/admin/services", icon: "⚙️", label: "Services", exact: true }, { href: "/admin/services/audit", icon: "🕘", label: "Audit log" }, { href: "/admin/services/ntfy", icon: "🔔", label: "Notifications (ntfy)" }, { href: "/admin/services/ai", icon: "✨", label: "AI" }, { href: "/admin/services/debug", icon: "🐞", label: "Debug" }, { href: "/admin/services/httplog", icon: "🌐", label: "HTTP log" }, { href: "/admin/services/pgstats", icon: "📈", label: "Postgres stats" }, { href: "/admin/services/links", icon: "🔗", label: "External links" }, { href: "/admin/services/privacy", icon: "🔒", label: "Privacy statement" }, { href: "/admin/services/security", icon: "🛡️", label: "Security headers" }];
-const MENUS: [string, Item[]][] = [["/admin/webmaster", WEBMASTER], ["/admin/blog", BLOG], ["/admin/mail", MAIL], ["/admin/forms", FORMS], ["/admin/crm", CRM], ["/admin/signed-docs", SIGNED], ["/admin/tours", TOURS], ["/admin/chores", CHORES], ["/admin/users", USERS], ["/admin/services", USERS]];
+const FORMS: Item[] = [{ href: "/admin/forms", icon: "📬", label: "Messages" }];
+const CRM: Item[] = [{ href: "/admin/crm", icon: "👥", label: "People", exact: true }, { href: "/admin/crm/approvals", icon: "✅", label: "New members" }, { href: "/admin/crm/classes", icon: "🎓", label: "Classes" }, { href: "/admin/crm/tools", icon: "🔧", label: "Tools & sign-offs" }, { href: "/admin/crm/skills", icon: "🛠️", label: "Skills" }, { href: "/admin/crm/values", icon: "🏷️", label: "Profile options" }, { href: "/admin/crm/waiver", icon: "📜", label: "Membership agreement" }];
+const SIGNED: Item[] = [{ href: "/admin/signed-docs", icon: "📄", label: "Documents", exact: true }, { href: "/admin/signed-docs/new", icon: "➕", label: "New document" }, { href: "/admin/signed-docs/templates", icon: "📑", label: "Templates" }, { href: "/admin/signed-docs/buckets", icon: "🗂️", label: "Folders" }];
+const TOURS: Item[] = [{ href: "/admin/tours", icon: "🗓️", label: "Bookings", exact: true }, { href: "/admin/tours/walkups", icon: "🚶", label: "Walk-ups" }, { href: "/admin/tours/availability", icon: "🕙", label: "Availability" }, { href: "/admin/tours/stats", icon: "📈", label: "Stats" }, { href: "/admin/tours/timeline", icon: "🧵", label: "Timeline" }, { href: "/admin/tours/notifications", icon: "🔔", label: "Tour alerts" }];
+const CHORES: Item[] = [{ href: "/admin/chores", icon: "🧹", label: "To do", exact: true }, { href: "/admin/chores/log", icon: "⏱️", label: "Hours" }, { href: "/admin/chores/stats", icon: "📊", label: "Stats" }, { href: "/admin/chores/achievements", icon: "🏅", label: "Achievements" }];
+const SYSTEM: Item[] = [{ href: "/admin/users", icon: "🔑", label: "Access" }, { href: "/admin/services", icon: "⚙️", label: "Setup", exact: true }, { href: "/admin/services/audit", icon: "📋", label: "Audit log" }, { href: "/admin/services/ntfy", icon: "📱", label: "Alert delivery" }, { href: "/admin/services/api-keys", icon: "🗝️", label: "API keys" }, { href: "/admin/services/ai", icon: "✨", label: "AI" },
+  { icon: "🩺", label: "Diagnostics", items: [{ href: "/admin/services/debug", icon: "🐞", label: "Debug" }, { href: "/admin/services/httplog", icon: "🌐", label: "HTTP log" }, { href: "/admin/services/pgstats", icon: "📈", label: "Database stats" }, { href: "/admin/services/security", icon: "🛡️", label: "Security headers" }] }];
+const MENUS: [string, Item[]][] = [["/admin/webmaster", WEBMASTER], ["/admin/blog", BLOG], ["/admin/mail", MAIL], ["/admin/forms", FORMS], ["/admin/crm", CRM], ["/admin/signed-docs", SIGNED], ["/admin/tours", TOURS], ["/admin/chores", CHORES], ["/admin/users", SYSTEM]];
+
+/** Page name for a URL (menu label), used for the browser tab title. */
+export const labelOf = (here: string): string | undefined => {
+  const all = (xs: Item[]): [string, string][] => xs.flatMap((i) => ("items" in i ? all(i.items) : [[i.href, i.label] as [string, string]]));
+  const hits = MENUS.flatMap(([, m]) => all(m)).filter(([h]) => here === h || here.startsWith(h + "/")).sort((a, b) => b[0].length - a[0].length);
+  return hits[0]?.[1];
+};
 
 const hrefs = (i: Item): string[] => ("items" in i ? i.items.flatMap(hrefs) : [i.href]);
 
@@ -64,7 +65,7 @@ function Node({ item, here, all }: { item: Item; here: string; all: string[] }) 
 /** The left menu for whichever admin section you are in, plus the account menu at the bottom (same on every page). */
 export default function Nav({ admin, user }: { admin: boolean; user: ReactNode }) {
   const here = usePathname();
-  const links = (MENUS.find(([p]) => here.startsWith(p))?.[1] ?? []).filter((l) => admin || !("href" in l && l.href.endsWith("/services")));
+  const tab = tabOf(here), links = (MENUS.find(([p]) => p === tab)?.[1] ?? []).filter((l) => admin || !("href" in l && l.href.endsWith("/services")));
   const all = links.flatMap(hrefs);
   return (
     <Collapse>

@@ -19,7 +19,7 @@ export default function Log() {
   const del = async (x: Entry) => { if (await confirmDialog(`Delete this entry for ${x.owner_name}?`, { ok: "Delete", danger: true })) run(() => chores("deleteLog", { id: x.id })); };
   return (
     <>
-      <h1>Hours log</h1>
+      <h1>Hours</h1>
       <p className="sub">The time members give to chores. Computer logs it when someone says they're starting or done; you can type in time here too.</p>
       {msg && <p role="alert" style={{ color: "var(--bad)" }}>{msg}</p>}
       <form className="card" onSubmit={add} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "end" }}>

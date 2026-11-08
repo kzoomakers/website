@@ -1,4 +1,6 @@
 "use client";
+import { useDirtyGuard } from "@/components/dirty-guard";
+import { promptDialog } from "@/components/dialog";
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { ImageInput } from "@/components/image-field";
 import { useRouter } from "next/navigation";
@@ -23,8 +25,9 @@ const CSS = `.me-item{position:relative;outline:1px dashed transparent;margin:2p
 
 export default function Editor({ id, state }: { id: number; state: State }) {
   const router = useRouter();
-  const [c, setC] = useState<Camp | undefined>();
+  const [c, setC] = useState<Camp | undefined>(), [savedN, setSavedN] = useState(0);
   const [msg, setMsg] = useState("");
+  useDirtyGuard(c, savedN);
   const [sel, select] = useState<string | null>(null);
   const [over, setOver] = useState<Over>(null);
   const [tab, setTab] = useState<"content" | "layout" | "styles" | "ai" | "details">("content");
@@ -38,7 +41,7 @@ export default function Editor({ id, state }: { id: number; state: State }) {
   const d = c.design, locked = c.status !== undefined && c.status !== "draft";
   const setD = (p: Partial<Design>) => setC({ ...c, design: { ...d, ...p } });
   const run = async (label: string, fn: () => Promise<unknown>) => { setMsg(label + "…"); try { await fn(); } catch (e: any) { setMsg(e.message); } };
-  const save = async () => { await rpc("saveCampaign", { campaign: c }); };
+  const save = async () => { await rpc("saveCampaign", { campaign: c }); setSavedN((n) => n + 1); };
   const append = (b: Block) => { setD({ blocks: [...d.blocks, b] }); select(String(d.blocks.length)); };
   const ctx: Ctx = { d, base: location.origin, sel, select, drag, over, setOver, locked };
 
@@ -93,7 +96,7 @@ export default function Editor({ id, state }: { id: number; state: State }) {
             }}>{ai.busy ? "Writing…" : "Generate"}</button></>)}
           {tab === "details" && <>
             <p className="sub">Subject, recipients and sender come on the next step. Use <code>{"{{name}}"}</code> in the text to greet each person.</p>
-            <button onClick={() => run("Saving template", async () => { const name = prompt("Template name?"); if (!name) return setMsg(""); await rpc("saveTemplate", { name, design: d }); setMsg("Template saved."); })}>Save as template</button></>}
+            <button onClick={() => run("Saving template", async () => { const name = await promptDialog("Template name?"); if (!name) return setMsg(""); await rpc("saveTemplate", { name, design: d }); setMsg("Template saved."); })}>Save as template</button></>}
         </div>
       </div>
     </C.Provider>
