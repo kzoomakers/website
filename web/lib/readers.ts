@@ -112,7 +112,8 @@ export async function afterSignIn(userId: number, next: string) {
   if (u?.approval !== "approved") return "/members";
   await joinMembersIfDone(userId); // also catches up people who finished before the Members list existed
   if (u.onboarding === "resign") return "/members/onboarding";
-  return u.onboarding !== "done" || u.thin || u.no_contact ? "/members" : safeNext(next); // first-time steps (and missing details) are the welcome wizard on /members
+  const to = safeNext(next); // "/" means no particular page was wanted: a normal sign-in lands on Home in the members area
+  return u.onboarding !== "done" || u.thin || u.no_contact || to === "/" ? "/members" : to; // first-time steps (and missing details) are the welcome wizard on /members
 }
 
 /** A one-time sign-in link that lands on `next` (used by message emails). It works once; whoever holds it gets into that account until then, so it's short-lived and only meant for the person it was sent to. */
