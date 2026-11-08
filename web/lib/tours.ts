@@ -39,12 +39,12 @@ async function conn() {
       name text NOT NULL, email text NOT NULL, phone text NOT NULL DEFAULT '', interest text NOT NULL DEFAULT '', heard text NOT NULL DEFAULT '', status text NOT NULL DEFAULT 'booked',
       cancelled boolean NOT NULL DEFAULT false, notes text NOT NULL DEFAULT '', token text NOT NULL UNIQUE, ip_hash text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now())`);
     await p.query("ALTER TABLE tour_bookings ADD COLUMN IF NOT EXISTS visitor_notes text NOT NULL DEFAULT ''");
-    for (const t of ["tour_bookings", "tour_requests"]) await p.query(`ALTER TABLE ${t} ADD COLUMN IF NOT EXISTS client_ip text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS user_agent text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS screen text NOT NULL DEFAULT ''`);
     // Walk-ups: people who asked for a tour when no times were open. A volunteer offers dates, the visitor picks one (which becomes an ordinary block + booking) or sends it back.
     await p.query(`CREATE TABLE IF NOT EXISTS tour_requests (id serial PRIMARY KEY, first_name text NOT NULL, last_name text NOT NULL, email text NOT NULL, phone text NOT NULL, zip text NOT NULL DEFAULT '',
       contact_method text NOT NULL DEFAULT 'Email', interest text NOT NULL DEFAULT '', notes text NOT NULL DEFAULT '', status text NOT NULL DEFAULT 'open', reschedules int NOT NULL DEFAULT 0,
       offers jsonb NOT NULL DEFAULT '[]', guide_name text NOT NULL DEFAULT '', guide_email text NOT NULL DEFAULT '', decline_note text NOT NULL DEFAULT '', token text NOT NULL UNIQUE,
       booking_id int, ip_hash text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now())`);
+    for (const t of ["tour_bookings", "tour_requests"]) await p.query(`ALTER TABLE ${t} ADD COLUMN IF NOT EXISTS client_ip text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS user_agent text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS screen text NOT NULL DEFAULT ''`);
     // One conversation per booking or walk-up request: staff emails, visitor replies (via a token link), and internal notes only staff see.
     await p.query(`CREATE TABLE IF NOT EXISTS tour_messages (id serial PRIMARY KEY, kind text NOT NULL, ref_id int NOT NULL, author_kind text NOT NULL, author text NOT NULL DEFAULT '', body text NOT NULL,
       created_at timestamptz NOT NULL DEFAULT now())`);
