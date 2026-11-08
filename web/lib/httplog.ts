@@ -1,18 +1,18 @@
 import { db } from "./db";
-import { skipped } from "./httplog-skip";
+import { skipped } from "./httplog-util";
 
 // HTTP request log. One row per request, in a table partitioned by day (UTC) so that retention is a cheap DROP of the oldest partition
 // and every time-bounded query only touches the days it asks about. Rows are buffered in memory and written in batches.
 export const KEEP_ROWS = 10_000_000;
 const TABLE = "http_log";
 
-export type Row = { at: Date; ip: string; method: string; host: string; path: string; query: string; params: Record<string, string | string[]>; ua: string; referer: string; user?: string };
+export type Row = { at: Date; ip: string; method: string; host: string; path: string; query: string; params: Record<string, string | string[]>; ua: string; referer: string; user?: string; status?: number };
 
 const SECRET_PARAM = /token|secret|password|passwd|code|key|sig|auth/i;
 const cut = (s: string, n: number) => (s.length > n ? s.slice(0, n) : s);
 
 /** Builds a log row from a request. Headers are not stored (only the user agent and referrer); token-like query params are replaced by "[redacted]" so the log never holds a live sign-in token. */
-export function toRow(req: Request): Row {
+export function toRow(req: Pick<Request, "url" | "method" | "headers">): Row {
   const u = new URL(req.url), h = req.headers;
   const params: Row["params"] = {}, clean = new URLSearchParams();
   for (const [k, v] of u.searchParams) {
@@ -49,7 +49,8 @@ async function maintain() {
       query text NOT NULL DEFAULT '', params jsonb NOT NULL DEFAULT '{}', ua text NOT NULL DEFAULT '', referer text NOT NULL DEFAULT '', "user" text NOT NULL DEFAULT ''
     ) PARTITION BY RANGE (at)`);
     await p.query(`ALTER TABLE ${TABLE} DROP COLUMN IF EXISTS headers`);
-    for (const ix of ["(at DESC)", "(path, at DESC)", "(ip, at DESC)", "(host, at DESC)", "(\"user\", at DESC)"])
+    await p.query(`ALTER TABLE ${TABLE} ADD COLUMN IF NOT EXISTS status smallint NOT NULL DEFAULT 0`); // response code; 0 = rows from before it was recorded
+    for (const ix of ["(at DESC)", "(path, at DESC)", "(ip, at DESC)", "(host, at DESC)", "(\"user\", at DESC)", "(status, at DESC)"])
       await p.query(`CREATE INDEX IF NOT EXISTS ${TABLE}_${ix.replace(/\W+/g, "_")}_ix ON ${TABLE} ${ix}`);
     for (let i = 0; i < 3; i++) {
       const a = new Date(now.getTime() + i * 864e5), b = new Date(a.getTime() + 864e5);
@@ -83,10 +84,10 @@ async function flush() {
     await resolve(rows).catch(() => {});
     const c = (f: (r: Row) => unknown) => rows.map(f);
     await (await pool()).query(
-      `INSERT INTO ${TABLE} (at, ip, method, host, path, query, params, ua, referer, "user")
-       SELECT at, ip, method, host, path, query, params::jsonb, ua, referer, u
-       FROM unnest($1::timestamptz[], $2::text[], $3::text[], $4::text[], $5::text[], $6::text[], $7::text[], $8::text[], $9::text[], $10::text[]) AS t(at, ip, method, host, path, query, params, ua, referer, u)`,
-      [c((r) => r.at), c((r) => r.ip), c((r) => r.method), c((r) => r.host), c((r) => r.path), c((r) => r.query), c((r) => JSON.stringify(r.params)), c((r) => r.ua), c((r) => r.referer), c((r) => r.user ?? "")]);
+      `INSERT INTO ${TABLE} (at, ip, method, host, path, query, params, ua, referer, "user", status)
+       SELECT at, ip, method, host, path, query, params::jsonb, ua, referer, u, st
+       FROM unnest($1::timestamptz[], $2::text[], $3::text[], $4::text[], $5::text[], $6::text[], $7::text[], $8::text[], $9::text[], $10::text[], $11::int[]) AS t(at, ip, method, host, path, query, params, ua, referer, u, st)`,
+      [c((r) => r.at), c((r) => r.ip), c((r) => r.method), c((r) => r.host), c((r) => r.path), c((r) => r.query), c((r) => JSON.stringify(r.params)), c((r) => r.ua), c((r) => r.referer), c((r) => r.user ?? ""), c((r) => r.status ?? 0)]);
   } catch {
     // Database down: keep what we can (bounded) so a blip loses nothing, but never grow without limit or break the request.
     s.buf.unshift(...rows.slice(0, Math.max(0, 20000 - s.buf.length)));
@@ -104,7 +105,7 @@ export function record(row: Row) {
   else s.timer ??= setTimeout(() => void flush(), 1000);
 }
 
-export type Filter = { q?: string; from?: string; to?: string; method?: string; ip?: string; path?: string; host?: string; user?: string; offset?: number; unit?: string };
+export type Filter = { q?: string; from?: string; to?: string; method?: string; ip?: string; path?: string; host?: string; user?: string; status?: string; offset?: number; unit?: string };
 
 function where(f: Filter) {
   const ps: unknown[] = [], w: string[] = [];
@@ -118,6 +119,8 @@ function where(f: Filter) {
   if (f.path) w.push(`path = ${add(f.path)}`);
   if (f.host) w.push(`host = ${add(f.host)}`);
   if (f.user) w.push(`"user" = ${add(f.user)}`);
+  if (/^[1-5]xx$/.test(f.status ?? "")) w.push(`status BETWEEN ${add(Number(f.status![0]) * 100)} AND ${add(Number(f.status![0]) * 100 + 99)}`); // a class: "404" or "4xx"
+  else if (/^\d{3}$/.test(f.status ?? "")) w.push(`status = ${add(Number(f.status))}`);
   if (f.q?.trim()) { const p = add(`%${f.q.trim().replace(/[\\%_]/g, "\\$&")}%`); w.push(`(concat_ws(' ', ip, "user", method, host, path, query, ua, referer) ILIKE ${p} OR params::text ILIKE ${p})`); }
   return { sql: "WHERE " + w.join(" AND "), ps };
 }
@@ -131,13 +134,13 @@ export async function query(f: Filter) {
     const { sql, ps } = where(f);
     const unit = ["second", "minute", "hour", "day"].includes(f.unit ?? "") ? f.unit : "hour";
     const top = (col: string) => c.query(`SELECT ${col} v, count(*)::int n FROM ${TABLE} ${sql} GROUP BY 1 ORDER BY 2 DESC LIMIT 15`, ps);
-    const [rows, total, buckets, paths, ips, users, uas, referers, methods, hosts] = await Promise.all([
-      c.query(`SELECT id, at, ip, "user", method, host, path, query, ua, referer FROM ${TABLE} ${sql} ORDER BY at DESC, id DESC LIMIT 100 OFFSET ${Math.max(0, Math.floor(Number(f.offset)) || 0)}`, ps),
+    const [rows, total, buckets, paths, ips, users, uas, referers, methods, hosts, statuses] = await Promise.all([
+      c.query(`SELECT id, at, ip, "user", method, host, path, query, ua, referer, status FROM ${TABLE} ${sql} ORDER BY at DESC, id DESC LIMIT 100 OFFSET ${Math.max(0, Math.floor(Number(f.offset)) || 0)}`, ps),
       c.query(`SELECT count(*)::int n, count(DISTINCT ip)::int ips, count(DISTINCT NULLIF("user", ''))::int users FROM ${TABLE} ${sql}`, ps),
-      c.query(`SELECT date_trunc('${unit}', at) t, count(*)::int n FROM ${TABLE} ${sql} GROUP BY 1 ORDER BY 1`, ps),
-      top("path"), top("ip"), top("nullif(\"user\", '')"), top("ua"), top("nullif(referer, '')"), top("method"), top("host"),
+      c.query(`SELECT date_trunc('${unit}', at) t, count(*)::int n, count(*) FILTER (WHERE status BETWEEN 200 AND 299)::int s2, count(*) FILTER (WHERE status BETWEEN 300 AND 399)::int s3, count(*) FILTER (WHERE status BETWEEN 400 AND 499)::int s4, count(*) FILTER (WHERE status >= 500)::int s5 FROM ${TABLE} ${sql} GROUP BY 1 ORDER BY 1`, ps),
+      top("path"), top("ip"), top("nullif(\"user\", '')"), top("ua"), top("nullif(referer, '')"), top("method"), top("host"), top("nullif(status, 0)"),
     ]);
-    return { rows: rows.rows, total: total.rows[0].n, uniq: { ips: total.rows[0].ips, users: total.rows[0].users }, buckets: buckets.rows, top: { path: paths.rows, ip: ips.rows, user: users.rows, ua: uas.rows, referer: referers.rows, method: methods.rows, host: hosts.rows } };
+    return { rows: rows.rows, total: total.rows[0].n, uniq: { ips: total.rows[0].ips, users: total.rows[0].users }, buckets: buckets.rows, top: { path: paths.rows, ip: ips.rows, user: users.rows, ua: uas.rows, referer: referers.rows, method: methods.rows, host: hosts.rows, status: statuses.rows } };
   } finally {
     await c.query("RESET statement_timeout").catch(() => {});
     c.release();
