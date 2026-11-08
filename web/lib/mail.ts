@@ -170,19 +170,44 @@ async function upsert(email: string, name: string, lists: number[], status: stri
   for (const l of lists) await q("INSERT INTO mail_memberships VALUES ($1,$2) ON CONFLICT DO NOTHING", [s.id, l]);
   return s as { id: number; status: string; token: string };
 }
-/**
- * A reader who just verified their email joins the "Registered users" list (created on first use). Existing status is never touched,
- * so someone who unsubscribed (or bounced) stays unsubscribed; they simply appear on the list.
- */
-async function joinList(key: string, list: string, desc: string, source: string, email: string, name: string) {
+/** The id of a system list, created on first use. */
+async function listIdFor(key: string, list: string, desc: string) {
   let id = (await q("SELECT data FROM settings WHERE key = $1", [key]))[0]?.data?.id;
   if (!id || !(await q("SELECT 1 FROM mail_lists WHERE id = $1", [id])).length) {
     id = (await q("INSERT INTO mail_lists (name, description) VALUES ($1, $2) RETURNING id", [list, desc]))[0].id;
     await q("INSERT INTO settings (key, data) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data", [key, JSON.stringify({ id })]);
   }
-  const s = await upsert(email, name, [id], "subscribed", source);
+  return id as number;
+}
+/**
+ * A reader who just verified their email joins the "Registered users" list (created on first use). Existing status is never touched,
+ * so someone who unsubscribed (or bounced) stays unsubscribed; they simply appear on the list.
+ */
+async function joinList(key: string, list: string, desc: string, source: string, email: string, name: string) {
+  const s = await upsert(email, name, [await listIdFor(key, list, desc)], "subscribed", source);
   await q("UPDATE mail_subscribers SET confirmed_at = COALESCE(confirmed_at, now()) WHERE id = $1 AND status = 'subscribed'", [s.id]);
   return s;
+}
+// The list members opt into from the handbook page ("Notify me by email of updates"). Update emails are campaigns sent to it (lib/handbook.ts).
+const HB = ["mail:handbook_list", "Request Handbook Updates", "Signed-in people who asked to be emailed when the member handbook changes"] as const;
+export const handbookListId = () => listIdFor(...HB);
+export async function handbookSubscribed(email: string) {
+  const id = (await q("SELECT data FROM settings WHERE key = $1", [HB[0]]))[0]?.data?.id;
+  return !!id && (await q("SELECT 1 FROM mail_memberships m JOIN mail_subscribers s ON s.id = m.subscriber_id WHERE m.list_id = $1 AND s.email = $2 AND s.status = 'subscribed' AND NOT s.trashed", [id, email.toLowerCase()])).length > 0;
+}
+/** Subscribers who will get the next handbook update email. */
+export async function handbookAudience() {
+  const id = (await q("SELECT data FROM settings WHERE key = $1", [HB[0]]))[0]?.data?.id;
+  return id ? (await q("SELECT count(*)::int AS n FROM mail_memberships m JOIN mail_subscribers s ON s.id = m.subscriber_id WHERE m.list_id = $1 AND s.status = 'subscribed' AND NOT s.trashed", [id]))[0].n as number : 0;
+}
+/** The person's own click: on adds them to the list (an explicit ask also re-subscribes someone who had unsubscribed; bounced addresses can't be), off removes them from this list only. */
+export async function setHandbookUpdates(email: string, name: string, on: boolean) {
+  email = email.trim().toLowerCase();
+  if (!on) { await q("DELETE FROM mail_memberships WHERE list_id = (SELECT (data->>'id')::int FROM settings WHERE key = $1) AND subscriber_id = (SELECT id FROM mail_subscribers WHERE email = $2)", [HB[0], email]); return; }
+  const cur = (await q("SELECT status FROM mail_subscribers WHERE email = $1", [email]))[0];
+  if (cur && (cur.status === "bounced" || cur.status === "complained")) throw new Error("Emails to this address have bounced, so we can't add it. Change your email address on your account page first.");
+  const s = await joinList(...HB, "handbook", email, name);
+  await q("UPDATE mail_subscribers SET status = 'subscribed', trashed = false, confirmed_at = COALESCE(confirmed_at, now()) WHERE id = $1 AND status IN ('unsubscribed', 'unconfirmed')", [s.id]);
 }
 export async function addRegistered(email: string, name: string, base: string) {
   void welcome((await joinList("mail:registered_list", "Registered users", "People who registered an account on the website", "registration", email, name)).token, base);

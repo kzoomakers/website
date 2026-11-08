@@ -1,6 +1,6 @@
-.adm{--bg:#f5f6f8;--card:#fff;--ink:#1c2024;--mut:#6b7280;--line:#e4e7ec;--acc:#2f6fed;--acc-bg:#e8effe;--bad:#c62828;--ok:#1b7f3b;
+.adm{--btn-bd:#7c8491;--bg:#f5f6f8;--card:#fff;--ink:#1c2024;--mut:#6b7280;--line:#e4e7ec;--acc:#2f6fed;--acc-bg:#e8effe;--bad:#c62828;--ok:#1b7f3b;
   min-height:calc(100vh - 16px);background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,sans-serif}
-@media (prefers-color-scheme:dark){.adm{--bg:#111316;--card:#1a1d21;--ink:#e8eaed;--mut:#9aa1ab;--line:#2a2e35;--acc:#7aa2ff;--acc-bg:#202a44;--bad:#ff6b6b;--ok:#55c97a}}
+@media (prefers-color-scheme:dark){.adm{--btn-bd:#6b7482;--bg:#111316;--card:#1a1d21;--ink:#e8eaed;--mut:#9aa1ab;--line:#2a2e35;--acc:#7aa2ff;--acc-bg:#202a44;--bad:#ff6b6b;--ok:#55c97a}}
 .adm *{box-sizing:border-box}
 .adm a{color:var(--acc);text-decoration:none}
 .adm{--bevel:hsl(0 0% 95%) 0px 1px,hsl(0 0% 83%) 1px 2px,hsl(0 0% 71%) 2px 3px,hsl(0 0% 59%) 3px 4px,hsl(0 0% 47%) 4px 5px,hsl(0 0% 35%) 5px 6px,hsl(0 0% 23%) 6px 7px,hsl(0 0% 11%) 7px 8px}
@@ -26,11 +26,11 @@
 .adm .sub{color:var(--mut);margin:0 0 20px}
 .adm .bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
 .adm .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 16px}
-.adm input,.adm textarea{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:0}
+.adm input,.adm textarea{font:inherit;color:inherit;background:var(--card);border:1px solid var(--btn-bd);border-radius:8px;padding:8px 10px;min-width:0}
 .adm input:focus,.adm textarea:focus{border-color:var(--acc)}
 .adm label{display:block;margin:12px 0;font-weight:500}
 .adm label input,.adm label textarea{display:block;width:100%;margin-top:4px;font-weight:400}
-.adm button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:7px 12px;transition:background .12s}
+.adm button{font:inherit;cursor:pointer;border:1px solid var(--btn-bd);background:var(--card);color:var(--ink);border-radius:8px;padding:7px 12px;transition:background .12s}
 .adm button:hover:not(:disabled){background:var(--bg)}
 .adm button:disabled{opacity:.4;cursor:default}
 .adm .pri{background:var(--acc);border-color:var(--acc);color:#fff}
@@ -135,9 +135,9 @@
 .adm .env-i{display:flex;flex-direction:column;gap:2px;padding:9px 12px;color:var(--ink)!important;border-bottom:1px solid var(--line)}.adm .env-i small{color:var(--mut)}.adm .env-i:hover{background:var(--bg)}.adm .env-i.new{background:#fff7e6;border-left:3px solid #d97706}
 @media (prefers-color-scheme:dark){.adm .env-i.new{background:#2a2112}}
 .adm .env-all{display:block;text-align:center;padding:9px}
-.adm .btn,.adm a.btn{display:inline-block;font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink)!important;border-radius:8px;padding:7px 12px;cursor:pointer}
+.adm .btn,.adm a.btn{display:inline-block;font:inherit;border:1px solid var(--btn-bd);background:var(--card);color:var(--ink)!important;border-radius:8px;padding:7px 12px;cursor:pointer}
 .adm .btn-main{background:var(--acc);border-color:var(--acc);color:#fff!important}.adm .btn-sm{padding:4px 10px;font-size:14px}
-.adm select,.adm .adm-main select{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.adm select,.adm .adm-main select{font:inherit;color:inherit;background:var(--card);border:1px solid var(--btn-bd);border-radius:8px;padding:8px 10px}
 
 /* Sidebar links: inline on desktop, behind a Menu button on phones */
 .adm-links{display:contents}.adm-burger{display:none}
@@ -229,6 +229,7 @@
 /* Inline links in running text are underlined so they don't rely on colour alone */
 .adm-main p a:not(.btn):not(.pri):not(.tag),.adm-main li a:not(.btn):not(.pri):not(.tag){text-decoration:underline}
 /* Section badges in the top bar */
+.adm-link .adm-n{margin-left:8px;background:#b45309;color:#fff;border-radius:99px;font:700 11px/1 system-ui;padding:3px 6px}
 .adm-top nav a .adm-n{margin-left:6px;background:#b45309;color:#fff;border-radius:99px;font:700 11px/1 system-ui;padding:3px 6px}
 /* Skeleton while a page loads */
 .adm-skel{display:grid;gap:12px}.adm-skel i{display:block;height:20px;border-radius:8px;background:linear-gradient(90deg,var(--line),var(--card),var(--line));background-size:200% 100%;animation:adm-shim 1.2s infinite}

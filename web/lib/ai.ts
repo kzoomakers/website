@@ -14,6 +14,7 @@ export const PROVIDERS = {
 export type ProviderId = keyof typeof PROVIDERS;
 export const SCENARIOS = [
   { id: "agreement-summary", label: "Membership agreement: plain-language summary of what changed", hint: "Short text in, short text out: a cheap model is plenty." },
+  { id: "handbook-summary", label: "Member handbook: plain-language summary of what changed (update emails)", hint: "Short text in, short text out: a cheap model is plenty." },
   { id: "blog-enhance", label: "Blog posts: Enhance with AI (rewrite in a chosen personality)", hint: "Rewrites a whole post, so choose the best of the cheap models. Style prompts are edited in section 3." },
   { id: "page-seo", label: "Page editor: Suggest description, AI summary and FAQs", hint: "Reads one page and writes short metadata: a cheap model is plenty. The prompt is edited in section 4." },
 ] as const;

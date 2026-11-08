@@ -151,6 +151,7 @@ export default function GuidedEditor({ def, initial }: { def: GuidedDef; initial
         <button className="pri" disabled={!dirty} onClick={save}>Save changes</button>
         <a href={`/${def.slug}`} target="_blank" rel="noreferrer"><button type="button">View page ↗</button></a>
         <span role="status" className={msg && msg !== "Saved." && msg !== "Reverted." ? "err" : dirty ? "tag" : "toast"}>{dirty && !msg ? "You have unsaved changes" : msg}</span>
+        {def.slug === "handbook" && saved > 0 && <a href="/admin/webmaster/handbook-updates">Email members about this change →</a>}
       </div>
       <Revisions<Obj> api={api} reload={saved}
         lines={(x) => guidedLines(def.fields, x)}

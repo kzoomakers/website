@@ -315,4 +315,5 @@ export async function saveGuided(slug: string, data: any, who: string, action = 
     `INSERT INTO settings (key, data) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data`, ["guided:" + slug, JSON.stringify(data)]);
   const changed = def.fields.filter((f) => canon(old[f.key]) !== canon(data[f.key])).map((f) => f.label);
   await logAudit(who, action, target || (changed.length ? "edited " + changed.join(", ") : "no changes"), data);
+  if (slug === "handbook") await import("./handbook").then((h) => h.recordChange(old, data, who)).catch((e) => console.error("Handbook change record:", e)); // never blocks the save
 }

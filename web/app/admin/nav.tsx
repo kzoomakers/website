@@ -5,6 +5,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Collapse from "./collapse";
 import { tabOf } from "./tabs";
+import { useAlerts, type Alerts } from "./alerts";
 
 type Item = { href: string; icon: string; label: string; exact?: boolean } | { icon: string; label: string; items: Item[] };
 
@@ -16,6 +17,7 @@ const WEBMASTER: Item[] = [
   { href: "/admin/services/privacy", icon: "🔒", label: "Privacy statement" }, { href: "/admin/services/links", icon: "🔗", label: "External links" },
   { href: "/admin/webmaster/robots", icon: "🤖", label: "Search engine settings" },
   { href: "/admin/webmaster/reviews", icon: "⭐", label: "Reviews" },
+  { href: "/admin/webmaster/handbook-updates", icon: "📣", label: "Handbook updates" },
 ];
 
 const BLOG: Item[] = [
@@ -48,28 +50,31 @@ const hrefs = (i: Item): string[] => ("items" in i ? i.items.flatMap(hrefs) : [i
 const current = (href: string, here: string, all: string[]) =>
   (here === href || here.startsWith(href + "/")) && !all.some((o) => o.length > href.length && (here === o || here.startsWith(o + "/")));
 
-function Node({ item, here, all }: { item: Item; here: string; all: string[] }) {
+// Menu pages with a queue, and the count of what is waiting in each.
+const WAITING: Record<string, keyof Alerts> = { "/admin/webmaster/reviews": "reviews", "/admin/blog/comments": "comments", "/admin/forms": "forms", "/admin/crm/approvals": "applicants", "/admin/tours/walkups": "walkups" };
+
+function Node({ item, here, all, n }: { item: Item; here: string; all: string[]; n: Alerts | null }) {
   const [open, setOpen] = useState(false); // tap toggles on phones (no hover there; iOS doesn't focus buttons); hooks stay above the early return
   if (!("items" in item))
-    return <Link href={item.href} className="adm-link" aria-current={(item.exact ? here === item.href : current(item.href, here, all)) ? "page" : undefined}><span aria-hidden>{item.icon}</span>{item.label}</Link>;
+    return <Link href={item.href} className="adm-link" aria-current={(item.exact ? here === item.href : current(item.href, here, all)) ? "page" : undefined}><span aria-hidden>{item.icon}</span>{item.label}{(n?.[WAITING[item.href]] ?? 0) > 0 && <span className="adm-n" title={`${n![WAITING[item.href]]} waiting`}>{n![WAITING[item.href]]}<span className="sr-only"> waiting</span></span>}</Link>;
   // Hover or keyboard focus opens the flyout; the group is highlighted while one of its pages is open.
   const active = hrefs(item).some((h) => current(h, here, all));
   return (
     <div className={"adm-group" + (open ? " open" : "")}>
       <button className="adm-link" aria-haspopup="true" onClick={() => setOpen(!open)} aria-current={active ? "true" : undefined}><span aria-hidden>{item.icon}</span>{item.label}<span className="adm-caret" aria-hidden>▸</span></button>
-      <div className="adm-fly">{item.items.map((c) => <Node key={c.label} item={c} here={here} all={all} />)}</div>
+      <div className="adm-fly">{item.items.map((c) => <Node key={c.label} item={c} here={here} all={all} n={n} />)}</div>
     </div>
   );
 }
 
 /** The left menu for whichever admin section you are in, plus the account menu at the bottom (same on every page). */
 export default function Nav({ admin, user }: { admin: boolean; user: ReactNode }) {
-  const here = usePathname();
+  const here = usePathname(), n = useAlerts(here);
   const tab = tabOf(here), links = (MENUS.find(([p]) => p === tab)?.[1] ?? []).filter((l) => admin || !("href" in l && l.href.endsWith("/services")));
   const all = links.flatMap(hrefs);
   return (
     <Collapse>
-      {links.map((l) => <Node key={l.label} item={l} here={here} all={all} />)}
+      {links.map((l) => <Node key={l.label} item={l} here={here} all={all} n={n} />)}
       <span className="adm-sp" />
       <a className="adm-link" href="/" target="_blank">↗ View site</a>
       {user}

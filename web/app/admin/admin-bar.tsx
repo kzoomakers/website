@@ -1,8 +1,8 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import { TABS, tabOf } from "./tabs";
+import { useAlerts } from "./alerts";
 
 
 // Top bar shared by every admin section: logo/name left, section tabs, and a corner ribbon naming the current section.
@@ -10,15 +10,8 @@ export default function AdminBar({ allowed }: { allowed: string[] }) {
   const here = usePathname();
   const tabs = TABS.filter(([, , , s]) => allowed.includes(s));
   const cur = tabs.find(([h]) => h === tabOf(here));
-  // Waiting items per tab (reviews, comments, held messages, applicants, walk-ups), refreshed every minute and when you move to another page.
-  const [n, setN] = useState<Record<string, number>>({});
-  useEffect(() => {
-    let live = true;
-    const poll = () => fetch("/api/webmaster/alerts", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((d) => live && d && setN({ "/admin/webmaster": d.reviews, "/admin/blog": d.comments, "/admin/forms": d.forms, "/admin/crm": d.applicants, "/admin/tours": d.walkups }), () => {});
-    poll();
-    const t = setInterval(poll, 60_000);
-    return () => { live = false; clearInterval(t); };
-  }, [here]);
+  // Waiting items per tab (reviews, comments, held messages, applicants, walk-ups).
+  const d = useAlerts(here), n: Record<string, number> = d ? { "/admin/webmaster": d.reviews, "/admin/blog": d.comments, "/admin/forms": d.forms, "/admin/crm": d.applicants, "/admin/tours": d.walkups } : {};
   return (
     <>
       <header className="adm-top">
