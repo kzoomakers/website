@@ -15,7 +15,7 @@ export default function Debug({ canEdit }: { canEdit: boolean }) {
   return (
     <>
       <h1>Debug</h1>
-      <p className="sub">Turn a stream on to trap its traffic. Lines are shown below (newest first, last 2,000 per stream kept) and also printed to the server log. Turn it off when you're done: nothing is recorded while a stream is off, except errors, which always go to the server log.</p>
+      <p className="sub">Turn a stream on to trap its traffic. Lines are shown below (newest first; the last 2,000 per stream are kept, 200 for AI streams because they hold whole prompts and replies) and also printed to the server log. Turn it off when you're done: nothing is recorded while a stream is off, except errors, which always go to the server log.</p>
       <div className="card">
         {Object.entries(s.streams).map(([k, d]) => (
           <label key={k} style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "6px 0" }}>

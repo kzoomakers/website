@@ -1,4 +1,5 @@
 import { db } from "./db";
+import { tracedFetch } from "./debug";
 import { getMailCfg } from "./mail";
 import { open, seal } from "./vault";
 import { cleanHtml } from "./sanitize";
@@ -75,7 +76,7 @@ export async function saveKey(p: unknown, key: string) {
 }
 
 async function call(p: ProviderId, key: string, path: string, body?: unknown, ms = 60000) {
-  const r = await fetch(PROVIDERS[p].base + path, { method: body ? "POST" : "GET", headers: { authorization: `Bearer ${key}`, "content-type": "application/json" }, body: body ? JSON.stringify(body) : undefined, signal: AbortSignal.timeout(ms) }).catch((e) => { throw new Error(e?.name === "TimeoutError" ? `${PROVIDERS[p].name} took longer than ${ms / 1000} seconds. Try again, a shorter post, or a faster model.` : `Couldn't reach ${PROVIDERS[p].name}: ${e.message}`); });
+  const r = await tracedFetch(`ai-${p}`, PROVIDERS[p].base + path, { method: body ? "POST" : "GET", headers: { authorization: `Bearer ${key}`, "content-type": "application/json" }, body: body ? JSON.stringify(body) : undefined, signal: AbortSignal.timeout(ms) }, [key]).catch((e) => { throw new Error(e?.name === "TimeoutError" ? `${PROVIDERS[p].name} took longer than ${ms / 1000} seconds. Try again, a shorter post, or a faster model.` : `Couldn't reach ${PROVIDERS[p].name}: ${e.message}`); });
   if (!r.ok) throw new Error(`${PROVIDERS[p].name} said ${r.status}: ${(await r.text()).replace(/\s+/g, " ").slice(0, 200)}`);
   return r.json();
 }

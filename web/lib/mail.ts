@@ -1,4 +1,4 @@
-import { debugLog } from "./debug";
+import { debugLog, tracedFetch } from "./debug";
 import nodemailer from "nodemailer";
 import type { Transporter } from "nodemailer";
 import { randomBytes, randomUUID } from "crypto";
@@ -579,11 +579,11 @@ Use 5-10 blocks, friendly and concise, end with a footer block. Use only URLs th
 export async function composeWithAI(prompt: string, current?: unknown) {
   const cfg = await getMailCfg();
   if (!cfg.deepseekKey) throw new Error("AI isn't set up yet — add a DeepSeek API token under Settings");
-  const r = await fetch("https://api.deepseek.com/chat/completions", {
+  const r = await tracedFetch("ai-deepseek", "https://api.deepseek.com/chat/completions", {
     method: "POST", headers: { authorization: "Bearer " + cfg.deepseekKey, "content-type": "application/json" },
     body: JSON.stringify({ model: cfg.aiModel || "deepseek-chat", max_tokens: 4000, response_format: { type: "json_object" },
       messages: [{ role: "system", content: SYSTEM }, { role: "user", content: (current ? `Current email (revise it as asked):\n${JSON.stringify(current)}\n\n` : "") + `Request: ${prompt.slice(0, 4000)}` }] }),
-  });
+  }, [cfg.deepseekKey]);
   if (!r.ok) throw new Error("AI request failed (" + r.status + ")");
   const text: string = (await r.json()).choices?.[0]?.message?.content ?? "";
   let j: any;

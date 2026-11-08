@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
 import { getCalUrl, logAudit, revertSetting, setCalUrl, settingHistory } from "@/lib/store";
+import { cachedAt, getFeed, resetFeed } from "@/lib/calendar-feed";
 import { actor, editingAllowed } from "@/lib/guard";
 
-// shortcut: per-process cache, fine for one instance; use a shared cache if the app is ever scaled out.
-let cache: { text: string; at: number } | null = null;
-const TTL = 60 * 60 * 1000;
-
-// Public: the calendar page loads its events from here instead of straight from the remote feed.
+// Admin side of the calendar feed (the public feed is /api/calendar, which shares the same cache).
 export async function GET(req: Request) {
   const q = new URL(req.url).searchParams;
   if (q.has("history")) {
@@ -15,14 +12,10 @@ export async function GET(req: Request) {
   }
   if (q.has("config")) {
     if (!(await editingAllowed("webmaster", "read"))) return new NextResponse("not found", { status: 404 });
-    return NextResponse.json({ url: await getCalUrl(), cachedAt: cache?.at ?? null });
+    return NextResponse.json({ url: await getCalUrl(), cachedAt: cachedAt() });
   }
-  if (!cache || Date.now() - cache.at > TTL) {
-    const r = await fetch(await getCalUrl(), { cache: "no-store" }).catch(() => null);
-    if (!r?.ok) return new NextResponse("calendar unavailable", { status: 502 });
-    cache = { text: await r.text(), at: Date.now() };
-  }
-  return new NextResponse(cache.text, { headers: { "content-type": "text/calendar; charset=utf-8" } });
+  const text = await getFeed();
+  return text ? new NextResponse(text, { headers: { "content-type": "text/calendar; charset=utf-8" } }) : new NextResponse("calendar unavailable", { status: 502 });
 }
 
 export async function PUT(req: Request) {
@@ -30,7 +23,7 @@ export async function PUT(req: Request) {
   const { url } = await req.json().catch(() => ({}));
   if (typeof url !== "string" || !/^https?:\/\/\S+$/.test(url.trim())) return new NextResponse("need an http(s) URL", { status: 400 });
   await setCalUrl(url.trim(), await actor());
-  cache = null;
+  resetFeed();
   return NextResponse.json({ ok: true });
 }
 
@@ -39,10 +32,10 @@ export async function POST(req: Request) {
   const { revert } = await req.json().catch(() => ({}));
   if (revert !== undefined) {
     if (!Number.isInteger(revert) || !(await revertSetting("calendar", revert, await actor()))) return new NextResponse("no such revision", { status: 404 });
-    cache = null;
+    resetFeed();
     return NextResponse.json({ url: await getCalUrl() });
   }
-  cache = null;
-  await logAudit(await actor(), "calendar.flush", "flushed cache");
+  await getFeed(true); // refresh in place: if Google fails, the old copy stays
+  await logAudit(await actor(), "calendar.flush", "refreshed the feed");
   return NextResponse.json({ ok: true });
 }
