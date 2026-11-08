@@ -155,6 +155,10 @@ export async function ensureSchema(pool: Pool) {
   // Debug trap: only filled while a stream is switched on in Admin > Debug (see lib/debug.ts).
   await pool.query("CREATE TABLE IF NOT EXISTS debug_log (id bigserial PRIMARY KEY, at timestamptz NOT NULL DEFAULT now(), stream text NOT NULL, level text NOT NULL DEFAULT 'info', message text NOT NULL, data jsonb)");
   await pool.query("CREATE INDEX IF NOT EXISTS debug_log_stream ON debug_log (stream, id DESC)");
+  // Optional: trigram indexes make the admin '%text%' ILIKE searches index scans. Queries are unchanged, so a server without pg_trgm (or a role that may not create it) just keeps the seq scans.
+  if (await pool.query("CREATE EXTENSION IF NOT EXISTS pg_trgm").then(() => true, () => false))
+    for (const [t, c] of [["site_users", "name"], ["site_users", "email"], ["site_users", "phone"], ["site_users", "bio"], ["sign_docs", "title"], ["sign_contacts", "name"], ["sign_contacts", "email"], ["skills", "name"]])
+      await pool.query(`CREATE INDEX IF NOT EXISTS ${t}_${c}_trgm ON ${t} USING gin (${c} gin_trgm_ops)`).catch(() => {});
   // First start: stage the built-in board and calendar link in Postgres (plus a baseline revision to roll back to). Admin screens replace them.
   for (const [key, data, action] of [["board", boardSeed, "board.import"], ["calendar", { url: CAL_DEFAULT }, "calendar.import"],
     ...(await Promise.all(GUIDED_SEEDS.map(async (g) => [`guided:${g}`, JSON.parse(await readFile(path.join(process.cwd(), "data", "guided", g + ".json"), "utf8")), `guided.${g}.import`] as const)))] as const)
