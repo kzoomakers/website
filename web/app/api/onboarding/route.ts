@@ -4,6 +4,7 @@ import { currentApplicant, hasPassword } from "@/lib/readers";
 import { baseUrl } from "@/lib/mail";
 import { clientIp } from "@/lib/comments";
 import * as o from "@/lib/onboarding";
+import { uploadLimitMb } from "@/lib/image";
 import { latestVersion } from "@/lib/waiver";
 import { RELATIONSHIPS } from "@/lib/profiles";
 
@@ -28,5 +29,5 @@ export async function GET() {
   const u = await currentApplicant().catch(() => null);
   if (!u || u.approval !== "approved") return new NextResponse("Sign in first.", { status: 401 });
   const step = await o.getStep(u.id);
-  return NextResponse.json({ step, fresh: u.fresh, name: u.name, kinds: o.ID_KINDS, relationships: RELATIONSHIPS, version: step === "waiver" ? await latestVersion() : null, has_password: await hasPassword(u.id) });
+  return NextResponse.json({ step, fresh: u.fresh, name: u.name, kinds: o.ID_KINDS, relationships: RELATIONSHIPS, version: step === "waiver" ? await latestVersion() : null, has_password: await hasPassword(u.id), upload_mb: await uploadLimitMb() });
 }

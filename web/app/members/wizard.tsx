@@ -6,7 +6,7 @@ import Notice from "@/components/notice";
 import SignPad from "@/components/sign-pad";
 import { Agreement } from "@/components/agreement";
 import { sendUpload } from "@/lib/upload-client";
-import { fileTooLarge, MAX_UPLOAD_MB } from "@/lib/upload-limit";
+import { fileTooLarge } from "@/lib/upload-limit";
 import { OPEN_TO } from "@/lib/fields";
 import type { Version } from "@/lib/waiver-diff";
 import type { Contact } from "@/lib/profiles";
@@ -17,7 +17,7 @@ import { useRead } from "./onboarding/use-read";
 // steps are local: the server counts the person as finished once phone, address and one emergency contact exist.
 const ORDER = [["waiver", "Waiver"], ["handbook", "Handbook"], ["id", "Photo ID"], ["contact", "Your info"], ["emergency", "Emergency"], ["directory", "Directory"], ["password", "Password"]] as const;
 type Screen = (typeof ORDER)[number][0];
-type Info = { step: string; fresh: boolean; name: string; kinds: Record<string, string>; relationships: string[]; version: Version | null; has_password: boolean };
+type Info = { step: string; fresh: boolean; name: string; kinds: Record<string, string>; relationships: string[]; version: Version | null; has_password: boolean; upload_mb: number };
 const FIRST: Record<string, Screen> = { waiver: "waiver", handbook: "handbook", id: "id", profile: "contact", done: "directory" }; // "done" only counts while `fresh` (the wizard was never finished)
 const EMPTY = { first_name: "", last_name: "", phone: "", relationship: "", address: "", business_phone: "" };
 const two = { display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" } as const;
@@ -118,7 +118,7 @@ export default function Wizard() {
           {read ? <div className="wz-row"><button className="pri" disabled={busy} onClick={() => post({ step: "handbook", read: true }, "id")}>I have read the handbook and agree to follow it</button></div>
             : <p className="sub" role="status">Scroll to the end of the handbook to continue.</p>}
         </>}
-        {screen === "id" && <IdStep kinds={info.kinds} next={() => go("contact")} />}
+        {screen === "id" && <IdStep mb={info.upload_mb} kinds={info.kinds} next={() => go("contact")} />}
         {screen === "contact" && <ContactStep next={() => go("emergency")} />}
         {screen === "emergency" && <EmergencyStep relationships={info.relationships} next={() => (info.fresh ? go("directory") : done())} />}
         {screen === "directory" && <DirectoryStep welcome={info.has_password} next={() => (info.has_password ? done() : go("password"))} />}
@@ -139,7 +139,7 @@ const ID_ACCEPT = "image/jpeg,image/png,image/webp,image/gif,image/avif,image/he
 const ID_FORMATS = "JPG, PNG, WebP, HEIC/HEIF, AVIF or GIF";
 const size = (n: number) => (n < 1048576 ? Math.max(1, Math.round(n / 1024)) + " KB" : (n / 1048576).toFixed(1) + " MB");
 
-function IdStep({ kinds, next }: { kinds: Record<string, string>; next: () => void }) {
+function IdStep({ kinds, mb, next }: { kinds: Record<string, string>; mb: number; next: () => void }) {
   const s = useSend(), [file, setFile] = useState<File | null>(null), [thumb, setThumb] = useState(""), [bad, setBad] = useState(false);
   const phone = useState(() => typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches)[0]; // a touch device: offer the camera too
   useEffect(() => { if (!file) return setThumb(""); const u = URL.createObjectURL(file); setBad(false); setThumb(u); return () => URL.revokeObjectURL(u); }, [file]);
@@ -147,7 +147,7 @@ function IdStep({ kinds, next }: { kinds: Record<string, string>; next: () => vo
   return <form style={{ display: "grid", gap: 12 }} onSubmit={(e) => {
     e.preventDefault();
     if (!file) return s.setErr("Choose a photo or scan of your ID first.");
-    const big = fileTooLarge(file);
+    const big = fileTooLarge(file, mb);
     if (big) return s.setErr(big);
     const fd = new FormData(e.currentTarget); fd.set("file", file);
     s.run(() => sendUpload("/api/onboarding/id", fd), next);
@@ -164,7 +164,7 @@ function IdStep({ kinds, next }: { kinds: Record<string, string>; next: () => vo
         <label className="wz-big"><span aria-hidden>📷</span><b>Take a picture</b><small>Use your camera</small><input type="file" accept="image/*" capture="environment" hidden onChange={pick} /></label>
         <label className="wz-big"><span aria-hidden>🖼️</span><b>Upload a file</b><small>Photos or files</small><input type="file" accept={ID_ACCEPT} hidden onChange={pick} /></label>
       </div> : <input type="file" accept={ID_ACCEPT} onChange={pick} aria-label="Photo or scan of your ID" />}
-      <small className="sub">Accepted: {ID_FORMATS}, up to {MAX_UPLOAD_MB} MB.</small>
+      <small className="sub">Accepted: {ID_FORMATS}, up to {mb} MB.</small>
       {file && <div className="card" style={{ display: "flex", gap: 12, alignItems: "center", padding: 10 }}>
         {thumb && !bad && <img src={thumb} alt="Preview of your ID" onError={() => setBad(true)} style={{ width: 64, height: 64, objectFit: "cover", borderRadius: 6 }} />}
         <span style={{ flex: 1, minWidth: 0, overflowWrap: "anywhere" }}>✓ <b>{file.name}</b> <small className="sub">({size(file.size)})</small></span>
