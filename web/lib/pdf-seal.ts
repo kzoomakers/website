@@ -77,7 +77,7 @@ export async function newCert(cn: string) {
   const cert = new pki.Certificate(), now = new Date(), end = new Date(now.getTime() + 10 * 365 * 864e5);
   cert.version = 2;
   const serial = webcrypto.getRandomValues(new Uint8Array(8));
-  serial[0] &= 0x7f; // the top bit would make the DER integer negative, which RFC 5280 forbids
+  serial[0] = (serial[0] & 0x7f) || 1; // top bit set would make the DER integer negative (RFC 5280 forbids); a zero first byte is a non-minimal encoding strict OpenSSL rejects (1 in 128)
   cert.serialNumber = new asn1js.Integer({ valueHex: serial.buffer as ArrayBuffer });
   for (const t of [cert.issuer, cert.subject]) t.typesAndValues.push(new pki.AttributeTypeAndValue({ type: "2.5.4.3", value: new asn1js.Utf8String({ value: cn }) }));
   cert.notBefore.value = now; cert.notAfter.value = end;

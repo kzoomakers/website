@@ -2,7 +2,9 @@
 const nextConfig = {
   // /notify is an alias of /ntfy (the ntfy-compatible API).
   async rewrites() {
-    return [{ source: "/notify/:path*", destination: "/ntfy/:path*" }, { source: "/notify", destination: "/ntfy" }];
+    return [{ source: "/notify/:path*", destination: "/ntfy/:path*" }, { source: "/notify", destination: "/ntfy" },
+      // The eBay listing template (HTML to paste into a listing) is served at /ebay/template.
+      { source: "/ebay/template", destination: "/images/ebay/template.html" }];
   },
   devIndicators: { position: "bottom-right" },
   async redirects() {

@@ -13,6 +13,7 @@ export async function resolve(spec, ctx, next) {
     const hit = ["", ".ts", ".tsx", "/index.ts"].map((e) => abs + e).find(isFile);
     if (hit) return next(hit, ctx);
   }
+  if (spec.startsWith("next/") && !spec.endsWith(".js")) spec += ".js"; // next-auth imports "next/server" the bundler way
   return next(spec, ctx);
 }
 export async function load(url, ctx, next) {
