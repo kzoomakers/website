@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { errMsg } from "@/lib/errmsg";
 import { submitContact } from "@/lib/contact";
 import { hashIp } from "@/lib/comments";
+import { convert } from "@/lib/ga-attr";
 
 // POST { kind: "contact" | "board", name, email, subject?, message, website? }
 export async function POST(req: Request) {
@@ -11,6 +12,7 @@ export async function POST(req: Request) {
   if (b.website) return NextResponse.json({ ok: true });
   try {
     await submitContact(b.kind, { name: s(b.name), email: s(b.email), subject: s(b.subject), message: s(b.message) }, hashIp(req));
+    await convert(req, "contact");
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return new NextResponse(e.message === "not configured" ? "The form isn't available right now." : errMsg(e), { status: 400 });

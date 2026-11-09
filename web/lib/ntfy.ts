@@ -8,6 +8,8 @@ import { isAdmin } from "@/auth";
 // /{topic}/json|sse|raw (streaming, or poll=1), message ids, `since`, keepalives. Stored in Postgres; streams poll the table.
 // Not ported: attachments, scheduled delivery, email/Firebase/APNs push, WebSocket, accounts (tokens replace them), message updates/deletes.
 export const TOURS_TOPIC = "kzoomakers-tours";
+/** Traffic spikes and drops from Google Analytics. Staff attach their own topic to it (Admin > Setup > Analytics & cookies). */
+export const GA_TOPIC = "google-analytics-notices";
 /** Special topics, one per tour event. Staff attach their own topic to the ones they want (Admin > Tours > Notifications), so one publish reaches everyone through the links. */
 export const TOUR_EVENTS = {
   booked: ["kzoomakers-tours-booked", "A tour is booked"],
@@ -52,6 +54,7 @@ async function conn() {
     await p.query(`CREATE TABLE IF NOT EXISTS ntfy_links (source text NOT NULL REFERENCES ntfy_topics ON DELETE CASCADE, target text NOT NULL REFERENCES ntfy_topics ON DELETE CASCADE,
       PRIMARY KEY (source, target), CHECK (source <> target))`);
     await p.query("INSERT INTO ntfy_topics (name, description, builtin, created_by) VALUES ($1, 'Tour bookings and cancellations, for staff', true, 'system') ON CONFLICT DO NOTHING", [TOURS_TOPIC]);
+    await p.query("INSERT INTO ntfy_topics (name, description, builtin, created_by) VALUES ($1, 'Traffic spikes and drops from Google Analytics (staff attach their topic to get these)', true, 'system') ON CONFLICT DO NOTHING", [GA_TOPIC]);
     for (const [name, label] of Object.values(TOUR_EVENTS)) await p.query("INSERT INTO ntfy_topics (name, description, builtin, created_by) VALUES ($1, $2, true, 'system') ON CONFLICT DO NOTHING", [name, label + " (staff attach their topic to get these)"]);
     await p.query("ALTER TABLE ntfy_topics ADD COLUMN IF NOT EXISTS locked boolean NOT NULL DEFAULT false"); // locked = nobody can read or publish through the API (set while the owner's account is disabled)
     await p.query("ALTER TABLE ntfy_tokens ADD COLUMN IF NOT EXISTS expires_at timestamptz, ADD COLUMN IF NOT EXISTS scopes text[] NOT NULL DEFAULT '{read,publish}'"); // scopes: read | publish

@@ -33,7 +33,7 @@ export default function CookieConsent() {
   }, [show]);
 
   // Taking consent back: forget the choice and reload, so trackers that already started are gone and the question is asked again.
-  const withdraw = () => { try { localStorage.removeItem(CONSENT_KEY); } catch { /* nothing stored */ } location.reload(); };
+  const withdraw = () => { try { localStorage.removeItem(CONSENT_KEY); } catch { /* nothing stored */ } document.cookie = "ft=; max-age=0; path=/"; location.reload(); };
   const ok = () => {
     try { localStorage.setItem(CONSENT_KEY, "1"); } catch { /* still lets them in for this visit */ }
     window.dispatchEvent(new Event("cookie-consent"));
