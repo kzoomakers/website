@@ -103,19 +103,18 @@ export default function ChipAnimation({ label = "KZOO" }: { label?: string }) {
 
   useEffect(() => {
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    let tl: any, timer: any;
-    // @ts-expect-error animejs v3 ships no types
-    import("animejs").then(({ default: anime }) => {
+    let tl: any;
+    import("animejs").then(({ createTimeline, svg, utils }) => {
       const q = (s: string) => ref.current!.querySelectorAll(s);
       const q2 = (s: string) => ref.current!.closest("section")!.querySelectorAll(s);
-      anime.set(q2(".paper-hl"), { opacity: 0 });
-      tl = anime.timeline({ autoplay: false, loop: true, direction: "alternate", loopComplete: (i: any) => { i.pause(); timer = setTimeout(() => i.play(), 3000); } });
-      tl.add({ targets: q(".group path"), strokeDashoffset: [0, anime.setDashoffset], easing: "easeInOutSine", stroke: ["#9c2a1a", "#2f5d50"], duration: 1500, delay: (_: any, i: number) => i * 50 })
-        .add({ targets: q("#chip-processor,#chip-heart,#chip-text"), scale: 5, translateY: -30, duration: 1500, delay: (_: any, i: number) => i * 250 })
-        .add({ targets: q2(".paper-hl"), opacity: [0, 1], translateY: [10, 0], duration: 1200, easing: "easeOutQuad", delay: (_: any, i: number) => i * 350 }, "-=600");
+      utils.set(q2(".paper-hl"), { opacity: 0 });
+      tl = createTimeline({ autoplay: false, loop: true, alternate: true, loopDelay: 3000 });
+      tl.add(svg.createDrawable(q(".group path")), { draw: ["0 1", "1 1"], ease: "inOutSine", stroke: ["#9c2a1a", "#2f5d50"], duration: 1500, delay: (_: any, i: number) => i * 50 })
+        .add(q("#chip-processor,#chip-heart,#chip-text"), { scale: 5, translateY: -30, duration: 1500, delay: (_: any, i: number) => i * 250 })
+        .add(q2(".paper-hl"), { opacity: [0, 1], translateY: [10, 0], duration: 1200, ease: "outQuad", delay: (_: any, i: number) => i * 350 }, "-=600");
       tl.play();
     });
-    return () => { clearTimeout(timer); tl?.pause(); };
+    return () => { tl?.pause(); };
   }, []);
 
   return (
