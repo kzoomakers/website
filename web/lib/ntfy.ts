@@ -1,3 +1,4 @@
+import { openText, sealText } from "./vault";
 import { tokenAllows } from "./ntfy-token";
 import { createHash, randomBytes } from "crypto";
 import { db } from "./db";
@@ -109,6 +110,7 @@ let cfgCache: { at: number; v: NtfyCfg } | undefined;
 export async function getCfg(): Promise<NtfyCfg> {
   if (cfgCache && Date.now() - cfgCache.at < 30_000) return cfgCache.v;
   const v = { baseUrl: "", upstream: "", upstreamToken: "", ...(await q("SELECT data FROM settings WHERE key = 'ntfy:config'"))[0]?.data };
+  v.upstreamToken = openText(v.upstreamToken);
   cfgCache = { at: Date.now(), v };
   return v;
 }
@@ -117,7 +119,7 @@ export async function saveCfg(x: any) {
   const cur = await getCfg(), v: NtfyCfg = { baseUrl: url(x.baseUrl, "The server address"), upstream: url(x.upstream, "The upstream server"), upstreamToken: x.upstreamToken ? String(x.upstreamToken).trim() : cur.upstreamToken };
   if (x.clearToken) v.upstreamToken = "";
   if (v.upstream && !v.baseUrl) throw new Error("Enter this server's public address (for example https://kzoomakers.org/ntfy) to turn on iOS push.");
-  await q("INSERT INTO settings (key, data) VALUES ('ntfy:config', $1) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data", [JSON.stringify(v)]);
+  await q("INSERT INTO settings (key, data) VALUES ('ntfy:config', $1) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data", [JSON.stringify({ ...v, upstreamToken: sealText(v.upstreamToken) })]);
   cfgCache = undefined;
 }
 function forward(topic: string, id: string) {

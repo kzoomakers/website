@@ -1,15 +1,9 @@
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
-import { db } from "./db";
+import { conn, db } from "./db";
 import { s3 } from "./s3";
 
 export type Media = { id: number; key: string; filename: string; mime: string; size: number; alt: string; uploader: string; created_at: string };
 
-async function conn() {
-  const d = db();
-  if (!d) throw new Error("not configured");
-  await d.ready;
-  return d.pool;
-}
 
 export const listMedia = async (): Promise<Media[]> => (db() ? (await (await conn()).query("SELECT * FROM media ORDER BY id DESC LIMIT 500")).rows : []);
 

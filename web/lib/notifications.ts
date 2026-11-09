@@ -1,13 +1,7 @@
-import { db } from "./db";
+import { conn } from "./db";
 
 export type Note = { id: number; kind: string; title: string; body: string; url: string; at: string; read: boolean };
 
-async function conn() {
-  const d = db();
-  if (!d) throw new Error("not configured");
-  await d.ready;
-  return d.pool;
-}
 
 /** Drops a notification in someone's inbox. Any feature can call this; `kind` is just a label (e.g. "comment.reply"). */
 export async function notifyUser(userId: number, n: { kind: string; title: string; body?: string; url?: string }) {

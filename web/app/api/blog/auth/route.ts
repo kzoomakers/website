@@ -41,7 +41,7 @@ export async function PUT(req: Request) {
   try {
     const s = await setPassword(u.id, b.password, typeof b.current === "string" ? b.current : "");
     const res = NextResponse.json({ ok: true });
-    res.cookies.set(COOKIE_NAME, s.cookie, { httpOnly: true, sameSite: "lax", secure: new URL(req.url).protocol === "https:", path: "/", maxAge: s.maxAge }); // the old cookie just stopped working
+    res.cookies.set(COOKIE_NAME, s.cookie, { httpOnly: true, sameSite: "lax", secure: (req.headers.get("x-forwarded-proto") ?? new URL(req.url).protocol.replace(":", "")) === "https", path: "/", maxAge: s.maxAge }); // the old cookie just stopped working
     return res;
   } catch (e: any) {
     return new NextResponse(errMsg(e), { status: 400 });

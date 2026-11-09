@@ -1,16 +1,10 @@
-import { db } from "./db";
+import { conn } from "./db";
 import { logAudit } from "./store";
 import { addMember, getMailCfg, mailReady, sendQueued as send } from "./mail";
 import { complete } from "./ai";
 import { changesPrompt, diffVersions, summarize, type Change, type Section, type Version } from "./waiver-diff";
 
 // Versions of the membership agreement. Published versions are never edited or deleted (legal/technical review); a change is a new version.
-async function conn() {
-  const d = db();
-  if (!d) throw new Error("not configured");
-  await d.ready;
-  return d.pool;
-}
 const clip = (v: unknown, n: number) => (typeof v === "string" ? v.trim().slice(0, n) : "");
 const esc = (s: string) => s.replace(/[<>&"]/g, "");
 

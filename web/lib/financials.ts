@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { conn, db } from "./db";
 import { logAudit } from "./store";
 
 export const MAX_PDF = 10 * 1024 * 1024;
@@ -7,12 +7,6 @@ export const validYear = (y: number) => Number.isInteger(y) && y >= 1990 && y <=
 export const isPdf = (b: Buffer) => b.subarray(0, 5).toString() === "%PDF-";
 export type Fin = { year: number; filename: string; size: number; uploaded_at: string; replaced_at: string | null };
 
-async function conn() {
-  const d = db();
-  if (!d) throw new Error("not configured");
-  await d.ready;
-  return d.pool;
-}
 
 export async function getOrg(): Promise<string> {
   if (!db()) return DEFAULT_ORG;

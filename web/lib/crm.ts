@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { conn } from "./db";
 import { getGuided, logAudit } from "./store";
 import { enqueueMail, getMailCfg, mailReady, sendQueued as send } from "./mail";
 import { loginLink } from "./readers";
@@ -11,12 +11,6 @@ import { randomUUID } from "crypto";
 import { FIELDS, SOCIALS, cleanField, cleanSocial, cleanTitle, isFacet, type FieldKey, type Fields } from "./fields";
 import { processImage } from "./image";
 
-async function conn() {
-  const d = db();
-  if (!d) throw new Error("not configured");
-  await d.ready;
-  return d.pool;
-}
 const clip = (v: unknown, n: number) => (typeof v === "string" ? v.trim().slice(0, n) : "");
 const esc = (s: string) => s.replace(/[<>&"]/g, "");
 
@@ -97,7 +91,7 @@ export async function setMySkills(userId: number, b: { optin?: unknown; show_pho
       await cl.query("INSERT INTO member_skills (user_id, skill_id, level, note) SELECT $1, id, $3, $4 FROM skills WHERE lower(name) = lower($2)", [userId, r.name, r.level, r.note]);
     }
     await cl.query("COMMIT");
-  } catch (e) { await cl.query("ROLLBACK"); throw e; } finally { cl.release(); }
+  } catch (e) { await cl.query("ROLLBACK").catch(() => {}); throw e; } finally { cl.release(); }
 }
 
 export const skillNames = async (): Promise<string[]> => (await (await conn()).query("SELECT name FROM skills ORDER BY lower(name) LIMIT 1000")).rows.map((r) => r.name);
@@ -210,7 +204,7 @@ export async function renameFieldValue(field: string, from: string, toIn: string
     await cl.query("DELETE FROM member_fields f WHERE field = $1 AND value = $2 AND EXISTS (SELECT 1 FROM member_fields g WHERE g.user_id = f.user_id AND g.field = $1 AND g.value = $3)", [field, from, to]); // they already have the target
     await cl.query("UPDATE member_fields SET value = $3 WHERE field = $1 AND value = $2", [field, from, to]);
     await cl.query("COMMIT");
-  } catch (e) { await cl.query("ROLLBACK"); throw e; } finally { cl.release(); }
+  } catch (e) { await cl.query("ROLLBACK").catch(() => {}); throw e; } finally { cl.release(); }
 }
 export async function deleteFieldValue(field: string, value: string) {
   if (!(field in FIELDS)) throw new Error("Unknown field.");

@@ -1,16 +1,10 @@
-import { db } from "./db";
+import { adminFloor, conn } from "./db";
 import { logAudit } from "./store";
 import { MIN_ADMINS } from "./users";
 import { disabledMsg } from "./readers";
 import { joinMembersIfDone } from "./waiver";
 import { setUserTopicsLocked } from "./ntfy";
 
-async function conn() {
-  const d = db();
-  if (!d) throw new Error("not configured");
-  await d.ready;
-  return d.pool;
-}
 
 // What a member can edit about themselves, and the extra fields only admins can edit.
 export const SELF_FIELDS = ["first_name", "last_name", "phone", "address1", "address2", "city", "state", "zip"] as const;
@@ -83,15 +77,18 @@ export const deleteContact = async (userId: number, id: number) =>
 
 /** Deletes a member and everything of theirs (comments, contacts, access). Never the founder, yourself, or one of the last MIN_ADMINS administrators. */
 export async function deleteUser(id: number, who: string) {
-  const c = await conn();
-  const u = (await c.query("SELECT email FROM site_users WHERE id = $1", [id])).rows[0];
+  const u = await adminFloor(async (c) => {
+    const u = (await c.query("SELECT email FROM site_users WHERE id = $1", [id])).rows[0];
+    if (!u) return null;
+    if (u.email.toLowerCase() === who.toLowerCase()) throw new Error("You can't delete your own account here.");
+    if ((await c.query("SELECT 1 FROM user_perms WHERE user_id = $1 AND locked", [id])).rowCount) throw new Error("The founding administrator can't be deleted.");
+    if ((await c.query("SELECT 1 FROM user_perms WHERE user_id = $1 AND section = 'admin' AND level = 'write'", [id])).rowCount
+      && (await c.query("SELECT count(*)::int n FROM user_perms p JOIN site_users s ON s.id = p.user_id WHERE p.section = 'admin' AND p.level = 'write' AND s.disabled_at IS NULL")).rows[0].n <= MIN_ADMINS)
+      throw new Error(`At least ${MIN_ADMINS} administrators must remain. Make someone else an administrator first.`);
+    await c.query("DELETE FROM site_users WHERE id = $1", [id]);
+    return u;
+  });
   if (!u) return false;
-  if (u.email.toLowerCase() === who.toLowerCase()) throw new Error("You can't delete your own account here.");
-  if ((await c.query("SELECT 1 FROM user_perms WHERE user_id = $1 AND locked", [id])).rowCount) throw new Error("The founding administrator can't be deleted.");
-  if ((await c.query("SELECT 1 FROM user_perms WHERE user_id = $1 AND section = 'admin' AND level = 'write'", [id])).rowCount
-    && (await c.query("SELECT count(*)::int n FROM user_perms p JOIN site_users s ON s.id = p.user_id WHERE p.section = 'admin' AND p.level = 'write' AND s.disabled_at IS NULL")).rows[0].n <= MIN_ADMINS)
-    throw new Error(`At least ${MIN_ADMINS} administrators must remain. Make someone else an administrator first.`);
-  await c.query("DELETE FROM site_users WHERE id = $1", [id]);
   await logAudit(who, "user.delete", u.email);
   return true;
 }
@@ -115,12 +112,12 @@ export async function mayTakeOver(callerIsAdmin: boolean, targetId: number) {
 
 /** Disables an account (reason = what they are told when they try to sign in; blank gives "Account is disabled") or, with null, enables it again. Existing sessions and unused links stop working at once. */
 export async function setDisabled(id: number, reason: string | null, who: string) {
-  const c = await conn();
+  // The account change is one transaction (so a crash can't leave it half-disabled); the ntfy topic lock below is idempotent and runs after it.
+  const u = await adminFloor(async (c) => {
   const u = (await c.query("SELECT email, disabled_at FROM site_users WHERE id = $1", [id])).rows[0];
-  if (!u) return false;
+  if (!u) return null;
   if (reason === null) {
     await c.query("UPDATE site_users SET disabled_at = NULL, disabled_reason = '' WHERE id = $1", [id]);
-    await setUserTopicsLocked(u.email, false); // idempotent: if this throws, enabling again retries it
   } else {
     if (u.email.toLowerCase() === who.toLowerCase()) throw new Error("You can't disable your own account.");
     if ((await c.query("SELECT 1 FROM user_perms WHERE user_id = $1 AND locked", [id])).rowCount) throw new Error("The founding administrator can't be disabled.");
@@ -131,6 +128,10 @@ export async function setDisabled(id: number, reason: string | null, who: string
     await c.query("UPDATE site_users SET disabled_at = COALESCE(disabled_at, now()), disabled_reason = $2 WHERE id = $1", [id, text]);
     await c.query("DELETE FROM login_tokens WHERE user_id = $1", [id]);
   }
+  return u;
+  });
+  if (!u) return false;
+  if (reason === null) await setUserTopicsLocked(u.email, false); // if this throws, enabling again retries it
   await logAudit(who, reason === null ? "user.enable" : "user.disable", u.email + (reason ? `: ${clip(reason, 300)}` : ""));
   return true;
 }

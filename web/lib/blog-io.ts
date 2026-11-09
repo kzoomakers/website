@@ -1,5 +1,5 @@
 import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
-import { db } from "./db";
+import { conn } from "./db";
 import { listAuthors, listCategories, listPosts, saveAuthor, saveCategory, savePost, slugify } from "./blog";
 import { registerMedia } from "./media";
 import { s3 } from "./s3";
@@ -15,12 +15,6 @@ export type Backup = {
   media: { key: string; filename: string; mime: string; size: number; alt?: string; data?: string }[];
 };
 
-async function conn() {
-  const d = db();
-  if (!d) throw new Error("not configured");
-  await d.ready;
-  return d.pool;
-}
 
 /** `files: false` leaves the image bytes out (small, but a restore then needs the files to already be in storage). */
 export async function exportBlog(files = true): Promise<Backup> {

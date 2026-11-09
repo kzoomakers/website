@@ -3,7 +3,8 @@ import nodemailer from "nodemailer";
 import type { Transporter } from "nodemailer";
 import { randomBytes, randomUUID } from "crypto";
 import { clickOk, same, sign } from "./signing";
-import { db } from "./db";
+import { applyOnce, db, withLock, withTx } from "./db";
+import { openText, sealText } from "./vault";
 import { backoffMinutes, MAX_MAIL_TRIES } from "./rules";
 import { cleanDesign, fill, renderEmail, TEMPLATES, type Design } from "./mail-render";
 
@@ -19,9 +20,13 @@ const EMPTY: MailCfg = {
   doubleOptIn: true, confirmSubject: "Confirm your subscription", confirmBody: "Hello!\n\nPlease confirm your subscription by clicking this link:\n\n{{link}}\n\nIf you didn't ask for this, you can ignore this email.",
   welcomeOn: false, welcomeSubject: "Welcome!", welcomeBody: "Hi {{name}},\n\nThanks for subscribing. We'll be in touch with news and events.", perMinute: 0,
 };
-export const getMailCfg = async (): Promise<MailCfg> => ({ ...EMPTY, ...(await q("SELECT data FROM settings WHERE key='mail:config'"))[0]?.data });
-export const mailReady = (c: MailCfg) => !!(c.smtp2goKey || c.smtpUrl) && !!c.from;
 const SECRETS = ["smtp2goKey", "smtpUrl", "deepseekKey"] as const;
+export const getMailCfg = async (): Promise<MailCfg> => {
+  const c: MailCfg = { ...EMPTY, ...(await q("SELECT data FROM settings WHERE key='mail:config'"))[0]?.data };
+  for (const k of SECRETS) c[k] = openText(c[k]); // encrypted at rest (lib/vault.ts)
+  return c;
+};
+export const mailReady = (c: MailCfg) => !!(c.smtp2goKey || c.smtpUrl) && !!c.from;
 /** For the admin screen: secrets are never sent back to the browser, only whether they are set. */
 export async function publicMailCfg() {
   const c = await getMailCfg();
@@ -42,7 +47,7 @@ export async function saveMailCfg(x: Partial<MailCfg>) {
   if (n.siteUrl && !/^https?:\/\/[^/\s]+$/.test(n.siteUrl.replace(/\/$/, ""))) throw new Error("Site address must look like https://example.org");
   if (!n.confirmBody.includes("{{link}}")) throw new Error("The confirmation email must contain {{link}}");
   n.siteUrl = n.siteUrl.replace(/\/$/, "");
-  await q("INSERT INTO settings (key, data) VALUES ('mail:config', $1) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data", [JSON.stringify(n)]);
+  await q("INSERT INTO settings (key, data) VALUES ('mail:config', $1) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data", [JSON.stringify({ ...n, ...Object.fromEntries(SECRETS.map((k) => [k, sealText(n[k])])) })]);
 }
 // Emailed links must point at our own site, never at a Host header the requester chose: use the saved site URL (or SITE_URL); only a local dev server may fall back to the request.
 export const baseUrl = async (req: Request) => {
@@ -95,6 +100,16 @@ async function init(p: import("pg").Pool) {
   await run(`CREATE TABLE IF NOT EXISTS mail_forms (id serial PRIMARY KEY, name text NOT NULL, kind text NOT NULL DEFAULT 'popup', enabled boolean NOT NULL DEFAULT true,
     lists int[] NOT NULL DEFAULT '{}', heading text NOT NULL DEFAULT '', body text NOT NULL DEFAULT '', button text NOT NULL DEFAULT 'Subscribe', success text NOT NULL DEFAULT '',
     delay int NOT NULL DEFAULT 8, color text NOT NULL DEFAULT '#2f6fed', ask_name boolean NOT NULL DEFAULT false)`);
+  // One send row per recipient per campaign (a start interrupted and repeated used to add the audience twice), lookups for cascades/joins, and valid statuses.
+  await applyOnce(p, "2026-11-08-mail-integrity", [
+    "DELETE FROM mail_sends a USING mail_sends b WHERE a.campaign_id = b.campaign_id AND a.subscriber_id = b.subscriber_id AND a.id > b.id",
+    "CREATE UNIQUE INDEX IF NOT EXISTS mail_sends_campaign_subscriber ON mail_sends (campaign_id, subscriber_id)",
+    "CREATE INDEX IF NOT EXISTS mail_sends_subscriber ON mail_sends (subscriber_id)",
+    "CREATE INDEX IF NOT EXISTS mail_memberships_list ON mail_memberships (list_id, subscriber_id)",
+    "CREATE INDEX IF NOT EXISTS mail_clicks_campaign ON mail_clicks (campaign_id)",
+    "ALTER TABLE mail_subscribers ADD CONSTRAINT mail_subscribers_status CHECK (status IN ('subscribed','unconfirmed','unsubscribed','bounced','complained')) NOT VALID",
+    "ALTER TABLE mail_campaigns ADD CONSTRAINT mail_campaigns_status CHECK (status IN ('draft','scheduled','sending','sent')) NOT VALID",
+  ]);
   // First start: one list and one site popup, so signup works immediately.
   if (!(await p.query("SELECT 1 FROM mail_lists")).rowCount) {
     const l = (await p.query("INSERT INTO mail_lists (name, description) VALUES ('General updates', 'News and events from the makerspace') RETURNING id")).rows[0].id;
@@ -565,9 +580,12 @@ export async function sendCampaign(id: number, base: string, at?: string) {
 
 async function begin(id: number, base: string) {
   const c = await getCampaign(id);
-  await q(`INSERT INTO mail_sends (campaign_id, subscriber_id, token) SELECT $1, s.id, gen_random_uuid()::text FROM (${AUDIENCE}) s`, [id, c.list_ids, c.tags ?? []]);
-  const total = (await q("SELECT count(*)::int AS n FROM mail_sends WHERE campaign_id=$1", [id]))[0].n;
-  await q("UPDATE mail_campaigns SET status='sending', total=$2, sent=0, failed=0, base=$3, scheduled_at=NULL WHERE id=$1", [id, total, base]);
+  // One transaction: a crash can't leave recipients added while the campaign still says "scheduled", and a repeat adds nobody twice (unique key).
+  await withTx(async (t) => {
+    await t.query(`INSERT INTO mail_sends (campaign_id, subscriber_id, token) SELECT $1, s.id, gen_random_uuid()::text FROM (${AUDIENCE}) s ON CONFLICT (campaign_id, subscriber_id) DO NOTHING`, [id, c.list_ids, c.tags ?? []]);
+    const total = (await t.query("SELECT count(*)::int AS n FROM mail_sends WHERE campaign_id=$1", [id])).rows[0].n;
+    await t.query("UPDATE mail_campaigns SET status='sending', total=$2, sent=0, failed=0, base=$3, scheduled_at=NULL WHERE id=$1", [id, total, base]);
+  });
   void work(id);
 }
 
@@ -577,6 +595,7 @@ async function work(id: number) {
   if (running.has(id)) return;
   running.add(id);
   try {
+    await withLock(8_000_000 + id, async () => { // another machine already delivering this campaign: skip, or recipients get it twice
     const cfg = await getMailCfg(), c = await getCampaign(id), sec = await secret();
     for (;;) {
       const batch = await q(`SELECT x.id, x.token AS send_token, s.email, s.name, s.token FROM mail_sends x JOIN mail_subscribers s ON s.id = x.subscriber_id
@@ -589,6 +608,7 @@ async function work(id: number) {
       }
     }
     await q("UPDATE mail_campaigns SET status='sent', sent_at=now() WHERE id=$1", [id]);
+    });
   } catch { /* configuration problem: leave it 'sending'; the next tick retries */ }
   finally { running.delete(id); }
 }

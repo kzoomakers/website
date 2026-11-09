@@ -2,7 +2,7 @@ import { createHash, randomBytes, randomInt } from "crypto";
 import { PDFDocument } from "pdf-lib";
 import { checkPw, hashPw } from "./sign-access";
 export { cookieOf, unlockCookie, unlocked } from "./sign-access";
-import { db } from "./db";
+import { conn } from "./db";
 import { logAudit } from "./store";
 import { getMailCfg, mailReady, sendQueued as send } from "./mail";
 import { open, seal, sha256 } from "./vault";
@@ -24,12 +24,6 @@ export type FieldIn = { r: number; type: string; page: number; x: number; y: num
 export type Setup = { message?: string; redirect_url?: string; hide_audit?: boolean; sequential?: boolean; needed?: number; tags?: string[]; present?: string[]; signers: Recipient[]; fields?: FieldIn[] };
 export type NewDoc = Setup & { hold?: boolean; title: string; body?: string; pdf?: string | Buffer; bucket_id?: number | null; due_at?: string | null };
 
-async function conn() {
-  const d = db();
-  if (!d) throw new Error("not configured");
-  await d.ready;
-  return d.pool;
-}
 const clip = (v: unknown, n: number) => (typeof v === "string" ? v.trim().slice(0, n) : "");
 const EMAIL_OK = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/;
 const esc = (s: string) => s.replace(/[<>&"]/g, "");

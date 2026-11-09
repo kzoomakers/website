@@ -1,5 +1,5 @@
 import { processImage } from "./image";
-import { db } from "./db";
+import { conn } from "./db";
 import { logAudit } from "./store";
 import { open, seal } from "./vault";
 import { signWaiver, type Proof } from "./sign";
@@ -12,12 +12,6 @@ export type IdKind = keyof typeof ID_KINDS;
 export type Step = "waiver" | "handbook" | "id" | "done" | "resign" | "profile"; // resign = already a member, but a newer mandatory agreement needs signing
 const NEXT: Record<Step, Step> = { waiver: "handbook", handbook: "id", id: "done", done: "done", resign: "done", profile: "done" };
 
-async function conn() {
-  const d = db();
-  if (!d) throw new Error("not configured");
-  await d.ready;
-  return d.pool;
-}
 
 export async function getStep(userId: number): Promise<Step> {
   return ((await (await conn()).query(`SELECT ${STEP_SQL} AS step FROM site_users u WHERE u.id = $1`, [userId])).rows[0]?.step ?? "done") as Step;

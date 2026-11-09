@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { conn } from "./db";
 import { logAudit } from "./store";
 import { notifyUser } from "./notifications";
 import { addRegistered, getMailCfg, mailReady, sendQueued as send } from "./mail";
@@ -11,12 +11,6 @@ export const STATES = ["pending", "waiting", "rejected", "approved"] as const;
 export type State = (typeof STATES)[number];
 export type ApprovalEvent = { id: number; actor: string; by_applicant: boolean; kind: "message" | "note" | "state"; to_state: State | null; body: string; at: string };
 
-async function conn() {
-  const d = db();
-  if (!d) throw new Error("not configured");
-  await d.ready;
-  return d.pool;
-}
 const clip = (v: unknown, n: number) => (typeof v === "string" ? v.trim().slice(0, n) : "");
 const esc = (s: string) => s.replace(/[<>&"]/g, "");
 const stale = () => new Error("Someone else just changed this person. Reload to see the latest.");

@@ -12,7 +12,7 @@ export async function GET(req: Request) {
     return d ? NextResponse.json(d) : off();
   }
   const list = (k: string) => p.get(k)?.split("\u0001").filter(Boolean) ?? [];
-  return NextResponse.json(await queryAudit({ q: p.get("q") ?? "", actors: list("actor"), sections: list("section"), actions: list("action"), from: p.get("from") ?? undefined, to: p.get("to") ?? undefined, sort: p.get("sort") ?? undefined, offset: Number(p.get("offset")), unit: p.get("unit") ?? undefined }));
+  return NextResponse.json(await queryAudit({ q: p.get("q") ?? "", actors: list("actor"), sections: list("section"), actions: list("action"), from: p.get("from") ?? undefined, to: p.get("to") ?? undefined, sort: p.get("sort") ?? undefined, after: Number(p.get("after")) || undefined, unit: p.get("unit") ?? undefined }));
 }
 
 export async function POST(req: Request) {

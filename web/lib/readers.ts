@@ -2,7 +2,7 @@ import { hit } from "./limit";
 import { createHash, createHmac, randomBytes, scrypt, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { cookies } from "next/headers";
-import { db } from "./db";
+import { conn, db } from "./db";
 import { STEP_SQL, joinMembersIfDone } from "./waiver";
 import { notify, setUserTopicsLocked, userTopicName } from "./ntfy";
 import { addRegistered, getMailCfg, mailReady, sendQueued as send } from "./mail";
@@ -27,12 +27,6 @@ const pwProblem = (p: string) => (p.length < PW_MIN ? `Passwords need at least $
 export const disabledMsg = (reason?: string | null) => reason?.trim() || "Account is disabled";
 const esc = (s: string) => s.replace(/[<>&"]/g, "");
 
-async function conn() {
-  const d = db();
-  if (!d) throw new Error("not configured");
-  await d.ready;
-  return d.pool;
-}
 
 function secret() {
   const s = process.env.AUTH_SECRET;

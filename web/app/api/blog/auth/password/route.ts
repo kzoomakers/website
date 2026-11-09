@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   try {
     const s = await passwordLogin(b.email, b.password, hashIp(req));
     const res = NextResponse.json({ ok: true, next: await afterSignIn(s.userId, safeNext(b.next)) });
-    res.cookies.set(COOKIE_NAME, s.cookie, { httpOnly: true, sameSite: "lax", secure: new URL(req.url).protocol === "https:", path: "/", maxAge: s.maxAge });
+    res.cookies.set(COOKIE_NAME, s.cookie, { httpOnly: true, sameSite: "lax", secure: (req.headers.get("x-forwarded-proto") ?? new URL(req.url).protocol.replace(":", "")) === "https", path: "/", maxAge: s.maxAge });
     return res;
   } catch (e: any) {
     return new NextResponse(errMsg(e), { status: 400 });

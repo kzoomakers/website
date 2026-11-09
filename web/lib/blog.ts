@@ -1,5 +1,5 @@
 import { cleanHtml } from "./sanitize";
-import { db } from "./db";
+import { conn, db } from "./db";
 import { logAudit } from "./store";
 
 export type Cat = { id: number; slug: string; name: string; description: string };
@@ -15,12 +15,6 @@ const COLS = `id, slug, title, excerpt, body, image, tags, status, publish_at, a
 const LIVE = "status = 'published' AND (publish_at IS NULL OR publish_at <= now())";
 export const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-async function conn() {
-  const d = db();
-  if (!d) throw new Error("not configured");
-  await d.ready;
-  return d.pool;
-}
 
 export type PostFilter = { limit?: number; light?: boolean; all?: boolean; tag?: string; category?: string; author?: number; q?: string };
 

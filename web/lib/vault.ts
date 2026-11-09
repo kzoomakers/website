@@ -21,3 +21,7 @@ export function open(blob: Buffer): Buffer {
 }
 
 export const sha256 = (b: Buffer | string) => createHash("sha256").update(b).digest("hex");
+
+/** Config secrets kept as text: "enc:" + base64(seal). Values saved before this existed (no prefix) still read back as they are. */
+export const sealText = (t: string) => (t ? "enc:" + seal(Buffer.from(t)).toString("base64") : "");
+export const openText = (t: string) => (t?.startsWith("enc:") ? open(Buffer.from(t.slice(4), "base64")).toString() : t ?? "");
