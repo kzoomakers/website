@@ -59,7 +59,7 @@ export default function Subscribers({ s, reload }: { s: State; reload: () => voi
         <div className="modal-bg" onClick={() => setEdit(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h2>{edit.id ? "Edit subscriber" : "New subscriber"}</h2>
-            <label className="field"><span>Email</span><input type="email" value={edit.email} onChange={(e) => setEdit({ ...edit, email: e.target.value })} /></label>
+            <label className="field"><span>Email</span><input type="email" autoFocus value={edit.email} onChange={(e) => setEdit({ ...edit, email: e.target.value })} /></label>
             <label className="field"><span>Name</span><input value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} /></label>
             <label className="field"><span>Tags (comma-separated)</span><input value={edit.tags} onChange={(e) => setEdit({ ...edit, tags: e.target.value })} /></label>
             <label className="field"><span>Status</span><select value={edit.status} onChange={(e) => setEdit({ ...edit, status: e.target.value })}><option value="subscribed">Subscribed</option><option value="unconfirmed">Unconfirmed</option><option value="unsubscribed">Unsubscribed</option></select></label>

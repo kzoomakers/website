@@ -99,7 +99,7 @@ export default function Approvals({ initial, canEdit, open, compact }: { initial
               <form className="card" style={{ display: "grid", gap: 8 }} onSubmit={async (e) => { e.preventDefault(); if (await run("applicantMove", { from: d.approval, to: "approved", confirmed: true, edit: { first_name: review.first_name, last_name: review.last_name, phone: review.phone } }, "Approved. They've been emailed.")) setReview(null); }}>
                 <strong>Check before approving</strong>
                 <div className="sub" style={{ margin: 0 }}>Fix anything that looks wrong. Email ({d.email}) was verified by their sign-in link. On first sign-in they'll be asked for address, phone and an emergency contact.</div>
-                <label>First name<input required value={review.first_name} onChange={(e) => setReview({ ...review, first_name: e.target.value })} /></label>
+                <label>First name<input required autoFocus value={review.first_name} onChange={(e) => setReview({ ...review, first_name: e.target.value })} /></label>
                 <label>Last name<input value={review.last_name} onChange={(e) => setReview({ ...review, last_name: e.target.value })} /></label>
                 <label>Phone<input type="tel" value={review.phone} onChange={(e) => setReview({ ...review, phone: e.target.value })} /></label>
                 <label style={{ display: "flex", gap: 8 }}><input type="checkbox" checked={review.ok} onChange={(e) => setReview({ ...review, ok: e.target.checked })} /> I've checked their name and contact details are right</label>

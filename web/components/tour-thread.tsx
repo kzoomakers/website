@@ -39,6 +39,7 @@ function Convo({ load, send, staff, other }: { load: () => Promise<Msg[]>; send:
       <form className="tt-f" onSubmit={go}>
         <textarea aria-label={staff ? "Message" : "Your reply"} rows={3} maxLength={4000} value={body} placeholder={staff ? (note ? "Private note for the team. The visitor won't see this." : `Message to ${other}. They'll get it by email with a link to reply.`) : "Write your reply…"}
           onChange={(e) => setBody(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) go(); }} style={note ? { background: "#fff8dc", color: "#1a1a1a" } : undefined} />
+        {body.length > 3000 && <small>{body.length}/4000</small>}
         <div className="tt-bar">
           {staff && <label style={{ margin: 0, fontWeight: 400 }}><input type="checkbox" checked={note} onChange={(e) => setNote(e.target.checked)} /> Internal note only (not emailed)</label>}
           {err && <span role="alert" style={{ color: "#b3261e" }}>{err}</span>}

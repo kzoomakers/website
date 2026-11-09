@@ -25,6 +25,7 @@ function List({ list, set, depth = 0 }: { list: MenuItem[]; set: Setter; depth?:
           {depth < 2 && (m.items
             ? <button onClick={async () => !m.items!.length || (await confirmDialog("Turn into a plain link and drop its sub-items?", { ok: "Make link", danger: true })) ? upd(i, { items: undefined, href: "" }) : 0}>make link</button>
             : <button onClick={() => upd(i, { items: [], href: undefined })}>make dropdown</button>)}{" "}
+          <button aria-label="Duplicate" title="Duplicate this item" onClick={() => set([...list.slice(0, i + 1), structuredClone(m), ...list.slice(i + 1)])}>⧉</button>{" "}
           <button className="danger" aria-label="Remove" onClick={async () => (await confirmDialog(`Remove ${m.label || "item"}?`, { ok: "Remove", danger: true })) && set(list.filter((_, j) => j !== i))}>✕</button></div>
           {m.items && <List list={m.items} depth={depth + 1} set={(items) => upd(i, { items })} />}
         </li>

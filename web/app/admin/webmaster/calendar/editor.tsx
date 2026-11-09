@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useDirtyGuard } from "@/components/dirty-guard";
 import { flushBurst } from "@/components/flush-burst";
 import Revisions from "../revisions";
 
@@ -9,12 +10,14 @@ const send = (method: string, body?: object) => fetch(api, { method, headers: { 
 export default function CalendarAdmin({ initial }: { initial: string }) {
   const [url, setUrl] = useState(initial);
   const [msg, setMsg] = useState("");
-  const [saved, setSaved] = useState(0);
+  const [saved, setSaved] = useState(0), [clean, setClean] = useState(0);
   const run = async (m: string, body: object | undefined, ok: string) => {
     const r = await send(m, body);
     setMsg(r.ok ? ok : await r.text());
+    if (r.ok && m === "PUT") setClean(clean + 1);
     setSaved(saved + 1);
   };
+  useDirtyGuard(url, clean);
   return (
     <>
       <h1>Calendar</h1>
@@ -28,7 +31,7 @@ export default function CalendarAdmin({ initial }: { initial: string }) {
         <button onClick={() => { flushBurst(); run("POST", undefined, "Cache flushed. The next visit fetches the feed again."); }}>Flush cache</button>
       </div>
       <Revisions<{ url: string }> api={api} reload={saved} lines={(d) => [d.url]}
-        onRevert={async (r) => { setUrl((await r.json()).url); setMsg("Reverted."); }} />
+        onRevert={async (r) => { setUrl((await r.json()).url); setClean(clean + 1); setMsg("Reverted."); }} />
     </>
   );
 }
