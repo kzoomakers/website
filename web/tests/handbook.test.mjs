@@ -29,3 +29,13 @@ test("without the exact-changes option the email has no wording diff", () => {
   assert.ok(!updateDesign(ch, "", false).blocks.some((b) => /<s>|<strong>/.test(b.html ?? "")));
   assert.equal(summaryHtml("a\nb"), '<p style="margin:0 0 14px">a<br>b</p>');
 });
+
+// Printing: the handbook page and the members page must both carry the plain printed copy, and the print CSS must hide everything else.
+import { readFileSync } from "node:fs";
+test("both handbook pages include the printed copy and the CSS hides the rest when printing", () => {
+  const guided = readFileSync("components/guided.tsx", "utf8"), members = readFileSync("app/members/handbook/page.tsx", "utf8"), css = readFileSync("components/handbook-print.css", "utf8");
+  assert.match(guided, /<HandbookPrint d=\{d\} \/>/);
+  assert.match(members, /<HandbookPrint d=\{d\} \/>/);
+  assert.match(css, /body:has\(\.hbp\) \*:not\(:has\(\.hbp\)\):not\(\.hbp\):not\(\.hbp \*\) \{ display: none !important; \}/);
+  assert.match(css, /\.hbp \{ display: none; \}/);
+});

@@ -1,0 +1,17 @@
+/* The handbook frame: a leather-bound cover around the page on desktop, edge-to-edge with a close button on phones.
+   The leather photo is portrait; on a landscape frame it is turned a quarter turn so the grain fills it at any window size. */
+.hbp-book { --pad: clamp(16px, 1.8vw, 30px); position: relative; container-type: size; height: calc(100vh - 220px); min-height: 460px; min-width: 0; border-radius: 14px; overflow: hidden; background: #1d4f68; box-shadow: 0 8px 22px rgba(0, 0, 0, .3), inset 0 0 0 1px rgba(0, 0, 0, .4); }
+.hbp-lea { position: absolute; left: 50%; top: 50%; width: 100cqw; height: 100cqh; background: url(/images/leather-texture.webp) center / cover; transform: translate(-50%, -50%) scale(1.04); }
+@container (orientation: landscape) { .hbp-lea { width: 100cqh; height: 100cqw; transform: translate(-50%, -50%) rotate(90deg) scale(1.04); } }
+.hbp-book::after { content: ""; position: absolute; inset: calc(var(--pad) / 2.3); border: 1.5px dashed rgba(240, 222, 178, .6); border-radius: 8px; pointer-events: none; }
+.hbp-in { position: absolute; inset: var(--pad); }
+.hbp-in iframe { display: block; width: 100%; height: 100%; border: 0; border-radius: 4px; background: #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .5), 0 3px 10px rgba(0, 0, 0, .45); }
+.hbp-x { display: none; }
+
+@media (max-width: 720px), (max-height: 500px) and (pointer: coarse) {
+  .hbp-book { position: fixed; inset: 0; z-index: 60; height: auto; min-height: 0; border-radius: 0; box-shadow: none; background: #fff; }
+  .hbp-lea, .hbp-book::after { display: none; }
+  .hbp-in { inset: 0; }
+  .hbp-in iframe { border-radius: 0; box-shadow: none; }
+  .hbp-x { display: flex; align-items: center; justify-content: center; position: absolute; z-index: 2; top: calc(env(safe-area-inset-top, 0px) + 10px); right: 10px; width: 44px; height: 44px; border-radius: 50%; background: rgba(29, 79, 104, .94); color: #f6ead0; border: 1px solid rgba(240, 222, 178, .6); box-shadow: 0 2px 8px rgba(0, 0, 0, .4); font-size: 22px; line-height: 1; text-decoration: none; }
+}

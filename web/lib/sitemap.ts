@@ -5,7 +5,8 @@ import { slugOfHref } from "./menu";
 export type Node = { label: string; slug?: string; children: Node[] };
 export type Entry = { slug: string; depth: number; lastmod: Date; created: Date };
 
-export const SITE = (process.env.SITE_URL ?? "https://kzoomakers.org").replace(/\/$/, "");
+import { SITE } from "./site";
+export { SITE };
 export const urlOf = (slug: string) => `${SITE}${slug === "index" ? "/" : "/" + slug}`;
 
 const EXTERNAL = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i; // http:, mailto:, tel:, //host
