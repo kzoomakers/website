@@ -179,6 +179,9 @@ const Body = ({ text }: { text: string }) => <>{paras(text).map((b, k) => b.spli
 export function HandbookPrint({ d }: { d: any }) {
   return (
     <article className="hbp" lang="en">
+      {/* position: fixed repeats on every printed page, standing in for the browser's own date/title header */}
+      {d.rev && <p className="rev-l">This revision created on {new Date(d.rev.at).toLocaleDateString("en-US", { dateStyle: "long", timeZone: "America/Detroit" })} by {d.rev.by}</p>}
+      <p className="rev-r">Handbook | Kzoo Makers</p>
       <div className="front">
         <div className="mast"><p className="kick">Club Policy &amp; Safety</p><h1>{d.title}</h1></div>
         <p className="lead">{d.intro}</p>

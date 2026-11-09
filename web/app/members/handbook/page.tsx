@@ -4,7 +4,7 @@ import Printer from "./printer";
 import "./book.css";
 import { HandbookPrint } from "@/components/guided";
 import { fillAddress } from "@/lib/hours";
-import { getGuided, getHours } from "@/lib/store";
+import { getGuided, getHours, withRev } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Handbook | Kzoo Makers", robots: { index: false } };
@@ -15,7 +15,7 @@ export default function HandbookPage() {
   return (
     <MembersShell title="Member handbook" path="/members/handbook">
       {async () => {
-        const d = fillAddress(await getGuided("handbook"), (await getHours()).contact.address);
+        const d = fillAddress(await withRev("handbook", await getGuided("handbook")), (await getHours()).contact.address);
         return (
           <div className="hbp-row">
             <div className="hbp-book">

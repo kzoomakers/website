@@ -1,0 +1,148 @@
+# One pipeline: three gates run in parallel (tests, deps audit, image scan); deploy runs only if all three pass.
+# Required status checks (branch ruleset): test, audit, image.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 12 * * 1" # weekly: new CVEs land without any push
+
+# New push to a PR cancels its stale run. Never cancel on main: a half-finished deploy is worse than a queued one.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  FLY_APP: kzoomakers-org-website
+  IMAGE: registry.fly.io/kzoomakers-org-website:${{ github.sha }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write # CTRF PR comment
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci --ignore-scripts
+      - name: Validate JSON files
+        working-directory: .
+        run: git ls-files '*.json' | xargs -n1 node -e 'JSON.parse(require("fs").readFileSync(process.argv[1]))'
+      - name: Unit tests + coverage
+        run: |
+          mkdir -p ctrf
+          node --import ./tests/resolve.mjs --test --experimental-test-coverage \
+            --test-reporter=spec --test-reporter-destination=stdout \
+            --test-reporter=spec --test-reporter-destination=spec.txt \
+            --test-reporter=junit --test-reporter-destination=junit.xml
+      - name: Convert to CTRF
+        if: always()
+        run: '[ -f junit.xml ] && npx --yes junit-to-ctrf junit.xml -o ctrf/ctrf-report.json || true'
+      - name: Coverage table in job summary
+        if: always()
+        run: |
+          { echo '### Coverage'; echo '```'; sed -n '/start of coverage report/,/end of coverage report/p' spec.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - name: CTRF report (summary + PR comment)
+        if: always() && hashFiles('web/ctrf/ctrf-report.json') != ''
+        uses: ctrf-io/github-test-reporter@v1
+        with:
+          report-path: web/ctrf/ctrf-report.json
+          summary-report: true
+          pull-request-report: true
+          previous-results-report: true
+          flaky-report: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true # fork PRs get a read-only token; the test step itself is the gate
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            web/ctrf/
+            web/junit.xml
+            web/spec.txt
+          retention-days: 30
+
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci --ignore-scripts
+      - name: npm audit
+        run: |
+          set +e
+          npm audit --audit-level=low | tee audit.txt
+          code=${PIPESTATUS[0]}
+          { echo '### npm audit'; echo '```'; cat audit.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          exit $code
+      - run: npm audit signatures
+
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build (layer cache shared across runs)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: ${{ env.IMAGE }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Trivy scan (HIGH/CRITICAL with a fix available fails the job)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE }}
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
+          trivyignores: .trivyignore.yaml
+      # Push the exact image that was just scanned; deploy ships this, so what we scan is what runs.
+      - if: github.event_name == 'push'
+        uses: superfly/flyctl-actions/setup-flyctl@master
+      - if: github.event_name == 'push'
+        run: flyctl auth docker && docker push "$IMAGE"
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [test, audit, image]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    concurrency: { group: deploy, cancel-in-progress: false }
+    steps:
+      - uses: actions/checkout@v4 # fly.toml
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      # Rolling deploy gated by the fly.toml health check: a bad release never replaces the running machine.
+      - run: flyctl deploy --image "$IMAGE" --app "$FLY_APP"
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

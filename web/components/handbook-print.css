@@ -25,6 +25,10 @@
   .hbp * { color: #000 !important; background: none !important; box-shadow: none !important; text-shadow: none !important; }
   .hbp p, .hbp li { orphans: 3; widows: 3; }
 
+  .hbp .rev-l, .hbp .rev-r { position: fixed; top: -0.5in; margin: 0; font: 10pt Georgia, serif; }
+  .hbp .rev-l { left: 0; }
+  .hbp .rev-r { right: 0; font-weight: 700; }
+
   .hbp .front { break-after: page; }
   .hbp .mast { text-align: center; border-top: 5pt solid #000; border-bottom: 1pt solid #000; padding: 16pt 0 14pt; margin: 0 0 22pt; position: relative; }
   .hbp .mast::after { content: ""; display: block; border-top: 1pt solid #000; position: absolute; left: 0; right: 0; bottom: 3pt; }
