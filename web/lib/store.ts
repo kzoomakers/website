@@ -307,6 +307,13 @@ export async function getGuided(slug: string): Promise<any> {
   return r.rows[0] ? withDefaults(guidedDef(slug)!.fields, r.rows[0].data) : null;
 }
 
+/** For the printed handbook only: adds `rev` (when and by whom it was last saved) to what getGuided returned, never to what gets stored. */
+export async function withRev(slug: string, d: any) {
+  if (slug !== "handbook" || !d || !db()) return d;
+  const r = (await (await conn()).query("SELECT at, actor FROM audit WHERE action = 'guided.handbook.save' ORDER BY id DESC LIMIT 1")).rows[0];
+  return r ? { ...d, rev: { at: new Date(r.at).toISOString(), by: r.actor } } : d;
+}
+
 export async function saveGuided(slug: string, data: any, who: string, action = `guided.${slug}.save`, target = "") {
   const def = guidedDef(slug)!;
   const old = (await getGuided(slug)) ?? {};

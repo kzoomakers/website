@@ -7,6 +7,8 @@ import { DonationNeeds } from "./donation-needs";
 import HandbookNotify from "./handbook-notify";
 import { ReviewForm } from "./review-form";
 import { ContactForm } from "./contact-form";
+import { SITE } from "@/lib/site";
+import "./handbook-print.css";
 
 const url = (h = "") => (/^(https?:|#|\/|mailto:|tel:)/.test(h) ? h : "/" + h);
 const paras = (t = "") => t.split(/\n\s*\n/).filter(Boolean);
@@ -169,6 +171,39 @@ function inline(t: string) {
   });
 }
 
+const Body = ({ text }: { text: string }) => <>{paras(text).map((b, k) => b.split("\n").every((l) => l.startsWith("- "))
+  ? <ul key={k}>{b.split("\n").map((l, m) => <li key={m}>{inline(l.slice(2))}</li>)}</ul>
+  : <p key={k}>{inline(b)}</p>)}</>;
+
+/** The handbook as a plain printed document: hidden on screen, the only thing shown when printing (see handbook-print.css). One column, no tables. */
+export function HandbookPrint({ d }: { d: any }) {
+  return (
+    <article className="hbp" lang="en">
+      {/* position: fixed repeats on every printed page, standing in for the browser's own date/title header */}
+      {d.rev && <p className="rev-l">This revision created on {new Date(d.rev.at).toLocaleDateString("en-US", { dateStyle: "long", timeZone: "America/Detroit" })} by {d.rev.by}</p>}
+      <p className="rev-r">Handbook | Kzoo Makers</p>
+      <div className="front">
+        <div className="mast"><p className="kick">Club Policy &amp; Safety</p><h1>{d.title}</h1></div>
+        <p className="lead">{d.intro}</p>
+        <h2 className="toc-h">Contents</h2>
+        <ol className="toc-l">{d.sections.map((s: any, i: number) => <li key={i}>{s.title}</li>)}</ol>
+      </div>
+      {d.sections.map((s: any, i: number) => (
+        <section key={i}>
+          <h2><span>{i + 1}.</span> {s.title}</h2>
+          {s.items.map((x: any, j: number) => (
+            <div className="it" key={j}>
+              <h3>{i + 1}.{j + 1} {x.title}</h3>
+              <Body text={x.text} />
+            </div>
+          ))}
+        </section>
+      ))}
+      <footer>{d.footer}<br />This is a printed copy. The current handbook is always the one online at {SITE}/handbook.</footer>
+    </article>
+  );
+}
+
 // Numbering and the table of contents come from the order of sections, so reordering renumbers everything.
 function Handbook({ d }: { d: any }) {
   return (
@@ -191,9 +226,7 @@ function Handbook({ d }: { d: any }) {
               {s.items.map((x: any, j: number) => (
                 <div className="subsection" id={`s${i + 1}-${j + 1}`} key={j}>
                   <h3>{i + 1}.{j + 1} {x.title}</h3>
-                  {paras(x.text).map((b, k) => b.split("\n").every((l) => l.startsWith("- "))
-                    ? <ul key={k}>{b.split("\n").map((l, m) => <li key={m}>{inline(l.slice(2))}</li>)}</ul>
-                    : <p key={k}>{inline(b)}</p>)}
+                  <Body text={x.text} />
                   {/^changes to (the )?handbook/i.test(x.title) && <HandbookNotify />}
                 </div>
               ))}
@@ -203,6 +236,7 @@ function Handbook({ d }: { d: any }) {
       </div>
       <a href="#top" className="back-to-top" title="Back to top" aria-label="Back to top">↑</a>
       <footer>{d.footer}</footer>
+      <HandbookPrint d={d} />
     </>
   );
 }
