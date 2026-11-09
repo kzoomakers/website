@@ -2,5 +2,6 @@
 secrets:
   - id: private-key
     paths:
-      - "/app/.next/server/chunks/*.js"
+      - "/app/.next/server/chunks/**/*.js"
+      - "/app/.next/server/chunks/**/*.js.map"
     statement: "happy-dom's built-in test HTTPS key, bundled into the server chunks"
