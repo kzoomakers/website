@@ -20,3 +20,12 @@ test("signed PDF builds with long text, odd characters and a signature", async (
     [{ name: "Pat", email: "p@x.org", signature: "Pat Q", drawn: "", at: new Date(), ip: "1.2.3.4", ua: "test" }], "Resolutions", "abc");
   assert.equal(pdf.subarray(0, 4).toString(), "%PDF");
 });
+
+test("config secrets: sealed text round-trips, legacy plaintext still reads", async () => {
+  const { sealText, openText } = await import("../lib/vault.ts");
+  const s = sealText("api-key-123");
+  assert.ok(s.startsWith("enc:") && !s.includes("api-key-123"));
+  assert.equal(openText(s), "api-key-123");
+  assert.equal(openText("old-plain"), "old-plain");
+  assert.equal(sealText(""), "");
+});

@@ -1,6 +1,6 @@
 import { AUDIT_SECTIONS } from "./audit-areas";
 import type { Data } from "@puckeditor/core";
-import { db, LOCKED, CAL_DEFAULT } from "./db";
+import { conn, db, LOCKED, CAL_DEFAULT } from "./db";
 import { guidedDef, withDefaults } from "./guided";
 import boardSeed from "@/data/board.json";
 import robotsSeed from "@/data/robots.json";
@@ -14,12 +14,6 @@ const SLUG_OK = /^[a-z0-9][a-z0-9_\-\/]*$/i;
 export { LOCKED };
 export const slugOf = (segs?: string[]) => (segs?.length ? segs.join("/") : "index");
 
-async function conn() {
-  const d = db();
-  if (!d) throw new Error("not configured");
-  await d.ready;
-  return d.pool;
-}
 
 /** null = no such page, or the site is not set up yet. */
 export async function getPage(slug: string): Promise<Data | null> {
@@ -178,7 +172,7 @@ export async function revertAudit(id: number, who: string) {
   return d.family === "menu" ? revertMenu(d.prevId!, who) : revertSetting(d.family, d.prevId!, who);
 }
 
-export type AuditQuery = { q?: string; actors?: string[]; sections?: string[]; actions?: string[]; from?: string; to?: string; sort?: string; offset?: number; unit?: string };
+export type AuditQuery = { q?: string; actors?: string[]; sections?: string[]; actions?: string[]; from?: string; to?: string; sort?: string; after?: number; unit?: string };
 
 /** Filtered, sorted audit entries plus a time histogram and the people/actions available to filter by (those ignore the people/section/action filters, so you can still pick more). */
 export async function queryAudit(f: AuditQuery) {
@@ -198,11 +192,16 @@ export async function queryAudit(f: AuditQuery) {
   if (f.sections?.length) extra.push(`action LIKE ANY(${add(ps, pats)})`);
   const order = { old: "id ASC", actor: "lower(actor) ASC, id DESC", action: "action ASC, id DESC" }[f.sort ?? ""] ?? "id DESC";
   const unit = ["hour", "day", "week", "month"].includes(f.unit ?? "") ? f.unit : "day";
-  const W = where(extra, ps);
+  const W = where(extra, ps), base = ps.length;
+  // Keyset paging: "after" is the id of the last row already shown; the next page starts after it in the chosen order.
+  const prev = f.after ? (await c.query("SELECT lower(actor) a, action FROM audit WHERE id = $1", [f.after])).rows[0] : undefined;
+  const cur = prev ? add(ps, f.after) : "";
+  const seek = !prev ? "" : f.sort === "old" ? `id > ${cur}` : f.sort === "actor" ? `(lower(actor), -id) > (${add(ps, prev.a)}::text, -${cur}::int)` : f.sort === "action" ? `(action, -id) > (${add(ps, prev.action)}::text, -${cur}::int)` : `id < ${cur}`;
+  const WP = seek ? (W ? `${W} AND ${seek}` : `WHERE ${seek}`) : W;
   const [rows, total, buckets, actors, actions] = await Promise.all([
-    c.query(`SELECT id, at, actor, action, target FROM audit ${W} ORDER BY ${order} LIMIT 100 OFFSET ${add(ps, Math.max(0, Number(f.offset) || 0))}`, ps),
-    c.query(`SELECT count(*)::int n FROM audit ${W}`, ps.slice(0, ps.length - 1)),
-    c.query(`SELECT date_trunc('${unit}', at) t, action, count(*)::int n FROM audit ${W} GROUP BY 1, 2 ORDER BY 1`, ps.slice(0, ps.length - 1)),
+    c.query(`SELECT id, at, actor, action, target FROM audit ${WP} ORDER BY ${order} LIMIT 100`, ps),
+    c.query(`SELECT count(*)::int n FROM audit ${W}`, ps.slice(0, base)),
+    c.query(`SELECT date_trunc('${unit}', at) t, action, count(*)::int n FROM audit ${W} GROUP BY 1, 2 ORDER BY 1`, ps.slice(0, base)),
     c.query(`SELECT actor v, count(*)::int n FROM audit ${where([], tp)} GROUP BY 1 ORDER BY 2 DESC LIMIT 200`, tp),
     c.query(`SELECT action v, count(*)::int n FROM audit ${where([], tp)} GROUP BY 1 ORDER BY 2 DESC LIMIT 300`, tp),
   ]);
@@ -315,4 +314,5 @@ export async function saveGuided(slug: string, data: any, who: string, action = 
     `INSERT INTO settings (key, data) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data`, ["guided:" + slug, JSON.stringify(data)]);
   const changed = def.fields.filter((f) => canon(old[f.key]) !== canon(data[f.key])).map((f) => f.label);
   await logAudit(who, action, target || (changed.length ? "edited " + changed.join(", ") : "no changes"), data);
+  if (slug === "handbook") await import("./handbook").then((h) => h.recordChange(old, data, who)).catch((e) => console.error("Handbook change record:", e)); // never blocks the save
 }

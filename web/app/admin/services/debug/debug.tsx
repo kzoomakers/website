@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import { useCallback, useEffect, useState } from "react";
 import { confirmDialog } from "@/components/dialog";
 
@@ -19,7 +20,7 @@ export default function Debug({ canEdit }: { canEdit: boolean }) {
       <div className="card">
         {Object.entries(s.streams).map(([k, d]) => (
           <label key={k} style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "6px 0" }}>
-            <input type="checkbox" disabled={!canEdit} checked={!!s.on[k]} onChange={(e) => post({ op: "set", stream: k, on: e.target.checked })} />
+            <input type="checkbox" disabled={!canEdit} checked={!!s.on[k]} onChange={(e) => { const on = e.target.checked; setS((x: any) => x && { ...x, on: { ...x.on, [k]: on } }); post({ op: "set", stream: k, on }); }} />
             <span><span className="tag">{k}</span> {d}{s.on[k] && <strong style={{ color: "var(--bad)" }}> · recording</strong>}</span>
           </label>
         ))}
@@ -29,7 +30,7 @@ export default function Debug({ canEdit }: { canEdit: boolean }) {
         <label><input type="checkbox" checked={live} onChange={(e) => setLive(e.target.checked)} /> Live refresh</label>
         <button onClick={load}>Refresh</button>
         {canEdit && <button onClick={async () => { if (await confirmDialog("Clear the trapped lines?", { ok: "Clear", danger: true })) post({ op: "clear", stream }); }}>Clear</button>}
-        {err && <span role="alert" className="sub" style={{ margin: 0, color: "var(--bad)" }}>{err}</span>}
+        {err && <Notice kind="error">{err}</Notice>}
       </nav>
       <div className="card" style={{ fontFamily: "ui-monospace, monospace", fontSize: 12.5 }}>
         {s.rows.map((r) => (

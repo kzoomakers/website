@@ -1,6 +1,6 @@
 import { notifyUser } from "./notifications";
 import { createHash } from "crypto";
-import { db } from "./db";
+import { conn, db } from "./db";
 import { getMailCfg, mailReady, sendQueued as send } from "./mail";
 import { judge, type Mode } from "./spam";
 import type { Item } from "./comment-tree";
@@ -11,12 +11,6 @@ export type Settings = { mode: Mode; closeAfterDays: number; notify: boolean; bl
 const DEFAULTS: Settings = { mode: "first_time", closeAfterDays: 0, notify: true, blocked: "" };
 export const MAX_LEN = 2000;
 
-async function conn() {
-  const d = db();
-  if (!d) throw new Error("not configured");
-  await d.ready;
-  return d.pool;
-}
 
 export async function getSettings(): Promise<Settings> {
   return { ...DEFAULTS, ...(await (await conn()).query("SELECT data FROM settings WHERE key = 'blog:comments'")).rows[0]?.data };

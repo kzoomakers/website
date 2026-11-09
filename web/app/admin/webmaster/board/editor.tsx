@@ -1,4 +1,5 @@
 "use client";
+import { useDirtyGuard } from "@/components/dirty-guard";
 import { useState } from "react";
 import { confirmDialog } from "@/components/dialog";
 import { ImageInput } from "@/components/image-field";
@@ -11,6 +12,7 @@ export default function BoardAdmin({ initial }: { initial: Board }) {
   const [b, setB] = useState(initial);
   const [msg, setMsg] = useState("");
   const [saved, setSaved] = useState(0);
+  useDirtyGuard(b, saved);
   const set = (members: Member[]) => setB({ ...b, members });
   const upd = (i: number, p: Partial<Member>) => set(b.members.map((m, j) => (j === i ? { ...m, ...p } : m)));
   const move = (i: number, d: number) => { const l = [...b.members]; const [x] = l.splice(i, 1); l.splice(i + d, 0, x); set(l); };
@@ -35,6 +37,7 @@ export default function BoardAdmin({ initial }: { initial: Board }) {
           <input aria-label="Role" placeholder="Role" value={m.role} onChange={(e) => upd(i, { role: e.target.value })} />{" "}
           <button disabled={!i} onClick={() => move(i, -1)}>↑</button>
           <button disabled={i === b.members.length - 1} onClick={() => move(i, 1)}>↓</button>{" "}
+          <button aria-label="Duplicate" title="Duplicate this member" onClick={() => set([...b.members.slice(0, i + 1), { ...m }, ...b.members.slice(i + 1)])}>⧉</button>{" "}
           <button className="danger" aria-label="Remove" onClick={async () => (await confirmDialog(`Remove ${m.name || "member"}?`, { ok: "Remove", danger: true })) && set(b.members.filter((_, j) => j !== i))}>✕</button>
           <textarea style={{ width: "100%", marginTop: 6 }} rows={4} aria-label="Bio" placeholder="Bio (blank line = new paragraph)" value={m.bio} onChange={(e) => upd(i, { bio: e.target.value })} />
           <ImageInput value={m.photo} onChange={(photo) => upd(i, { photo })} />

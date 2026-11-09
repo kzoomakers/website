@@ -14,6 +14,7 @@ export const PROVIDERS = {
 export type ProviderId = keyof typeof PROVIDERS;
 export const SCENARIOS = [
   { id: "agreement-summary", label: "Membership agreement: plain-language summary of what changed", hint: "Short text in, short text out: a cheap model is plenty." },
+  { id: "handbook-summary", label: "Member handbook: plain-language summary of what changed (update emails)", hint: "Short text in, short text out: a cheap model is plenty." },
   { id: "blog-enhance", label: "Blog posts: Enhance with AI (rewrite in a chosen personality)", hint: "Rewrites a whole post, so choose the best of the cheap models. Style prompts are edited in section 3." },
   { id: "page-seo", label: "Page editor: Suggest description, AI summary and FAQs", hint: "Reads one page and writes short metadata: a cheap model is plenty. The prompt is edited in section 4." },
 ] as const;
@@ -31,7 +32,7 @@ const load = async (): Promise<Cfg> => ({ keys: {}, models: {}, use: {}, ...(awa
 const store = async (c: Cfg) => void (await (await pool()).query("INSERT INTO settings (key, data) VALUES ('ai:config', $1) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data", [JSON.stringify(c)]));
 const isProvider = (p: unknown): p is ProviderId => typeof p === "string" && p in PROVIDERS;
 
-/** The token for a provider. DeepSeek falls back to the token already saved in the Postmaster settings. */
+/** The token for a provider. DeepSeek falls back to the token already saved in the Email settings. */
 async function token(c: Cfg, p: ProviderId) {
   if (c.keys[p]) return open(Buffer.from(c.keys[p]!, "base64")).toString();
   return p === "deepseek" ? (await getMailCfg()).deepseekKey : "";

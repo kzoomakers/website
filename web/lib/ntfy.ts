@@ -1,3 +1,4 @@
+import { openText, sealText } from "./vault";
 import { tokenAllows } from "./ntfy-token";
 import { createHash, randomBytes } from "crypto";
 import { db } from "./db";
@@ -109,6 +110,7 @@ let cfgCache: { at: number; v: NtfyCfg } | undefined;
 export async function getCfg(): Promise<NtfyCfg> {
   if (cfgCache && Date.now() - cfgCache.at < 30_000) return cfgCache.v;
   const v = { baseUrl: "", upstream: "", upstreamToken: "", ...(await q("SELECT data FROM settings WHERE key = 'ntfy:config'"))[0]?.data };
+  v.upstreamToken = openText(v.upstreamToken);
   cfgCache = { at: Date.now(), v };
   return v;
 }
@@ -117,7 +119,7 @@ export async function saveCfg(x: any) {
   const cur = await getCfg(), v: NtfyCfg = { baseUrl: url(x.baseUrl, "The server address"), upstream: url(x.upstream, "The upstream server"), upstreamToken: x.upstreamToken ? String(x.upstreamToken).trim() : cur.upstreamToken };
   if (x.clearToken) v.upstreamToken = "";
   if (v.upstream && !v.baseUrl) throw new Error("Enter this server's public address (for example https://kzoomakers.org/ntfy) to turn on iOS push.");
-  await q("INSERT INTO settings (key, data) VALUES ('ntfy:config', $1) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data", [JSON.stringify(v)]);
+  await q("INSERT INTO settings (key, data) VALUES ('ntfy:config', $1) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data", [JSON.stringify({ ...v, upstreamToken: sealText(v.upstreamToken) })]);
   cfgCache = undefined;
 }
 function forward(topic: string, id: string) {
@@ -170,7 +172,7 @@ export async function saveTopic(x: any, who: string) {
   if (!TOPIC_OK.test(name) || RESERVED.includes(name)) throw new Error("Topic names are 1-64 letters, numbers, - or _ (and can't be a reserved word like 'docs').");
   if (!Number.isInteger(days) || days < 1 || days > MAX_RETENTION) throw new Error(`Keep messages for 1 to ${MAX_RETENTION} days.`);
   const f = [String(x.description ?? "").slice(0, 300), !!x.public_read, !!x.public_write];
-  if (x.existing) { if (!(await q("UPDATE ntfy_topics SET description=$2, public_read=public_read AND kind = 'shared' AND $3, public_write=public_write AND kind = 'shared' AND $4, retention_days=$5 WHERE name=$1 RETURNING 1", [name, ...f, days])).length) throw new Error("No such topic."); return; }
+  if (x.existing) { if (!(await q("UPDATE ntfy_topics SET description=$2, public_read=(kind = 'shared' AND $3), public_write=(kind = 'shared' AND $4), retention_days=$5 WHERE name=$1 RETURNING 1", [name, ...f, days])).length) throw new Error("No such topic."); return; }
   if (!(await q("INSERT INTO ntfy_topics (name, description, public_read, public_write, retention_days, created_by) VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT DO NOTHING RETURNING 1", [name, ...f, days, who])).length) throw new Error("That topic already exists.");
 }
 export async function deleteTopic(name: string) {

@@ -43,6 +43,7 @@ export default function Status() {
           <label>{v.approval === "waiting" ? "Your reply" : "Anything you'd like to add? (optional)"}
             <textarea required rows={4} maxLength={2000} value={text} onChange={(e) => setText(e.target.value)} style={{ width: "100%", boxSizing: "border-box", font: "inherit", padding: 8 }} />
           </label>
+          {text.length > 1500 && <small>{text.length}/2000</small>}
           {err && <p role="alert" style={{ color: "#b00020", margin: 0 }}>{err}</p>}
           <div><button className="btn btn-main" type="submit" disabled={busy || !text.trim()}>Send</button></div>
         </form>

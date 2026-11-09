@@ -1,16 +1,10 @@
-import { db } from "./db";
+import { conn } from "./db";
 import { logAudit } from "./store";
-import { getMailCfg, mailReady, sendQueued as send } from "./mail";
+import { addMember, getMailCfg, mailReady, sendQueued as send } from "./mail";
 import { complete } from "./ai";
 import { changesPrompt, diffVersions, summarize, type Change, type Section, type Version } from "./waiver-diff";
 
 // Versions of the membership agreement. Published versions are never edited or deleted (legal/technical review); a change is a new version.
-async function conn() {
-  const d = db();
-  if (!d) throw new Error("not configured");
-  await d.ready;
-  return d.pool;
-}
 const clip = (v: unknown, n: number) => (typeof v === "string" ? v.trim().slice(0, n) : "");
 const esc = (s: string) => s.replace(/[<>&"]/g, "");
 
@@ -20,6 +14,19 @@ export const STEP_SQL = `CASE WHEN u.onboarding = 'done' AND u.approval = 'appro
        WHEN u.phone = '' OR u.address1 = '' OR NOT EXISTS (SELECT 1 FROM emergency_contacts e WHERE e.user_id = u.id) THEN 'profile'
        ELSE 'done' END
   ELSE u.onboarding END`;
+
+/** Call after anything that could finish onboarding (waiver, ID, profile, emergency contact, sign-in): the first time they are approved, have signed the waiver, uploaded an ID and saved an emergency contact, the person joins the Members list. Once only, so an admin removing them sticks. */
+export async function joinMembersIfDone(userId: number) {
+  const c = await conn();
+  try {
+    const u = (await c.query(`UPDATE site_users u SET member_listed_at = now() WHERE u.id = $1 AND u.member_listed_at IS NULL AND u.approval = 'approved'
+      AND EXISTS (SELECT 1 FROM sign_docs d WHERE d.user_id = u.id AND d.kind = 'waiver' AND d.status = 'complete')
+      AND EXISTS (SELECT 1 FROM member_ids i WHERE i.user_id = u.id) AND EXISTS (SELECT 1 FROM emergency_contacts e WHERE e.user_id = u.id) RETURNING u.email, u.name`, [userId])).rows[0];
+    if (!u) return;
+    try { await addMember(u.email, u.name); }
+    catch (e) { await c.query("UPDATE site_users SET member_listed_at = NULL WHERE id = $1", [userId]); throw e; } // try again on their next save or sign-in
+  } catch (e) { console.error("Members list:", e); } // a mailing-list hiccup must not fail the save
+}
 
 const COLS = "id, revision, title, sections, closing, summary, mandatory, created_by, created_at";
 export const listVersions = async (): Promise<(Version & { signed: number })[]> =>

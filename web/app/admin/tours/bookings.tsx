@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import { useState } from "react";
 import { confirmDialog } from "@/components/dialog";
 import type { Booking } from "@/lib/tours";
@@ -13,14 +14,14 @@ export default function Bookings({ initial }: { initial: Booking[] }) {
   const [rows, setRows] = useState(initial), [past, setPast] = useState(false), [msg, setMsg] = useState("");
   const load = async (p = past) => { setPast(p); setRows(await tours("bookings", { past: p })); };
   const run = async (op: string, args: Record<string, unknown>) => { setMsg(""); try { await tours(op, args); await load(); } catch (e: any) { setMsg(e.message); } };
-  const cancel = async (b: Booking) => { if (await confirmDialog(`Cancel ${b.name}'s tour? They will be emailed.`, { ok: "Cancel tour", danger: true })) run("cancel", { id: b.id }); };
+  const cancel = async (b: Booking) => { if (await confirmDialog(`Cancel ${b.name}'s tour? They will be emailed.`, { ok: "Cancel tour", cancelLabel: "Keep tour", danger: true })) run("cancel", { id: b.id }); };
   return (
     <>
-      <h1>Tour bookings</h1>
+      <h1>Bookings</h1>
       <p className="sub">People who booked a tour on the website. Set what happened afterwards, message the visitor or leave private notes, or cancel a booking (the visitor is emailed).</p>
       <nav className="bar">
         <label><input type="checkbox" checked={past} onChange={(e) => load(e.target.checked)} /> Include past tours</label>
-        {msg && <span className="sub" role="alert" style={{ margin: 0 }}>{msg}</span>}
+        {msg && <Notice kind="error">{msg}</Notice>}
       </nav>
       <div className="card">
         {rows.map((b) => (
@@ -29,7 +30,7 @@ export default function Bookings({ initial }: { initial: Booking[] }) {
             <a className="tag" href={`mailto:${b.email}`}>{b.email}</a><a className="tag" href={`tel:${b.phone}`}>{b.phone}</a>
             {b.guide_name && <span className="tag">Guide: {b.guide_name}</span>}
             {(b.interest || b.heard) && <div className="sub" style={{ margin: "4px 0" }}>{b.interest && `Interested in: ${b.interest}. `}{b.heard && `Heard about us: ${b.heard}.`}</div>}
-            {(b.client_ip || b.user_agent || b.screen) && <div className="sub" style={{ margin: "4px 0", fontSize: 12 }}>Device: {[b.client_ip, b.screen, b.user_agent].filter(Boolean).join(" · ")}</div>}
+            {(b.client_ip || b.user_agent || b.screen) && <details className="sub" style={{ margin: "4px 0", fontSize: 12 }}><summary>Technical details</summary>{[b.client_ip, b.screen, b.user_agent].filter(Boolean).join(" · ")}</details>}
             {b.visitor_notes && <div className="sub" style={{ margin: "4px 0" }}>Visitor's notes: {b.visitor_notes}</div>}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginTop: 6 }}>
               {b.status === "cancelled" ? <span className="tag" style={{ fontWeight: 600 }}>Cancelled</span> : (

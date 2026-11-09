@@ -1,4 +1,7 @@
 "use client";
+import { useDirtyGuard } from "@/components/dirty-guard";
+import Notice, { msgKind } from "@/components/notice";
+import { promptDialog } from "@/components/dialog";
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { ImageInput } from "@/components/image-field";
 import { useRouter } from "next/navigation";
@@ -23,8 +26,9 @@ const CSS = `.me-item{position:relative;outline:1px dashed transparent;margin:2p
 
 export default function Editor({ id, state }: { id: number; state: State }) {
   const router = useRouter();
-  const [c, setC] = useState<Camp | undefined>();
+  const [c, setC] = useState<Camp | undefined>(), [savedN, setSavedN] = useState(0);
   const [msg, setMsg] = useState("");
+  useDirtyGuard(c, savedN);
   const [sel, select] = useState<string | null>(null);
   const [over, setOver] = useState<Over>(null);
   const [tab, setTab] = useState<"content" | "layout" | "styles" | "ai" | "details">("content");
@@ -38,7 +42,7 @@ export default function Editor({ id, state }: { id: number; state: State }) {
   const d = c.design, locked = c.status !== undefined && c.status !== "draft";
   const setD = (p: Partial<Design>) => setC({ ...c, design: { ...d, ...p } });
   const run = async (label: string, fn: () => Promise<unknown>) => { setMsg(label + "…"); try { await fn(); } catch (e: any) { setMsg(e.message); } };
-  const save = async () => { await rpc("saveCampaign", { campaign: c }); };
+  const save = async () => { await rpc("saveCampaign", { campaign: c }); setSavedN((n) => n + 1); };
   const append = (b: Block) => { setD({ blocks: [...d.blocks, b] }); select(String(d.blocks.length)); };
   const ctx: Ctx = { d, base: location.origin, sel, select, drag, over, setOver, locked };
 
@@ -59,7 +63,7 @@ export default function Editor({ id, state }: { id: number; state: State }) {
           <button onClick={() => run("Saving", async () => { await save(); setMsg("Saved."); })}>Save</button>
           <button className="pri" onClick={() => run("Saving", async () => { await save(); router.push(`/admin/mail/email/${id}/send`); })}>Next →</button></>}
         <button onClick={() => setMobile(!mobile)}>{mobile ? "🖥 Desktop" : "📱 Mobile"} view</button>
-        {msg && <span className="sub" style={{ margin: 0 }} role="status">{msg}</span>}
+        {msg && <Notice kind={msgKind(msg)}>{msg}</Notice>}
       </div>
       {locked && <p className="sub">This email has already been sent, so it's read-only.</p>}
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 300px", gap: 16, alignItems: "start" }}>
@@ -93,7 +97,7 @@ export default function Editor({ id, state }: { id: number; state: State }) {
             }}>{ai.busy ? "Writing…" : "Generate"}</button></>)}
           {tab === "details" && <>
             <p className="sub">Subject, recipients and sender come on the next step. Use <code>{"{{name}}"}</code> in the text to greet each person.</p>
-            <button onClick={() => run("Saving template", async () => { const name = prompt("Template name?"); if (!name) return setMsg(""); await rpc("saveTemplate", { name, design: d }); setMsg("Template saved."); })}>Save as template</button></>}
+            <button onClick={() => run("Saving template", async () => { const name = await promptDialog("Template name?"); if (!name) return setMsg(""); await rpc("saveTemplate", { name, design: d }); setMsg("Template saved."); })}>Save as template</button></>}
         </div>
       </div>
     </C.Provider>
@@ -141,7 +145,7 @@ function Item({ b, i, list, onChange, prefix }: { b: Block; i: number; list: Blo
             onDragEnd={() => { x.drag.current = null; x.setOver(null); }}>⠿</span>
           {rich && <>
             <button title="Bold" onClick={() => fmt("bold")}><b>B</b></button><button title="Italic" onClick={() => fmt("italic")}><i>I</i></button><button title="Underline" onClick={() => fmt("underline")}><u>U</u></button>
-            <button title="Link" onClick={() => { const u = prompt("Link address (https://…)"); if (u) fmt("createLink", u); }}>🔗</button><button title="Remove link" onClick={() => fmt("unlink")}>⛓‍💥</button>
+            <button title="Link" onClick={async () => { const sel = getSelection(), r = sel?.rangeCount ? sel.getRangeAt(0).cloneRange() : null, u = await promptDialog("Link address (https://…)", "https://", { ok: "Add link" }); if (u && r) { sel!.removeAllRanges(); sel!.addRange(r); fmt("createLink", u); } }}>🔗</button><button title="Remove link" onClick={() => fmt("unlink")}>⛓‍💥</button>
             <button title="Bullets" onClick={() => fmt("insertUnorderedList")}>•≡</button><button title="Numbers" onClick={() => fmt("insertOrderedList")}>1≡</button></>}
           {(b.t === "text" || b.t === "heading") && (["left", "center", "right"] as const).map((a) => <button key={a} title={"Align " + a} onClick={() => set({ ...b, align: a })}>{a === "left" ? "⇤" : a === "center" ? "↔" : "⇥"}</button>)}
           <button title="Move up" disabled={i === 0} onClick={() => go(i - 1)}>↑</button>

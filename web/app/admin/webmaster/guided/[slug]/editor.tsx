@@ -1,4 +1,5 @@
 "use client";
+import { useDirtyGuard } from "@/components/dirty-guard";
 import Flash from "@/components/flash";
 import { useEffect, useState } from "react";
 import { confirmDialog } from "@/components/dialog";
@@ -10,7 +11,20 @@ import { guidedLines, type Field, type GuidedDef } from "@/lib/guided";
 
 type Obj = Record<string, any>;
 
-const blank = (fields: Field[]): Obj => Object.fromEntries(fields.map((f) => [f.key, f.kind === "list" || f.kind === "needs" ? [] : f.kind === "select" ? f.options![0].split("|")[0] : ""]));
+// A yes/no toggle may start on its first option; any other select starts empty so the editor has to choose.
+const yesNo = (f: Field) => f.options!.join() === "no,yes";
+const blank = (fields: Field[]): Obj => Object.fromEntries(fields.map((f) => [f.key, f.kind === "list" || f.kind === "needs" ? [] : f.kind === "select" && yesNo(f) ? f.options![0].split("|")[0] : ""]));
+
+/** Label of the first shown select left empty (new items only; saved content always has a value), or "". */
+const unchosen = (fields: Field[], v: Obj, up: Obj = {}): string => {
+  const here = { ...up, ...v };
+  for (const f of fields) {
+    if (f.when && !f.when[1].includes(here[f.when[0]])) continue;
+    if (f.kind === "select" && !v[f.key]) return f.label;
+    if (f.kind === "list") for (const it of v[f.key] ?? []) { const m = unchosen(f.of!, it, here); if (m) return m; }
+  }
+  return "";
+};
 
 const opt = (o: string) => o.split("|") as [string, string?];
 
@@ -32,7 +46,7 @@ function Control({ f, v, set, up }: { f: Field; v: any; set: (v: any) => void; u
       <span>{f.label}{f.hint && <em> — {f.hint}</em>}</span>
       {f.kind === "area" || f.kind === "lines" ? <textarea rows={f.kind === "lines" ? 6 : 4} value={v} onChange={(e) => set(e.target.value)} />
         : f.kind === "image" ? <ImageInput value={v} onChange={set} avatar={f.avatar} />
-        : f.kind === "select" ? <select value={v} onChange={(e) => set(e.target.value)}>{f.options!.map((o) => <option key={o} value={opt(o)[0]}>{opt(o)[1] ?? o}</option>)}</select>
+        : f.kind === "select" ? <select value={v} onChange={(e) => set(e.target.value)}>{!v && <option value="">Choose…</option>}{f.options!.map((o) => <option key={o} value={opt(o)[0]}>{opt(o)[1] ?? o}</option>)}</select>
         : f.kind === "color" ? <span><input type="color" value={v || "#008080"} onChange={(e) => set(e.target.value)} /> <input value={v} placeholder="(none)" onChange={(e) => set(e.target.value)} style={{ width: 110 }} /></span>
         : <input value={v} onChange={(e) => set(e.target.value)} />}
     </label>
@@ -129,32 +143,35 @@ export default function GuidedEditor({ def, initial }: { def: GuidedDef; initial
   const [msg, setMsg] = useState("");
   const [saved, setSaved] = useState(0);
   const [base, setBase] = useState(JSON.stringify(initial));
-  const dirty = JSON.stringify(d) !== base;
-  useEffect(() => {
-    if (!dirty) return;
-    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
-    window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
-  }, [dirty]);
+  const dirty = useDirtyGuard(d, base);
   const api = `/api/webmaster/guided/${def.slug}`;
+  // Unsaved edits are kept in this browser every 2s so a crash or killed tab doesn't lose a long session (nothing is published).
+  const key = `guided-draft:${def.slug}`, [draft, setDraft] = useState<Obj | null>(null);
+  const store = (v: string | null) => { try { v === null ? localStorage.removeItem(key) : localStorage.setItem(key, v); } catch {} };
+  useEffect(() => { try { const x = JSON.parse(localStorage.getItem(key) ?? "null"); if (x && JSON.stringify(x) !== base) setDraft(x); } catch {} }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!dirty) return; const t = setTimeout(() => store(JSON.stringify(d)), 2000); return () => clearTimeout(t); }, [d, dirty]); // eslint-disable-line react-hooks/exhaustive-deps
   const save = async () => {
+    const need = unchosen(def.fields, d);
+    if (need) return setMsg(`Choose a value for “${need}” first.`);
     const r = await fetch(api, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(d) });
     setMsg(r.ok ? "Saved." : await r.text());
-    if (r.ok) { setBase(JSON.stringify(d)); setSaved(saved + 1); }
+    if (r.ok) { setBase(JSON.stringify(d)); setSaved(saved + 1); store(null); }
   };
   return (
     <>
       <h1>{def.label}</h1>
       <p className="sub">{def.blurb} Shown on <a href={`/${def.slug}`}>/{def.slug}</a>.</p>
+      {draft && <div className="card" role="status" style={{ padding: 12 }}>Unsaved edits from an earlier session were found in this browser. <button onClick={() => { setD(draft); setDraft(null); }}>Restore them</button> <button onClick={() => { store(null); setDraft(null); }}>Discard</button></div>}
       <div className="card" style={{ padding: 12 }}><Fields fields={def.fields} v={d} set={(x) => { setMsg(""); setD(x); }} /></div>
       <div className="bar savebar">
         <button className="pri" disabled={!dirty} onClick={save}>Save changes</button>
         <a href={`/${def.slug}`} target="_blank" rel="noreferrer"><button type="button">View page ↗</button></a>
         <span role="status" className={msg && msg !== "Saved." && msg !== "Reverted." ? "err" : dirty ? "tag" : "toast"}>{dirty && !msg ? "You have unsaved changes" : msg}</span>
+        {def.slug === "handbook" && saved > 0 && <a href="/admin/webmaster/handbook-updates">Email members about this change →</a>}
       </div>
       <Revisions<Obj> api={api} reload={saved}
         lines={(x) => guidedLines(def.fields, x)}
-        onRevert={async (r) => { const x = await r.json(); setD(x); setBase(JSON.stringify(x)); setMsg("Reverted."); }} />
+        onRevert={async (r) => { const x = await r.json(); setD(x); setBase(JSON.stringify(x)); store(null); setMsg("Reverted."); }} />
     </>
   );
 }

@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { CalItem } from "@/lib/tours";
 import { hue } from "@/lib/tours-fmt";
@@ -72,7 +73,7 @@ export default function WeekCalendar() {
         </div>
         <span className="sub" style={{ margin: 0 }}><b>{confirmed}</b> confirmed · <b>{items.length - confirmed}</b> awaiting reply</span>
       </div>
-      {err && <p role="alert" style={{ color: "var(--bad)" }}>{err}</p>}
+      {err && <Notice kind="error">{err}</Notice>}
       <div className="bar" style={{ gap: 8, marginBottom: 10, fontSize: 13 }}>
         {guides.map(([g, h]) => <span key={g} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><i style={{ width: 10, height: 10, borderRadius: 3, background: color(h).fg }} />{g}</span>)}
         <span className="sub" style={{ margin: 0, marginLeft: "auto" }}><i style={{ display: "inline-block", width: 18, height: 10, borderRadius: 3, background: "var(--acc-bg)", border: "1.5px solid var(--acc)", verticalAlign: "middle" }} /> confirmed &nbsp; <i style={{ display: "inline-block", width: 18, height: 10, borderRadius: 3, border: "1.5px dashed var(--acc)", verticalAlign: "middle" }} /> awaiting reply</span>

@@ -25,7 +25,7 @@ export default function Form({ dbHost, s3, configured }: { dbHost?: string; s3?:
   const line = (name: string, e: string) => <p className={e ? "err" : "ok"}>{e ? `✗ ${name}: ${e}` : `✓ ${name} OK`}</p>;
   return (
     <div style={{ maxWidth: 560 }}>
-      <h1>Services</h1>
+      <h1>Setup</h1>
       <p className="sub">Connect the external services. Both are tested; if both pass, settings are saved and you continue to the admin.</p>
       <h2>Postgres</h2>
       {dbHost ? <p className="ok">✓ {dbHost} (set by the DATABASE_URL environment variable)</p> : <>

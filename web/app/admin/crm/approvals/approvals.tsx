@@ -1,12 +1,13 @@
 "use client";
+import Notice, { msgKind } from "@/components/notice";
 import { useEffect, useState } from "react";
 import { alertDialog, promptDialog } from "@/components/dialog";
 import { crm } from "../rpc";
 import type { Detail, Row, State } from "@/lib/approvals";
 
 type Counts = Record<State, number>;
-const TABS: [State, string][] = [["pending", "Needs us"], ["waiting", "Waiting for reply"], ["rejected", "Rejected"], ["approved", "Approved"]];
-const LABEL: Record<string, string> = { pending: "Pending", waiting: "Waiting", rejected: "Rejected", approved: "Approved" };
+const TABS: [State, string][] = [["pending", "To review"], ["waiting", "Waiting for applicant"], ["rejected", "Declined"], ["approved", "Approved"]];
+const LABEL: Record<string, string> = { pending: "To review", waiting: "Waiting for applicant", rejected: "Declined", approved: "Approved" };
 // UX: most replies are one of a few questions, so one click drops the wording in (still editable).
 const CANNED = ["Could you confirm your full name as you'd like it to appear?", "What would you like to make or learn at the space?", "Is there a phone number we can reach you at?"];
 
@@ -57,11 +58,11 @@ export default function Approvals({ initial, canEdit, open, compact }: { initial
 
   return (
     <section aria-label="Sign-up approvals">
-      {compact ? <h2>New members awaiting approval ({counts.pending + counts.waiting})</h2> : <><h1>New members</h1><p className="sub">People who signed up and verified their email. They can't use the members area until someone approves them. Ask a question and they can reply right here; every message and change is recorded with who made it.</p></>}
+      {compact ? <h2>New members waiting for approval ({counts.pending + counts.waiting})</h2> : <><h1>New members</h1><p className="sub">People who signed up and verified their email. They can't use the members area until someone approves them. Ask a question and they can reply right here; every message and change is recorded with who made it.</p></>}
       <div className="bar" role="tablist">
         {TABS.map(([t, l]) => <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? "pri" : ""} onClick={() => { setTab(t); setSel(null); }}>{l}{t !== "approved" ? ` (${counts[t]})` : ""}</button>)}
       </div>
-      {err && <p role="alert" style={{ color: "var(--bad)" }}>{err}</p>}
+      {err && <Notice kind="error">{err}</Notice>}
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         {list}
         {d && (
@@ -98,14 +99,14 @@ export default function Approvals({ initial, canEdit, open, compact }: { initial
               <form className="card" style={{ display: "grid", gap: 8 }} onSubmit={async (e) => { e.preventDefault(); if (await run("applicantMove", { from: d.approval, to: "approved", confirmed: true, edit: { first_name: review.first_name, last_name: review.last_name, phone: review.phone } }, "Approved. They've been emailed.")) setReview(null); }}>
                 <strong>Check before approving</strong>
                 <div className="sub" style={{ margin: 0 }}>Fix anything that looks wrong. Email ({d.email}) was verified by their sign-in link. On first sign-in they'll be asked for address, phone and an emergency contact.</div>
-                <label>First name<input required value={review.first_name} onChange={(e) => setReview({ ...review, first_name: e.target.value })} /></label>
+                <label>First name<input required autoFocus value={review.first_name} onChange={(e) => setReview({ ...review, first_name: e.target.value })} /></label>
                 <label>Last name<input value={review.last_name} onChange={(e) => setReview({ ...review, last_name: e.target.value })} /></label>
                 <label>Phone<input type="tel" value={review.phone} onChange={(e) => setReview({ ...review, phone: e.target.value })} /></label>
                 <label style={{ display: "flex", gap: 8 }}><input type="checkbox" checked={review.ok} onChange={(e) => setReview({ ...review, ok: e.target.checked })} /> I've checked their name and contact details are right</label>
                 <div className="bar"><button className="pri" type="submit" disabled={busy || !review.ok}>Approve {review.first_name}</button><button type="button" onClick={() => setReview(null)}>Cancel</button></div>
               </form>
             )}
-            {msg && <p role="status" className="sub">{msg}</p>}
+            {msg && <Notice kind={msgKind(msg)}>{msg}</Notice>}
           </div>
         )}
       </div>

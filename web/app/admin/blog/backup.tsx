@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Notice, { msgKind } from "@/components/notice";
 
 // Download or restore the whole blog as import.json.
 export default function Backup() {
@@ -19,7 +20,7 @@ export default function Backup() {
       <a href="/api/webmaster/blog-io"><button>Export import.json</button></a>
       <label><button type="button" disabled={busy} onClick={(e) => e.currentTarget.nextElementSibling instanceof HTMLInputElement && e.currentTarget.nextElementSibling.click()}>Import import.json…</button>
         <input type="file" accept="application/json,.json" hidden onChange={(e) => { restore(e.target.files?.[0]); e.target.value = ""; }} /></label>
-      {msg && <span className="sub" role="status" style={{ margin: 0 }}>{msg}</span>}
+      {msg && <Notice kind={msgKind(msg)}>{msg}</Notice>}
     </div>
   );
 }

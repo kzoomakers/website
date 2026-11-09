@@ -4,6 +4,7 @@ import { Counters } from "./chrome";
 import { DragCarousel } from "./drag-carousel";
 import { GuideBrowser } from "./guide-browser";
 import { DonationNeeds } from "./donation-needs";
+import HandbookNotify from "./handbook-notify";
 import { ReviewForm } from "./review-form";
 import { ContactForm } from "./contact-form";
 
@@ -193,6 +194,7 @@ function Handbook({ d }: { d: any }) {
                   {paras(x.text).map((b, k) => b.split("\n").every((l) => l.startsWith("- "))
                     ? <ul key={k}>{b.split("\n").map((l, m) => <li key={m}>{inline(l.slice(2))}</li>)}</ul>
                     : <p key={k}>{inline(b)}</p>)}
+                  {/^changes to (the )?handbook/i.test(x.title) && <HandbookNotify />}
                 </div>
               ))}
             </section>

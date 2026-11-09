@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import { useState } from "react";
 import { confirmDialog } from "@/components/dialog";
 import { chores } from "./rpc";
@@ -13,19 +14,19 @@ export default function Todo({ initial, members }: { initial: Row[]; members: { 
   const run = async (f: () => Promise<unknown>) => { setMsg(""); try { await f(); await load(); } catch (e: any) { setMsg(e.message); } };
   const save = (e: React.FormEvent) => { e.preventDefault(); run(async () => { await chores("save", { chore: { ...form, id: form.id || undefined } }); setForm(BLANK); }); };
   const edit = (r: Row) => setForm({ id: r.id, name: r.name, every_days: r.every_days ? String(r.every_days) : "", aliases: r.aliases.join(", "), notes: r.notes });
-  const del = async (r: Row) => { if (await confirmDialog(`Put away "${r.name}"? The hours people gave to it stay counted.`, { ok: "Put away", danger: true })) run(() => chores("delete", { id: r.id })); };
+  const del = async (r: Row) => { if (await confirmDialog(`Delete "${r.name}"? The hours people gave to it stay counted.`, { ok: "Delete", danger: true })) run(() => chores("delete", { id: r.id })); };
   const finish = (e: React.FormEvent) => { e.preventDefault(); run(async () => { await chores("logTime", { chore_id: done!.id, user_id: Number(done!.user), minutes: Number(done!.minutes) }); setDone(null); }); };
   return (
     <>
       <h1>Chores</h1>
       <p className="sub">The chores that keep the space running and how often each wants doing. Overdue ones are read out by Computer at the space. Mark one done for a member here, or they can say so out loud.</p>
-      {msg && <p role="alert" style={{ color: "var(--bad)" }}>{msg}</p>}
+      {msg && <Notice kind="error">{msg}</Notice>}
       <form className="card" onSubmit={save} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "end" }}>
         <label style={{ flex: "2 1 220px" }}>Chore<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} maxLength={120} placeholder="clean the bathroom" required style={{ width: "100%" }} /></label>
         <label>Every (days)<input type="number" min={1} max={366} value={form.every_days} onChange={(e) => setForm({ ...form, every_days: e.target.value })} placeholder="as needed" style={{ width: 110 }} /></label>
         <label style={{ flex: "1 1 180px" }}>Other names<input value={form.aliases} onChange={(e) => setForm({ ...form, aliases: e.target.value })} placeholder="restroom, loo" style={{ width: "100%" }} /></label>
         <label style={{ flex: "2 1 220px" }}>Notes<input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} maxLength={1000} style={{ width: "100%" }} /></label>
-        <button className="primary">{form.id ? "Save chore" : "Add chore"}</button>
+        <button className="pri">{form.id ? "Save chore" : "Add chore"}</button>
         {form.id > 0 && <button type="button" onClick={() => setForm(BLANK)}>Cancel</button>}
       </form>
       <div className="card">
@@ -46,7 +47,7 @@ export default function Todo({ initial, members }: { initial: Row[]; members: { 
               <form onSubmit={finish} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "end", marginTop: 8 }}>
                 <label>Who<select value={done.user} onChange={(e) => setDone({ ...done, user: e.target.value })} required><option value="">Pick a member</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></label>
                 <label>Minutes<input type="number" min={1} max={960} value={done.minutes} onChange={(e) => setDone({ ...done, minutes: e.target.value })} required style={{ width: 90 }} /></label>
-                <button className="primary">Log it</button>
+                <button className="pri">Log it</button>
               </form>
             )}
           </div>

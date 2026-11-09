@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Notice, { msgKind } from "@/components/notice";
 import { confirmDialog } from "@/components/dialog";
 import type { AdminComment, Settings, Status } from "@/lib/comments";
 
@@ -62,7 +63,7 @@ export default function Moderation({ initial, tab: t0, counts: n0, settings: s0 
         <label>Blocked words (one per line; a match goes straight to Spam)
           <textarea rows={3} value={s.blocked} onChange={(e) => setS({ ...s, blocked: e.target.value })} /></label>
         <label><input type="checkbox" checked={s.notify} onChange={(e) => setS({ ...s, notify: e.target.checked })} /> Email the post's author and the person being replied to</label>
-        <div><button onClick={save}>Save settings</button> {note && <span className="sub" role="status">{note}</span>}</div>
+        <div><button onClick={save}>Save settings</button> {note && <Notice kind={msgKind(note)}>{note}</Notice>}</div>
       </div>
     </>
   );

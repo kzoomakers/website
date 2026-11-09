@@ -21,3 +21,17 @@ test("a Node request is read like a web one (https behind the proxy, joined repe
   assert.equal(w.headers.get("Cookie"), "a=1, b=2");
   assert.equal(w.headers.get("nope"), null);
 });
+
+const { classify, countable } = await import("../lib/referrers-util.ts");
+test("referrers: AI beats search, own site and robots are ignored, utm_source is used when the referrer is hidden", () => {
+  assert.deepEqual(classify("https://chatgpt.com/", "", "kzoomakers.org"), { kind: "ai", source: "ChatGPT", host: "chatgpt.com", via: "referrer" });
+  assert.equal(classify("", "chatgpt.com", "x.org")?.source, "ChatGPT");
+  assert.equal(classify("https://gemini.google.com/app", "", "x.org")?.kind, "ai");
+  assert.equal(classify("https://www.google.co.uk/", "", "x.org")?.source, "Google");
+  assert.equal(classify("https://l.facebook.com/l.php", "", "x.org")?.kind, "social");
+  assert.equal(classify("https://example.com/post", "", "x.org")?.kind, "other");
+  assert.equal(classify("https://www.x.org/about", "", "x.org"), null);
+  assert.equal(classify("", "", "x.org"), null);
+  assert.ok(countable({ method: "GET", status: 200, path: "/about", ua: "Mozilla/5.0" }));
+  assert.ok(!countable({ method: "GET", status: 200, path: "/about", ua: "Googlebot" }) && !countable({ method: "GET", status: 404, path: "/a", ua: "" }) && !countable({ method: "GET", status: 200, path: "/api/x", ua: "" }));
+});

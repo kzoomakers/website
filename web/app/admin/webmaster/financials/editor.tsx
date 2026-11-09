@@ -1,16 +1,18 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useDirtyGuard } from "@/components/dirty-guard";
+import Notice, { msgKind } from "@/components/notice";
 import { confirmDialog } from "@/components/dialog";
 import type { Fin } from "@/lib/financials";
 
 const when = (s: string) => new Date(s).toLocaleString();
 
 export default function FinancialsEditor() {
-  const [org, setOrg] = useState("");
+  const [org, setOrg] = useState<string>();
   const [files, setFiles] = useState<Fin[]>([]);
   const [year, setYear] = useState(String(new Date().getFullYear() - 1));
   const [file, setFile] = useState<File | null>(null);
-  const [msg, setMsg] = useState("");
+  const [msg, setMsg] = useState(""), [clean, setClean] = useState(0);
   const load = () => fetch("/api/webmaster/financials").then((r) => r.json()).then((d) => { setOrg(d.org); setFiles(d.files); });
   useEffect(() => { load(); }, []);
   const send = async (init: RequestInit, ok: string, url = "/api/webmaster/financials") => {
@@ -19,6 +21,7 @@ export default function FinancialsEditor() {
     if (r.ok) load();
     return r.ok;
   };
+  useDirtyGuard(org, clean);
   const upload = async () => {
     if (!file) return setMsg("Choose a PDF first.");
     const fd = new FormData(); fd.set("year", year); fd.set("file", file);
@@ -30,10 +33,10 @@ export default function FinancialsEditor() {
     <>
       <h1>Financials</h1>
       <p className="sub">One PDF per year, shown on <a href="/financials" target="_blank">/financials</a>. The page and its Learn More menu link appear once something is uploaded.</p>
-      {msg && <p className="sub" role="status">{msg}</p>}
+      {msg && <Notice kind={msgKind(msg)}>{msg}</Notice>}
       <div className="card" style={{ padding: 12 }}>
-        <label>Organization name <input style={{ width: "100%" }} value={org} onChange={(e) => setOrg(e.target.value)} /></label>
-        <div className="bar"><button className="pri" onClick={() => send({ method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ org }) }, "Saved.")}>Save name</button></div>
+        <label>Organization name <input style={{ width: "100%" }} value={org ?? ""} onChange={(e) => setOrg(e.target.value)} /></label>
+        <div className="bar"><button className="pri" onClick={() => send({ method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ org }) }, "Saved.").then((ok) => ok && setClean(clean + 1))}>Save name</button></div>
       </div>
       <h2>Upload or replace a PDF</h2>
       <div className="card" style={{ padding: 12 }}>

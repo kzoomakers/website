@@ -30,7 +30,7 @@ async function conn() {
 /** Emails one stored message to its board/contact inbox; the visitor's address goes in Reply-To so "reply" just works. */
 async function deliver(m: Pick<Message, "kind" | "name" | "email" | "subject" | "message">) {
   const cfg = await getMailCfg();
-  if (!mailReady(cfg)) throw new Error("Email sending isn't set up yet (Postmaster → Settings)");
+  if (!mailReady(cfg)) throw new Error("Email sending isn't set up yet (Email → Settings)");
   await send({
     to: TO[m.kind], headers: { "Reply-To": m.email },
     subject: `[${LABEL[m.kind]}] ${m.subject || `Message from ${m.name}`}`.replace(/[\r\n]+/g, " ").slice(0, 200),

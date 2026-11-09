@@ -26,14 +26,14 @@ export default function Pages() {
     r.ok ? load() : setErr(await r.text());
   };
   useEffect(() => { load(); }, []);
-  const ask = async (what: string, d = "") => { const s = (await promptDialog(what, d))?.trim(); if (s && !SLUG.test(s)) { setErr(`Bad slug: ${s}`); return null; } return s || null; };
+  const ask = async (what: string, d = "") => { const s = (await promptDialog(what, d))?.trim(); if (s && !SLUG.test(s)) { setErr(`Web addresses can only use letters, numbers and dashes (not "${s}").`); return null; } return s || null; };
 
   // New page: pick slug and sitemap placement, save a blank page carrying that placement, then open the editor.
   const [np, setNp] = useState<{ slug: string; parent: string } | null>(null);
   const create = async () => {
     if (!np) return;
     const slug = np.slug.trim();
-    if (!SLUG.test(slug)) return setErr(`Bad slug: ${slug}`);
+    if (!SLUG.test(slug)) return setErr(`Web addresses can only use letters, numbers and dashes (not "${slug}").`);
     if (slugs.includes(slug)) return location.assign(`/edit/${slug}`);
     const data = { root: { props: { parent: np.parent, title: slug } }, content: [] };
     const r = await fetch(api, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ slug, data }) });
@@ -71,9 +71,9 @@ export default function Pages() {
       <h1>Pages</h1>
       <p className="sub">{slugs.length} pages</p>
       {err && <p className="err">{err}</p>}
-      <div className="seg" role="tablist">
-        <button role="tab" aria-pressed={tab === "all"} onClick={() => setTab("all")}>All pages</button>
-        <button role="tab" aria-pressed={tab === "deleted"} onClick={() => setTab("deleted")}>Deleted{gone.length ? ` (${gone.length})` : ""}</button>
+      <div className="seg" role="group" aria-label="Show">
+        <button aria-pressed={tab === "all"} onClick={() => setTab("all")}>All pages</button>
+        <button aria-pressed={tab === "deleted"} onClick={() => setTab("deleted")}>Deleted{gone.length ? ` (${gone.length})` : ""}</button>
       </div>
       {tab === "deleted" ? (
         <div className="card">

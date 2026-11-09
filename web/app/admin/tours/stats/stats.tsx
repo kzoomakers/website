@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import { useRef, useState } from "react";
 import { hue } from "@/lib/tours-fmt";
 import type { stats } from "@/lib/tours";
@@ -34,11 +35,11 @@ export default function Stats({ initial }: { initial: S }) {
   const W = 700, H = 120, bw = W / Math.max(chart.length, 1);
   return (
     <>
-      <h1>Tour stats</h1>
+      <h1>Stats</h1>
       <p className="sub">How tours turn into members. “Closed” means a visitor was marked <em>signed up</em>; the closer is the tour’s guide. Ranges look at when the tour was booked.</p>
       <div className="bar">
         {RANGES.map(([d, l]) => <button key={d} type="button" className={days === d ? "pri" : ""} aria-pressed={days === d} onClick={() => pick(d)}>{l}</button>)}
-        {err && <span role="alert" className="sub" style={{ margin: 0, color: "var(--bad)" }}>{err}</span>}
+        {err && <Notice kind="error">{err}</Notice>}
       </div>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
         <Kpi icon="🗓️" label="Tours booked" value={live} sub={`${s.cancelled} cancelled · ${s.walkupTours} from walk-ups`} />

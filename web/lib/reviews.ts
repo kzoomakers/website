@@ -1,7 +1,7 @@
 import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { randomUUID } from "crypto";
 import { processImage } from "./image";
-import { db } from "./db";
+import { conn, db } from "./db";
 import { s3 } from "./s3";
 import { judge } from "./spam";
 import { cleanGuided } from "./guided";
@@ -24,12 +24,6 @@ export async function dropPhoto(url: string) {
   if (store && key.startsWith("avatars/")) await store.client.send(new DeleteObjectCommand({ Bucket: store.bucket, Key: key })).catch(() => {});
 }
 
-async function conn() {
-  const d = db();
-  if (!d) throw new Error("not configured");
-  await d.ready;
-  return d.pool;
-}
 
 /** A signed-in reader submits a review. One waiting at a time; filter-caught spam is stored as rejected and looks accepted. */
 export async function submitReview(user: { id: number; name: string }, textIn: string, roleIn: string, photo?: File | null) {

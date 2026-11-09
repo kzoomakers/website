@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { confirmDialog } from "@/components/dialog";
 import PdfPages from "@/components/pdf-pages";
 import SignPad from "@/components/sign-pad";
 
-const DONE: Record<string, string> = { signed: "Thank you, you're done. Everyone involved gets the finished PDF by email once it is complete.", declined: "You declined to sign.", complete: "This paper already has all the signatures it needs.", void: "This paper was cancelled.", expired: "This paper is past its due date." };
+const DONE: Record<string, string> = { signed: "Thank you, you're done. Everyone involved gets the finished PDF by email once it is complete.", declined: "You declined to sign.", complete: "This document already has all the signatures it needs.", void: "This document was cancelled.", expired: "This document is past its due date." };
 type F = { id: number; type: string; page: number; x: number; y: number; w: number; h: number; label: string; options: string[]; required: boolean };
 const post = (body: object) => fetch("/api/sign", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
 
@@ -47,7 +48,7 @@ export default function Sign({ token, name, role, fields, pdf, redirect, gate, s
         ? <p><button className="pri" disabled={busy} onClick={() => call({ action: "sign" }, () => setS("signed"))}>I've read this document</button></p>
         : <SignPad name={name} busy={busy} label={role === "approver" ? "Approve" : "Sign"} initials={fields.some((f) => f.type === "initials")} onSign={submit} />}
       {err && <p role="alert" style={{ color: "#b00020" }}>{err}</p>}
-      {role !== "viewer" && (no ? <form className="card" onSubmit={(e) => { e.preventDefault(); call({ action: "decline", reason }, () => setS("declined")); }}><label>Reason (optional)<textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={500} style={{ width: "100%" }} /></label><button disabled={busy}>Decline</button></form>
+      {role !== "viewer" && (no ? <form className="card" onSubmit={async (e) => { e.preventDefault(); if (await confirmDialog("Decline to sign this document? This can't be undone.", { ok: "Yes, decline", danger: true })) call({ action: "decline", reason }, () => setS("declined")); }}><label>Reason<textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={500} required style={{ width: "100%" }} /></label><button disabled={busy}>Decline</button></form>
         : <p><button type="button" onClick={() => setNo(true)}>I can't {role === "approver" ? "approve" : "sign"} this</button></p>)}
     </>
   );

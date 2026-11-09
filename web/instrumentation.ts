@@ -2,10 +2,16 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
     (await import("./lib/httplog-hook")).installHttpLog(); // HTTP log (Admin > Services), with response codes
+    const { withLock } = await import("./lib/db");
+    // A second machine skips a job another one is running, so scaling out can't double-send mail or reminders.
+    const job = (id: number, ms: number, fn: () => Promise<unknown>) => setInterval(() => withLock(id, fn).catch(() => {}), ms);
     const { tick } = await import("./lib/mail");
-    setInterval(() => tick().catch(() => {}), 60_000);
+    job(7351911, 60_000, tick);
     const { checkStale, checkReminders } = await import("./lib/tours");
-    setInterval(() => checkReminders().catch(() => {}), 60_000); // "due now / in 1, 3, 6 hours" lines in the tours timeline
-    setInterval(() => checkStale().catch(() => {}), 30 * 60_000); // untaken walk-ups
+    job(7351912, 60_000, checkReminders); // "due now / in 1, 3, 6 hours" lines in the tours timeline
+    job(7351913, 30 * 60_000, checkStale); // untaken walk-ups
+    const { prune } = await import("./lib/retention");
+    setTimeout(() => withLock(7351914, prune).catch(() => {}), 120_000); // not at the very start
+    job(7351914, 6 * 3600_000, prune); // data past the 5-year limit (lib/retention.ts)
   }
 }

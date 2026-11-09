@@ -1,4 +1,5 @@
 "use client";
+import Notice, { msgKind } from "@/components/notice";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { pct, rpc, when, type Cfg, type State } from "./api";
@@ -46,7 +47,7 @@ function Home({ s }: { s: State }) {
   const stat = (n: number, label: string, href = "") => <Link href={"/admin/mail/subscribers" + href} className="card" style={{ padding: 14, minWidth: 130, textAlign: "center" }}><b style={{ fontSize: 26 }}>{n}</b><br /><small>{label}</small></Link>;
   return (
     <>
-      <h1>Home <Link href="/admin/mail/email/new" className="pri">New email</Link></h1>
+      <h1>Overview <Link href="/admin/mail/email/new" className="pri">New email</Link></h1>
       <div className="bar" style={{ flexWrap: "wrap" }}>
         {stat(d.subscribed, "subscribed")}{stat(d.new30, "joined in 30 days")}{stat(d.unsubscribed30, "left in 30 days")}{stat(d.unconfirmed, "unconfirmed")}
         {stat(d.inactive, "inactive (never open)", "?status=inactive")}{stat(d.bounced + d.complained, "bounced / complained", "?status=bounced")}
@@ -70,7 +71,7 @@ function Lists({ s, reload }: Props) {
     <>
       <h1>Lists {!f && <button className="pri" onClick={() => setF({ name: "", description: "" })}>New list</button>}</h1>
       <p className="sub">Each list is independent. Send an email to one or several, and point signup forms at the lists they should fill.</p>
-      {msg && <p className="err" role="alert">{msg}</p>}
+      {msg && <Notice kind="error">{msg}</Notice>}
       {f && (
         <div className="card" style={{ padding: 14, marginBottom: 14, maxWidth: 560 }}>
           <label className="field"><span>Name</span><input value={f.name} autoFocus onChange={(e) => setF({ ...f, name: e.target.value })} /></label>
@@ -84,7 +85,7 @@ function Lists({ s, reload }: Props) {
             <tr key={l.id}>
               <td><b>{l.name}</b><br /><small>{l.description}</small>
                 <div className="mp-act"><button onClick={() => setF({ id: l.id, name: l.name, description: l.description })}>Edit</button><Link href={"/admin/mail/subscribers?list=" + l.id}>View subscribers</Link>
-                  <button className="bad" onClick={async () => { if (confirm(`Delete the list "${l.name}"? Its subscribers stay; only the list goes.`)) { await rpc("deleteList", { id: l.id }); reload(); } }}>Delete</button></div></td>
+                  <button className="bad" onClick={async () => { if (await confirmDialog(`Delete the list "${l.name}"? Its subscribers stay; only the list goes.`, { ok: "Delete", danger: true })) { await rpc("deleteList", { id: l.id }); reload(); } }}>Delete</button></div></td>
               <td>{l.subscribed}</td><td>{l.unconfirmed}</td><td>{l.unsubscribed}</td><td>{when(l.created_at)}</td>
             </tr>))}
         </tbody>
@@ -134,7 +135,7 @@ function Settings({ s, reload }: Props) {
         {text("deepseekKey", "DeepSeek API token", "sk-…", true)}
         {text("aiModel", "Model (optional)", "deepseek-chat")}
         <div className="bar"><button className="pri" onClick={async () => { try { await rpc("saveCfg", { cfg: f }); setF({ ...f, smtp2goKey: "", smtpUrl: "", deepseekKey: "" }); setMsg("Settings saved."); reload(); } catch (e: any) { setMsg(e.message); } }}>Save settings</button>
-          {msg && <span className="sub" style={{ margin: 0 }} role="status">{msg}</span>}</div>
+          {msg && <Notice kind={msgKind(msg)}>{msg}</Notice>}</div>
       </div>
     </>
   );
@@ -148,7 +149,7 @@ function Queue() {
   const drop = (args: object) => rpc("dropQueued", args).then(load, (e) => alertDialog(e.message));
   return (
     <>
-      <h1>Queue {!!rows?.length && <button style={{ color: "var(--bad)" }} onClick={async () => { if (await confirmDialog(`Delete all ${rows.length} queued emails? They will never be sent.`)) drop({ all: true }); }}>Delete all</button>}</h1>
+      <h1>Queue {!!rows?.length && <button style={{ color: "var(--bad)" }} onClick={async () => { if (await confirmDialog(`Delete all ${rows.length} queued emails? They will never be sent.`, { ok: "Delete all", danger: true })) drop({ all: true }); }}>Delete all</button>}</h1>
       <p className="sub">Emails that are waiting to go out, or failed and are being retried (after 2, 4, 8 minutes and so on, up to 8 tries).</p>
       {!rows ? <p>Loading…</p> : !rows.length ? <p className="sub">Nothing is waiting. 🎉</p> : (
         <table className="mp-table">

@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import { useEffect, useState } from "react";
 import { confirmDialog, promptDialog } from "@/components/dialog";
 import { chores } from "../rpc";
@@ -19,15 +20,15 @@ export default function Log() {
   const del = async (x: Entry) => { if (await confirmDialog(`Delete this entry for ${x.owner_name}?`, { ok: "Delete", danger: true })) run(() => chores("deleteLog", { id: x.id })); };
   return (
     <>
-      <h1>Hours log</h1>
+      <h1>Hours</h1>
       <p className="sub">The time members give to chores. Computer logs it when someone says they're starting or done; you can type in time here too.</p>
-      {msg && <p role="alert" style={{ color: "var(--bad)" }}>{msg}</p>}
+      {msg && <Notice kind="error">{msg}</Notice>}
       <form className="card" onSubmit={add} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "end" }}>
         <label>Chore<select value={f.chore_id} onChange={(e) => setF({ ...f, chore_id: e.target.value })} required><option value="">Pick a chore</option>{list.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
         <label>Who<select value={f.user_id} onChange={(e) => setF({ ...f, user_id: e.target.value })} required><option value="">Pick a member</option>{people.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></label>
         <label>Minutes<input type="number" min={1} max={960} value={f.minutes} onChange={(e) => setF({ ...f, minutes: e.target.value })} required style={{ width: 90 }} /></label>
         <label>Day<input type="date" value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} /></label>
-        <button className="primary">Log time</button>
+        <button className="pri">Log time</button>
       </form>
       <nav className="bar">
         {PERIODS.map(([k, l]) => <button key={k} aria-pressed={period === k} className={period === k ? "primary" : ""} onClick={() => { setPeriod(k); load(k); }}>{l}</button>)}

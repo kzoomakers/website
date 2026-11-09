@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Notice, { msgKind } from "@/components/notice";
 import { confirmDialog } from "@/components/dialog";
 import type { Doc } from "@/lib/sign";
 import { board } from "./rpc";
@@ -21,14 +22,14 @@ export default function Papers({ initial, buckets, tags, sealed }: { sealed: boo
   };
   return (
     <>
-      <h1>Signed docs <small className="sub" style={{ fontSize: 12 }} title="Updates every few seconds">● live · {live.toLocaleTimeString()}</small></h1>
-      <p className="sub">Resolutions, minutes and agreements collected with e-signatures. <a href="/admin/signed-docs/new">Start a new paper</a>. {sealed ? "Finished PDFs carry a digital certificate signature." : "No digital certificate is configured, so finished PDFs are hashed and encrypted but not cryptographically signed (add one on the Services page)."}</p>
+      <h1>Documents <small className="sub" style={{ fontSize: 12 }} title="Updates every few seconds">● live · {live.toLocaleTimeString()}</small></h1>
+      <p className="sub">Resolutions, minutes and agreements collected with e-signatures. <a href="/admin/signed-docs/new">Start a new document</a>. {sealed ? "Finished PDFs carry a digital certificate signature." : "No digital certificate is configured, so finished PDFs are hashed and encrypted but not cryptographically signed (add one on the Services page)."}</p>
       <nav className="bar">
-        <select value={f.bucket} onChange={(e) => load({ ...f, bucket: e.target.value })} aria-label="Bucket"><option value="">All buckets</option>{buckets.map((b) => <option key={b.id} value={b.id}>{b.name} ({b.n})</option>)}</select>
+        <select value={f.bucket} onChange={(e) => load({ ...f, bucket: e.target.value })} aria-label="Folder"><option value="">All folders</option>{buckets.map((b) => <option key={b.id} value={b.id}>{b.name} ({b.n})</option>)}</select>
         <select value={f.tag} onChange={(e) => load({ ...f, tag: e.target.value })} aria-label="Tag"><option value="">All tags</option>{tags.map((t) => <option key={t}>{t}</option>)}</select>
         <select value={f.status} onChange={(e) => load({ ...f, status: e.target.value })} aria-label="Status"><option value="">Any status</option>{Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
         <input type="search" placeholder="Search titles" value={f.q} onChange={(e) => load({ ...f, q: e.target.value })} />
-        {msg && <span role="status" className="sub" style={{ margin: 0 }}>{msg}</span>}
+        {msg && <Notice kind={msgKind(msg)}>{msg}</Notice>}
       </nav>
       <div className="card">
         {rows.map((d) => {
@@ -54,7 +55,7 @@ export default function Papers({ initial, buckets, tags, sealed }: { sealed: boo
             </div>
           );
         })}
-        {!rows.length && <p className="sub">No papers match.</p>}
+        {!rows.length && <p className="sub">No documents match.</p>}
       </div>
     </>
   );

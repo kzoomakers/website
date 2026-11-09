@@ -12,7 +12,7 @@ const join = (...p: (string | undefined)[]) => p.filter(Boolean).join(" · ");
 // Search members who chose to be listed. Compact cards, photo on the left. Messages go to their in-app inbox; an address shows only if that member chose to list it.
 export default function Directory({ initial, listed, facets }: { initial: Listing[]; listed: boolean; facets: { fields: Fields; skills: boolean } }) {
   const [rows, setRows] = useState(initial), [q, setQ] = useState(""), [level, setLevel] = useState(""), [filters, setFilters] = useState<Record<string, string>>({}), first = useRef(true);
-  const [to, setTo] = useState<Listing | null>(null), [body, setBody] = useState(""), [msg, setMsg] = useState(""), [busy, setBusy] = useState(false), [open, setOpen] = useState<number | null>(null);
+  const [sent, setSent] = useState<number | null>(null), [to, setTo] = useState<Listing | null>(null), [body, setBody] = useState(""), [msg, setMsg] = useState(""), [busy, setBusy] = useState(false), [open, setOpen] = useState<number | null>(null);
   useEffect(() => {
     if (first.current) { first.current = false; return; }
     const t = setTimeout(async () => { const r = await api({ op: "search", q, level, filters }).catch(() => null); if (r?.ok) setRows(await r.json()); }, 250);
@@ -44,7 +44,7 @@ export default function Directory({ initial, listed, facets }: { initial: Listin
               {m.since && <div className="dr-line">Member since {new Date(m.since).toLocaleDateString([], { month: "short", year: "numeric" })}</div>}
               {f(m, "working_on") && <div className="dr-line">🔨 <b>Working on:</b> {f(m, "working_on")}</div>}
               {f(m, "looking_for") && <div className="dr-line">🔎 <b>Looking for:</b> {f(m, "looking_for")}</div>}
-              {m.bio && <p className={"dr-bio" + (open === m.id ? " open" : "")} onClick={() => setOpen(open === m.id ? null : m.id)} title="Click to expand" style={{ cursor: "pointer" }}>{m.bio}</p>}
+              {m.bio && <><p className={"dr-bio" + (open === m.id ? " open" : "")} id={"bio-" + m.id}>{m.bio}</p>{m.bio.length > 140 && <button type="button" className="link" aria-expanded={open === m.id} aria-controls={"bio-" + m.id} onClick={() => setOpen(open === m.id ? null : m.id)} style={{ border: 0, background: "none", color: "var(--acc)", padding: 0 }}>{open === m.id ? "Show less" : "Read more"}</button>}</>}
               {(m.skills.length > 0 || m.fields.interests || m.fields.machine || m.fields.open_to) && <div className="dr-chips">
                 {m.fields.open_to?.map((v) => <span key={v} className="dr-chip open" title="Open to">🤝 {v}</span>)}
                 {m.fields.machine?.map((v) => <span key={v} className="dr-chip mach" title="Favorite machine or area">🛠️ {v}</span>)}
@@ -54,11 +54,12 @@ export default function Directory({ initial, listed, facets }: { initial: Listin
               <div className="dr-foot">
                 {m.phone && <a href={`tel:${m.phone}`}>{m.phone}</a>}{m.email && <a href={`mailto:${m.email}`}>{m.email}</a>}{m.discord && <span>Discord: {m.discord}</span>}
                 {(Object.keys(SOCIALS) as (keyof typeof SOCIALS)[]).filter((k) => m.socials?.[k]).map((k) => <a key={k} href={socialHref(k, m.socials[k])} target="_blank" rel="noopener noreferrer nofollow">{SOCIALS[k].label}</a>)}
-                {to?.id !== m.id && <button className="btn btn-sm" onClick={() => { setTo(m); setMsg(""); }}>Message {m.name.split(" ")[0]}</button>}
+                {sent === m.id && to?.id !== m.id && <span role="status" className="sub">Sent. Replies appear in your <a href="/members/inbox">Inbox</a>.</span>}
+                {to?.id !== m.id && <button className="btn btn-sm" onClick={() => { setTo(m); setSent(null); setMsg(""); }}>{sent === m.id ? "Send another" : `Message ${m.name.split(" ")[0]}`}</button>}
               </div>
             </div>
             {to?.id === m.id && (
-              <form className="dr-msg" onSubmit={async (e) => { e.preventDefault(); setBusy(true); const r = await api({ op: "message", to: m.id, body }).catch(() => null); setBusy(false); if (r?.ok) { setMsg(`Message sent to ${m.name}. Replies will show up in your Inbox.`); setTo(null); setBody(""); } else setMsg(r ? await r.text() : "Network error."); }}>
+              <form className="dr-msg" onSubmit={async (e) => { e.preventDefault(); setBusy(true); const r = await api({ op: "message", to: m.id, body }).catch(() => null); setBusy(false); if (r?.ok) { setMsg(""); setSent(m.id); setTo(null); setBody(""); } else setMsg(r ? await r.text() : "Network error."); }}>
                 <textarea required minLength={5} maxLength={2000} rows={3} aria-label={`Message to ${m.name}`} placeholder="Say what you're working on and what you'd like help with. They'll get it in their inbox here and by email." value={body} onChange={(e) => setBody(e.target.value)} />
                 <div style={{ display: "flex", gap: 8 }}><button className="btn btn-main btn-sm" disabled={busy}>Send</button><button type="button" className="btn btn-sm" onClick={() => setTo(null)}>Cancel</button></div>
               </form>

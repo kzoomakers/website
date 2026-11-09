@@ -1,4 +1,6 @@
 "use client";
+import Notice from "@/components/notice";
+import { confirmDialog, promptDialog } from "@/components/dialog";
 import { useCallback, useEffect, useState } from "react";
 import { rpc, type State } from "./api";
 
@@ -19,7 +21,7 @@ export default function Forms({ s }: { s: State; reload: () => void }) {
     return (
       <>
         <h1>{f.id ? "Edit form" : "New form"}</h1>
-        {msg && <p className="err" role="alert">{msg}</p>}
+        {msg && <Notice kind="error">{msg}</Notice>}
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,360px)", gap: 20, alignItems: "start" }}>
           <div className="card" style={{ padding: 16 }}>
             <label className="field"><span>Form name (only you see this)</span><input value={f.name} onChange={(e) => set({ name: e.target.value })} /></label>
@@ -50,9 +52,9 @@ export default function Forms({ s }: { s: State; reload: () => void }) {
   }
   return (
     <>
-      <h1>Forms <button className="pri" onClick={() => setF({ ...NEW, lists: s.lists[0] ? [s.lists[0].id] : [] })}>New form</button></h1>
+      <h1>Signup forms <button className="pri" onClick={() => setF({ ...NEW, lists: s.lists[0] ? [s.lists[0].id] : [] })}>New form</button></h1>
       <p className="sub">Signup forms shown on the public website. A visitor who closes one won't see it again for 30 days.</p>
-      {msg && <p className="err" role="alert">{msg}</p>}
+      {msg && <Notice kind="error">{msg}</Notice>}
       <table className="mp-table">
         <thead><tr><th>Name</th><th>Type</th><th>Lists</th><th>Status</th></tr></thead>
         <tbody>
@@ -60,7 +62,7 @@ export default function Forms({ s }: { s: State; reload: () => void }) {
             <tr key={x.id}>
               <td><b>{x.name}</b>
                 <div className="mp-act"><button onClick={() => setF(x)}>Edit</button><button onClick={() => save({ ...x, enabled: !x.enabled })}>{x.enabled ? "Deactivate" : "Activate"}</button>
-                  <button className="bad" onClick={async () => { if (confirm(`Delete the form "${x.name}"?`)) { await rpc("deleteForm", { id: x.id }); load(); } }}>Delete</button></div></td>
+                  <button className="bad" onClick={async () => { if (await confirmDialog(`Delete the form "${x.name}"? Pages that embed it will stop accepting signups.`, { ok: "Delete", danger: true })) { await rpc("deleteForm", { id: x.id }); load(); } }}>Delete</button></div></td>
               <td>{KINDS.find((k) => k[0] === x.kind)?.[1]}</td><td><small>{names(x.lists)}</small></td>
               <td><span className={"pill" + (x.enabled ? " sent" : " draft")}>{x.enabled ? "Active" : "Inactive"}</span></td>
             </tr>))}

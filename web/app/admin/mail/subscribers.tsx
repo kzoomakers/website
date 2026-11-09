@@ -1,4 +1,6 @@
 "use client";
+import Notice from "@/components/notice";
+import { confirmDialog, promptDialog } from "@/components/dialog";
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { rpc, when, type State } from "./api";
@@ -31,9 +33,9 @@ export default function Subscribers({ s, reload }: { s: State; reload: () => voi
   const doBulk = async () => {
     if (!bulk || !sel.length) return;
     const [action, l] = bulk.split(":");
-    if (action === "erase") { if (!confirm(`Permanently erase ${sel.length} people and everything we hold about them? This can't be undone.`)) return; try { for (const id of sel) await rpc("erasePerson", { id }); setBulk(""); after(); } catch (e: any) { setMsg(e.message); } return; }
-    if (action === "addTag" || action === "removeTag") { const tg = prompt("Tag name?"); if (!tg) return; try { await rpc("bulkSubscribers", { ids: sel, action, tag: tg }); setBulk(""); after(); } catch (e: any) { setMsg(e.message); } return; }
-    if (action === "delete" && !confirm(`Permanently delete ${sel.length} people?`)) return;
+    if (action === "erase") { if (!(await confirmDialog(`Permanently erase ${sel.length} ${sel.length === 1 ? 'person' : 'people'} and everything we hold about them? This can't be undone.`, { ok: `Erase ${sel.length}`, danger: true }))) return; try { for (const id of sel) await rpc("erasePerson", { id }); setBulk(""); after(); } catch (e: any) { setMsg(e.message); } return; }
+    if (action === "addTag" || action === "removeTag") { const tg = await promptDialog("Tag name?"); if (!tg) return; try { await rpc("bulkSubscribers", { ids: sel, action, tag: tg }); setBulk(""); after(); } catch (e: any) { setMsg(e.message); } return; }
+    if (action === "delete" && !(await confirmDialog(`Permanently delete ${sel.length} ${sel.length === 1 ? 'person' : 'people'}?`, { ok: `Delete ${sel.length}`, danger: true }))) return;
     try { await rpc("bulkSubscribers", { ids: sel, action, list: Number(l) || undefined }); setBulk(""); after(); } catch (e: any) { setMsg(e.message); }
   };
   const names = (ids: number[]) => ids.map((i) => s.lists.find((l) => l.id === i)?.name).filter(Boolean).join(", ");
@@ -42,7 +44,7 @@ export default function Subscribers({ s, reload }: { s: State; reload: () => voi
     <>
       <h1>Subscribers <button className="pri" onClick={() => setEdit({ ...blank })}>New subscriber</button> <button onClick={() => setImp(!imp)}>Import</button>
         <button onClick={async () => { const { csv } = await rpc("exportSubscribers", { status, list: list || undefined, search }); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = "subscribers.csv"; a.click(); }}>Export</button></h1>
-      {msg && <p className="err" role="alert">{msg}</p>}
+      {msg && <Notice kind="error">{msg}</Notice>}
       {imp && (
         <div className="card" style={{ padding: 14, marginBottom: 14 }}>
           <b>Import subscribers</b>
@@ -57,7 +59,7 @@ export default function Subscribers({ s, reload }: { s: State; reload: () => voi
         <div className="modal-bg" onClick={() => setEdit(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h2>{edit.id ? "Edit subscriber" : "New subscriber"}</h2>
-            <label className="field"><span>Email</span><input type="email" value={edit.email} onChange={(e) => setEdit({ ...edit, email: e.target.value })} /></label>
+            <label className="field"><span>Email</span><input type="email" autoFocus value={edit.email} onChange={(e) => setEdit({ ...edit, email: e.target.value })} /></label>
             <label className="field"><span>Name</span><input value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} /></label>
             <label className="field"><span>Tags (comma-separated)</span><input value={edit.tags} onChange={(e) => setEdit({ ...edit, tags: e.target.value })} /></label>
             <label className="field"><span>Status</span><select value={edit.status} onChange={(e) => setEdit({ ...edit, status: e.target.value })}><option value="subscribed">Subscribed</option><option value="unconfirmed">Unconfirmed</option><option value="unsubscribed">Unsubscribed</option></select></label>

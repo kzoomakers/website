@@ -1,4 +1,5 @@
 "use client";
+import Notice from "@/components/notice";
 import { useState } from "react";
 import { confirmDialog } from "@/components/dialog";
 import type { Block } from "@/lib/tours";
@@ -31,7 +32,7 @@ export default function Availability({ initial, email, name }: { initial: Block[
   const set = (k: keyof typeof blank, v: string) => setF({ ...f, [k]: typeof blank[k] === "number" ? Number(v) : v });
   return (
     <>
-      <h1>Tour availability</h1>
+      <h1>Availability</h1>
       <p className="sub">When a guide can give tours. The block is cut into tours of the length you choose, and visitors pick one on the Tours page. Guides get an email for each booking.</p>
       <form className="card" onSubmit={save} style={{ padding: 16, marginBottom: 16, display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))" }}>
         <label>Date<input type="date" required value={f.date} onChange={(e) => set("date", e.target.value)} /></label>
@@ -51,7 +52,7 @@ export default function Availability({ initial, email, name }: { initial: Block[
         <label><input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} /> Only mine</label>
         <label><input type="checkbox" checked={past} onChange={(e) => load(e.target.checked)} /> Include past blocks</label>
         {upcoming.length > 0 && <button className="danger" onClick={() => remove(upcoming, upcoming.length === 1 ? "this upcoming block" : `all ${upcoming.length} upcoming blocks shown`)}>{q || mine ? `Delete the ${upcoming.length} upcoming shown…` : "Delete all upcoming blocks…"}</button>}
-        {msg && <span className="sub" role="alert" style={{ margin: 0 }}>{msg}</span>}
+        {msg && <Notice kind="error">{msg}</Notice>}
       </nav>
       <div className="card">
         {shown.map((b) => (

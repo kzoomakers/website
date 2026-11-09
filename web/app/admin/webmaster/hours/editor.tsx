@@ -1,4 +1,6 @@
 "use client";
+import { useDirtyGuard } from "@/components/dirty-guard";
+import Notice, { msgKind } from "@/components/notice";
 import { useState } from "react";
 import Revisions from "../revisions";
 import { DAYS, type Hours } from "@/lib/hours";
@@ -9,6 +11,7 @@ export default function HoursEditor({ initial }: { initial: Hours }) {
   const [f, setF] = useState(fields(initial));
   const [msg, setMsg] = useState("");
   const [saved, setSaved] = useState(0);
+  useDirtyGuard(f, saved);
   const set = (p: Partial<typeof f>) => { setMsg(""); setF({ ...f, ...p }); };
   const save = async () => {
     const r = await fetch("/api/webmaster/hours", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(f) });
@@ -19,7 +22,7 @@ export default function HoursEditor({ initial }: { initial: Hours }) {
     <>
       <h1>Hours &amp; address</h1>
       <p className="sub">Shown in the footer, on the contact page and on the home page. Use times like <b>10:00 AM</b>; <b>12:00 AM</b> means midnight.</p>
-      {msg && <p className="sub" role="status">{msg}</p>}
+      {msg && <Notice kind={msgKind(msg)}>{msg}</Notice>}
       <div className="card" style={{ padding: 12 }}>
         <fieldset style={{ border: 0, padding: 0 }}>
           <legend>Open on</legend>

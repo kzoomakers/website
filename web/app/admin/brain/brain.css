@@ -15,3 +15,5 @@
 @keyframes tube-core{0%{fill:#ffd35a;opacity:.8;filter:drop-shadow(0 0 2px #fff0a0) drop-shadow(0 0 6px #ffb72e)}100%{fill:#fff8cf;opacity:1;filter:drop-shadow(0 0 5px #fff7bd) drop-shadow(0 0 14px #ffb72e)}}
 @keyframes tube-glow{0%{opacity:.25;filter:blur(5px)}100%{opacity:.7;filter:blur(16px)}}
 @keyframes charge-pins{0%{width:0}25%{width:18px}50%{width:38px}75%{width:58px}100%{width:78px}}
+
+@media (prefers-reduced-motion:reduce){.landing *{animation:none!important}}

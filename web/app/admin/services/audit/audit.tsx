@@ -132,8 +132,8 @@ export default function Audit() {
   const days = span.from ? ((span.to?.getTime() ?? Date.now()) - span.from.getTime()) / DAY : 999;
   const unit = days <= 2 ? "hour" : days <= 100 ? "day" : days <= 400 ? "week" : "month";
 
-  const params = (offset = 0) => {
-    const p = new URLSearchParams({ q, sort, unit, offset: String(offset) });
+  const params = (after = 0) => {
+    const p = new URLSearchParams({ q, sort, unit, after: String(after) });
     for (const k of ["actors", "sections", "actions"] as const) if (f[k].length) p.set(k.slice(0, -1), f[k].join("\u0001"));
     if (span.from) p.set("from", span.from.toISOString());
     if (span.to) p.set("to", span.to.toISOString());
@@ -261,7 +261,7 @@ export default function Audit() {
           );
         })}
         {res && !rows.length && <p className="sub">No entries match.</p>}
-        {res && rows.length < res.total && <p><button onClick={() => fetch(`/api/webmaster/audit?${params(rows.length)}`).then((r) => r.json()).then((r) => setMore([...more, ...r.rows])).catch(() => setErr("Could not load more"))}>Show more ({res.total - rows.length} left)</button></p>}
+        {res && rows.length < res.total && <p><button onClick={() => fetch(`/api/webmaster/audit?${params(rows[rows.length - 1].id)}`).then((r) => r.json()).then((r) => setMore([...more, ...r.rows])).catch(() => setErr("Could not load more"))}>Show more ({res.total - rows.length} left)</button></p>}
       </div>
     </>
   );

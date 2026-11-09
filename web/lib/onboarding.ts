@@ -1,9 +1,9 @@
 import { processImage } from "./image";
-import { db } from "./db";
+import { conn } from "./db";
 import { logAudit } from "./store";
 import { open, seal } from "./vault";
 import { signWaiver, type Proof } from "./sign";
-import { STEP_SQL, latestVersion } from "./waiver";
+import { STEP_SQL, joinMembersIfDone, latestVersion } from "./waiver";
 
 // After staff approve someone, their next sign-in walks them through: waiver (signed PDF emailed) -> handbook -> photo ID. Order is enforced here, not just in the UI.
 export const OFFICE = "contact@kzoomakers.org";
@@ -12,12 +12,6 @@ export type IdKind = keyof typeof ID_KINDS;
 export type Step = "waiver" | "handbook" | "id" | "done" | "resign" | "profile"; // resign = already a member, but a newer mandatory agreement needs signing
 const NEXT: Record<Step, Step> = { waiver: "handbook", handbook: "id", id: "done", done: "done", resign: "done", profile: "done" };
 
-async function conn() {
-  const d = db();
-  if (!d) throw new Error("not configured");
-  await d.ready;
-  return d.pool;
-}
 
 export async function getStep(userId: number): Promise<Step> {
   return ((await (await conn()).query(`SELECT ${STEP_SQL} AS step FROM site_users u WHERE u.id = $1`, [userId])).rows[0]?.step ?? "done") as Step;
@@ -33,6 +27,13 @@ export async function sign(u: { id: number; name: string; email: string }, signa
   if (step !== "waiver" && step !== "resign") throw new Error("You've already signed the current agreement.");
   await signWaiver(u, await latestVersion(), signature, initials, drawn, proof, base, OFFICE);
   if (step === "waiver") await advance(u.id, "waiver"); // a re-sign has nothing to advance: the new signature is what clears it
+  await joinMembersIfDone(u.id);
+}
+
+/** The wizard's last screen was reached: it never opens again. Only once the required steps are done. */
+export async function welcomed(userId: number) {
+  if ((await getStep(userId)) !== "done") throw new Error("Finish the earlier steps first.");
+  await (await conn()).query("UPDATE site_users SET welcomed_at = now() WHERE id = $1 AND welcomed_at IS NULL", [userId]);
 }
 
 export async function handbookRead(userId: number) { await advance(userId, "handbook"); }
@@ -53,6 +54,7 @@ export async function storeId(userId: number, kind: string, expires: string, fil
   const img = (await processImage(file, { still: true, fit: { width: 2200, height: 2200 } })).data;
   await (await conn()).query("INSERT INTO member_ids (user_id, kind, expires_on, data) VALUES ($1,$2,$3,$4) ON CONFLICT (user_id) DO UPDATE SET kind = EXCLUDED.kind, expires_on = EXCLUDED.expires_on, data = EXCLUDED.data, uploaded_at = now()", [userId, kind, expires || null, seal(img)]);
   await advance(userId, "id");
+  await joinMembersIfDone(userId);
 }
 
 /** Staff viewing someone's ID: decrypts, and is always recorded in the audit log. */

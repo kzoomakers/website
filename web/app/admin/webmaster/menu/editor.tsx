@@ -1,4 +1,5 @@
 "use client";
+import { useDirtyGuard } from "@/components/dirty-guard";
 import { useEffect, useState } from "react";
 import { confirmDialog } from "@/components/dialog";
 import { ago } from "../ago";
@@ -24,6 +25,7 @@ function List({ list, set, depth = 0 }: { list: MenuItem[]; set: Setter; depth?:
           {depth < 2 && (m.items
             ? <button onClick={async () => !m.items!.length || (await confirmDialog("Turn into a plain link and drop its sub-items?", { ok: "Make link", danger: true })) ? upd(i, { items: undefined, href: "" }) : 0}>make link</button>
             : <button onClick={() => upd(i, { items: [], href: undefined })}>make dropdown</button>)}{" "}
+          <button aria-label="Duplicate" title="Duplicate this item" onClick={() => set([...list.slice(0, i + 1), structuredClone(m), ...list.slice(i + 1)])}>⧉</button>{" "}
           <button className="danger" aria-label="Remove" onClick={async () => (await confirmDialog(`Remove ${m.label || "item"}?`, { ok: "Remove", danger: true })) && set(list.filter((_, j) => j !== i))}>✕</button></div>
           {m.items && <List list={m.items} depth={depth + 1} set={(items) => upd(i, { items })} />}
         </li>
@@ -49,7 +51,8 @@ function Diff({ before, after }: { before: MenuItem[]; after: MenuItem[] }) {
 
 export default function MenuEditor({ initial }: { initial: MenuItem[] }) {
   const [menu, setMenu] = useState(initial);
-  const [msg, setMsg] = useState("");
+  const [msg, setMsg] = useState(""), [savedN, setSavedN] = useState(0);
+  useDirtyGuard(menu, savedN);
   const [open, setOpen] = useState<number | null>(null);
   const [revs, setRevs] = useState<Rev[]>([]);
   const loadRevs = () => fetch("/api/webmaster/menu?history").then((r) => r.json()).then(setRevs).catch(() => {});
@@ -57,6 +60,7 @@ export default function MenuEditor({ initial }: { initial: MenuItem[] }) {
   const save = async () => {
     const r = await fetch("/api/webmaster/menu", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(menu) });
     setMsg(r.ok ? "Saved" : await r.text());
+    if (r.ok) setSavedN((n) => n + 1);
     loadRevs();
   };
   const revert = async (id: number) => {

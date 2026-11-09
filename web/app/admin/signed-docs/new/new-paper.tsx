@@ -1,4 +1,6 @@
 "use client";
+import Notice from "@/components/notice";
+import { useDirtyGuard } from "@/components/dirty-guard";
 import { useRef, useState } from "react";
 import PdfPages, { readPages } from "@/components/pdf-pages";
 import { detect } from "@/lib/pdf-detect";
@@ -19,6 +21,7 @@ export default function NewPaper({ buckets, templates }: { buckets: { id: number
   const [all, setAll] = useState(true), [needed, setNeeded] = useState(1), [signers, setSigners] = useState<P[]>([]), [q, setQ] = useState(""), [found, setFound] = useState<{ name: string; email: string }[]>([]), [manual, setManual] = useState({ name: "", email: "" });
   const [fields, setFields] = useState<F[]>([]), [note, setNote] = useState(""), [tool, setTool] = useState(""), [cur, setCur] = useState(0), [sel, setSel] = useState(-1);
   const [busy, setBusy] = useState(false), [err, setErr] = useState(""), [done, setDone] = useState(""), pdfKey = useRef(0);
+  useDirtyGuard(done ? 0 : [title, body, !!pdf, signers, fields, message, tags]);
   const actors = signers.map((s, i) => [s, i] as const).filter(([s]) => s.role === "signer" || s.role === "approver");
   const add = (p: { name: string; email: string }, role = "signer") => { if (p.name && (p.email || role === "slot") && !signers.some((s) => p.email && s.email.toLowerCase() === p.email.toLowerCase())) setSigners([...signers, { ...p, role: role === "slot" ? "signer" : role, ord: 1, password: "", verify: false }]); };
   const setP = (i: number, v: Partial<P>) => setSigners(signers.map((s, j) => (j === i ? { ...s, ...v } : s)));
@@ -38,8 +41,8 @@ export default function NewPaper({ buckets, templates }: { buckets: { id: number
     setBusy(true); setErr("");
     try {
       const r = await board(op, { doc: doc() });
-      setDone(op === "saveTemplate" ? "Template saved. Start a paper from it any time, or turn on its public link under Templates." : r.failed.length ? `Created, but the email to ${r.failed.join(", ")} failed. Use "Send reminder" on the paper to retry.` : "Created. The people who are up first have been emailed a link.")
-      if (op === "create" && hold) setDone("Created. Nobody has been emailed yet: open the paper and use \"Email link\" next to each person.");
+      setDone(op === "saveTemplate" ? "Template saved. Start a document from it any time, or turn on its public link under Templates." : r.failed.length ? `Created, but the email to ${r.failed.join(", ")} failed. Use "Send reminder" on the document to retry.` : "Created. The people who are up first have been emailed a link.")
+      if (op === "create" && hold) setDone("Created. Nobody has been emailed yet: open the document and use \"Email link\" next to each person.");
     } catch (x: any) { setErr(x.message); }
     setBusy(false);
   };
@@ -77,10 +80,10 @@ export default function NewPaper({ buckets, templates }: { buckets: { id: number
   const f = fields[sel];
   const setF = (v: Partial<F>) => setFields(fields.map((x, j) => (j === sel ? { ...x, ...v } : x)));
 
-  if (done) return <><h1>New paper</h1><p role="status">{done}</p><p><a href="/admin/signed-docs">Back to papers</a> · <a href="/admin/signed-docs/new" onClick={() => location.assign("/admin/signed-docs/new")}>Start another</a></p></>;
+  if (done) return <><h1>New document</h1><p role="status">{done}</p><p><a href="/admin/signed-docs">Back to documents</a> · <a href="/admin/signed-docs/new" onClick={() => location.assign("/admin/signed-docs/new")}>Start another</a></p></>;
   return (
     <>
-      <h1>New paper</h1>
+      <h1>New document</h1>
       <p className="sub">Upload a PDF (or write the text), add the people, drag signature and other fields onto the pages, and each person gets an emailed link. When it's complete everyone gets the signed PDF.</p>
       <form onSubmit={(e) => { e.preventDefault(); run("create"); }} style={{ display: "grid", gap: 12, maxWidth: 940 }}>
         {templates.length > 0 && <label>Start from a template <select defaultValue="" onChange={(e) => useTemplate(e.target.value)}><option value="">(blank)</option>{templates.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}</select></label>}
@@ -103,7 +106,7 @@ export default function NewPaper({ buckets, templates }: { buckets: { id: number
               <button type="button" onClick={() => drop(i)}>Remove</button>
             </div>))}
           <label style={{ display: "block", marginTop: 8 }}><input type="checkbox" checked={seq} onChange={(e) => setSeq(e.target.checked)} /> Sign in order: people with a higher order number only get their link after everyone below them has finished (same number = at the same time)</label>
-          <label style={{ display: "block" }}><input type="checkbox" checked={hold} onChange={(e) => setHold(e.target.checked)} /> Don't email anyone yet: I'll send each person's link myself from the paper</label>
+          <label style={{ display: "block" }}><input type="checkbox" checked={hold} onChange={(e) => setHold(e.target.checked)} /> Don't email anyone yet: I'll send each person's link myself from the document</label>
           <label style={{ display: "block" }}><input type="checkbox" checked={all} onChange={(e) => setAll(e.target.checked)} /> Every signer and approver must sign</label>
           {!all && <label>It is complete after <input type="number" min={1} max={Math.max(1, actors.length)} value={needed} onChange={(e) => setNeeded(Number(e.target.value))} style={{ width: 70 }} /> signature{needed === 1 ? "" : "s"} (a quorum)</label>}
           <p className="sub" style={{ margin: "6px 0 0" }}>A password is given to the person by you, outside the email. "Email code" sends a 6-digit code to their address when they open the link.</p>
@@ -132,7 +135,7 @@ export default function NewPaper({ buckets, templates }: { buckets: { id: number
           </fieldset>)}
         <fieldset className="card"><legend>Details and options</legend>
           <div className="bar">
-            <label>Bucket <select value={bucket} onChange={(e) => setBucket(e.target.value)}><option value="">(none)</option>{buckets.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></label>
+            <label>Folder <select value={bucket} onChange={(e) => setBucket(e.target.value)}><option value="">(none)</option>{buckets.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></label>
             <label>Tags <input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="finance, 2026" /></label>
             <label>Due <input type="date" value={due} onChange={(e) => setDue(e.target.value)} /></label>
           </div>
@@ -141,7 +144,7 @@ export default function NewPaper({ buckets, templates }: { buckets: { id: number
           <label>After signing, send them to (optional web address)<input type="url" value={redirect} onChange={(e) => setRedirect(e.target.value)} placeholder="https://" style={{ width: "100%", boxSizing: "border-box" }} /></label>
           <label><input type="checkbox" checked={hideAudit} onChange={(e) => setHideAudit(e.target.checked)} /> Leave the signing-certificate page off the finished PDF</label>
         </fieldset>
-        {err && <p role="alert" style={{ color: "#b00020" }}>{err}</p>}
+        {err && <Notice kind="error">{err}</Notice>}
         <div className="bar">
           <button className="pri" disabled={busy || !signers.length}>{busy ? "Working…" : "Create and email signers"}</button>
           <button type="button" disabled={busy || !signers.length} onClick={() => run("saveTemplate")}>Save as template instead</button>

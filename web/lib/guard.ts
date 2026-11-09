@@ -13,9 +13,9 @@ export type Me = { email: string; name: string; image?: string; perms: Partial<R
 
 const ROOT: Me["perms"] = { admin: "write" };
 
-/** Who is signed in: a Google account on ADMIN_EMAILS (full admin), or a site account with rows in user_perms. Local `npm run dev` without Google creds is a full admin. */
+/** Who is signed in: a Google account on ADMIN_EMAILS (full admin), or a site account with rows in user_perms. Local `npm run dev` with ALLOW_DEV_ADMIN=1 (never in production) is a full admin. */
 export const me = cache(async (): Promise<Me | null> => {
-  if (process.env.NODE_ENV !== "production" && !process.env.AUTH_GOOGLE_ID) return { email: "dev", name: "dev", perms: ROOT };
+  if (process.env.ALLOW_DEV_ADMIN === "1" && process.env.NODE_ENV !== "production") return { email: "dev", name: "dev", perms: ROOT };
   const g = (await auth())?.user;
   if (g?.email && isAdmin(g.email)) return { email: g.email, name: g.name ?? g.email, image: g.image ?? undefined, perms: ROOT };
   const r = await currentMember().catch(() => null);

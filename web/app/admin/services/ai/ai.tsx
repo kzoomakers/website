@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Notice, { msgKind } from "@/components/notice";
 import type { adminView } from "@/lib/ai";
 
 type View = Awaited<ReturnType<typeof adminView>>;
@@ -21,12 +22,12 @@ export default function Ai({ initial, canEdit }: { initial: View; canEdit: boole
     <div style={{ maxWidth: 820 }}>
       <h1>AI</h1>
       <p className="sub">Optional helpers that write plain-language text for staff to review. Add a service's API token, let it find its models, then choose which model does each job. A feature only appears for staff once its model is chosen here. Only free models or models costing $0.06 per million tokens or less are offered, cheapest first.</p>
-      {msg && <p role="status" className="sub">{msg}</p>}
+      {msg && <Notice kind={msgKind(msg)}>{msg}</Notice>}
 
       <h2>1. Services</h2>
       {v.providers.map((p) => (
         <section key={p.id} className="card" style={{ padding: 14, marginBottom: 12 }}>
-          <strong>{p.name}</strong> {p.hasKey ? <span className="tag">✓ token saved{p.viaMail ? " (from Postmaster settings)" : ""}</span> : <span className="tag">no token</span>}
+          <strong>{p.name}</strong> {p.hasKey ? <span className="tag">✓ token saved{p.viaMail ? " (from Email settings)" : ""}</span> : <span className="tag">no token</span>}
           {p.models.length > 0 && <span className="tag">{p.models.length} models found</span>}
           <p className="sub" style={{ margin: "6px 0" }}>Get a token at <a href={p.keysUrl} target="_blank" rel="noreferrer">{p.keysUrl.replace("https://", "")}</a>. It is stored encrypted and never shown again.</p>
           {canEdit && (

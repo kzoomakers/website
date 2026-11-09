@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool, type PoolClient } from "pg";
 import { readdir, readFile } from "fs/promises";
 import path from "path";
 import boardSeed from "@/data/board.json";
@@ -10,11 +10,28 @@ export const LOCKED = ["index", "sitemap", "calendar", "board", "team", "history
 const GUIDED_SEEDS = ["index", "team", "history", "pricing", "handbook", "about", "contact", "other-makerspaces", "laser-shop", "wood-shop", "metal-shop", "3d-printing", "craft-room-kalamazoo", "meeting-space", "what_is_a_makerspace", "why-kzoo-makers", "how-to", "tools-we-are-seeking-donations-kalamazoo"];
 export const CAL_DEFAULT = "https://calendar.google.com/calendar/ical/kzoomakers.org_fkmebp59ti7pvl271vp65p1k8s%40group.calendar.google.com/public/basic.ics";
 
-export const poolFor = (c: Pick<Cfg, "databaseUrl" | "databaseCa">) =>
-  new Pool({ ...pgConnection(c), connectionTimeoutMillis: 5000 });
+export const poolFor = (c: Pick<Cfg, "databaseUrl" | "databaseCa">) => {
+  // statement_timeout / idle_in_transaction_session_timeout: a stuck query or a leaked open transaction can't hold locks or a connection forever.
+  const pool = new Pool({ ...pgConnection(c), connectionTimeoutMillis: 5000, idleTimeoutMillis: 30_000, statement_timeout: 60_000, idle_in_transaction_session_timeout: 120_000 });
+  // An idle connection dropped by a database restart or failover emits 'error'; with no listener Node crashes the whole process.
+  pool.on("error", (e) => console.error("postgres pool:", e.message));
+  return pool;
+};
 
 // Creates the table and, if it is brand new/empty, loads the migrated pages from data/pages.
 export async function ensureSchema(pool: Pool) {
+  // One process migrates at a time: a second one starting together waits here, then finds everything already done (the welcomed_at backfill must run once).
+  const lock = await pool.connect();
+  try {
+    await lock.query("SELECT pg_advisory_lock(7351902)");
+    await migrate(pool);
+  } finally {
+    await lock.query("SELECT pg_advisory_unlock(7351902)").catch(() => {});
+    lock.release();
+  }
+}
+
+async function migrate(pool: Pool) {
   await pool.query(`CREATE TABLE IF NOT EXISTS pages (
     slug text PRIMARY KEY, data jsonb NOT NULL, updated_at timestamptz NOT NULL DEFAULT now())`);
   await pool.query("CREATE TABLE IF NOT EXISTS settings (key text PRIMARY KEY, data jsonb NOT NULL)");
@@ -28,7 +45,7 @@ export async function ensureSchema(pool: Pool) {
   await pool.query("CREATE INDEX IF NOT EXISTS page_revisions_slug ON page_revisions (slug, id DESC)");
   // When the page was made (sitemap "new page" boost). Pages that existed before this column count as old: their first revision is only the baseline saved at the first edit, not their creation.
   await pool.query("ALTER TABLE pages ADD COLUMN IF NOT EXISTS created_at timestamptz");
-  await pool.query(`UPDATE pages p SET created_at = COALESCE((SELECT min(at) FROM page_revisions r WHERE r.slug = p.slug AND NOT EXISTS (SELECT 1 FROM page_revisions i WHERE i.slug = p.slug AND i.action = 'page.import')), '2000-01-01') WHERE created_at IS NULL`);
+  await applyOnce(pool, "2026-11-08-pages-created-at", [`UPDATE pages p SET created_at = COALESCE((SELECT min(at) FROM page_revisions r WHERE r.slug = p.slug AND NOT EXISTS (SELECT 1 FROM page_revisions i WHERE i.slug = p.slug AND i.action = 'page.import')), '2000-01-01') WHERE created_at IS NULL`]);
   await pool.query("ALTER TABLE pages ALTER COLUMN created_at SET DEFAULT now()");
   await pool.query(`CREATE TABLE IF NOT EXISTS posts (id serial PRIMARY KEY, slug text UNIQUE NOT NULL, title text NOT NULL, excerpt text NOT NULL DEFAULT '',
     body text NOT NULL DEFAULT '', image text NOT NULL DEFAULT '', tags text[] NOT NULL DEFAULT '{}', status text NOT NULL DEFAULT 'draft',
@@ -44,7 +61,7 @@ export async function ensureSchema(pool: Pool) {
   // Member details. `name` stays the display name (first + last); the rest is kept by the member and by admins (card number, QuickBooks id, notes are admin-only).
   for (const col of ["first_name", "last_name", "phone", "address1", "address2", "city", "state", "zip", "access_card_number", "qb_id", "notes"])
     await pool.query(`ALTER TABLE site_users ADD COLUMN IF NOT EXISTS ${col} text NOT NULL DEFAULT ''`);
-  await pool.query(`UPDATE site_users SET first_name = split_part(name, ' ', 1), last_name = btrim(substr(name, length(split_part(name, ' ', 1)) + 1)) WHERE first_name = '' AND last_name = ''`);
+  await applyOnce(pool, "2026-11-08-split-names", [`UPDATE site_users SET first_name = split_part(name, ' ', 1), last_name = btrim(substr(name, length(split_part(name, ' ', 1)) + 1)) WHERE first_name = '' AND last_name = ''`]);
   await pool.query("ALTER TABLE site_users ADD COLUMN IF NOT EXISTS disabled_at timestamptz, ADD COLUMN IF NOT EXISTS disabled_reason text NOT NULL DEFAULT ''"); // disabled = cannot sign in; the reason is what they are told
   // Members area: membership levels (names of the plans on the Pricing page), the skills directory, tool authorizations and classes.
   await pool.query("ALTER TABLE site_users ADD COLUMN IF NOT EXISTS directory_optin boolean NOT NULL DEFAULT false, ADD COLUMN IF NOT EXISTS bio text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS photo text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS show_phone boolean NOT NULL DEFAULT false, ADD COLUMN IF NOT EXISTS show_email boolean NOT NULL DEFAULT false, ADD COLUMN IF NOT EXISTS discord text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS show_discord boolean NOT NULL DEFAULT true, ADD COLUMN IF NOT EXISTS socials jsonb NOT NULL DEFAULT '{}', ADD COLUMN IF NOT EXISTS show_socials boolean NOT NULL DEFAULT true");
@@ -76,6 +93,10 @@ export async function ensureSchema(pool: Pool) {
     created_at timestamptz NOT NULL DEFAULT now())`);
   await pool.query("CREATE INDEX IF NOT EXISTS emergency_contacts_user ON emergency_contacts (user_id)");
   await pool.query("ALTER TABLE site_users ADD COLUMN IF NOT EXISTS session_version int NOT NULL DEFAULT 0");
+  // Handbook edits, recorded as before/after snapshots (the diff is computed from them). One open row collects edits until staff email the update, skip it, or it is sent.
+  await pool.query(`CREATE TABLE IF NOT EXISTS handbook_changes (id serial PRIMARY KEY, created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now(), created_by text NOT NULL DEFAULT '',
+    before jsonb NOT NULL, after jsonb NOT NULL, summary text NOT NULL DEFAULT '', exact boolean NOT NULL DEFAULT false, sent_at timestamptz, skipped_at timestamptz, campaign_id int, recipients int)`);
+  await pool.query("ALTER TABLE site_users ADD COLUMN IF NOT EXISTS member_listed_at timestamptz"); // set once, when they first join the Members mailing list; an admin removing them later sticks
   await pool.query("CREATE TABLE IF NOT EXISTS login_fails (email text NOT NULL, at timestamptz NOT NULL DEFAULT now())");
   await pool.query("ALTER TABLE login_fails ADD COLUMN IF NOT EXISTS ip text NOT NULL DEFAULT ''"); // lockouts are per address + visitor, so a stranger can't lock someone out
   await pool.query("CREATE TABLE IF NOT EXISTS rate_hits (key text NOT NULL, at timestamptz NOT NULL DEFAULT now())"); // lib/limit.ts
@@ -86,7 +107,9 @@ export async function ensureSchema(pool: Pool) {
   // Sign-up approval. New accounts start 'pending' (existing ones are 'approved'); staff move them between pending / waiting (for the applicant's reply) / rejected / approved.
   // approval_events is the dialog thread: messages both ways, staff-only notes, and every state change with who did it.
   await pool.query("ALTER TABLE site_users ADD COLUMN IF NOT EXISTS approval text NOT NULL DEFAULT 'approved' CHECK (approval IN ('pending','waiting','rejected','approved'))");
-  await pool.query("UPDATE site_users SET approval = 'pending' WHERE verified_at IS NULL AND approval = 'approved'"); // never-verified sign-ups must not skip the queue by verifying later
+  // never-verified sign-ups must not skip the queue by verifying later: fixed once here, and from now on the database refuses the combination (checked for new/changed rows)
+  await applyOnce(pool, "2026-11-08-approved-needs-verified", ["UPDATE site_users SET approval = 'pending' WHERE verified_at IS NULL AND approval = 'approved'",
+    "ALTER TABLE site_users ADD CONSTRAINT site_users_approved_verified CHECK (approval <> 'approved' OR verified_at IS NOT NULL) NOT VALID"]);
   await pool.query(`CREATE TABLE IF NOT EXISTS approval_events (id serial PRIMARY KEY, user_id int NOT NULL REFERENCES site_users ON DELETE CASCADE, actor text NOT NULL, by_applicant boolean NOT NULL DEFAULT false,
     kind text NOT NULL CHECK (kind IN ('message','note','state')), to_state text, body text NOT NULL DEFAULT '', at timestamptz NOT NULL DEFAULT now())`);
   await pool.query("CREATE INDEX IF NOT EXISTS approval_events_user ON approval_events (user_id, id)");
@@ -100,7 +123,7 @@ export async function ensureSchema(pool: Pool) {
   // Threading (parent_id, unlimited depth; deleting a comment removes its replies), moderation state, abuse signals, and likes.
   await pool.query(`ALTER TABLE comments ADD COLUMN IF NOT EXISTS parent_id int REFERENCES comments ON DELETE CASCADE,
     ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'approved', ADD COLUMN IF NOT EXISTS reason text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS ip_hash text NOT NULL DEFAULT ''`);
-  await pool.query("UPDATE comments SET status = 'hidden', hidden = false WHERE hidden"); // the old hidden flag is now a status
+  await applyOnce(pool, "2026-11-08-comments-hidden-flag", ["UPDATE comments SET status = 'hidden', hidden = false WHERE hidden"]); // the old hidden flag is now a status
   await pool.query("CREATE INDEX IF NOT EXISTS comments_parent ON comments (parent_id)");
   await pool.query("CREATE INDEX IF NOT EXISTS comments_ip ON comments (ip_hash, created_at)");
   // Homepage review submissions from signed-in readers; an admin approves (copying it into the homepage roster), edits or rejects.
@@ -114,6 +137,8 @@ export async function ensureSchema(pool: Pool) {
   await pool.query("CREATE INDEX IF NOT EXISTS notifications_user ON notifications (user_id, id DESC)");
   // Member onboarding after approval: waiver -> handbook -> photo ID -> done. Existing members stay 'done'.
   await pool.query("ALTER TABLE site_users ADD COLUMN IF NOT EXISTS onboarding text NOT NULL DEFAULT 'done' CHECK (onboarding IN ('waiver','handbook','id','done'))");
+  // welcomed_at: set when they finish the welcome wizard. Added with every approved member already through onboarding counted as welcomed (people still waiting for approval are not), so only new approvals see it.
+  await pool.query("DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'site_users' AND column_name = 'welcomed_at') THEN ALTER TABLE site_users ADD COLUMN welcomed_at timestamptz; UPDATE site_users SET welcomed_at = now() WHERE onboarding = 'done' AND approval = 'approved'; END IF; END $$");
   // Photo IDs, AES-256-GCM encrypted before they reach the database (see lib/vault.ts).
   await pool.query("CREATE TABLE IF NOT EXISTS member_ids (user_id int PRIMARY KEY REFERENCES site_users ON DELETE CASCADE, kind text NOT NULL, expires_on date, data bytea NOT NULL, uploaded_at timestamptz NOT NULL DEFAULT now())");
   // Public financial PDFs (one per year; replacing keeps the first upload date).
@@ -162,8 +187,30 @@ export async function ensureSchema(pool: Pool) {
   await pool.query("CREATE INDEX IF NOT EXISTS debug_log_stream ON debug_log (stream, id DESC)");
   // Optional: trigram indexes make the admin '%text%' ILIKE searches index scans. Queries are unchanged, so a server without pg_trgm (or a role that may not create it) just keeps the seq scans.
   if (await pool.query("CREATE EXTENSION IF NOT EXISTS pg_trgm").then(() => true, () => false))
-    for (const [t, c] of [["site_users", "name"], ["site_users", "email"]])
+    for (const [t, c] of [["site_users", "name"], ["site_users", "email"], ["site_users", "first_name"], ["site_users", "bio"], ["skills", "name"], ["member_skills", "note"], ["member_fields", "value"]])
       await pool.query(`CREATE INDEX IF NOT EXISTS ${t}_${c}_trgm ON ${t} USING gin (${c} gin_trgm_ops)`).catch(() => {});
+  // Foreign-key lookups (deleting a member/doc cascades through these) and database-enforced rules. See applyOnce for how constraints are introduced.
+  await applyOnce(pool, "2026-11-08-core-indexes-constraints", [
+    "CREATE INDEX IF NOT EXISTS sign_signers_doc ON sign_signers (doc_id)",
+    "CREATE INDEX IF NOT EXISTS sign_docs_user ON sign_docs (user_id)",
+    "CREATE INDEX IF NOT EXISTS sign_docs_bucket ON sign_docs (bucket_id)",
+    "CREATE INDEX IF NOT EXISTS comments_user ON comments (user_id)",
+    "CREATE INDEX IF NOT EXISTS comment_likes_user ON comment_likes (user_id)",
+    "CREATE INDEX IF NOT EXISTS class_signups_user ON class_signups (user_id)",
+    "CREATE INDEX IF NOT EXISTS member_skills_skill ON member_skills (skill_id)",
+    "CREATE INDEX IF NOT EXISTS tool_auths_tool ON tool_auths (tool_id)",
+    "ALTER TABLE comments ADD CONSTRAINT comments_status CHECK (status IN ('approved','pending','spam','hidden')) NOT VALID",
+    "ALTER TABLE posts ADD CONSTRAINT posts_status CHECK (status IN ('draft','published')) NOT VALID",
+    "ALTER TABLE review_submissions ADD CONSTRAINT review_submissions_status CHECK (status IN ('pending','approved','rejected')) NOT VALID",
+    "ALTER TABLE class_proposals ADD CONSTRAINT class_proposals_status CHECK (status IN ('pending','approved','declined')) NOT VALID",
+    "ALTER TABLE sign_signers ADD CONSTRAINT sign_signers_role CHECK (role IN ('signer','approver','viewer','cc')) NOT VALID",
+    "ALTER TABLE classes ADD CONSTRAINT classes_capacity CHECK (capacity >= 0) NOT VALID",
+    "ALTER TABLE class_proposals ADD CONSTRAINT class_proposals_capacity CHECK (capacity >= 0) NOT VALID",
+    // One account per address whatever the capitalisation. Skipped (with a log line) if case-variant duplicates already exist: merge them, then restart.
+    `DO $$ BEGIN
+       IF EXISTS (SELECT 1 FROM site_users GROUP BY lower(email) HAVING count(*) > 1) THEN RAISE NOTICE 'site_users has emails differing only by case; unique lower(email) index not created';
+       ELSE CREATE UNIQUE INDEX IF NOT EXISTS site_users_email_lower ON site_users ((lower(email))); END IF; END $$`,
+  ]);
   // First start: stage the built-in board and calendar link in Postgres (plus a baseline revision to roll back to). Admin screens replace them.
   for (const [key, data, action] of [["board", boardSeed, "board.import"], ["calendar", { url: CAL_DEFAULT }, "calendar.import"],
     ...(await Promise.all(GUIDED_SEEDS.map(async (g) => [`guided:${g}`, JSON.parse(await readFile(path.join(process.cwd(), "data", "guided", g + ".json"), "utf8")), `guided.${g}.import`] as const)))] as const)
@@ -193,4 +240,56 @@ export function db(): { pool: Pool; ready: Promise<unknown> } | null {
     g.db = { key, pool, ready };
   }
   return g.db;
+}
+
+/** The ready pool: throws if setup has not run. Shared by every lib module that talks to Postgres. */
+export async function conn(): Promise<Pool> {
+  const d = db();
+  if (!d) throw new Error("not configured");
+  await d.ready;
+  return d.pool;
+}
+
+/** Run `fn` only if no other process holds the lock `id` (a machine started alongside this one skips the job instead of double-firing it). */
+export async function withLock(id: number, fn: () => Promise<unknown>) {
+  const c = await (await conn()).connect();
+  try {
+    if (!(await c.query("SELECT pg_try_advisory_lock($1) AS ok", [id])).rows[0].ok) return;
+    try { await fn(); } finally { await c.query("SELECT pg_advisory_unlock($1)", [id]).catch(() => {}); }
+  } finally { c.release(); }
+}
+
+/** BEGIN/COMMIT around `fn`; rolls back (without hiding the original error) if it throws. */
+export async function withTx<T>(fn: (c: PoolClient) => Promise<T>): Promise<T> {
+  const c = await (await conn()).connect();
+  try {
+    await c.query("BEGIN");
+    const r = await fn(c);
+    await c.query("COMMIT");
+    return r;
+  } catch (e) { await c.query("ROLLBACK").catch(() => {}); throw e; } finally { c.release(); }
+}
+
+/** Anything that can lower the number of active administrators (delete, disable, demote) runs through here, one at a time, so two of them can't each see "enough admins left". */
+export const adminFloor = <T>(fn: (c: PoolClient) => Promise<T>) =>
+  withTx(async (c) => { await c.query("SELECT pg_advisory_xact_lock(7351920)"); return fn(c); });
+
+/**
+ * Versioned migrations: runs `statements` once, atomically, and records `id` in schema_migrations. Ids are never edited after release; add a new one.
+ * Statements run in a transaction, so no CONCURRENTLY: fine at this table size. Constraints are added NOT VALID (new rows are checked at once; existing rows are
+ * checked by `ALTER TABLE … VALIDATE CONSTRAINT …` when you are ready, it does not block writes).
+ */
+export async function applyOnce(pool: Pool, id: string, statements: string[]) {
+  const c = await pool.connect();
+  try {
+    await c.query("BEGIN");
+    await c.query("SELECT pg_advisory_xact_lock(7351903)");
+    await c.query("CREATE TABLE IF NOT EXISTS schema_migrations (id text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())");
+    if (!(await c.query("SELECT 1 FROM schema_migrations WHERE id = $1", [id])).rowCount) {
+      for (const s of statements) await c.query(s);
+      await c.query("INSERT INTO schema_migrations (id) VALUES ($1)", [id]);
+      console.log("migration applied:", id);
+    }
+    await c.query("COMMIT");
+  } catch (e) { await c.query("ROLLBACK").catch(() => {}); throw e; } finally { c.release(); }
 }

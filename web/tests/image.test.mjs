@@ -52,10 +52,10 @@ test("HEIC becomes a WebP, and a 20 megapixel HEIC is shrunk to 12 megapixels or
   assert.ok(px(b) <= 12e6 && px(b) > 11e6, `${b.width}x${b.height}`);
 });
 
-test("refused with a message: garbage, SVG, over 30 MB, a huge animation, and a timeout", async () => {
+test("refused with a message: garbage, SVG, over the 70 MB default, a huge animation, and a timeout", async () => {
   await refused(processImage(Buffer.from("not an image")), /couldn't be read/);
   await refused(processImage(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"/>')), /SVG/);
-  await refused(processImage(Buffer.alloc(31 * 1024 * 1024)), /30 MB/);
+  await refused(processImage(Buffer.alloc(71 * 1024 * 1024)), /70 MB/);
   await refused(processImage(await frames(400, 400, 160)), /animation is too big/); // 25.6 million pixels in all
   await refused(processImage(await solid(64, 48).png().toBuffer(), { timeoutMs: 1 }), /too long/);
 });
@@ -82,7 +82,7 @@ test("email: JPEG for a still (transparency goes white), GIF for an animation", 
 test("uploadGate: needs a size, refuses too big, and a busy 503 does not use up the hourly allowance", async () => {
   const req = (len) => new Request("http://x/", { method: "POST", headers: len ? { "content-length": String(len) } : {} });
   assert.equal((await uploadGate(req(0), "g1")).status, 411);
-  assert.equal((await uploadGate(req(32 * 1024 * 1024), "g1")).status, 413);
+  assert.equal((await uploadGate(req(72 * 1024 * 1024), "g1")).status, 413);
   assert.equal(await uploadGate(req(1000), "g1", 2), null);
   assert.equal(await uploadGate(req(1000), "g1", 2), null);
   assert.equal((await uploadGate(req(1000), "g1", 2)).status, 429);
@@ -92,4 +92,16 @@ test("uploadGate: needs a size, refuses too big, and a busy 503 does not use up 
   for (let i = 0; i < 10; i++) assert.equal((await uploadGate(req(1000), "g2", 2)).status, 503);
   await Promise.all(jobs);
   assert.equal(await uploadGate(req(1000), "g2", 2), null);
+});
+
+test("upload limits: the admin numbers must be whole, in range, and public never above signed-in", async () => {
+  const { checkLimits, publicTooLarge, tooLarge } = await import("../lib/upload-limit.ts");
+  const { uploadLimits, setUploadLimits } = await import("../lib/upload-cfg.ts");
+  assert.doesNotThrow(() => checkLimits({ mb: 70, publicMb: 10 }));
+  assert.doesNotThrow(() => checkLimits({ mb: 150, publicMb: 1 }));
+  for (const bad of [{ mb: 0, publicMb: 1 }, { mb: 151, publicMb: 1 }, { mb: 1.5, publicMb: 1 }, { mb: 70, publicMb: 11 }, { mb: 70, publicMb: 0 }, { mb: 5, publicMb: 6 }, { mb: NaN, publicMb: 1 }]) assert.throws(() => checkLimits(bad), /whole number/);
+  await assert.rejects(setUploadLimits({ mb: 0, publicMb: 1 }), /whole number/);
+  assert.deepEqual(await uploadLimits(true), { mb: 70, publicMb: 10 }); // no database: the defaults
+  assert.match(tooLarge(70), /too big.*70 MB/);
+  assert.match(publicTooLarge(10), /Without signing in.*10 MB/);
 });

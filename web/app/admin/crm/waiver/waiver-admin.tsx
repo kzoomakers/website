@@ -1,4 +1,6 @@
 "use client";
+import { useDirtyGuard } from "@/components/dirty-guard";
+import Notice, { msgKind } from "@/components/notice";
 import { useState } from "react";
 import { confirmDialog } from "@/components/dialog";
 import { Agreement, Changes } from "@/components/agreement";
@@ -17,6 +19,7 @@ const nextRev = (r: string) => r.replace(/(\d+)$/, (n) => String(Number(n) + 1))
 export default function WaiverAdmin({ initial, canEdit, ai }: { initial: V[]; canEdit: boolean; ai: boolean }) {
   const [vs, setVs] = useState(initial), [tab, setTab] = useState<"edit" | "versions" | "members">("edit"), cur = vs[0];
   const [d, setD] = useState({ revision: nextRev(cur.revision), title: cur.title, closing: cur.closing, sections: cur.sections.map((s) => ({ ...s })) as Section[], summary: "", mandatory: true });
+  useDirtyGuard(d, vs.length);
   const [msg, setMsg] = useState(""), [busy, setBusy] = useState(false), [thinking, setThinking] = useState(false);
   const [mem, setMem] = useState<M[] | null>(null), [mf, setMf] = useState({ q: "", version: "" });
   const changes = diffVersions(cur, d), set = (i: number, k: keyof Section, v: string) => setD({ ...d, sections: d.sections.map((s, j) => (j === i ? { ...s, [k]: v } : s)) });
@@ -39,11 +42,11 @@ export default function WaiverAdmin({ initial, canEdit, ai }: { initial: V[]; ca
   };
   return (
     <>
-      <h1>Membership agreement &amp; liability waiver</h1>
+      <h1>Membership agreement</h1>
       <p className="sub">New members sign this after approval. Publishing a change makes a new numbered version: the old ones are kept forever, along with every member's signed copy.</p>
       <nav className="bar" role="tablist">
         {([["edit", "Edit & publish"], ["versions", `Versions (${vs.length})`], ["members", "Who signed what"]] as const).map(([t, l]) => <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? "pri" : ""} onClick={() => show(t)}>{l}</button>)}
-        {msg && <span role="status" className="sub" style={{ margin: 0 }}>{msg}</span>}
+        {msg && <Notice kind={msgKind(msg)}>{msg}</Notice>}
       </nav>
 
       {tab === "edit" && (

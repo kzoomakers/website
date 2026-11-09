@@ -2,7 +2,7 @@ import { createHash, randomBytes, randomInt } from "crypto";
 import { PDFDocument } from "pdf-lib";
 import { checkPw, hashPw } from "./sign-access";
 export { cookieOf, unlockCookie, unlocked } from "./sign-access";
-import { db } from "./db";
+import { conn } from "./db";
 import { logAudit } from "./store";
 import { getMailCfg, mailReady, sendQueued as send } from "./mail";
 import { open, seal, sha256 } from "./vault";
@@ -24,12 +24,6 @@ export type FieldIn = { r: number; type: string; page: number; x: number; y: num
 export type Setup = { message?: string; redirect_url?: string; hide_audit?: boolean; sequential?: boolean; needed?: number; tags?: string[]; present?: string[]; signers: Recipient[]; fields?: FieldIn[] };
 export type NewDoc = Setup & { hold?: boolean; title: string; body?: string; pdf?: string | Buffer; bucket_id?: number | null; due_at?: string | null };
 
-async function conn() {
-  const d = db();
-  if (!d) throw new Error("not configured");
-  await d.ready;
-  return d.pool;
-}
 const clip = (v: unknown, n: number) => (typeof v === "string" ? v.trim().slice(0, n) : "");
 const EMAIL_OK = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/;
 const esc = (s: string) => s.replace(/[<>&"]/g, "");
@@ -181,7 +175,7 @@ export async function createDoc(n: NewDoc, who: string, base: string, direct = -
 
 export async function remind(id: number, who: string, base: string) {
   const d = await getDoc(id);
-  if (!d || d.status !== "open") throw new Error("Only open papers can be reminded.");
+  if (!d || d.status !== "open") throw new Error("Only open documents can be reminded.");
   const todo = d.signers.filter((s) => !s.signed_at && s.sent_at && s.role !== "cc");
   for (const s of todo) await mailSigner(d, s, base, true);
   await advance(id, base);
@@ -191,7 +185,7 @@ export async function remind(id: number, who: string, base: string) {
 
 export async function voidDoc(id: number, who: string) {
   const r = await (await conn()).query("UPDATE sign_docs SET status = 'void' WHERE id = $1 AND kind = 'board' AND status = 'open' RETURNING title", [id]);
-  if (!r.rowCount) throw new Error("Only open papers can be voided.");
+  if (!r.rowCount) throw new Error("Only open documents can be voided.");
   await logAudit(who, "board.sign.void", `${r.rows[0].title} (#${id})`);
 }
 
@@ -231,8 +225,8 @@ export async function signByToken(token: string, input: SignInput, proof: Proof,
   const f = await byToken(token), signature = clip(input.signature, 100), initials = clip(input.initials, 6).toUpperCase();
   if (!f) throw new Error("This signing link isn't valid.");
   if (f.signer.locked && !ok) throw new Error("Enter your password or code first.");
-  if (f.doc.status !== "open") throw new Error(f.doc.status === "complete" ? "This paper already has all the signatures it needs." : "This paper is no longer open for signing.");
-  if (f.signer.signed_at || f.signer.declined_at) throw new Error("You've already responded to this paper.");
+  if (f.doc.status !== "open") throw new Error(f.doc.status === "complete" ? "This document already has all the signatures it needs." : "This document is no longer open for signing.");
+  if (f.signer.signed_at || f.signer.declined_at) throw new Error("You've already responded to this document.");
   if (f.signer.role === "viewer") await (await conn()).query("UPDATE sign_signers SET signed_at = now(), ip = $2, ua = $3 WHERE id = $1 AND signed_at IS NULL", [f.signer.id, proof.ip.slice(0, 64), proof.ua.slice(0, 300)]);
   else {
     if (signature.length < 2) throw new Error("Type your full name to sign.");
