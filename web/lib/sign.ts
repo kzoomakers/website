@@ -131,7 +131,7 @@ const pdfInfo = async (pdf: string | Buffer) => {
 };
 
 /** Normalises recipients, fields and options. A template keeps blank emails (slots a public-link visitor fills) and never keeps passwords. */
-function cleanSetup(n: Setup, pages: number, template: boolean) {
+export function cleanSetup(n: Setup, pages: number, template: boolean) {
   const signers = (n.signers ?? []).map((s) => ({ name: clip(s.name, 100), email: clip(s.email, 200).toLowerCase(), role: (ROLES as readonly string[]).includes(s.role as string) ? (s.role as Role) : "signer" as Role, ord: Math.round(num(s.ord ?? 1, 1, 50)) || 1, password: template ? "" : clip(s.password, 100), verify: !!s.verify })).filter((s) => s.name || s.email);
   if (!signers.length || signers.length > 50) throw new Error("Add between 1 and 50 people.");
   if (signers.some((s) => !s.name || (!template || s.email) && !EMAIL_OK.test(s.email))) throw new Error("Every person needs a name and a valid email address.");
