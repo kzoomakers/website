@@ -1,7 +1,6 @@
 import http from "node:http";
 import { getToken } from "next-auth/jwt";
 import { toRow, record } from "./httplog";
-import { countReferral } from "./referrers";
 import { staticPath, statusOf, webLike } from "./httplog-util";
 import { COOKIE_NAME, cookieUserId } from "./readers";
 
@@ -44,5 +43,4 @@ async function finish(row: ReturnType<typeof toRow>, cookie: string) {
     }
   } catch { /* keep the row without a user */ }
   record(row);
-  countReferral(row);
 }

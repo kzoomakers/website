@@ -955,7 +955,7 @@ flowchart LR
 2. Each save is recorded (who, when, before/after). Saves identical to the current content are ignored.
 3. Staff can browse the **audit log**, see what changed, and **revert** (where a "before" exists). Deleted pages can be restored with their menu links.
 4. **Financial reports:** staff upload one PDF per year (max 10 MB, must be a real PDF), which appears at a public link and adds "Financials" to the public menu once a PDF exists. Replacing keeps the first upload date.
-5. Link clicks leaving the site, referrers and traffic are counted for staff.
+5. Link clicks leaving the site, and (when Google Analytics is turned on in Setup) visitors and traffic sources are reported to staff.
 
 **Business rules:** [BR-K8 – BR-K12](BUSINESS_RULES.md#k-blog-reviews-and-website).
 
@@ -984,7 +984,7 @@ flowchart TD
 **Participants:** Administrators, system.
 
 **Normal process:**
-1. Administrators can view: the audit log, a log of web requests (with response codes), database health, link-click and referrer statistics, a debug view, and phone-alert (ntfy) topics, tokens and connected devices.
+1. Administrators can view: the audit log, a log of web requests (with response codes), database health, link-click statistics and the Google Analytics report, a debug view, and phone-alert (ntfy) topics, tokens and connected devices.
 2. Admins configure: upload size limits, web-security headers, privacy policy text, AI model choices, a signing certificate, API keys (shown once; only a fingerprint is stored; optional expiry), and sign-up rate reset.
 3. Every 6 hours, data older than **5 years** is deleted from: audit log, page revisions, tour timeline, email click records, contact messages, notifications; sent email campaigns older than 5 years are deleted with their recipients and clicks.
 4. Link-click *details* are kept 180 days (daily totals forever).

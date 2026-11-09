@@ -17,7 +17,7 @@ const WEBMASTER: Item[] = [
   { href: "/admin/services/privacy", icon: "🔒", label: "Privacy statement" }, { href: "/admin/services/links", icon: "🔗", label: "External links" },
   { href: "/admin/webmaster/robots", icon: "🤖", label: "Search engine settings" },
   { href: "/admin/webmaster/reviews", icon: "⭐", label: "Reviews" },
-  { href: "/admin/webmaster/referrers", icon: "🧭", label: "HTTP referrers" },
+  { href: "/admin/webmaster/analytics", icon: "📈", label: "Analytics" },
   { href: "/admin/webmaster/handbook-updates", icon: "📣", label: "Handbook updates" },
 ];
 
@@ -34,7 +34,7 @@ const CRM: Item[] = [{ href: "/admin/crm", icon: "👥", label: "People", exact:
 const SIGNED: Item[] = [{ href: "/admin/signed-docs", icon: "📄", label: "Documents", exact: true }, { href: "/admin/signed-docs/new", icon: "➕", label: "New document" }, { href: "/admin/signed-docs/templates", icon: "📑", label: "Templates" }, { href: "/admin/signed-docs/buckets", icon: "🗂️", label: "Folders" }];
 const TOURS: Item[] = [{ href: "/admin/tours", icon: "🗓️", label: "Bookings", exact: true }, { href: "/admin/tours/walkups", icon: "🚶", label: "Walk-ups" }, { href: "/admin/tours/availability", icon: "🕙", label: "Availability" }, { href: "/admin/tours/stats", icon: "📈", label: "Stats" }, { href: "/admin/tours/timeline", icon: "🧵", label: "Timeline" }, { href: "/admin/tours/notifications", icon: "🔔", label: "Tour alerts" }];
 const CHORES: Item[] = [{ href: "/admin/chores", icon: "🧹", label: "To do", exact: true }, { href: "/admin/chores/log", icon: "⏱️", label: "Hours" }, { href: "/admin/chores/stats", icon: "📊", label: "Stats" }, { href: "/admin/chores/achievements", icon: "🏅", label: "Achievements" }];
-const SYSTEM: Item[] = [{ href: "/admin/users", icon: "🔑", label: "Access" }, { href: "/admin/services", icon: "⚙️", label: "Setup", exact: true }, { href: "/admin/services/audit", icon: "📋", label: "Audit log" }, { href: "/admin/services/ntfy", icon: "📱", label: "Alert delivery" }, { href: "/admin/services/api-keys", icon: "🗝️", label: "API keys" }, { href: "/admin/services/ai", icon: "✨", label: "AI" },
+const SYSTEM: Item[] = [{ href: "/admin/users", icon: "🔑", label: "Access" }, { href: "/admin/services", icon: "⚙️", label: "Setup", exact: true }, { href: "/admin/services/audit", icon: "📋", label: "Audit log" }, { href: "/admin/services/ntfy", icon: "📱", label: "Alert delivery" }, { href: "/admin/services/api-keys", icon: "🗝️", label: "API keys" }, { href: "/admin/services/ai", icon: "✨", label: "AI" }, { href: "/admin/services/google-analytics", icon: "📊", label: "Analytics & cookies" },
   { icon: "🩺", label: "Diagnostics", items: [{ href: "/admin/services/debug", icon: "🐞", label: "Debug" }, { href: "/admin/services/httplog", icon: "🌐", label: "HTTP log" }, { href: "/admin/services/pgstats", icon: "📈", label: "Database stats" }, { href: "/admin/services/security", icon: "🛡️", label: "Security headers" }] }];
 const MENUS: [string, Item[]][] = [["/admin/webmaster", WEBMASTER], ["/admin/blog", BLOG], ["/admin/mail", MAIL], ["/admin/forms", FORMS], ["/admin/crm", CRM], ["/admin/signed-docs", SIGNED], ["/admin/tours", TOURS], ["/admin/chores", CHORES], ["/admin/users", SYSTEM]];
 

@@ -35,6 +35,8 @@ async function migrate(pool: Pool) {
   await pool.query(`CREATE TABLE IF NOT EXISTS pages (
     slug text PRIMARY KEY, data jsonb NOT NULL, updated_at timestamptz NOT NULL DEFAULT now())`);
   await pool.query("CREATE TABLE IF NOT EXISTS settings (key text PRIMARY KEY, data jsonb NOT NULL)");
+  // First-party referrer counts are replaced by Google Analytics (lib/ga.ts). The tag that used to be hardcoded in script.js becomes the starting setting, so tracking carries on (only after the visitor accepts cookies).
+  await applyOnce(pool, "2026-11-09-referrers-to-ga", ["DROP TABLE IF EXISTS referrer_daily", `INSERT INTO settings (key, data) VALUES ('ga:config', '{"enabled":true,"measurementId":"G-K9PW1WKYKW","propertyId":"","credentials":""}') ON CONFLICT (key) DO NOTHING`]);
   // Audit log; rows with `data` (menu snapshots) double as revision history.
   await pool.query(`CREATE TABLE IF NOT EXISTS audit (id serial PRIMARY KEY, at timestamptz NOT NULL DEFAULT now(),
     actor text NOT NULL, action text NOT NULL, target text NOT NULL DEFAULT '', data jsonb)`);
