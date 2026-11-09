@@ -17,6 +17,7 @@ const WEBMASTER: Item[] = [
   { href: "/admin/services/privacy", icon: "🔒", label: "Privacy statement" }, { href: "/admin/services/links", icon: "🔗", label: "External links" },
   { href: "/admin/webmaster/robots", icon: "🤖", label: "Search engine settings" },
   { href: "/admin/webmaster/reviews", icon: "⭐", label: "Reviews" },
+  { href: "/admin/webmaster/referrers", icon: "🧭", label: "HTTP referrers" },
   { href: "/admin/webmaster/handbook-updates", icon: "📣", label: "Handbook updates" },
 ];
 
