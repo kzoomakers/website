@@ -46,7 +46,7 @@ export default function GoogleAnalytics({ initial, canEdit }: { initial: View; c
           <li>Paste the Property ID (GA4 Admin &gt; Property details, a number) and the whole JSON key below.</li>
         </ol>
         <input aria-label="Property ID" placeholder="Property ID, e.g. 123456789" inputMode="numeric" value={pid} disabled={!canEdit} onChange={(e) => setPid(e.target.value)} style={{ marginBottom: 8 }} />
-        <textarea aria-label="Service-account key (JSON)" rows={4} autoComplete="off" disabled={!canEdit} placeholder={v.serviceAccount ? "Paste a new key to replace the saved one" : '{ "type": "service_account", … }'} value={key} onChange={(e) => setKey(e.target.value)} style={{ width: "100%", boxSizing: "border-box", font: "13px/1.4 ui-monospace,monospace" }} />
+        <textarea aria-label="Service-account key (JSON)" rows={4} autoComplete="off" disabled={!canEdit} placeholder={v.serviceAccount ? "Paste a new key to replace the saved one" : "Paste the contents of the downloaded JSON key file"} value={key} onChange={(e) => setKey(e.target.value)} style={{ width: "100%", boxSizing: "border-box", font: "13px/1.4 ui-monospace,monospace" }} />
         <p className="sub" style={{ margin: "6px 0" }}>{v.serviceAccount ? <>✓ Key saved for <strong>{v.serviceAccount}</strong>. It is stored encrypted and never shown again.</> : "No key saved yet."}</p>
       </section>
       <section className="card" style={{ padding: 14, marginBottom: 12 }}>
