@@ -24,7 +24,7 @@ test("admin:write reaches every section; other levels stay in their own section"
 
 const walk = (d) => readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirectory() ? walk(join(d, f)) : [join(d, f)]));
 test("an API route with no auth check must be on the reviewed public list", () => {
-  const PUBLIC = new Set(["tours", "contact", "calendar", "subscribe", "hours", "auth/[...nextauth]", "links/click", "blog/auth/password"].map((p) => `app/api/${p}/route.ts`));
+  const PUBLIC = new Set(["tours", "contact", "calendar", "subscribe", "hours", "auth/[...nextauth]", "links/click", "blog/auth/password", "ga/tag", "privacy"].map((p) => `app/api/${p}/route.ts`));
   const guarded = /editingAllowed|current(Member|Verified|Applicant)|keyAllows|gate\(|\bme\(\)|auth\(\)|token|isAdmin|getSession|byToken/;
   for (const f of walk("app/api").filter((f) => f.endsWith("route.ts")))
     if (!guarded.test(readFileSync(f, "utf8"))) assert.ok(PUBLIC.has(f), `${f} has no auth check: guard it, or add it here if it is meant to be public`);

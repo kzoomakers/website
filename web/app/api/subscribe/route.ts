@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { errMsg } from "@/lib/errmsg";
 import { baseUrl, publicForms, publicSubscribe } from "@/lib/mail";
 import { clientIp } from "@/lib/comments";
+import { convert } from "@/lib/ga-attr";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,9 @@ export async function POST(req: Request) {
   if (b?.website) return NextResponse.json({ result: "subscribed" }); // honeypot: bots fill hidden fields, pretend success
   try {
     const ip = clientIp(req);
-    return NextResponse.json({ result: await publicSubscribe(Number(b?.form), String(b?.email ?? "").trim(), String(b?.name ?? "").trim(), await baseUrl(req), ip) });
+    const result = await publicSubscribe(Number(b?.form), String(b?.email ?? "").trim(), String(b?.name ?? "").trim(), await baseUrl(req), ip);
+    await convert(req, "subscribe");
+    return NextResponse.json({ result });
   } catch (e: any) {
     return new NextResponse(errMsg(e), { status: 400 });
   }

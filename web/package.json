@@ -17,6 +17,13 @@
     "@tiptap/react": "^3.33.0",
     "@tiptap/starter-kit": "^3.33.0",
     "@types/nodemailer": "^8.0.2",
+    "all-the-german-words": "^1.1.0",
+    "an-array-of-dutch-words": "^0.0.0-development",
+    "an-array-of-english-words": "^2.0.0",
+    "an-array-of-french-words": "^2.0.0",
+    "an-array-of-italian-words": "^1.2.0",
+    "an-array-of-portuguese-words": "^1.2.0",
+    "an-array-of-spanish-words": "^2.0.0",
     "animejs": "^4.5.0",
     "asn1js": "4.0.0",
     "cheerio": "^1.2.0",
@@ -28,9 +35,11 @@
     "pdfjs-dist": "6.5.438",
     "pg": "^8.23.1",
     "pkijs": "4.0.1",
+    "qrcode-generator": "^2.0.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "sharp": "^0.35.5"
+    "sharp": "^0.35.5",
+    "wordlist-english": "^1.2.1"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

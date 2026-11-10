@@ -3,6 +3,7 @@ import { readdir, readFile } from "fs/promises";
 import path from "path";
 import boardSeed from "@/data/board.json";
 import waiverSeed from "@/data/waiver-2025.1.json";
+import guestSeed from "@/data/guest-agreement-1.0.json";
 import { getConfig, pgConnection, type Cfg } from "./config";
 
 /** Pages managed by their own admin screen: not listed, not editable in Puck. */
@@ -35,6 +36,8 @@ async function migrate(pool: Pool) {
   await pool.query(`CREATE TABLE IF NOT EXISTS pages (
     slug text PRIMARY KEY, data jsonb NOT NULL, updated_at timestamptz NOT NULL DEFAULT now())`);
   await pool.query("CREATE TABLE IF NOT EXISTS settings (key text PRIMARY KEY, data jsonb NOT NULL)");
+  // First-party referrer counts are replaced by Google Analytics (lib/ga.ts). The tag that used to be hardcoded in script.js becomes the starting setting, so tracking carries on (only after the visitor accepts cookies).
+  await applyOnce(pool, "2026-11-09-referrers-to-ga", ["DROP TABLE IF EXISTS referrer_daily", `INSERT INTO settings (key, data) VALUES ('ga:config', '{"enabled":true,"measurementId":"G-K9PW1WKYKW","propertyId":"","credentials":""}') ON CONFLICT (key) DO NOTHING`]);
   // Audit log; rows with `data` (menu snapshots) double as revision history.
   await pool.query(`CREATE TABLE IF NOT EXISTS audit (id serial PRIMARY KEY, at timestamptz NOT NULL DEFAULT now(),
     actor text NOT NULL, action text NOT NULL, target text NOT NULL DEFAULT '', data jsonb)`);
@@ -182,6 +185,32 @@ async function migrate(pool: Pool) {
   ]) await pool.query(q);
   await pool.query("INSERT INTO waiver_versions (revision, title, sections, closing, summary, created_by) SELECT $1,$2,$3,$4,'First version (imported from the paper agreement).','system' WHERE NOT EXISTS (SELECT 1 FROM waiver_versions)",
     [waiverSeed.revision, waiverSeed.title, JSON.stringify(waiverSeed.sections), waiverSeed.closing]);
+  // Guest agreement = the same table with kind 'guest'. Revision numbers are unique per kind. Drafts are one work-in-progress copy per kind and never signable.
+  await pool.query("ALTER TABLE waiver_versions ADD COLUMN IF NOT EXISTS kind text NOT NULL DEFAULT 'member'");
+  await pool.query("ALTER TABLE waiver_versions DROP CONSTRAINT IF EXISTS waiver_versions_revision_key");
+  await pool.query("CREATE UNIQUE INDEX IF NOT EXISTS waiver_versions_kind_revision ON waiver_versions (kind, lower(revision))");
+  await pool.query("INSERT INTO waiver_versions (kind, revision, title, sections, closing, summary, created_by) SELECT 'guest',$1,$2,$3,$4,'First version.','system' WHERE NOT EXISTS (SELECT 1 FROM waiver_versions WHERE kind = 'guest')",
+    [guestSeed.revision, guestSeed.title, JSON.stringify(guestSeed.sections), guestSeed.closing]);
+  await pool.query("CREATE TABLE IF NOT EXISTS agreement_drafts (kind text PRIMARY KEY, data jsonb NOT NULL, updated_by text NOT NULL DEFAULT '', updated_at timestamptz NOT NULL DEFAULT now())");
+  // Who may publish an agreement ("special permissions", Admin > Access). Keyed by email so Google-login admins can be listed too.
+  await pool.query("CREATE TABLE IF NOT EXISTS special_perms (perm text NOT NULL, email text NOT NULL, PRIMARY KEY (perm, email))");
+  // Guests of members. Everything here is deleted with the guest (see lib/guests.ts); the signed agreement lives in sign_docs (kind 'guest', guest_id).
+  await pool.query(`CREATE TABLE IF NOT EXISTS guests (id serial PRIMARY KEY, host_id int NOT NULL REFERENCES site_users ON DELETE CASCADE, first_name text NOT NULL DEFAULT '', last_name text NOT NULL DEFAULT '',
+    email text NOT NULL DEFAULT '', phone text NOT NULL DEFAULT '', address text NOT NULL DEFAULT '', zip text NOT NULL DEFAULT '', state text NOT NULL DEFAULT '', minor boolean, guardian_name text NOT NULL DEFAULT '',
+    retention_ack_at timestamptz, delete_requested_at timestamptz, created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now())`);
+  await pool.query("CREATE INDEX IF NOT EXISTS guests_host ON guests (host_id)");
+  await pool.query(`CREATE TABLE IF NOT EXISTS guest_contacts (id serial PRIMARY KEY, guest_id int NOT NULL REFERENCES guests ON DELETE CASCADE, first_name text NOT NULL, last_name text NOT NULL,
+    phone text NOT NULL, relationship text NOT NULL, address text NOT NULL DEFAULT '', business_phone text NOT NULL DEFAULT '')`);
+  await pool.query("CREATE INDEX IF NOT EXISTS guest_contacts_guest ON guest_contacts (guest_id)");
+  await pool.query("CREATE TABLE IF NOT EXISTS guest_ids (guest_id int PRIMARY KEY REFERENCES guests ON DELETE CASCADE, kind text NOT NULL, expires_on date, data bytea NOT NULL, uploaded_at timestamptz NOT NULL DEFAULT now())");
+  await pool.query("CREATE TABLE IF NOT EXISTS guest_links (token_hash text PRIMARY KEY, guest_id int NOT NULL REFERENCES guests ON DELETE CASCADE, expires_at timestamptz NOT NULL)");
+  await pool.query("CREATE INDEX IF NOT EXISTS guest_links_guest ON guest_links (guest_id)");
+  await pool.query("CREATE TABLE IF NOT EXISTS guest_visits (id serial PRIMARY KEY, guest_id int NOT NULL REFERENCES guests ON DELETE CASCADE, host_id int NOT NULL, at timestamptz NOT NULL DEFAULT now())");
+  await pool.query("CREATE INDEX IF NOT EXISTS guest_visits_guest ON guest_visits (guest_id, at DESC)");
+  await pool.query("CREATE TABLE IF NOT EXISTS guest_notices (guest_id int NOT NULL REFERENCES guests ON DELETE CASCADE, version_id int NOT NULL REFERENCES waiver_versions, queued_at timestamptz NOT NULL DEFAULT now(), sent_at timestamptz, PRIMARY KEY (guest_id, version_id))");
+  await pool.query("ALTER TABLE sign_docs ADD COLUMN IF NOT EXISTS guest_id int REFERENCES guests ON DELETE CASCADE");
+  await pool.query("CREATE INDEX IF NOT EXISTS sign_docs_guest ON sign_docs (guest_id)");
+  await pool.query("CREATE TABLE IF NOT EXISTS mail_daily (day date PRIMARY KEY, n int NOT NULL DEFAULT 0)"); // every email actually sent, per day (Detroit time), so the guest trickle can back off
   // Debug trap: only filled while a stream is switched on in Admin > Debug (see lib/debug.ts).
   await pool.query("CREATE TABLE IF NOT EXISTS debug_log (id bigserial PRIMARY KEY, at timestamptz NOT NULL DEFAULT now(), stream text NOT NULL, level text NOT NULL DEFAULT 'info', message text NOT NULL, data jsonb)");
   await pool.query("CREATE INDEX IF NOT EXISTS debug_log_stream ON debug_log (stream, id DESC)");

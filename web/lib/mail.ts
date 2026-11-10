@@ -460,7 +460,12 @@ const smtp = (c: MailCfg) => (tx?.url === c.smtpUrl ? tx : (tx = { url: c.smtpUr
 type Msg = { to: string; subject: string; html?: string; text?: string; from?: string; headers?: Record<string, string>; attachments?: { filename: string; content: Buffer; type: string }[] };
 const fromHeader = (name: string, addr: string) => (name ? `${name.replace(/[<>"\r\n]/g, "")} <${addr}>` : addr);
 /** One send path: SMTP2GO's HTTP API when an SMTP2GO key is saved, otherwise plain SMTP. */
+/** Sends one message and counts it toward today's total (the guest notice trickle backs off as the day fills up). */
 export async function send(m: Msg, c: MailCfg) {
+  await sendRaw(m, c);
+  await q("INSERT INTO mail_daily (day, n) VALUES ((now() AT TIME ZONE 'America/Detroit')::date, 1) ON CONFLICT (day) DO UPDATE SET n = mail_daily.n + 1").catch(() => {});
+}
+async function sendRaw(m: Msg, c: MailCfg) {
   const from = m.from ?? fromHeader(c.fromName, c.from), headers = { ...(c.replyTo ? { "Reply-To": c.replyTo } : {}), ...m.headers };
   if (!c.smtp2goKey) return void (await smtp(c).sendMail({ from, to: m.to, subject: m.subject, html: m.html, text: m.text, headers, attachments: m.attachments?.map((a) => ({ filename: a.filename, content: a.content, contentType: a.type })) }));
   const t0 = Date.now(), meta = { to: m.to, from, subject: m.subject, attachments: m.attachments?.map((a) => `${a.filename} (${a.content.length} bytes)`) };

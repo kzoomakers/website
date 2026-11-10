@@ -10,7 +10,7 @@ const esc = (s: string) => s.replace(/[<>&"]/g, "");
 
 /** Where a signed-in person stands: their stored onboarding step, 'resign' when a mandatory version newer than the one they signed exists, or 'profile' when their phone, address or an emergency contact is missing. Needs `site_users u` in scope. */
 export const STEP_SQL = `CASE WHEN u.onboarding = 'done' AND u.approval = 'approved' THEN
-  CASE WHEN COALESCE((SELECT max(d.version_id) FROM sign_docs d WHERE d.user_id = u.id AND d.kind = 'waiver' AND d.status = 'complete'), 0) < COALESCE((SELECT max(id) FROM waiver_versions WHERE mandatory), 0) THEN 'resign'
+  CASE WHEN COALESCE((SELECT max(d.version_id) FROM sign_docs d WHERE d.user_id = u.id AND d.kind = 'waiver' AND d.status = 'complete'), 0) < COALESCE((SELECT max(id) FROM waiver_versions WHERE mandatory AND kind = 'member'), 0) THEN 'resign'
        WHEN u.phone = '' OR u.address1 = '' OR NOT EXISTS (SELECT 1 FROM emergency_contacts e WHERE e.user_id = u.id) THEN 'profile'
        ELSE 'done' END
   ELSE u.onboarding END`;
@@ -29,11 +29,13 @@ export async function joinMembersIfDone(userId: number) {
 }
 
 const COLS = "id, revision, title, sections, closing, summary, mandatory, created_by, created_at";
-export const listVersions = async (): Promise<(Version & { signed: number })[]> =>
-  (await (await conn()).query(`SELECT ${COLS}, (SELECT count(DISTINCT d.user_id)::int FROM sign_docs d WHERE d.version_id = v.id AND d.kind = 'waiver' AND d.status = 'complete'
-    AND d.id = (SELECT max(x.id) FROM sign_docs x WHERE x.user_id = d.user_id AND x.kind = 'waiver' AND x.status = 'complete')) AS signed FROM waiver_versions v ORDER BY id DESC`)).rows;
+export type Kind = "member" | "guest";
+const DOC_KIND = { member: "waiver", guest: "guest" } as const; // sign_docs.kind for a signed copy of each
+export const listVersions = async (kind: Kind = "member"): Promise<(Version & { signed: number })[]> =>
+  (await (await conn()).query(`SELECT ${COLS}, (SELECT count(DISTINCT COALESCE(d.user_id, d.guest_id))::int FROM sign_docs d WHERE d.version_id = v.id AND d.kind = $2 AND d.status = 'complete'
+    AND d.id = (SELECT max(x.id) FROM sign_docs x WHERE COALESCE(x.user_id, x.guest_id) = COALESCE(d.user_id, d.guest_id) AND x.kind = d.kind AND x.status = 'complete')) AS signed FROM waiver_versions v WHERE v.kind = $1 ORDER BY id DESC`, [kind, DOC_KIND[kind]])).rows;
 export const getVersion = async (id: number): Promise<Version | null> => (await (await conn()).query(`SELECT ${COLS} FROM waiver_versions WHERE id = $1`, [id])).rows[0] ?? null;
-export const latestVersion = async (): Promise<Version> => (await (await conn()).query(`SELECT ${COLS} FROM waiver_versions ORDER BY id DESC LIMIT 1`)).rows[0];
+export const latestVersion = async (kind: Kind = "member"): Promise<Version> => (await (await conn()).query(`SELECT ${COLS} FROM waiver_versions WHERE kind = $1 ORDER BY id DESC LIMIT 1`, [kind])).rows[0];
 
 function check(secs: unknown): Section[] {
   if (!Array.isArray(secs) || !secs.length || secs.length > 200) throw new Error("Add at least one section.");
@@ -46,15 +48,21 @@ function check(secs: unknown): Section[] {
 export type Draft = { revision: string; title: string; sections: Section[]; closing: string; summary: string; mandatory: boolean };
 
 /** Publishes a new version. If `mandatory`, every approved member is emailed and must sign it at their next sign-in. */
-export async function publish(d: Draft, who: string, base: string) {
+export async function publish(d: Draft, who: string, base: string, kind: Kind = "member") {
   const c = await conn(), revision = clip(d.revision, 40), title = clip(d.title, 200), closing = clip(d.closing, 3000), summary = clip(d.summary, 6000), sections = check(d.sections);
   if (!revision || !title || !closing) throw new Error("Revision, title and closing statement are required.");
-  const prev = await latestVersion();
+  const prev = await latestVersion(kind);
   if (!diffVersions(prev, { sections, closing }).length && title === prev.title) throw new Error("Nothing has changed from the current version.");
   if (!summary) throw new Error("Describe what changed in plain language: members will read this.");
-  if ((await c.query("SELECT 1 FROM waiver_versions WHERE lower(revision) = lower($1)", [revision])).rowCount) throw new Error(`Revision ${revision} already exists. Choose a new revision number.`);
-  const id = (await c.query("INSERT INTO waiver_versions (revision, title, sections, closing, summary, mandatory, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id",
-    [revision, title, JSON.stringify(sections), closing, summary, !!d.mandatory, who])).rows[0].id as number;
+  if ((await c.query("SELECT 1 FROM waiver_versions WHERE kind = $2 AND lower(revision) = lower($1)", [revision, kind])).rowCount) throw new Error(`Revision ${revision} already exists. Choose a new revision number.`);
+  const id = (await c.query("INSERT INTO waiver_versions (kind, revision, title, sections, closing, summary, mandatory, created_by) VALUES ($8,$1,$2,$3,$4,$5,$6,$7) RETURNING id",
+    [revision, title, JSON.stringify(sections), closing, summary, !!d.mandatory, who, kind])).rows[0].id as number;
+  await c.query("DELETE FROM agreement_drafts WHERE kind = $1", [kind]);
+  if (kind === "guest") { // every guest who signed before is emailed a few a day (lib/guests.ts runGuestMail), mandatory or not
+    await c.query("INSERT INTO guest_notices (guest_id, version_id) SELECT DISTINCT d.guest_id, $1::int FROM sign_docs d WHERE d.kind = 'guest' AND d.status = 'complete' AND d.guest_id IS NOT NULL ON CONFLICT DO NOTHING", [id]);
+    await logAudit(who, "crm.guest-agreement.publish", `Revision ${revision} (#${id})${d.mandatory ? ", guests must re-sign" : ""}`);
+    return id;
+  }
   await logAudit(who, "crm.waiver.publish", `Revision ${revision} (#${id})${d.mandatory ? ", all members must re-sign" : ""}`);
   if (d.mandatory) void notifyMembers(summary, diffVersions(prev, { sections, closing }), revision, base).catch(() => {});
   return id;
@@ -85,7 +93,7 @@ export async function historyFor(userId: number): Promise<Signed[]> {
 export async function changesFor(userId: number) {
   const h = await historyFor(userId), cur = await latestVersion(), last = h.at(-1)?.version;
   if (!last || last.id === cur.id) return { cur, last: last ?? null, changes: [] as Change[], notes: [] as { revision: string; summary: string; at: string }[] };
-  const newer = (await (await conn()).query("SELECT revision, summary, created_at AS at FROM waiver_versions WHERE id > $1 ORDER BY id", [last.id])).rows;
+  const newer = (await (await conn()).query("SELECT revision, summary, created_at AS at FROM waiver_versions WHERE kind = 'member' AND id > $1 ORDER BY id", [last.id])).rows;
   return { cur, last, changes: diffVersions(last, cur), notes: newer as { revision: string; summary: string; at: string }[] };
 }
 
@@ -96,7 +104,7 @@ export async function members(q: string, version: string) {
     FROM site_users u LEFT JOIN LATERAL (SELECT id, version_id, completed_at FROM sign_docs WHERE user_id = u.id AND kind = 'waiver' AND status = 'complete' ORDER BY id DESC LIMIT 1) l ON true
     LEFT JOIN waiver_versions v ON v.id = l.version_id
     WHERE u.approval = 'approved' AND u.verified_at IS NOT NULL AND (u.name ILIKE $1 OR u.email ILIKE $1)
-      AND CASE WHEN $2 = '' THEN true WHEN $2 = 'none' THEN l.id IS NULL WHEN $2 = 'old' THEN l.id IS NULL OR l.version_id < (SELECT max(id) FROM waiver_versions) ELSE l.version_id = $2::int END
+      AND CASE WHEN $2 = '' THEN true WHEN $2 = 'none' THEN l.id IS NULL WHEN $2 = 'old' THEN l.id IS NULL OR l.version_id < (SELECT max(id) FROM waiver_versions WHERE kind = 'member') ELSE l.version_id = $2::int END
     ORDER BY lower(u.name) LIMIT 300`, [like, /^\d+$/.test(version) ? version : version === "none" || version === "old" ? version : ""])).rows as { id: number; name: string; email: string; version_id: number | null; revision: string | null; signed_at: string | null; doc_id: number | null; must_resign: boolean }[];
 }
 
@@ -112,7 +120,7 @@ export async function myPdf(userId: number, docId: number) {
 export async function accountView(userId: number) {
   const h = await historyFor(userId);
   if (!h.length) return null;
-  const all = (await (await conn()).query("SELECT id, revision, summary, created_at AS at FROM waiver_versions ORDER BY id")).rows as { id: number; revision: string; summary: string; at: string }[];
+  const all = (await (await conn()).query("SELECT id, revision, summary, created_at AS at FROM waiver_versions WHERE kind = 'member' ORDER BY id")).rows as { id: number; revision: string; summary: string; at: string }[];
   const cur = await latestVersion();
   return {
     current: h.at(-1)!.version.id === cur.id,
@@ -129,8 +137,41 @@ For each change write one bullet that starts with "- " and the section name, a c
 Use only what the text says: never invent rules, dates or amounts. If a change is just wording or a typo fix, say so in one short sentence. No intro, no outro, no markdown besides the "- " bullets.`;
 
 /** A plain-language summary of what this draft changes compared with the current version, written by the AI model chosen for this job. */
-export async function aiSummary(d: Draft) {
-  const prev = await latestVersion(), ch = diffVersions(prev, { sections: check(d.sections), closing: clip(d.closing, 3000) });
+export async function aiSummary(d: Draft, kind: Kind = "member") {
+  const prev = await latestVersion(kind), ch = diffVersions(prev, { sections: check(d.sections), closing: clip(d.closing, 3000) });
   if (!ch.length) throw new Error("Nothing has changed yet, so there is nothing to summarize.");
   return complete("agreement-summary", SYSTEM, `Here are the changes from the current agreement to the new draft:\n\n${changesPrompt(ch)}`);
+}
+
+// ---- drafts: one work-in-progress copy per agreement. Never shown to signers; publishing it (or discarding it) removes it.
+export async function getDraft(kind: Kind): Promise<(Draft & { updated_by: string; updated_at: string }) | null> {
+  const r = (await (await conn()).query("SELECT data, updated_by, updated_at FROM agreement_drafts WHERE kind = $1", [kind])).rows[0];
+  return r ? { ...r.data, updated_by: r.updated_by, updated_at: r.updated_at } : null;
+}
+export async function saveDraft(kind: Kind, d: Draft, who: string) {
+  const data = { revision: clip(d.revision, 40), title: clip(d.title, 200), closing: clip(d.closing, 3000), summary: clip(d.summary, 6000), mandatory: !!d.mandatory,
+    sections: (Array.isArray(d.sections) ? d.sections : []).slice(0, 200).map((s: any) => ({ heading: clip(s?.heading, 200), body: clip(s?.body, 20000) })) }; // lenient on purpose: a draft may be unfinished
+  await (await conn()).query("INSERT INTO agreement_drafts (kind, data, updated_by) VALUES ($1,$2,$3) ON CONFLICT (kind) DO UPDATE SET data = EXCLUDED.data, updated_by = EXCLUDED.updated_by, updated_at = now()", [kind, JSON.stringify(data), who]);
+  await logAudit(who, "crm.agreement.draft", `${kind} agreement draft saved`);
+}
+export async function discardDraft(kind: Kind, who: string) {
+  await (await conn()).query("DELETE FROM agreement_drafts WHERE kind = $1", [kind]);
+  await logAudit(who, "crm.agreement.draft", `${kind} agreement draft discarded`);
+}
+
+// ---- special permissions: who may publish an agreement. An empty list means every full administrator may (so nobody is locked out before the list is set up).
+export const SPECIAL = { "agreement.member": "Publish the membership agreement", "agreement.guest": "Publish the guest agreement" } as const;
+export type Special = keyof typeof SPECIAL;
+export const specialList = async (): Promise<Record<Special, string[]>> => {
+  const out = { "agreement.member": [], "agreement.guest": [] } as Record<Special, string[]>;
+  for (const r of (await (await conn()).query("SELECT perm, email FROM special_perms ORDER BY email")).rows) if (r.perm in out) out[r.perm as Special].push(r.email);
+  return out;
+};
+export async function setSpecial(perm: string, email: string, on: boolean, who: string) {
+  const e = clip(email, 200).toLowerCase();
+  if (!(perm in SPECIAL) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) throw new Error("Choose a permission and a valid email.");
+  const c = await conn();
+  if (on) await c.query("INSERT INTO special_perms (perm, email) VALUES ($1,$2) ON CONFLICT DO NOTHING", [perm, e]);
+  else await c.query("DELETE FROM special_perms WHERE perm = $1 AND email = $2", [perm, e]);
+  await logAudit(who, "user.special", `${e}: ${perm} = ${on ? "yes" : "no"}`);
 }

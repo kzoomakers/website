@@ -3,6 +3,7 @@ import { errMsg } from "@/lib/errmsg";
 import { book, openSlots, requestTour, AREAS, HEARD, CONTACT } from "@/lib/tours";
 import { baseUrl } from "@/lib/mail";
 import { clientIp, hashIp } from "@/lib/comments";
+import { convert } from "@/lib/ga-attr";
 
 export const dynamic = "force-dynamic";
 const fail = (e: any) => new NextResponse(e.message === "not configured" ? "Booking isn't available right now." : errMsg(e), { status: 400 });
@@ -19,11 +20,13 @@ export async function POST(req: Request) {
   const dev = { ip: clientIp(req).slice(0, 64), ua: (req.headers.get("user-agent") ?? "").slice(0, 300), screen: /^\d{3,5}x\d{3,5}$/.test(s(b?.screen)) ? s(b.screen) : "" };
   if (b?.request) {
     if (b.website) return NextResponse.json({ ok: true });
-    try { await requestTour(b, hashIp(req), dev, await baseUrl(req)); return NextResponse.json({ ok: true }); } catch (e: any) { return fail(e); }
+    try { await requestTour(b, hashIp(req), dev, await baseUrl(req)); await convert(req, "tour"); return NextResponse.json({ ok: true }); } catch (e: any) { return fail(e); }
   }
   if (!Number.isInteger(b?.block) || !s(b.start) || !s(b.name) || !s(b.email)) return new NextResponse("Please fill in your name, email and phone.", { status: 400 });
   if (b.website) return NextResponse.json({ ok: true }); // honeypot: pretend it worked
   try {
-    return NextResponse.json(await book({ block: b.block, start: s(b.start), name: s(b.name), email: s(b.email), phone: s(b.phone), areas: Array.isArray(b.areas) ? b.areas.map(s) : [], heard: s(b.heard), notes: s(b.notes) }, hashIp(req), dev, await baseUrl(req)));
+    const done = await book({ block: b.block, start: s(b.start), name: s(b.name), email: s(b.email), phone: s(b.phone), areas: Array.isArray(b.areas) ? b.areas.map(s) : [], heard: s(b.heard), notes: s(b.notes) }, hashIp(req), dev, await baseUrl(req));
+    await convert(req, "tour");
+    return NextResponse.json(done);
   } catch (e: any) { return fail(e); }
 }

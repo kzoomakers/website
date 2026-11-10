@@ -1,0 +1,14 @@
+{
+  "title": "GUEST RELEASE, INDEMNITY & ASSUMPTION OF RISK AGREEMENT",
+  "revision": "1.0",
+  "sections": [
+    { "heading": "VISIT", "body": "I am visiting Kzoo Makers (the \"Makerspace\") as the guest of a member. I will stay with my host at all times and follow the rules posted at the space and the directions of staff and members in charge." },
+    { "heading": "NO USE OF EQUIPMENT", "body": "I will not operate any tool, machine or computer at the Makerspace. I may watch and ask questions." },
+    { "heading": "ASSUMPTION OF RISK", "body": "I understand that a makerspace contains tools, machinery, materials and activities that can cause injury, illness, or property damage, including from other people's use of equipment. I choose to enter and accept those risks." },
+    { "heading": "RELEASE AND INDEMNITY", "body": "To the fullest extent the law allows, I release Kzoo Makers, its directors, officers, members, volunteers and staff from claims arising out of my visit, including claims based on ordinary negligence, and I agree to be responsible for any damage I cause." },
+    { "heading": "EMERGENCIES", "body": "If I am hurt or ill, I authorize Kzoo Makers to call emergency services and to contact the emergency contacts I listed. I am responsible for any resulting costs." },
+    { "heading": "MY INFORMATION", "body": "Kzoo Makers keeps my details, emergency contacts, signed agreement and photo ID encrypted, uses them only for the safety and administration of my visits, and does not use my email for marketing. My records are kept for at least 2 years after my last visit and can then be deleted at my request." },
+    { "heading": "MINORS", "body": "If I am under 18, my parent or legal guardian must be present and must sign this agreement as well. By signing, the guardian accepts it for me and for themself." }
+  ],
+  "closing": "I HAVE CAREFULLY READ THIS GUEST AGREEMENT, I UNDERSTAND IT, AND I SIGN IT FREELY."
+}

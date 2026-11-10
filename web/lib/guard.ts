@@ -47,3 +47,14 @@ export async function gate(section: Section, path: string): Promise<Level> {
 export async function actor() {
   return (await me())?.email ?? "dev";
 }
+
+/** May the caller do this special thing (publish an agreement)? Anyone on the list for it; with an empty list, any full administrator. Set the lists at Admin > Access > Special permissions. */
+export async function canSpecial(perm: "agreement.member" | "agreement.guest") {
+  const m = await me();
+  if (!m) return false;
+  const d = db();
+  if (!d) return levelOf(m, "admin") === "write";
+  await d.ready;
+  const list = (await d.pool.query("SELECT email FROM special_perms WHERE perm = $1", [perm])).rows.map((r) => String(r.email).toLowerCase());
+  return list.length ? list.includes(m.email.toLowerCase()) : levelOf(m, "admin") === "write";
+}

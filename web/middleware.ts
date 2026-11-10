@@ -7,7 +7,7 @@ import { publicTooLarge } from "@/lib/upload-limit";
 // Node runtime (Postgres needs it): adds the security headers (Admin > Security headers) and refuses oversized requests. The HTTP log is written by lib/httplog-hook.ts, which sees the response code.
 // The upload routes are left out on purpose: they check who you are first and then apply the (larger) signed-in limit themselves (lib/image.ts uploadGate). Everything else is behind this file,
 // where Next.js buffers at most 10 MB of a body, so anonymous callers can never make the server hold more than that.
-export const config = { runtime: "nodejs", matcher: ["/((?!_next/static|_next/image|favicon.ico|api/onboarding/id|api/members/photo|api/members/art|api/reviews|api/webmaster/upload).*)"] };
+export const config = { runtime: "nodejs", matcher: ["/((?!_next/static|_next/image|favicon.ico|api/onboarding/id|api/guests/photo|api/members/photo|api/members/art|api/reviews|api/webmaster/upload).*)"] };
 
 export async function middleware(req: NextRequest) {
   const len = Number(req.headers.get("content-length"));
