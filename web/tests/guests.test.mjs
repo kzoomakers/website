@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert";
 import { readFileSync } from "node:fs";
 
-const { noticeAllowance, DEFAULT_CFG, deleteText } = await import("../lib/guest-rules.ts");
+const { noticeAllowance, DEFAULT_CFG, deleteText, retention } = await import("../lib/guest-rules.ts");
 const { buildAgreementPdf } = await import("../lib/sign-pdf.ts");
 const seed = JSON.parse(readFileSync("data/guest-agreement-1.0.json", "utf8"));
 const t = DEFAULT_CFG.noticeTiers;
@@ -39,5 +39,17 @@ test("the guest agreement seed is complete, and a minor's PDF carries a guardian
   const minor = await buildAgreementPdf(seed, sg("Gus Guest"), "abc", sg("Gail Guardian"));
   assert.equal(minor.subarray(0, 4).toString(), "%PDF");
   assert.ok(minor.length > solo.length);
-  assert.ok(minor.toString("latin1").includes("Guardian") || minor.length > solo.length);
+  assert.ok(minor.length > solo.length); // the second signature block adds content
+});
+
+test("records are kept the full period; a guest is deletable only the day after, in Detroit time", () => {
+  const at = (iso) => new Date(iso);
+  assert.deepEqual(retention(null, null, false, 2).deletable, true); // never signed: nothing to keep
+  const r = (now) => retention("2024-11-09T15:00:00Z", "2024-01-01T00:00:00Z", true, 2, at(now));
+  assert.equal(r("2026-11-09T15:00:00Z").deletable, false); // the date itself: still kept
+  assert.equal(r("2026-11-10T15:00:00Z").deletable, true); // the day after
+  assert.equal(r("2026-11-10T03:00:00Z").deletable, false); // 10pm Nov 9 in Detroit is still Nov 9
+  assert.equal(retention("2024-02-29T15:00:00Z", null, true, 1, at("2025-03-01T15:00:00Z")).deletable, false); // leap day + 1y = Mar 1
+  assert.equal(retention("2024-02-29T15:00:00Z", null, true, 1, at("2025-03-02T15:00:00Z")).deletable, true);
+  assert.equal(retention("2024-01-01T00:00:00Z", "2025-06-01T00:00:00Z", true, 2, at("2026-01-01T00:00:00Z")).deletable, false); // later of visit and signing wins
 });

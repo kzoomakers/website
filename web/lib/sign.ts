@@ -2,7 +2,8 @@ import { createHash, randomBytes, randomInt } from "crypto";
 import { PDFDocument } from "pdf-lib";
 import { checkPw, hashPw } from "./sign-access";
 export { cookieOf, unlockCookie, unlocked } from "./sign-access";
-import { conn } from "./db";
+import type { Pool } from "pg";
+import { conn, withTx } from "./db";
 import { logAudit } from "./store";
 import { getMailCfg, mailReady, sendQueued as send } from "./mail";
 import { open, seal, sha256 } from "./vault";
@@ -253,8 +254,8 @@ export async function declineByToken(token: string, reason: string) {
 }
 
 /** Records one signature; true if it was the one that completed the document (that caller must finalize). */
-async function recordSignature(signerId: number, docId: number, signature: string, drawn: string, p: Proof, initials = "") {
-  const c = await conn();
+async function recordSignature(signerId: number, docId: number, signature: string, drawn: string, p: Proof, initials = "", cx?: { query: Pool["query"] }) {
+  const c = cx ?? await conn();
   if (!(await c.query("UPDATE sign_signers SET signed_at = now(), signature = $2, drawn = $3, ip = $4, ua = $5, initials = $6 WHERE id = $1 AND signed_at IS NULL AND declined_at IS NULL", [signerId, signature, drawn, p.ip.slice(0, 64), p.ua.slice(0, 300), initials])).rowCount) throw new Error("You've already responded to this paper.");
   return !!(await c.query(`UPDATE sign_docs d SET status = 'complete', completed_at = now() WHERE d.id = $1 AND d.status = 'open'
     AND (SELECT count(*) FROM sign_signers WHERE doc_id = d.id AND role IN ('signer','approver') AND signed_at IS NOT NULL) >= CASE WHEN d.needed > 0 THEN d.needed ELSE (SELECT count(*) FROM sign_signers WHERE doc_id = d.id AND role IN ('signer','approver')) END`, [docId])).rowCount;
@@ -279,13 +280,17 @@ export async function signGuest(guest: { id: number; name: string; email: string
   if (clip(i.initials, 6).length < 1) throw new Error("Enter initials: they go at the foot of every page.");
   if (!PNG.test(i.drawn)) throw new Error("Draw the signature in the box to sign the agreement.");
   if (i.guardian && (clip(i.guardian.signature, 100).length < 2 || !PNG.test(i.guardian.drawn))) throw new Error("The parent or guardian must type their name and draw their signature.");
-  const c = await conn();
-  const id = (await c.query("INSERT INTO sign_docs (kind, guest_id, version_id, title, body, created_by) VALUES ('guest',$1,$2,$3,$4,$5) RETURNING id", [guest.id, v.id, `${v.title} (revision ${v.revision})`, fullText(v), hostEmail])).rows[0].id as number;
-  const add = async (name: string, email: string, role = "signer") => (await c.query("INSERT INTO sign_signers (doc_id, name, email, token, role) VALUES ($1,$2,$3,$4,$5) RETURNING id", [id, name, email, randomBytes(8).toString("hex"), role])).rows[0].id as number;
-  const sid = await add(guest.name, guest.email), gid = i.guardian ? await add(i.guardian.name, guest.email) : 0;
-  await add("Host", hostEmail, "cc");
-  const done = await recordSignature(sid, id, clip(i.signature, 100), i.drawn, proof, clip(i.initials, 6).toUpperCase());
-  const last = i.guardian ? await recordSignature(gid, id, clip(i.guardian.signature, 100), i.guardian.drawn, proof) : done;
+  // One transaction: the paper, its signers, the signatures and the guest's retention tick are saved together or not at all. The PDF is built after, so a slow or failed PDF never undoes a signature.
+  const { id, last } = await withTx(async (c) => {
+    const id = (await c.query("INSERT INTO sign_docs (kind, guest_id, version_id, title, body, created_by) VALUES ('guest',$1,$2,$3,$4,$5) RETURNING id", [guest.id, v.id, `${v.title} (revision ${v.revision})`, fullText(v), hostEmail])).rows[0].id as number;
+    const add = async (name: string, email: string, role = "signer") => (await c.query("INSERT INTO sign_signers (doc_id, name, email, token, role) VALUES ($1,$2,$3,$4,$5) RETURNING id", [id, name, email, randomBytes(8).toString("hex"), role])).rows[0].id as number;
+    const sid = await add(guest.name, guest.email), gid = i.guardian ? await add(i.guardian.name, guest.email) : 0;
+    await add("Host", hostEmail, "cc");
+    const done = await recordSignature(sid, id, clip(i.signature, 100), i.drawn, proof, clip(i.initials, 6).toUpperCase(), c);
+    const last = i.guardian ? await recordSignature(gid, id, clip(i.guardian.signature, 100), i.guardian.drawn, proof, "", c) : done;
+    await c.query("UPDATE guests SET minor=$2, guardian_name=$3, retention_ack_at=now(), updated_at=now() WHERE id=$1", [guest.id, !!i.guardian, i.guardian ? clip(i.guardian.name, 100) : ""]);
+    return { id, last };
+  });
   if (last) await finalize(id, base);
 }
 

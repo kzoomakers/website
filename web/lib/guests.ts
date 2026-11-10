@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import { conn } from "./db";
+import { conn, withTx } from "./db";
 import { logAudit } from "./store";
 import { open, seal, sha256 } from "./vault";
 import { processImage } from "./image";
@@ -8,13 +8,12 @@ import { RELATIONSHIPS, phoneOk, type Contact } from "./profiles";
 import { signGuest, type GuestSign, type Proof } from "./sign";
 import { getMailCfg, mailReady, send } from "./mail";
 import { latestVersion } from "./waiver";
-import { DEFAULT_CFG, deleteText, noticeAllowance, type GuestCfg, type Tier } from "./guest-rules";
+import { DEFAULT_CFG, TZ, deleteText, fmtDate, noticeAllowance, retention, type GuestCfg, type Tier } from "./guest-rules";
 export { DEFAULT_CFG, deleteText, noticeAllowance, type GuestCfg, type Tier };
 
 // Guests of members: the host member creates them, and either the host or the guest (on their own phone, through a private expiring link) fills in the wizard.
 // A guest is "ready" only when details, an emergency contact, the current agreement (with the retention tick) and a photo ID are all on file. Rules live here, not in the screens.
 const clip = (v: unknown, n: number) => (typeof v === "string" ? v.trim().slice(0, n) : "");
-const TZ = "America/Detroit";
 
 // ---- settings (Admin > People > Guests)
 const num = (v: unknown, lo: number, hi: number, name: string) => { const n = Number(v); if (!Number.isInteger(n) || n < lo || n > hi) throw new Error(`${name} must be a whole number from ${lo} to ${hi}.`); return n; };
@@ -60,13 +59,10 @@ export const STEPS: Step[] = ["details", "emergency", "agreement", "photo"];
 function shape(r: any, cfg: GuestCfg) {
   const done: Record<Step, boolean> = { details: r.d_details, emergency: r.d_contacts, agreement: r.d_agreement, photo: r.has_photo };
   const next = STEPS.find((s) => !done[s]) ?? null; // first unfinished step; null = ready
-  // Records are kept for the retention period after the last visit (or, with no visit yet, after signing). Never signed = nothing to keep.
-  const base = [r.last_visit, r.signed_at].filter(Boolean).map((d: string) => +new Date(d)).sort((a, b) => b - a)[0];
-  const until = r.ever_signed && base ? new Date(new Date(base).setFullYear(new Date(base).getFullYear() + cfg.retentionYears)) : null;
-  const dayOf = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: TZ }); // YYYY-MM-DD in Detroit: a guest becomes deletable on the day after their date, so records are always kept the full period
+  const { until, deletable } = retention(r.last_visit, r.signed_at, r.ever_signed, cfg.retentionYears);
   return { id: r.id as number, host_id: r.host_id as number, host_name: r.host_name as string, first_name: r.first_name, last_name: r.last_name, email: r.email, phone: r.phone, address: r.address, zip: r.zip, state: r.state,
     minor: r.minor as boolean | null, guardian_name: r.guardian_name, done, next, ready: next === null, has_photo: r.has_photo as boolean, last_visit: r.last_visit as string | null,
-    ever_signed: r.ever_signed as boolean, retain_until: until && until.toISOString(), deletable: !until || dayOf(new Date()) > dayOf(until), delete_requested_at: r.delete_requested_at as string | null,
+    ever_signed: r.ever_signed as boolean, retain_until: until && until.toISOString(), deletable, delete_requested_at: r.delete_requested_at as string | null,
     needs_resign: r.ever_signed && !r.d_agreement && r.retention_ack_at !== null };
 }
 export type Guest = ReturnType<typeof shape>;
@@ -128,7 +124,6 @@ export async function sign(g: Guest, i: { signature: string; initials: string; d
   if (i.minor && !i.guardian) throw new Error("A minor's parent or legal guardian must be present and sign too.");
   const v = await latestVersion("guest"), input: GuestSign = { signature: i.signature, initials: i.initials, drawn: i.drawn, guardian: i.minor ? i.guardian : undefined };
   await signGuest({ id: g.id, name: `${g.first_name} ${g.last_name}`, email: g.email }, (await (await conn()).query("SELECT email FROM site_users WHERE id = $1", [g.host_id])).rows[0].email, v, input, proof, base);
-  await (await conn()).query("UPDATE guests SET minor=$2, guardian_name=$3, retention_ack_at=now(), updated_at=now() WHERE id=$1", [g.id, i.minor, i.minor ? clip(i.guardian?.name, 100) : ""]);
 }
 
 export async function storePhoto(id: number, kind: string, expires: string, file: File) {
@@ -146,21 +141,25 @@ export async function photoOf(id: number) {
 export type CheckIn = { already: boolean; at: string; week: number; nag: boolean };
 export async function checkIn(g: Guest): Promise<CheckIn> {
   if (!g.ready) throw new Error("This guest isn't ready to be checked in yet. Finish their steps first.");
-  const c = await conn(), cfg = await getCfg();
-  const today = (await c.query(`SELECT at FROM guest_visits WHERE guest_id = $1 AND (at AT TIME ZONE $2)::date = (now() AT TIME ZONE $2)::date ORDER BY at DESC LIMIT 1`, [g.id, TZ])).rows[0];
-  const week = async () => (await c.query("SELECT count(DISTINCT (at AT TIME ZONE $2)::date)::int n FROM guest_visits WHERE guest_id = $1 AND at > now() - interval '7 days'", [g.id, TZ])).rows[0].n as number;
-  if (today) return { already: true, at: today.at, week: await week(), nag: false };
-  const at = (await c.query("INSERT INTO guest_visits (guest_id, host_id) VALUES ($1,$2) RETURNING at", [g.id, g.host_id])).rows[0].at as string;
-  await c.query("UPDATE guests SET delete_requested_at = NULL WHERE id = $1", [g.id]); // coming back cancels a deletion request
-  const n = await week();
-  return { already: false, at, week: n, nag: n > cfg.weeklyLimit };
+  const cfg = await getCfg();
+  // The guest's row is locked while we look and insert, so two taps at once can't both record today's visit.
+  // The weekly limit is only a nudge (`nag`): it never blocks a check-in.
+  return withTx(async (c) => {
+    await c.query("SELECT 1 FROM guests WHERE id = $1 FOR UPDATE", [g.id]);
+    const today = (await c.query(`SELECT at FROM guest_visits WHERE guest_id = $1 AND (at AT TIME ZONE $2)::date = (now() AT TIME ZONE $2)::date ORDER BY at DESC LIMIT 1`, [g.id, TZ])).rows[0];
+    const week = async () => (await c.query("SELECT count(DISTINCT (at AT TIME ZONE $2)::date)::int n FROM guest_visits WHERE guest_id = $1 AND at > now() - interval '7 days'", [g.id, TZ])).rows[0].n as number;
+    if (today) return { already: true, at: today.at, week: await week(), nag: false };
+    const at = (await c.query("INSERT INTO guest_visits (guest_id, host_id) VALUES ($1,$2) RETURNING at", [g.id, g.host_id])).rows[0].at as string;
+    await c.query("UPDATE guests SET delete_requested_at = NULL WHERE id = $1", [g.id]); // coming back cancels a deletion request
+    const n = await week();
+    return { already: false, at, week: n, nag: n > cfg.weeklyLimit };
+  });
 }
 export const visitsOf = async (id: number) => (await (await conn()).query("SELECT at FROM guest_visits WHERE guest_id = $1 ORDER BY at DESC LIMIT 100", [id])).rows.map((r) => r.at as string);
 /** The host's own recent guest visits, for the member home page. */
 export const recentVisits = async (hostId: number) => (await (await conn()).query(`SELECT v.at, g.first_name, g.last_name FROM guest_visits v JOIN guests g ON g.id = v.guest_id WHERE v.host_id = $1 ORDER BY v.at DESC LIMIT 10`, [hostId])).rows as { at: string; first_name: string; last_name: string }[];
 
 // ---- deleting
-const fmtDate = (d: string | Date) => new Date(d).toLocaleDateString("en-US", { timeZone: TZ, month: "2-digit", day: "2-digit", year: "numeric" });
 /** Deletes everything about one guest (details, contacts, signed PDF, photo ID, visits). A member can only do it once the retention period has passed (a guest who never signed has nothing to keep); an admin may override, knowingly. */
 export async function deleteGuest(g: Guest, by: { who: string; override?: boolean }) {
   if (!g.deletable && !by.override) throw new Error(`Sorry! We have to retain their records for ${(await getCfg()).retentionYears} years. They can be deleted after ${fmtDate(g.retain_until!)}.`);
@@ -238,7 +237,7 @@ export async function runGuestMail() {
 async function runScheduledDeletes(cfg: GuestCfg, mail: Awaited<ReturnType<typeof getMailCfg>>, base: string) {
   const c = await conn(), key = `guest:del:${(await c.query(`SELECT (now() AT TIME ZONE '${TZ}')::date AS d`)).rows[0].d.toISOString().slice(0, 10)}`;
   let done = Number((await c.query("SELECT data FROM settings WHERE key = $1", [key])).rows[0]?.data?.n ?? 0);
-  for (const r of (await c.query(`${VIEW} WHERE g.delete_requested_at IS NOT NULL ORDER BY g.delete_requested_at LIMIT 50`)).rows) {
+  for (const r of (await c.query(`${VIEW} WHERE g.delete_requested_at IS NOT NULL ORDER BY g.delete_requested_at`)).rows) {
     if (done >= cfg.deletePerDay) break;
     const g = shape(r, cfg);
     if (!g.deletable) continue;
