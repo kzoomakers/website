@@ -11,6 +11,7 @@ primary_region = 'ord'
 [env]
   AUTH_URL = 'https://kzoomakers.org' # behind Fly's proxy Next sees itself as localhost:3000, which broke the Google redirect URI; change to the real domain when it goes live
   SITE_URL = 'https://kzoomakers.org' # base for emailed links and sign-in redirects
+  NODE_OPTIONS = '--max-old-space-size=768' # Node's default cap is about 530 MB even on this 1 GB machine; leave room below the VM limit for sharp and buffers
 
 [http_service]
   internal_port = 3000

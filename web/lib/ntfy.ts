@@ -1,6 +1,6 @@
 import { openText, sealText } from "./vault";
 import { tokenAllows } from "./ntfy-token";
-import { createHash, randomBytes } from "crypto";
+import { createHash, randomBytes, randomInt } from "crypto";
 import { db } from "./db";
 import { isAdmin } from "@/auth";
 import { createRequire } from "module";
@@ -190,30 +190,17 @@ export const topicClients = (name: string) => q("SELECT id, at, last_seen, close
 export const listTokens = (owner = "") => q("SELECT hash, label, topics, write, scopes, expires_at, created_by, owner, created_at, last_used_at FROM ntfy_tokens WHERE owner = $1 ORDER BY created_at DESC", [owner]);
 export const listAllTokens = () => q("SELECT hash, label, topics, write, scopes, expires_at, created_by, owner, created_at, last_used_at FROM ntfy_tokens ORDER BY owner <> '', created_at DESC");
 const rq = createRequire(import.meta.url);
-const WORDS: string[] = [
-  ...(rq("wordlist-english/english-words-10.json") as string[]),
-  ...(rq("an-array-of-english-words") as string[]),
-  ...(rq("an-array-of-spanish-words") as string[]),
-  ...(rq("an-array-of-french-words") as string[]),
-  ...(rq("an-array-of-portuguese-words") as string[]),
-  ...(rq("an-array-of-italian-words") as string[]),
-  ...(rq("all-the-german-words") as string[]),
-  ...(rq("an-array-of-dutch-words") as string[]),
-].filter((w: string) => /^[a-z]{3,6}$/.test(w));
+// Plain a-z English words, 3 to 8 letters, from the common-to-fairly-common tiers of wordlist-english (about 40,000 words). Loaded on first use, not at startup.
+let words: string[] | undefined;
+const WORDS = () => (words ??= [10, 20, 35, 40, 50].flatMap((t) => rq(`wordlist-english/english-words-${t}.json`) as string[]).filter((w) => /^[a-z]{3,8}$/.test(w)));
 const BASIC = "-/:()$&@?!1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const EXPANDED = "~<>\u2022\u00a5\u00a3\u20ac|_*+=#$%";
-const pickFrom = (s: string, r: Buffer, i: number) => s[r[i] % s.length];
-const makeToken = () => {
-  const r = randomBytes(10);
-  const p = pickFrom(BASIC, r, 0);
-  const w1 = WORDS[r[1] % WORDS.length];
-  const w2 = WORDS[r[2] % WORDS.length];
-  const w3 = WORDS[r[3] % WORDS.length];
-  const useExpanded = r[4] % 4 === 0;
-  const s1 = useExpanded ? pickFrom(EXPANDED, r, 5) : pickFrom(BASIC, r, 5);
-  const s2 = pickFrom(BASIC, r, 6);
-  const suffix = r[7] % 2 === 0 ? s1 + s2 : s2 + s1;
-  return p + p + w1 + " " + w2 + " " + w3 + suffix;
+const pickFrom = (s: string) => s[randomInt(s.length)];
+/** e.g. "((river lemon cargo plank%a": a doubled symbol, four random words, two more symbols. Every choice uses the whole range (crypto.randomInt). */
+export const makeToken = () => {
+  const w = WORDS(), p = pickFrom(BASIC);
+  const s1 = randomInt(4) === 0 ? pickFrom(EXPANDED) : pickFrom(BASIC), s2 = pickFrom(BASIC);
+  return p + p + [0, 1, 2, 3].map(() => w[randomInt(w.length)]).join(" ") + (randomInt(2) === 0 ? s1 + s2 : s2 + s1);
 };
 export async function createToken(x: any, who: string, owner = "") {
   const label = String(x.label ?? "").trim().slice(0, 80), topics: string[] = Array.isArray(x.topics) ? x.topics.map(String) : [];
