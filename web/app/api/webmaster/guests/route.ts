@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   try {
     switch (a.op) {
       case "list": return NextResponse.json(await G.adminList(String(a.q ?? "")));
-      case "visits": return NextResponse.json(await G.adminVisits());
+      case "visits": return NextResponse.json(await G.adminVisits(String(a.q ?? ""), String(a.from ?? ""), String(a.to ?? "")));
       case "saveCfg": return NextResponse.json(await G.saveCfg(a.cfg, await actor()));
       case "delete": { // an admin may delete before the retention period ended (`override`), and the screen warns first
         const g = await G.getGuest(Number(a.id));

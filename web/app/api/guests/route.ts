@@ -62,6 +62,12 @@ export async function POST(req: Request) {
         if (!(await hit("guest-link-mint:" + g.host_id, 30, 3600_000))) return new NextResponse("Too many links made. Try again later.", { status: 429 });
         return NextResponse.json({ url: `${await baseUrl(req)}/guest/${await G.mintLink(g.id, (await G.getCfg()).linkHours)}` });
       }
+      case "emailLink": { // host only: sends the same private link as the QR code to an address they type
+        if (!a.host) return new NextResponse("not found", { status: 404 });
+        if (!(await hit("guest-link-mail:" + g.host_id, 10, 3600_000))) return new NextResponse("Too many emails sent. Try again later.", { status: 429 });
+        await G.emailLink(g, String(b.to ?? ""), `${await baseUrl(req)}/guest/${await G.mintLink(g.id, (await G.getCfg()).linkHours)}`);
+        return NextResponse.json({ ok: true });
+      }
       case "checkin": if (!a.host) return new NextResponse("not found", { status: 404 }); return NextResponse.json(await G.checkIn(g));
       case "delete": if (!a.host) return new NextResponse("not found", { status: 404 }); await G.deleteGuest(g, { who: (await currentMember())!.email }); return NextResponse.json({ ok: true });
       default: return new NextResponse("unknown op", { status: 400 });

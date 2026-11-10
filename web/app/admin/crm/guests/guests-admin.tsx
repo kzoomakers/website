@@ -15,8 +15,9 @@ const when = (s: string) => new Date(s).toLocaleString([], { dateStyle: "medium"
 const day = (s: string) => new Date(s).toLocaleDateString([], { dateStyle: "medium" });
 
 export default function GuestsAdmin({ initial, visits, cfg: c0, canEdit }: { initial: Row[]; visits: Visit[]; cfg: GuestCfg; canEdit: boolean }) {
-  const [rows, setRows] = useState(initial), [q, setQ] = useState(""), [cfg, setCfg] = useState(c0), [msg, setMsg] = useState("");
+  const [vs, setVs] = useState(visits), [vf, setVf] = useState({ q: "", from: "", to: "" }), [rows, setRows] = useState(initial), [q, setQ] = useState(""), [cfg, setCfg] = useState(c0), [msg, setMsg] = useState("");
   const search = async (v: string) => { setQ(v); setRows(await rpc<Row[]>("list", { q: v }).catch(() => [])); };
+  const findVisits = async (f: typeof vf) => { setVf(f); setVs(await rpc<Visit[]>("visits", f).catch(() => [])); };
   const save = async () => { try { setCfg(await rpc<GuestCfg>("saveCfg", { cfg })); setMsg("Settings saved."); } catch (e: any) { setMsg(e.message); } };
   const del = async (r: Row) => {
     const warn = r.deletable ? `Delete ${r.name} and everything we hold about them?` : `WARNING: ${r.name} is still inside the record-keeping period (until ${day(r.retain_until!)}). Deleting now is before the retention period ends. Delete everything anyway?`;
@@ -60,8 +61,14 @@ export default function GuestsAdmin({ initial, visits, cfg: c0, canEdit }: { ini
     </section>
 
     <section style={{ display: "grid", gap: 8, maxWidth: 760, marginTop: 18 }}>
-      <h2 style={{ marginBottom: 0 }}>Recent guest visits</h2>
-      <div className="card">{visits.map((v, i) => <div key={i} className="bar" style={{ justifyContent: "space-between", borderTop: i ? "1px solid var(--line)" : 0, padding: "6px 0" }}><span><strong>{v.first_name} {v.last_name}</strong> <small>host {v.host}</small></span><small>{when(v.at)}</small></div>)}{!visits.length && <p className="sub">No visits yet.</p>}</div>
+      <h2 style={{ marginBottom: 0 }}>Guest visits</h2>
+      <div className="bar">
+        <input type="search" placeholder="Guest or host name" value={vf.q} onChange={(e) => findVisits({ ...vf, q: e.target.value })} />
+        <label>From <input type="date" value={vf.from} onChange={(e) => findVisits({ ...vf, from: e.target.value })} /></label>
+        <label>To <input type="date" value={vf.to} onChange={(e) => findVisits({ ...vf, to: e.target.value })} /></label>
+        <small className="sub">{vs.length} shown (newest 500)</small>
+      </div>
+      <div className="card">{vs.map((v, i) => <div key={i} className="bar" style={{ justifyContent: "space-between", borderTop: i ? "1px solid var(--line)" : 0, padding: "6px 0" }}><span><strong>{v.first_name} {v.last_name}</strong> <small>host {v.host}</small></span><small>{when(v.at)}</small></div>)}{!vs.length && <p className="sub">No visits found.</p>}</div>
     </section>
   </>;
 }

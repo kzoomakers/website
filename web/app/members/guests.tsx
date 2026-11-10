@@ -105,6 +105,7 @@ function GuestModal({ onClose }: { onClose: () => void }) {
               : <div style={{ display: "grid", gap: 6, justifyItems: "start" }}>
                 {g.needs_resign && <Notice kind="info">The guest agreement changed. They need to sign the new version before their next check-in.</Notice>}
                 <button type="button" className="pri" onClick={() => setWiz({ id: g.id, resume: true })}>{g.needs_resign ? "Sign the new agreement" : "Resume"}</button></div>}
+            {g.ever_signed && <p style={{ margin: 0 }}><a href={`/api/guests/pdf?g=${g.id}`}>Signed agreement (PDF)</a></p>}
             <section><h3 style={{ margin: "0 0 6px" }}>Previous check-ins</h3>
               {d!.visits.length ? <ul style={{ margin: 0 }}>{d!.visits.map((v) => <li key={v}>{when(v)}</li>)}</ul> : <p className="sub" style={{ margin: 0 }}>No check-ins yet.</p>}</section>
             <div><button type="button" onClick={() => remove(g, d!.retention_years)}>Delete</button></div>

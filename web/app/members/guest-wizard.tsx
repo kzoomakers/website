@@ -58,12 +58,22 @@ export default function GuestWizard({ id, token, resume, onClose }: { id?: numbe
           {screen === "done" && <>
             <h2 id="wz-h">{g.ready ? `${g.first_name} is all set` : "Almost there"}</h2>
             <p>{token ? "Thank you! Everything is on file. You can close this page." : g.ready ? "Everything is on file. You can check them in from the guest list." : "Some steps are still open. Pick the guest in the list to continue."}</p>
+            {g.ever_signed && <p><a href={`/api/guests/pdf?${q}`}>Download the signed agreement (PDF)</a></p>}
             {!token && <div className="wz-row"><button className="pri" onClick={onClose}>Back to my guests</button></div>}
           </>}
         </>}
       </div>
     </dialog>
   );
+}
+
+function EmailLink({ id }: { id: number }) {
+  const s = useSend(), [to, setTo] = useState(""), [done, setDone] = useState(false);
+  return <form style={{ display: "grid", gap: 6 }} onSubmit={(e) => { e.preventDefault(); setDone(false); s.run(() => json("POST", "/api/guests", { op: "emailLink", g: id, to }), () => setDone(true)); }}>
+    <label>Or email the link to the guest<input type="email" inputMode="email" required value={to} onChange={(e) => setTo(e.target.value)} placeholder="guest@example.com" /></label>
+    <Notice kind="error">{s.err}</Notice>
+    <div className="wz-row" style={{ justifyContent: "flex-start" }}><button disabled={s.busy}>{s.busy ? "Sending…" : "Send link"}</button>{done && <small role="status">Sent.</small>}</div>
+  </form>;
 }
 
 function StartStep({ id, q, g, next, cancel }: { id: number; q: string; g: Guest; next: () => void; cancel: () => void }) {
@@ -95,6 +105,7 @@ function StartStep({ id, q, g, next, cancel }: { id: number; q: string; g: Guest
       {phone && <button type="button" onClick={() => { location.href = `mailto:?subject=${encodeURIComponent("Kzoo Makers guest form")}&body=${encodeURIComponent(msg)}`; }}>Email the link</button>}
       <button type="button" onClick={() => navigator.clipboard?.writeText(url).then(() => setCopied(true))}>{copied ? "Copied" : "Copy link"}</button>
     </div>}
+    <EmailLink id={id} />
     <div className="wz-row"><button type="button" onClick={cancel}>Cancel</button><button className="pri" onClick={next}>Next</button></div>
   </>;
 }

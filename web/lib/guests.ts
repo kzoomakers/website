@@ -183,8 +183,28 @@ export async function adminList(q: string) {
   return (await (await conn()).query(`${VIEW} WHERE g.first_name ILIKE $1 OR g.last_name ILIKE $1 OR g.email ILIKE $1 OR h.name ILIKE $1 ORDER BY g.id DESC LIMIT 300`, [like])).rows
     .map((r) => { const g = shape(r, cfg); return { id: g.id, name: `${g.first_name} ${g.last_name}`.trim() || "(not started)", email: g.email, host: g.host_name, ready: g.ready, next: g.next, last_visit: g.last_visit, retain_until: g.retain_until, deletable: g.deletable, delete_requested_at: g.delete_requested_at }; });
 }
-export async function adminVisits() {
-  return (await (await conn()).query(`SELECT v.at, g.first_name, g.last_name, h.name AS host FROM guest_visits v JOIN guests g ON g.id = v.guest_id JOIN site_users h ON h.id = v.host_id ORDER BY v.at DESC LIMIT 100`)).rows as { at: string; first_name: string; last_name: string; host: string }[];
+/** Every guest check-in, newest first; filter by guest or host name and by date (YYYY-MM-DD, Detroit time). */
+export async function adminVisits(q = "", from = "", to = "") {
+  const like = "%" + clip(q, 80).replace(/[\\%_]/g, "\\$&") + "%", ok = (d: string) => (/^\d{4}-\d{2}-\d{2}$/.test(d) ? d : null);
+  return (await (await conn()).query(`SELECT v.at, g.first_name, g.last_name, h.name AS host FROM guest_visits v JOIN guests g ON g.id = v.guest_id JOIN site_users h ON h.id = v.host_id
+    WHERE (g.first_name || ' ' || g.last_name ILIKE $1 OR h.name ILIKE $1) AND ($2::date IS NULL OR (v.at AT TIME ZONE '${TZ}')::date >= $2::date) AND ($3::date IS NULL OR (v.at AT TIME ZONE '${TZ}')::date <= $3::date)
+    ORDER BY v.at DESC LIMIT 500`, [like, ok(from), ok(to)])).rows as { at: string; first_name: string; last_name: string; host: string }[];
+}
+
+/** The guest's latest signed agreement PDF (decrypted), for them or their host. */
+export async function signedPdfOf(id: number) {
+  const r = (await (await conn()).query("SELECT pdf, title FROM sign_docs WHERE guest_id = $1 AND kind = 'guest' AND status = 'complete' AND pdf IS NOT NULL ORDER BY id DESC LIMIT 1", [id])).rows[0];
+  return r ? { pdf: open(r.pdf), title: r.title as string } : null;
+}
+
+/** Emails the guest's private form link (the same link the QR code holds) to the address the host typed. */
+export async function emailLink(g: Guest, to: string, link: string) {
+  const mail = await getMailCfg();
+  if (!mailReady(mail)) throw new Error("Email isn't set up on the site yet. Use the QR code or copy the link.");
+  const addr = clip(to, 200).toLowerCase();
+  if (!/^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(addr)) throw new Error("Enter a valid email address.");
+  const host = g.host_name.split(" ")[0];
+  await send({ to: addr, subject: "Your Kzoo Makers guest form", text: `Hi,\n\n${host} invited you to Kzoo Makers. Please fill in your guest form here (the link works for a few hours, and you can stop and come back with it):\n\n${link}\n\nIf you weren't expecting this, you can ignore it.` }, mail);
 }
 
 // ---- the hourly job: revision notices (a trickle that backs off as the day's email total fills up) and scheduled deletions
