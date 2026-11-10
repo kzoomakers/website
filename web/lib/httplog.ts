@@ -55,7 +55,7 @@ async function maintain() {
     const have = new Set((await p.query("SELECT indexname FROM pg_indexes WHERE tablename = $1", [TABLE])).rows.map((r) => r.indexname));
     for (const ix of ["(at DESC)", "(path, at DESC)", "(ip, at DESC)", "(host, at DESC)", "(\"user\", at DESC)", "(status, at DESC)"]) {
       const name = `${TABLE}_${ix.replace(/\W+/g, "_")}_ix`;
-      if (!have.has(name)) await p.query(`CREATE INDEX ${name} ON ${TABLE} ${ix}`);
+      if (!have.has(name)) await p.query(`CREATE INDEX IF NOT EXISTS ${name} ON ${TABLE} ${ix}`);
     }
     for (let i = 0; i < 3; i++) {
       const a = new Date(now.getTime() + i * 864e5), b = new Date(a.getTime() + 864e5);
