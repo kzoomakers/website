@@ -20,10 +20,10 @@ type Screen = (typeof ORDER)[number][0];
 type Info = { step: string; fresh: boolean; name: string; kinds: Record<string, string>; relationships: string[]; version: Version | null; has_password: boolean; upload_mb: number };
 const FIRST: Record<string, Screen> = { waiver: "waiver", handbook: "handbook", id: "id", profile: "contact", done: "directory" }; // "done" only counts while `fresh` (the wizard was never finished)
 const EMPTY = { first_name: "", last_name: "", phone: "", relationship: "", address: "", business_phone: "" };
-const two = { display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" } as const;
-const json = (method: string, url: string, body?: unknown) => fetch(url, { method, headers: { "content-type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
+export const two = { display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" } as const;
+export const json = (method: string, url: string, body?: unknown) => fetch(url, { method, headers: { "content-type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
 
-const CSS = `
+export const WZ_CSS = `
 dialog.wz{border:0;border-radius:16px;padding:0;width:min(720px,calc(100% - 24px));max-height:calc(100dvh - 24px);box-shadow:0 20px 60px rgba(0,0,0,.4);background:var(--card);color:var(--ink);overflow:auto}
 dialog.wz.wz--wide{width:min(1100px,calc(100% - 24px))}
 dialog.wz.wz--hb{width:70vw}
@@ -90,19 +90,8 @@ export default function Wizard() {
   const done = () => { dlg.current?.close(); setScreen(null); router.refresh(); };
   return (
     <dialog ref={dlg} className={"wz" + (screen === "handbook" ? " wz--hb" : screen === "waiver" ? " wz--wide" : "")} aria-labelledby="wz-h" onCancel={(e) => e.preventDefault()}>
-      <style>{CSS}</style>
-      <div className="wz-top">
-        <div className="stp" role="group" aria-label="Progress">
-          {ORDER.map(([k, l], i) => <Fragment key={k}>
-            {i > 0 && <div className="stp__line" aria-hidden />}
-            <div className={"stp__step" + (i < at ? " stp__step--done" : i === at ? " stp__step--current" : "")} aria-current={i === at ? "step" : undefined}>
-              <div className="stp__num" aria-hidden>{i < at ? "✓" : i + 1}</div>
-              <div className="stp__name"><span className="sr-only">{i < at ? "Done: " : ""}</span>{l}</div>
-            </div>
-          </Fragment>)}
-        </div>
-        {at < ORDER.length && <p className="stp__now"><b>Step {at + 1} of {ORDER.length}:</b> {ORDER[at][1]}</p>}
-      </div>
+      <style>{WZ_CSS}</style>
+      <Stepper steps={ORDER} at={at} />
       <div className="wz-body">
         <Notice kind="error">{err}</Notice>
         {screen === "waiver" && info.version && <>
@@ -129,7 +118,23 @@ export default function Wizard() {
   );
 }
 
-function useSend() {
+/** The numbered progress bar across the top of every wizard. */
+export function Stepper({ steps, at }: { steps: readonly (readonly [string, string])[]; at: number }) {
+  return <div className="wz-top">
+    <div className="stp" role="group" aria-label="Progress">
+      {steps.map(([k, l], i) => <Fragment key={k}>
+        {i > 0 && <div className="stp__line" aria-hidden />}
+        <div className={"stp__step" + (i < at ? " stp__step--done" : i === at ? " stp__step--current" : "")} aria-current={i === at ? "step" : undefined}>
+          <div className="stp__num" aria-hidden>{i < at ? "✓" : i + 1}</div>
+          <div className="stp__name"><span className="sr-only">{i < at ? "Done: " : ""}</span>{l}</div>
+        </div>
+      </Fragment>)}
+    </div>
+    {at < steps.length && <p className="stp__now"><b>Step {at + 1} of {steps.length}:</b> {steps[at][1]}</p>}
+  </div>;
+}
+
+export function useSend() {
   const [busy, setBusy] = useState(false), [err, setErr] = useState("");
   return { busy, err, setErr, run: async (f: () => Promise<Response | null | undefined>, ok: (r: Response) => void) => { setBusy(true); setErr(""); const r = await f().catch(() => null); setBusy(false); r?.ok ? ok(r) : setErr(r ? await r.text() : "Couldn't reach the server. Check your connection and try again."); } };
 }
@@ -139,7 +144,7 @@ const ID_ACCEPT = "image/jpeg,image/png,image/webp,image/gif,image/avif,image/he
 const ID_FORMATS = "JPG, PNG, WebP, HEIC/HEIF, AVIF or GIF";
 const size = (n: number) => (n < 1048576 ? Math.max(1, Math.round(n / 1024)) + " KB" : (n / 1048576).toFixed(1) + " MB");
 
-function IdStep({ kinds, mb, next }: { kinds: Record<string, string>; mb: number; next: () => void }) {
+export function IdStep({ kinds, mb, next, url = "/api/onboarding/id", guest = false }: { kinds: Record<string, string>; mb: number; next: () => void; url?: string; guest?: boolean }) {
   const s = useSend(), [file, setFile] = useState<File | null>(null), [thumb, setThumb] = useState(""), [bad, setBad] = useState(false);
   const phone = useState(() => typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches)[0]; // a touch device: offer the camera too
   useEffect(() => { if (!file) return setThumb(""); const u = URL.createObjectURL(file); setBad(false); setThumb(u); return () => URL.revokeObjectURL(u); }, [file]);
@@ -150,11 +155,11 @@ function IdStep({ kinds, mb, next }: { kinds: Record<string, string>; mb: number
     const big = fileTooLarge(file, mb);
     if (big) return s.setErr(big);
     const fd = new FormData(e.currentTarget); fd.set("file", file);
-    s.run(() => sendUpload("/api/onboarding/id", fd), next);
+    s.run(() => sendUpload(url, fd), next);
   }}>
     <h2 id="wz-h">Photo ID</h2>
-    <p>Upload a photo or scan of a non-expired driver's license or state ID, passport, military ID or college ID.</p>
-    <p className="sub">🔒 Your ID is encrypted before it is stored. Only authorized staff can open it, and every view is logged.</p>
+    <p>Upload a photo or scan of {guest ? "the guest's" : "a"} non-expired driver's license or state ID, passport, military ID or college ID.</p>
+    <p className="sub">🔒 {guest ? "The ID is" : "Your ID is"} encrypted before it is stored. {guest ? "Only the member who brought the guest can see it." : "Only authorized staff can open it, and every view is logged."}</p>
     <Notice kind="error">{s.err}</Notice>
     <label>Type of ID<select name="kind" required defaultValue=""><option value="" disabled>Choose…</option>{Object.entries(kinds).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
     <label>Expiration date (blank only for a college ID with none)<input type="date" name="expires" min={new Date().toISOString().slice(0, 10)} /></label>
@@ -193,24 +198,25 @@ function ContactStep({ next }: { next: () => void }) {
   </form>;
 }
 
-function EmergencyStep({ relationships, next }: { relationships: string[]; next: () => void }) {
+export function EmergencyStep({ relationships, next, api = "/api/account", who = "you" }: { relationships: string[]; next: () => void; api?: string; who?: string }) {
+  const withQ = (extra: string) => api + (api.includes("?") ? "&" : "?") + extra;
   const s = useSend(), [list, setList] = useState<Contact[] | null>(null), [f, setF] = useState(EMPTY), [adding, setAdding] = useState(false);
-  useEffect(() => { fetch("/api/account").then((r) => r.json()).then((j) => { setList(j.contacts ?? []); setAdding(!j.contacts?.length); }).catch(() => setList([])); }, []);
+  useEffect(() => { fetch(api).then((r) => r.json()).then((j) => { setList(j.contacts ?? []); setAdding(!j.contacts?.length); }).catch(() => setList([])); }, []);
   if (!list) return <p role="status">Loading…</p>;
   const set = (k: keyof typeof EMPTY) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF({ ...f, [k]: e.target.value });
   const saved = (r: Response) => r.json().then((l: Contact[]) => { setList(l); setF(EMPTY); setAdding(false); });
   return <div style={{ display: "grid", gap: 12 }}>
     <h2 id="wz-h">Emergency contacts</h2>
-    <p>Who should we call if something happens while you're at the space? Add at least one; you can add more.</p>
+    <p>Who should we call if something happens while {who === "you" ? "you're" : who + " is"} at the space? Add at least one; you can add more.</p>
     <Notice kind="error">{s.err}</Notice>
     {list.map((c) => <div key={c.id} className="card" style={{ display: "flex", gap: 12, alignItems: "center", padding: "10px 16px" }}>
       <span style={{ flex: 1 }}><b>{c.first_name} {c.last_name}</b> <small className="sub">({c.relationship})</small><br /><small>{c.phone}{c.business_phone && ` · work ${c.business_phone}`}{c.address && ` · ${c.address}`}</small></span>
-      <button type="button" aria-label={`Remove ${c.first_name} ${c.last_name}`} onClick={() => s.run(() => json("DELETE", "/api/account?contact=" + c.id), (r) => r.json().then((l: Contact[]) => { setList(l); setAdding(!l.length); }))}>Remove</button>
+      <button type="button" aria-label={`Remove ${c.first_name} ${c.last_name}`} onClick={() => s.run(() => json("DELETE", withQ("contact=" + c.id)), (r) => r.json().then((l: Contact[]) => { setList(l); setAdding(!l.length); }))}>Remove</button>
     </div>)}
-    {adding ? <form className="card" style={{ display: "grid", gap: 10, padding: 16 }} onSubmit={(e) => { e.preventDefault(); s.run(() => json("POST", "/api/account", f), saved); }}>
+    {adding ? <form className="card" style={{ display: "grid", gap: 10, padding: 16 }} onSubmit={(e) => { e.preventDefault(); s.run(() => json("POST", api, f), saved); }}>
       <div style={two}><label>First name<input required maxLength={80} value={f.first_name} onChange={set("first_name")} /></label><label>Last name<input required maxLength={80} value={f.last_name} onChange={set("last_name")} /></label></div>
       <div style={two}><label>Phone<input required type="tel" maxLength={30} value={f.phone} onChange={set("phone")} /></label>
-        <label>Relationship to you<select required value={f.relationship} onChange={set("relationship")}><option value="">Choose…</option>{relationships.map((r) => <option key={r}>{r}</option>)}</select></label></div>
+        <label>Relationship to {who === "you" ? "you" : who}<select required value={f.relationship} onChange={set("relationship")}><option value="">Choose…</option>{relationships.map((r) => <option key={r}>{r}</option>)}</select></label></div>
       <label>Address (optional)<input maxLength={300} value={f.address} onChange={set("address")} /></label>
       <label>Business phone (optional)<input type="tel" maxLength={30} value={f.business_phone} onChange={set("business_phone")} /></label>
       <div className="wz-row">{list.length > 0 && <button type="button" onClick={() => setAdding(false)}>Cancel</button>}<button disabled={s.busy}>{s.busy ? "Saving…" : "Save contact"}</button></div>

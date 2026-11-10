@@ -13,7 +13,7 @@ export const RELATIONSHIPS = ["Parent", "Sibling", "Friend", "Spouse", "Signific
 
 const EMAIL_OK = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/;
 const clip = (v: unknown, n: number) => (typeof v === "string" ? v.trim().slice(0, n) : "");
-const phoneOk = (p: string) => /^[\d\s()+.\-x]{7,30}$/.test(p) && p.replace(/\D/g, "").length >= 7;
+export const phoneOk = (p: string) => /^[\d\s()+.\-x]{7,30}$/.test(p) && p.replace(/\D/g, "").length >= 7;
 
 export type Profile = Record<(typeof ADMIN_FIELDS)[number], string> & { id: number; name: string; verified: boolean; has_password: boolean; created_at: string; disabled: boolean; disabled_reason: string };
 export type Contact = { id: number; first_name: string; last_name: string; phone: string; relationship: string; address: string; business_phone: string };

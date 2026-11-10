@@ -3,6 +3,7 @@ import { tokenAllows } from "./ntfy-token";
 import { createHash, randomBytes } from "crypto";
 import { db } from "./db";
 import { isAdmin } from "@/auth";
+import { createRequire } from "module";
 
 // A small ntfy server (https://ntfy.sh) speaking the same HTTP contract the mobile apps use: publish with PUT/POST, subscribe with
 // /{topic}/json|sse|raw (streaming, or poll=1), message ids, `since`, keepalives. Stored in Postgres; streams poll the table.
@@ -188,6 +189,32 @@ export const topicClients = (name: string) => q("SELECT id, at, last_seen, close
 // ---- tokens (admin). The token is shown once; only its hash is kept.
 export const listTokens = (owner = "") => q("SELECT hash, label, topics, write, scopes, expires_at, created_by, owner, created_at, last_used_at FROM ntfy_tokens WHERE owner = $1 ORDER BY created_at DESC", [owner]);
 export const listAllTokens = () => q("SELECT hash, label, topics, write, scopes, expires_at, created_by, owner, created_at, last_used_at FROM ntfy_tokens ORDER BY owner <> '', created_at DESC");
+const rq = createRequire(import.meta.url);
+const WORDS: string[] = [
+  ...(rq("wordlist-english/english-words-10.json") as string[]),
+  ...(rq("an-array-of-english-words") as string[]),
+  ...(rq("an-array-of-spanish-words") as string[]),
+  ...(rq("an-array-of-french-words") as string[]),
+  ...(rq("an-array-of-portuguese-words") as string[]),
+  ...(rq("an-array-of-italian-words") as string[]),
+  ...(rq("all-the-german-words") as string[]),
+  ...(rq("an-array-of-dutch-words") as string[]),
+].filter((w: string) => /^[a-z]{3,6}$/.test(w));
+const BASIC = "-/:()$&@?!1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const EXPANDED = "~<>\u2022\u00a5\u00a3\u20ac|_*+=#$%";
+const pickFrom = (s: string, r: Buffer, i: number) => s[r[i] % s.length];
+const makeToken = () => {
+  const r = randomBytes(10);
+  const p = pickFrom(BASIC, r, 0);
+  const w1 = WORDS[r[1] % WORDS.length];
+  const w2 = WORDS[r[2] % WORDS.length];
+  const w3 = WORDS[r[3] % WORDS.length];
+  const useExpanded = r[4] % 4 === 0;
+  const s1 = useExpanded ? pickFrom(EXPANDED, r, 5) : pickFrom(BASIC, r, 5);
+  const s2 = pickFrom(BASIC, r, 6);
+  const suffix = r[7] % 2 === 0 ? s1 + s2 : s2 + s1;
+  return p + p + w1 + " " + w2 + " " + w3 + suffix;
+};
 export async function createToken(x: any, who: string, owner = "") {
   const label = String(x.label ?? "").trim().slice(0, 80), topics: string[] = Array.isArray(x.topics) ? x.topics.map(String) : [];
   if (!label) throw new Error("Give the token a label, such as the person or phone it is for.");
@@ -196,7 +223,7 @@ export async function createToken(x: any, who: string, owner = "") {
   if (!(exp in EXPIRY)) throw new Error("Pick how long the token should last.");
   const scopes: string[] = Array.isArray(x.scopes) ? x.scopes : x.write === false ? ["read"] : ["read", "publish"];
   if (!scopes.length || !scopes.every((v) => v === "read" || v === "publish")) throw new Error("Unknown token permission.");
-  const token = "tk_" + randomBytes(24).toString("base64url").replace(/[-_]/g, "x").slice(0, 29);
+  const token = makeToken();
   await q("INSERT INTO ntfy_tokens (hash, label, topics, write, scopes, expires_at, created_by, owner) VALUES ($1,$2,$3,$4,$5,CASE WHEN $6::int IS NULL THEN NULL ELSE now() + make_interval(days => $6::int) END,$7,$8)",
     [sha(token), label, topics, scopes.includes("publish"), scopes, EXPIRY[exp], who, owner]);
   return token;

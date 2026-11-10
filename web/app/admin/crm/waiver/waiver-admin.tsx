@@ -8,18 +8,21 @@ import { diffVersions, summarize, type Section, type Version } from "@/lib/waive
 
 type V = Version & { signed: number };
 type M = { id: number; name: string; email: string; version_id: number | null; revision: string | null; signed_at: string | null; doc_id: number | null; must_resign: boolean };
-const rpc = async <T,>(op: string, args: Record<string, unknown> = {}): Promise<T> => {
-  const r = await fetch("/api/webmaster/waiver", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ op, ...args }) });
+type Draft = { revision: string; title: string; sections: Section[]; closing: string; summary: string; mandatory: boolean };
+const rpcFor = (kind: string) => async <T,>(op: string, args: Record<string, unknown> = {}): Promise<T> => {
+  const r = await fetch("/api/webmaster/waiver", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ op, kind, ...args }) });
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 };
 const when = (s: string) => new Date(s).toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
 const nextRev = (r: string) => r.replace(/(\d+)$/, (n) => String(Number(n) + 1));
 
-export default function WaiverAdmin({ initial, canEdit, ai }: { initial: V[]; canEdit: boolean; ai: boolean }) {
-  const [vs, setVs] = useState(initial), [tab, setTab] = useState<"edit" | "versions" | "members">("edit"), cur = vs[0];
-  const [d, setD] = useState({ revision: nextRev(cur.revision), title: cur.title, closing: cur.closing, sections: cur.sections.map((s) => ({ ...s })) as Section[], summary: "", mandatory: true });
-  useDirtyGuard(d, vs.length);
+export default function WaiverAdmin({ initial, canEdit, canPublish, ai, kind = "member", draft = null }: { initial: V[]; canEdit: boolean; canPublish: boolean; ai: boolean; kind?: "member" | "guest"; draft?: Draft | null }) {
+  const rpc = rpcFor(kind), guest = kind === "guest", who = guest ? "guests" : "members", name = guest ? "Guest agreement" : "Membership agreement";
+  const [vs, setVs] = useState(initial), [tab, setTab] = useState<"edit" | "preview" | "versions" | "members">("edit"), cur = vs[0], [saves, setSaves] = useState(0), [hasDraft, setHasDraft] = useState(!!draft);
+  const fresh = (v: V, rev = nextRev(v.revision)): Draft => ({ revision: rev, title: v.title, closing: v.closing, sections: v.sections.map((s) => ({ ...s })), summary: "", mandatory: true });
+  const [d, setD] = useState<Draft>(draft ?? fresh(cur));
+  useDirtyGuard(d, vs.length + saves);
   const [msg, setMsg] = useState(""), [busy, setBusy] = useState(false), [thinking, setThinking] = useState(false);
   const [mem, setMem] = useState<M[] | null>(null), [mf, setMf] = useState({ q: "", version: "" });
   const changes = diffVersions(cur, d), set = (i: number, k: keyof Section, v: string) => setD({ ...d, sections: d.sections.map((s, j) => (j === i ? { ...s, [k]: v } : s)) });
@@ -32,26 +35,36 @@ export default function WaiverAdmin({ initial, canEdit, ai }: { initial: V[]; ca
     try { setD({ ...d, summary: (await rpc<{ text: string }>("aiSummary", { draft: d })).text }); setMsg("AI wrote a draft. Read it and fix anything before you publish."); } catch (e: any) { setMsg(e.message); }
     setThinking(false);
   };
+  const saveDraft = async () => {
+    setBusy(true); setMsg("");
+    try { await rpc("saveDraft", { draft: d }); setHasDraft(true); setSaves((n) => n + 1); setMsg("Draft saved. Nobody but admins can see it, and nobody is asked to sign it."); } catch (e: any) { setMsg(e.message); }
+    setBusy(false);
+  };
+  const discard = async () => {
+    if (!(await confirmDialog("Throw away this draft and start again from the current published version?", { ok: "Discard draft", danger: true }))) return;
+    try { await rpc("discardDraft"); setHasDraft(false); setD(fresh(cur)); setSaves((n) => n + 1); setMsg("Draft discarded."); } catch (e: any) { setMsg(e.message); }
+  };
   const publish = async () => {
-    const n = d.mandatory ? ` Every approved member will be emailed and must sign it at their next sign-in.` : " Members who already signed are not asked again.";
+    const n = guest ? (d.mandatory ? " Every guest who signed before is emailed a few a day and must sign it again before their next check-in." : " Every guest who signed before is emailed a few a day; signing again is optional.")
+      : d.mandatory ? ` Every approved member will be emailed and must sign it at their next sign-in.` : " Members who already signed are not asked again.";
     if (!(await confirmDialog(`Publish revision ${d.revision}? It can never be edited or deleted afterwards; changes mean a new revision.${n}`, { ok: "Publish" }))) return;
     setBusy(true); setMsg("");
-    try { await rpc("publish", { draft: d }); const nv = await rpc<V[]>("versions"); setVs(nv); setD({ revision: nextRev(d.revision), title: d.title, closing: d.closing, sections: d.sections, summary: "", mandatory: true }); setMem(null); setMsg(`Revision ${d.revision} is live.`); setTab("versions"); }
+    try { await rpc("publish", { draft: d }); const nv = await rpc<V[]>("versions"); setVs(nv); setD({ revision: nextRev(d.revision), title: d.title, closing: d.closing, sections: d.sections, summary: "", mandatory: true }); setMem(null); setHasDraft(false); setMsg(`Revision ${d.revision} is live.`); setTab("versions"); }
     catch (e: any) { setMsg(e.message); }
     setBusy(false);
   };
   return (
     <>
-      <h1>Membership agreement</h1>
-      <p className="sub">New members sign this after approval. Publishing a change makes a new numbered version: the old ones are kept forever, along with every member's signed copy.</p>
+      <h1>{name}</h1>
+      <p className="sub">{guest ? "Guests sign this on their first visit." : "New members sign this after approval."} Save a draft as often as you like and preview it exactly as signers will see it. Publishing makes a new numbered version: the old ones are kept forever, along with every signed copy.</p>
       <nav className="bar" role="tablist">
-        {([["edit", "Edit & publish"], ["versions", `Versions (${vs.length})`], ["members", "Who signed what"]] as const).map(([t, l]) => <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? "pri" : ""} onClick={() => show(t)}>{l}</button>)}
+        {([["edit", hasDraft ? "Edit (draft saved)" : "Edit"], ["preview", "Preview"], ["versions", `Versions (${vs.length})`], ...(guest ? [] : [["members", "Who signed what"]])] as [typeof tab, string][]).map(([t, l]) => <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? "pri" : ""} onClick={() => show(t)}>{l}</button>)}
         {msg && <Notice kind={msgKind(msg)}>{msg}</Notice>}
       </nav>
 
       {tab === "edit" && (
         <div style={{ display: "grid", gap: 14, maxWidth: 820 }}>
-          <p className="sub" style={{ margin: 0 }}>You're editing a copy of the current version (revision {cur.revision}). Nothing changes for members until you publish.</p>
+          <p className="sub" style={{ margin: 0 }}>You're editing {hasDraft ? "the saved draft" : `a copy of the current version (revision ${cur.revision})`}. Nothing changes for {who} until you publish.</p>
           <div className="bar"><label>Revision <input value={d.revision} onChange={(e) => setD({ ...d, revision: e.target.value })} style={{ width: 110 }} /></label><label style={{ flex: 1 }}>Title <input value={d.title} onChange={(e) => setD({ ...d, title: e.target.value })} style={{ width: "100%", boxSizing: "border-box" }} /></label></div>
           {d.sections.map((s, i) => (
             <fieldset key={i} className="card" style={{ display: "grid", gap: 6 }}>
@@ -67,13 +80,31 @@ export default function WaiverAdmin({ initial, canEdit, ai }: { initial: V[]; ca
             <h2 style={{ marginTop: 0 }}>What will change for members</h2>
             <p className="sub">{summarize(changes)}</p>
             <Changes changes={changes} />
-            <label>Explain it in plain language: members read this in the email and when they sign again
+            <label>Explain it in plain language: {who} read this in the email and when they sign again
               <textarea value={d.summary} onChange={(e) => setD({ ...d, summary: e.target.value })} rows={4} placeholder="e.g. Membership dues can now be paid up to the 15th instead of the 10th. We also clarified the guest rule." style={{ width: "100%", boxSizing: "border-box" }} /></label>
             {ai && canEdit && <><button type="button" className="pri" disabled={thinking || !changes.length} onClick={summarizeAi}>{thinking ? "Writing…" : "✨ Summarize with AI"}</button>{" "}</>}
             <button type="button" onClick={() => setD({ ...d, summary: d.summary || `Changes: ${summarize(changes)}` })}>Start from the automatic list</button>
-            <label style={{ display: "block", marginTop: 10 }}><input type="checkbox" checked={d.mandatory} onChange={(e) => setD({ ...d, mandatory: e.target.checked })} /> Require every member to sign this version (they're emailed and must agree at their next sign-in)</label>
+            <label style={{ display: "block", marginTop: 10 }}><input type="checkbox" checked={d.mandatory} onChange={(e) => setD({ ...d, mandatory: e.target.checked })} /> {guest ? "Require every guest to sign this version again before their next check-in (they're all emailed either way)" : "Require every member to sign this version (they're emailed and must agree at their next sign-in)"}</label>
           </section>
-          {canEdit && <button className="pri" disabled={busy || !changes.length && d.title === cur.title} onClick={publish}>{busy ? "Publishing…" : `Publish revision ${d.revision}`}</button>}
+          {canEdit && <div className="bar">
+            <button disabled={busy} onClick={saveDraft}>Save draft</button>
+            <button onClick={() => setTab("preview")}>Preview</button>
+            {hasDraft && <button onClick={discard}>Discard draft</button>}
+            {canPublish ? <button className="pri" disabled={busy || !changes.length && d.title === cur.title} onClick={publish}>{busy ? "Publishing…" : `Publish revision ${d.revision}`}</button>
+              : <small className="sub">You can save drafts, but publishing needs a special permission (Admin &gt; Access &gt; Special permissions).</small>}
+          </div>}
+        </div>
+      )}
+
+      {tab === "preview" && (
+        <div style={{ display: "grid", gap: 10, maxWidth: 820 }}>
+          <p className="sub" style={{ margin: 0 }}><b>Preview.</b> This is how {who} will read it (revision {d.revision}), signature box and all. It is not published and nobody can sign it.</p>
+          <div className="card" style={{ background: "#fff", color: "#111" }}>
+            <h2 style={{ marginTop: 0, textAlign: "center" }}>{d.title}</h2>
+            <Agreement sections={d.sections.filter((s) => s.heading || s.body)} closing={d.closing} />
+            <hr /><p className="sub" style={{ color: "#555" }}>[ Signature box, initials and "I agree" tick appear here ]</p>
+          </div>
+          <div className="bar"><button onClick={() => setTab("edit")}>Back to editing</button></div>
         </div>
       )}
 

@@ -89,7 +89,7 @@ export async function buildFieldPdf(source: Buffer, fields: FieldRow[], signers:
 type Signer = { name: string; email: string; signature: string; initials?: string; drawn: string; at: Date; ip: string; ua: string };
 
 /** The membership agreement in the paper form's layout: centered title, revision and page count top right, run-in headings, initials on every page, signature block. Pass no signer for a blank copy. */
-export async function buildAgreementPdf(v: { title: string; revision: string; sections: { heading: string; body: string }[]; closing: string }, signer: Signer | null, hash = "") {
+export async function buildAgreementPdf(v: { title: string; revision: string; sections: { heading: string; body: string }[]; closing: string }, signer: Signer | null, hash = "", guardian: Signer | null = null) {
   const pdf = await PDFDocument.create(), font = await pdf.embedFont(StandardFonts.Helvetica), bold = await pdf.embedFont(StandardFonts.HelveticaBold), script = await pdf.embedFont(StandardFonts.TimesRomanItalic);
   const W = 612, H = 792, M = 54, TW = W - 2 * M, SZ = 10, LH = 13, ink = rgb(0.1, 0.1, 0.1);
   let page = pdf.addPage([W, H]), y = H - 96;
@@ -116,15 +116,19 @@ export async function buildAgreementPdf(v: { title: string; revision: string; se
   room(210); y -= 6;
   for (const l of wrap(v.closing, bold, SZ, TW)) line(l, M, bold);
   y -= 14; line("Please sign below:", M);
-  y -= 34;
-  if (signer?.drawn) { try { const img = await pdf.embedPng(Buffer.from(signer.drawn.split(",")[1], "base64")), sc = Math.min(180 / img.width, 40 / img.height); page.drawImage(img, { x: M + 6, y: y - 2, width: img.width * sc, height: img.height * sc }); } catch { /* typed name below still counts */ } }
-  else if (signer) page.drawText(ascii(signer.signature), { x: M + 6, y: y + 4, size: 20, font: script, color: ink });
-  if (signer) page.drawText(signer.at.toLocaleDateString("en-US", { timeZone: "America/Detroit" }), { x: M + 340, y: y + 4, size: 11, font, color: ink });
-  page.drawLine({ start: { x: M, y }, end: { x: M + 280, y }, thickness: 0.6, color: ink }); page.drawLine({ start: { x: M + 330, y }, end: { x: M + 450, y }, thickness: 0.6, color: ink });
-  y -= 11; page.drawText("Signature of Member/Guest", { x: M, y, size: 8.5, font, color: ink }); page.drawText("Date", { x: M + 330, y, size: 8.5, font, color: ink });
-  y -= 34; if (signer) page.drawText(ascii(signer.name), { x: M + 6, y: y + 4, size: 11, font, color: ink });
-  page.drawLine({ start: { x: M, y }, end: { x: M + 280, y }, thickness: 0.6, color: ink });
-  y -= 11; page.drawText("Printed Name of Member/Guest", { x: M, y, size: 8.5, font, color: ink });
+  const block = async (sg: Signer | null, who: string) => { // a signature line (drawn or typed) with its date, then the printed name
+    y -= 34;
+    if (sg?.drawn) { try { const img = await pdf.embedPng(Buffer.from(sg.drawn.split(",")[1], "base64")), sc = Math.min(180 / img.width, 40 / img.height); page.drawImage(img, { x: M + 6, y: y - 2, width: img.width * sc, height: img.height * sc }); } catch { /* typed name below still counts */ } }
+    else if (sg) page.drawText(ascii(sg.signature), { x: M + 6, y: y + 4, size: 20, font: script, color: ink });
+    if (sg) page.drawText(sg.at.toLocaleDateString("en-US", { timeZone: "America/Detroit" }), { x: M + 340, y: y + 4, size: 11, font, color: ink });
+    page.drawLine({ start: { x: M, y }, end: { x: M + 280, y }, thickness: 0.6, color: ink }); page.drawLine({ start: { x: M + 330, y }, end: { x: M + 450, y }, thickness: 0.6, color: ink });
+    y -= 11; page.drawText(`Signature of ${who}`, { x: M, y, size: 8.5, font, color: ink }); page.drawText("Date", { x: M + 330, y, size: 8.5, font, color: ink });
+    y -= 34; if (sg) page.drawText(ascii(sg.name), { x: M + 6, y: y + 4, size: 11, font, color: ink });
+    page.drawLine({ start: { x: M, y }, end: { x: M + 280, y }, thickness: 0.6, color: ink });
+    y -= 11; page.drawText(`Printed Name of ${who}`, { x: M, y, size: 8.5, font, color: ink });
+  };
+  await block(signer, guardian ? "Minor Guest" : "Member/Guest");
+  if (guardian) { room(110); y -= 16; await block(guardian, "Parent/Legal Guardian"); }
   // Headers and footers once the page count is known.
   const pages = pdf.getPages();
   pages.forEach((pg, i) => {
@@ -140,6 +144,7 @@ export async function buildAgreementPdf(v: { title: string; revision: string; se
     const put = (t: string, f = font, size = 9.5) => { for (const l of wrap(t, f, size, TW)) { cy -= size * 1.5; cp.drawText(l, { x: M, y: cy, size, font: f, color: ink }); } cy -= 6; };
     put("Signing certificate", bold, 16); put(`Document: ${v.title}, revision ${v.revision}`); if (hash) put(`Content SHA-256: ${hash}`, font, 9);
     put(`${signer.name} <${signer.email}>\nSigned ${signer.at.toISOString()}\nInitials ${signer.initials || "n/a"}\nIP ${signer.ip || "unknown"}\n${signer.ua || "unknown device"}`, font, 9);
+    if (guardian) put(`Parent/guardian: ${guardian.name} <${guardian.email}>\nSigned ${guardian.at.toISOString()}\nIP ${guardian.ip || "unknown"}\n${guardian.ua || "unknown device"}`, font, 9);
     put("Signed electronically after reviewing the full text, with the same legal effect as a handwritten signature (U.S. ESIGN Act and UETA). The initials shown at the foot of each page were applied by the signer. This file is stored encrypted.", font, 8.5);
   }
   return Buffer.from(await pdf.save());

@@ -272,16 +272,33 @@ export async function signWaiver(user: { id: number; name: string; email: string
   await finalize(id, base, copyTo);
 }
 
+export type GuestSign = { signature: string; initials: string; drawn: string; guardian?: { name: string; signature: string; drawn: string } };
+/** A guest signs a version of the guest agreement on the host's (or their own) device. A minor also needs the guardian's signature, which goes on the same document; the host is copied on the signed PDF. */
+export async function signGuest(guest: { id: number; name: string; email: string }, hostEmail: string, v: Version, i: GuestSign, proof: Proof, base: string) {
+  if (clip(i.signature, 100).length < 2) throw new Error("Type the guest's full name to sign.");
+  if (clip(i.initials, 6).length < 1) throw new Error("Enter initials: they go at the foot of every page.");
+  if (!PNG.test(i.drawn)) throw new Error("Draw the signature in the box to sign the agreement.");
+  if (i.guardian && (clip(i.guardian.signature, 100).length < 2 || !PNG.test(i.guardian.drawn))) throw new Error("The parent or guardian must type their name and draw their signature.");
+  const c = await conn();
+  const id = (await c.query("INSERT INTO sign_docs (kind, guest_id, version_id, title, body, created_by) VALUES ('guest',$1,$2,$3,$4,$5) RETURNING id", [guest.id, v.id, `${v.title} (revision ${v.revision})`, fullText(v), hostEmail])).rows[0].id as number;
+  const add = async (name: string, email: string, role = "signer") => (await c.query("INSERT INTO sign_signers (doc_id, name, email, token, role) VALUES ($1,$2,$3,$4,$5) RETURNING id", [id, name, email, randomBytes(8).toString("hex"), role])).rows[0].id as number;
+  const sid = await add(guest.name, guest.email), gid = i.guardian ? await add(i.guardian.name, guest.email) : 0;
+  await add("Host", hostEmail, "cc");
+  const done = await recordSignature(sid, id, clip(i.signature, 100), i.drawn, proof, clip(i.initials, 6).toUpperCase());
+  const last = i.guardian ? await recordSignature(gid, id, clip(i.guardian.signature, 100), i.guardian.drawn, proof) : done;
+  if (last) await finalize(id, base);
+}
+
 /** Builds, digitally signs (when a certificate is configured), encrypts and stores the signed PDF, then emails it to everyone involved (and a waiver copy to the office). */
 async function finalize(docId: number, base: string, copyTo = "") {
   const c = await conn(), d = (await c.query("SELECT d.*, b.name AS bucket FROM sign_docs d LEFT JOIN sign_buckets b ON b.id = d.bucket_id WHERE d.id = $1", [docId])).rows[0];
   const ss = (await c.query("SELECT id, name, email, signature, initials, drawn, signed_at AS at, ip, ua FROM sign_signers WHERE doc_id = $1 AND signed_at IS NOT NULL AND role IN ('signer','approver') ORDER BY signed_at", [docId])).rows;
-  const ver: Version | undefined = d.kind === "waiver" && d.version_id ? (await c.query("SELECT id, revision, title, sections, closing FROM waiver_versions WHERE id = $1", [d.version_id])).rows[0] : undefined;
+  const ver: Version | undefined = (d.kind === "waiver" || d.kind === "guest") && d.version_id ? (await c.query("SELECT id, revision, title, sections, closing FROM waiver_versions WHERE id = $1", [d.version_id])).rows[0] : undefined;
   let raw: Buffer;
   if (d.source) {
     const src = open(d.source), fields = (await c.query("SELECT page, x, y, w, h, type, value, signer_id AS signer FROM sign_fields WHERE doc_id = $1 ORDER BY id", [docId])).rows;
     raw = await buildFieldPdf(src, fields, new Map(ss.map((s) => [s.id as number, s])), { title: d.title, completed: new Date(d.completed_at), hideAudit: d.hide_audit }, sha256(src));
-  } else raw = ver ? await buildAgreementPdf(ver, ss[0], sha256(d.body)) : await buildPdf({ title: d.title, body: d.body, tags: d.tags, present: d.present, completed: new Date(d.completed_at) }, ss, d.bucket, sha256(d.title + "\n" + d.body), d.hide_audit);
+  } else raw = ver ? await buildAgreementPdf(ver, ss[0], sha256(d.body), ss[1] ?? null) : await buildPdf({ title: d.title, body: d.body, tags: d.tags, present: d.present, completed: new Date(d.completed_at) }, ss, d.bucket, sha256(d.title + "\n" + d.body), d.hide_audit);
   const pdf = await sealPdf(raw);
   await c.query("UPDATE sign_docs SET pdf = $2, sha = $3 WHERE id = $1", [docId, seal(pdf), sha256(pdf)]);
   const cfg = await getMailCfg();
@@ -289,9 +306,9 @@ async function finalize(docId: number, base: string, copyTo = "") {
   const attachments = [{ filename: d.title.replace(/[^\w.-]+/g, "_").slice(0, 60) + ".pdf", content: pdf, type: "application/pdf" }];
   const copies = (await c.query("SELECT email FROM sign_signers WHERE doc_id = $1 AND (role = 'cc' OR signed_at IS NOT NULL)", [docId])).rows.map((r) => r.email as string);
   const to = new Set([...copies, ...(copyTo ? [copyTo] : []), ...(EMAIL_OK.test(d.created_by) && d.kind === "board" ? [d.created_by] : [])]);
-  for (const t of to) await send({ to: t, subject: `Signed: ${d.title}${d.kind === "waiver" ? ` (${ss[0].name})` : ""}`, text: `The signed copy of "${d.title}" is attached. It is stored encrypted at rest and was sent over an encrypted connection.`,
+  for (const t of to) await send({ to: t, subject: `Signed: ${d.title}${d.kind !== "board" ? ` (${ss[0].name})` : ""}`, text: `The signed copy of "${d.title}" is attached. It is stored encrypted at rest and was sent over an encrypted connection.`,
     html: `<p>The signed copy of <strong>${esc(d.title)}</strong> is attached.</p><p><small>It is stored encrypted at rest and was sent over an encrypted connection.</small></p>`, attachments }, cfg).catch(() => {});
-  await logAudit("system", d.kind === "waiver" ? "crm.waiver" : "board.sign.complete", `${d.title} (#${docId})`);
+  await logAudit("system", d.kind === "waiver" ? "crm.waiver" : d.kind === "guest" ? "guest.sign" : "board.sign.complete", `${d.title} (#${docId})`);
 }
 
 // ---- templates: a saved setup (text or PDF, people, fields, options) to start new papers from, optionally with a public "sign this" link

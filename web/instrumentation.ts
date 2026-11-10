@@ -13,6 +13,8 @@ export async function register() {
     const { runAlerts, runDigest } = await import("./lib/ga-notify");
     job(7351915, 3 * 3600_000, runAlerts); // spike/drop notice to the google-analytics-notices topic (once a day at most)
     job(7351916, 3600_000, runDigest); // weekly email summary, Mondays from 8am Eastern, if switched on
+    const { runGuestMail } = await import("./lib/guests");
+    job(7351917, 3600_000, runGuestMail); // guest agreement update emails (a slow trickle) and scheduled guest deletions
     const { prune } = await import("./lib/retention");
     setTimeout(() => withLock(7351914, prune).catch(() => {}), 120_000); // not at the very start
     job(7351914, 6 * 3600_000, prune); // data past the 5-year limit (lib/retention.ts)
