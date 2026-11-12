@@ -13,12 +13,12 @@ import { cleanDesign, fill, renderEmail, TEMPLATES, type Design } from "./mail-r
 export type MailCfg = {
   fromName: string; from: string; replyTo: string; siteUrl: string; smtp2goKey: string; smtpUrl: string; deepseekKey: string; aiModel: string;
   doubleOptIn: boolean; confirmSubject: string; confirmBody: string;
-  welcomeOn: boolean; welcomeSubject: string; welcomeBody: string; perMinute: number;
+  welcomeOn: boolean; welcomeSubject: string; welcomeBody: string; perMinute: number; perDay: number;
 };
 const EMPTY: MailCfg = {
   fromName: "", from: "", replyTo: "", siteUrl: "", smtp2goKey: "", smtpUrl: "", deepseekKey: "", aiModel: "",
   doubleOptIn: true, confirmSubject: "Confirm your subscription", confirmBody: "Hello!\n\nPlease confirm your subscription by clicking this link:\n\n{{link}}\n\nIf you didn't ask for this, you can ignore this email.",
-  welcomeOn: false, welcomeSubject: "Welcome!", welcomeBody: "Hi {{name}},\n\nThanks for subscribing. We'll be in touch with news and events.", perMinute: 0,
+  welcomeOn: false, welcomeSubject: "Welcome!", welcomeBody: "Hi {{name}},\n\nThanks for subscribing. We'll be in touch with news and events.", perMinute: 0, perDay: 0,
 };
 const SECRETS = ["smtp2goKey", "smtpUrl", "deepseekKey"] as const;
 export const getMailCfg = async (): Promise<MailCfg> => {
@@ -39,6 +39,7 @@ export async function saveMailCfg(x: Partial<MailCfg>) {
     if (x[k] === undefined) continue; // fields you don't send keep their value
     if (k === "doubleOptIn" || k === "welcomeOn") { n[k] = !!x[k]; continue; }
     if (k === "perMinute") { n.perMinute = Math.min(6000, Math.max(0, Math.floor(Number(x.perMinute)) || 0)); continue; }
+    if (k === "perDay") { n.perDay = Math.min(1_000_000, Math.max(0, Math.floor(Number(x.perDay)) || 0)); continue; }
     const raw = String(x[k] ?? ""), v = (k === "confirmBody" || k === "welcomeBody" ? raw : raw.trim()).slice(0, 2000);
     if ((SECRETS as readonly string[]).includes(k)) { if (v) n[k] = v === "-" ? "" : v; } else n[k] = v;
   }
@@ -96,6 +97,7 @@ async function init(p: import("pg").Pool) {
   await run("ALTER TABLE mail_clicks ADD COLUMN IF NOT EXISTS send_id int REFERENCES mail_sends ON DELETE CASCADE");
   // Outgoing one-off emails that failed (or were queued in bulk): retried with exponential backoff, see sendQueued.
   await run("CREATE TABLE IF NOT EXISTS mail_queue (id serial PRIMARY KEY, msg jsonb NOT NULL, tries int NOT NULL DEFAULT 0, next_at timestamptz NOT NULL DEFAULT now(), last_error text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now())");
+  await run("ALTER TABLE mail_queue ADD COLUMN IF NOT EXISTS held boolean NOT NULL DEFAULT false"); // waiting for the daily limit, not retrying after an error
   await run("CREATE TABLE IF NOT EXISTS mail_templates (id serial PRIMARY KEY, name text NOT NULL, design jsonb NOT NULL)");
   await run(`CREATE TABLE IF NOT EXISTS mail_forms (id serial PRIMARY KEY, name text NOT NULL, kind text NOT NULL DEFAULT 'popup', enabled boolean NOT NULL DEFAULT true,
     lists int[] NOT NULL DEFAULT '{}', heading text NOT NULL DEFAULT '', body text NOT NULL DEFAULT '', button text NOT NULL DEFAULT 'Subscribe', success text NOT NULL DEFAULT '',
@@ -460,8 +462,16 @@ const smtp = (c: MailCfg) => (tx?.url === c.smtpUrl ? tx : (tx = { url: c.smtpUr
 type Msg = { to: string; subject: string; html?: string; text?: string; from?: string; headers?: Record<string, string>; attachments?: { filename: string; content: Buffer; type: string }[] };
 const fromHeader = (name: string, addr: string) => (name ? `${name.replace(/[<>"\r\n]/g, "")} <${addr}>` : addr);
 /** One send path: SMTP2GO's HTTP API when an SMTP2GO key is saved, otherwise plain SMTP. */
-/** Sends one message and counts it toward today's total (the guest notice trickle backs off as the day fills up). */
+const TODAY = "(now() AT TIME ZONE 'America/Detroit')::date";
+const sentToday = async () => (await q(`SELECT COALESCE((SELECT n FROM mail_daily WHERE day = ${TODAY}), 0)::int AS n`))[0].n as number;
+/** Sends one message, or, once the daily limit (Settings) is used up, parks it in the queue until tomorrow. Callers can't tell the difference. */
 export async function send(m: Msg, c: MailCfg) {
+  // shortcut: the check and the count aren't atomic, so two sends racing at the limit can overshoot by a message or two; keep the setting a little under the provider's cap.
+  if (c.perDay && (await sentToday()) >= c.perDay) return void (await enqueueMail(m, 0, "", 0, true));
+  await deliverNow(m, c);
+}
+/** Sends one message and counts it toward today's total (the guest notice trickle backs off as the day fills up). */
+async function deliverNow(m: Msg, c: MailCfg) {
   await sendRaw(m, c);
   await q("INSERT INTO mail_daily (day, n) VALUES ((now() AT TIME ZONE 'America/Detroit')::date, 1) ON CONFLICT (day) DO UPDATE SET n = mail_daily.n + 1").catch(() => {});
 }
@@ -487,24 +497,25 @@ async function sendRaw(m: Msg, c: MailCfg) {
 const pack = (m: Msg) => ({ ...m, attachments: m.attachments?.map((a) => ({ ...a, content: a.content.toString("base64") })) });
 const unpack = (j: any): Msg => ({ ...j, attachments: j.attachments?.map((a: any) => ({ ...a, content: Buffer.from(a.content, "base64") })) });
 /** Puts a message on the queue; the next tick delivers it, or `delayMin` minutes from now. */
-export const enqueueMail = (m: Msg, tries = 0, error = "", delayMin = 0) =>
-  q("INSERT INTO mail_queue (msg, tries, last_error, next_at) VALUES ($1,$2,$3, now() + make_interval(mins => $4))", [JSON.stringify(pack(m)), tries, error.slice(0, 300), delayMin]);
+export const enqueueMail = (m: Msg, tries = 0, error = "", delayMin = 0, held = false) =>
+  q("INSERT INTO mail_queue (msg, tries, last_error, next_at, held) VALUES ($1,$2,$3, now() + make_interval(mins => $4), $5)", [JSON.stringify(pack(m)), tries, error.slice(0, 300), delayMin, held]);
 /** Like send, but a failure never reaches the caller: the message waits in the queue and is retried (2, 4, 8 ... minutes, up to MAX_MAIL_TRIES). */
 export async function sendQueued(m: Msg, c: MailCfg) {
   await send(m, c).catch((e) => enqueueMail(m, 1, String(e?.message ?? e), backoffMinutes(1)));
 }
 /** Delivers what is due. A row is leased for 10 minutes while it is tried, so two servers never send the same message. */
 async function flushQueue() {
-  const rows = await q("UPDATE mail_queue SET next_at = now() + interval '10 minutes' WHERE id IN (SELECT id FROM mail_queue WHERE next_at <= now() AND tries < $1 ORDER BY id LIMIT 50 FOR UPDATE SKIP LOCKED) RETURNING id, msg, tries", [MAX_MAIL_TRIES]);
-  if (!rows.length) return;
   const cfg = await getMailCfg();
   if (!mailReady(cfg)) return;
+  const room = cfg.perDay ? cfg.perDay - (await sentToday()) : 50; // today's remaining allowance; held mail waits for tomorrow
+  if (room <= 0) return;
+  const rows = await q("UPDATE mail_queue SET next_at = now() + interval '10 minutes' WHERE id IN (SELECT id FROM mail_queue WHERE next_at <= now() AND tries < $1 ORDER BY id LIMIT $2 FOR UPDATE SKIP LOCKED) RETURNING id, msg, tries", [MAX_MAIL_TRIES, Math.min(50, room)]);
   for (const r of rows) {
-    try { await send(unpack(r.msg), cfg); await q("DELETE FROM mail_queue WHERE id=$1", [r.id]); }
-    catch (e: any) { await q("UPDATE mail_queue SET tries = tries + 1, last_error = $2, next_at = now() + make_interval(mins => $3) WHERE id=$1", [r.id, String(e?.message ?? e).slice(0, 300), backoffMinutes(r.tries + 1)]); }
+    try { await deliverNow(unpack(r.msg), cfg); await q("DELETE FROM mail_queue WHERE id=$1", [r.id]); }
+    catch (e: any) { await q("UPDATE mail_queue SET held = false, tries = tries + 1, last_error = $2, next_at = now() + make_interval(mins => $3) WHERE id=$1", [r.id, String(e?.message ?? e).slice(0, 300), backoffMinutes(r.tries + 1)]); }
   }
 }
-export const listQueue = () => q("SELECT id, msg->>'to' AS recipient, msg->>'subject' AS subject, tries, next_at, last_error, created_at, tries >= $1 AS gave_up FROM mail_queue ORDER BY id LIMIT 500", [MAX_MAIL_TRIES]);
+export const listQueue = () => q("SELECT id, msg->>'to' AS recipient, msg->>'subject' AS subject, held, tries, next_at, last_error, created_at, tries >= $1 AS gave_up FROM mail_queue ORDER BY id LIMIT 500", [MAX_MAIL_TRIES]);
 /** Deletes the given messages, or every queued message when `ids` is omitted. */
 export const dropQueued = async (ids?: number[]) => (ids ? await q("DELETE FROM mail_queue WHERE id = ANY($1) RETURNING id", [ids]) : await q("DELETE FROM mail_queue RETURNING id")).length;
 
