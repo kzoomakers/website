@@ -1,7 +1,7 @@
 import { randomBytes } from "crypto";
 import { db } from "./db";
 import { notify, TOURS_TOPIC } from "./ntfy";
-import { csvToRequests, checkOffers, DATE, summarize, fmtOffer, mins, reminderDue, TIME, TZ, type Offer } from "./tours-fmt";
+import { csvToRequests, requestsToCsv, checkOffers, DATE, summarize, fmtOffer, mins, reminderDue, TIME, TZ, type Offer } from "./tours-fmt";
 import { announce, getCfg as notifyCfg } from "./tours-notify";
 import { getMailCfg, mailReady, sendQueued as send } from "./mail";
 import MI_ZIPS from "./mi-zips.json"; // from the Michigan rows of GeoNames US.txt; refresh if zips are ever added
@@ -323,6 +323,10 @@ export async function importRequests(csv: unknown) {
   }
   await logEvent("walkup_new", `${added} walk-up request(s) imported from a CSV`);
   return { added, dupes, skipped };
+}
+
+export async function exportRequests(all: boolean) {
+  return requestsToCsv(await listRequests(all));
 }
 
 export async function listRequests(all: boolean): Promise<WalkupRequest[]> {

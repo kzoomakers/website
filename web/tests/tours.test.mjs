@@ -56,3 +56,13 @@ test("sign-up CSV rows become walk-ups, skipping rows with no email", () => {
   assert.deepEqual([rows[0].at, rows[0].interest, rows[0].contact], ["2026-02-13 11:04:13", "Wood shop, Metal shop", "Phone call"]);
   assert.match(rows[0].notes, /Why: hi, there/);
 });
+
+const { requestsToCsv } = await import("../lib/tours-fmt.ts");
+test("walk-up export re-imports to the same rows (quotes, commas, newlines, Kalamazoo time)", () => {
+  const csv = requestsToCsv([{ first_name: "Ann", last_name: 'Lee "AL"', interest: "Wood shop, Metal shop", phone: "269", email: "a@b.co", contact_method: "Phone call", notes: "Why: hi, there\nline two", created_at: new Date("2026-02-13T16:04:13Z") }]);
+  assert.match(csv, /^Timestamp,First Name/);
+  const { rows, skipped } = csvToRequests(csv);
+  assert.equal(skipped.length, 0);
+  assert.deepEqual([rows[0].first, rows[0].last, rows[0].email, rows[0].phone, rows[0].contact, rows[0].at], ["Ann", 'Lee "AL"', "a@b.co", "269", "Phone call", "2026-02-13 11:04:13"]);
+  assert.match(rows[0].notes, /Why: hi, there\nline two/);
+});
