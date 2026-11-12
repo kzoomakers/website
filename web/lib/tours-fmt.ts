@@ -41,30 +41,51 @@ export function cleanDays(x: unknown) {
   return n;
 }
 
-export type StatRow = { day: string; dow: number; hr: number; status: string; cancelled: boolean; held: boolean; walkup: boolean; interest: string; heard: string; guide: string; guide_email: string; close_days: number | null; est: boolean };
+export type StatRow = { day: string; dow: number; tdow?: number; hr: number; status: string; cancelled: boolean; held: boolean; walkup: boolean; interest: string; heard: string; guide: string; guide_email: string; close_days: number | null; est: boolean; won_day?: string };
 const mean = (a: number[]) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : null);
 const tally = (keys: string[]) => Object.entries(keys.reduce<Record<string, number>>((m, k) => ((m[k] = (m[k] ?? 0) + 1), m), {})).sort((a, b) => b[1] - a[1]);
 const addDays = (d: string, n: number) => new Date(+new Date(`${d}T12:00:00Z`) + n * 864e5).toISOString().slice(0, 10);
+const monday = (d: string) => addDays(d, -((new Date(`${d}T12:00:00Z`).getUTCDay() + 6) % 7));
+const CLOSE_BUCKETS: [string, number][] = [["Same day", 1], ["1–3 days", 3], ["3–7 days", 7], ["1–2 weeks", 14], ["2–4 weeks", 30], ["Over a month", Infinity]];
+export const guideKey = (r: { guide: string; guide_email: string }) => r.guide_email.trim().toLowerCase() || r.guide.trim().toLowerCase() || "none";
 /** Tour stats from one row per booking. Rates only count tours that have happened (`held`); "closed" = signed up; the closer is the guide (grouped by email, else name).
- *  `series` has one bucket for every day from the range start to `today` (weekly beyond 120 days), zeros included. */
-export function summarize(rows: StatRow[], days: number, today: string) {
-  const live = rows.filter((r) => !r.cancelled), held = live.filter((r) => r.held), won = live.filter((r) => r.status === "signed_up");
-  const start = days ? addDays(today, 1 - days) : rows[0]?.day ?? today, weekly = (+new Date(today) - +new Date(start)) / 864e5 > 120;
-  const bucket = (d: string) => (weekly ? addDays(d, -((new Date(`${d}T12:00:00Z`).getUTCDay() + 6) % 7)) : d), counts = new Map<string, number>();
-  for (const r of rows) counts.set(bucket(r.day), (counts.get(bucket(r.day)) ?? 0) + 1);
-  const series: [string, number][] = [];
-  for (let d = bucket(start); d <= today; d = addDays(d, weekly ? 7 : 1)) series.push([d, counts.get(d) ?? 0]);
-  const who = (r: StatRow) => r.guide_email.trim().toLowerCase() || r.guide.trim().toLowerCase() || "none";
-  const names = new Map<string, string>(); for (const r of live) if (!names.get(who(r)) || r.guide) names.set(who(r), r.guide || r.guide_email || "No guide");
-  const closers = [...new Set(held.map(who))].map((k) => {
-    const h = held.filter((r) => who(r) === k), w = h.filter((r) => r.status === "signed_up");
-    return { name: names.get(k) ?? "No guide", tours: h.length, won: w.length, days: mean(w.map((r) => r.close_days ?? 0)) };
+ *  `series` has one bucket for every day from the range start to `today` (weekly beyond 120 days), zeros included. `guide` (a guideKey) narrows everything except the guide table, which always lists everyone.
+ *  burnup = running totals of tours booked and of sign-ups; weekly = sign-ups per tour held by booking week; groups = the same rate by what they came for, how they heard and the tour's weekday. */
+export function summarize(allRows: StatRow[], days: number, today: string, guide = "") {
+  const who = guideKey, all = allRows.filter((r) => !r.cancelled), allHeld = all.filter((r) => r.held);
+  const names = new Map<string, string>(); for (const r of all) if (!names.get(who(r)) || r.guide) names.set(who(r), r.guide || r.guide_email || "No guide");
+  const closers = [...new Set(allHeld.map(who))].map((k) => {
+    const h = allHeld.filter((r) => who(r) === k), w = h.filter((r) => r.status === "signed_up"), n = (...st: string[]) => h.filter((r) => st.includes(r.status)).length;
+    return { key: k, name: names.get(k) ?? "No guide", tours: h.length, won: w.length, days: mean(w.map((r) => r.close_days ?? 0)),
+      later: n("sign_up_later", "maybe_later"), lost: n("no_interest"), noShow: n("no_show"), unrecorded: n("booked") };
   }).sort((a, b) => b.won - a.won || b.tours - a.tours);
+  const rows = guide ? allRows.filter((r) => who(r) === guide) : allRows;
+  const live = rows.filter((r) => !r.cancelled), held = live.filter((r) => r.held), won = live.filter((r) => r.status === "signed_up");
+  const start = days ? addDays(today, 1 - days) : allRows[0]?.day ?? today, weekly = (+new Date(today) - +new Date(start)) / 864e5 > 120;
+  const bucket = (d: string) => (weekly ? monday(d) : d), counts = new Map<string, number>();
+  for (const r of rows) counts.set(bucket(r.day), (counts.get(bucket(r.day)) ?? 0) + 1);
+  const series: [string, number][] = [], burnup: { d: string; booked: number; won: number }[] = [];
+  const wonAt = won.map((r) => bucket(r.won_day && r.won_day <= today ? r.won_day : r.day)), bookedAt = live.map((r) => bucket(r.day));
+  for (let d = bucket(start); d <= today; d = addDays(d, weekly ? 7 : 1)) {
+    series.push([d, counts.get(d) ?? 0]);
+    burnup.push({ d, booked: bookedAt.filter((x) => x <= d).length, won: wonAt.filter((x) => x <= d).length });
+  }
+  const wk = new Map<string, { held: number; won: number }>();
+  for (const r of held) { const k = monday(r.day), v = wk.get(k) ?? { held: 0, won: 0 }; v.held++; if (r.status === "signed_up") v.won++; wk.set(k, v); }
+  const weeks = [...wk].sort((a, b) => (a[0] < b[0] ? -1 : 1)).map(([d, v]) => ({ d, ...v, rate: v.held ? v.won / v.held : null }));
+  const group = (keysOf: (r: StatRow) => string[]) => {
+    const m = new Map<string, { held: number; won: number }>();
+    for (const r of held) for (const k of keysOf(r)) { const v = m.get(k) ?? { held: 0, won: 0 }; v.held++; if (r.status === "signed_up") v.won++; m.set(k, v); }
+    return [...m].map(([name, v]) => ({ name, ...v })).sort((a, b) => b.held - a.held);
+  };
+  const closeTimes = won.map((r) => r.close_days ?? 0), closeHist = CLOSE_BUCKETS.map(([label, max], i) => [label, closeTimes.filter((x) => x < max && x >= (i ? CLOSE_BUCKETS[i - 1][1] : -Infinity)).length] as [string, number]);
   const heat = Array.from({ length: 7 }, () => Array(24).fill(0)); for (const r of rows) heat[r.dow][r.hr]++;
   return {
     total: rows.length, cancelled: rows.length - live.length, held: held.length, won: won.length, estimated: won.filter((r) => r.est).length, days: mean(won.map((r) => r.close_days ?? 0)),
     walkupTours: live.filter((r) => r.walkup).length, noShow: held.filter((r) => r.status === "no_show").length, funnel: tally(live.map((r) => r.status)),
-    closers, interests: tally(live.flatMap((r) => (r.interest ? r.interest.split(", ") : []))), heard: tally(live.map((r) => r.heard || "Not said")), series, weekly, heat,
+    closers, guides: [...names].map(([key, name]) => ({ key, name })).sort((a, b) => a.name.localeCompare(b.name)), interests: tally(live.flatMap((r) => (r.interest ? r.interest.split(", ") : []))), heard: tally(live.map((r) => r.heard || "Not said")),
+    series, weekly, heat, burnup, weeks, closeHist,
+    groups: { heard: group((r) => [r.heard || "Not said"]), interest: group((r) => (r.interest ? r.interest.split(", ") : ["Not said"])), weekday: group((r) => (r.tdow == null ? [] : [String(r.tdow)])) },
   };
 }
 
