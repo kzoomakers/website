@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { alertDialog, promptDialog } from "@/components/dialog";
 import { crm } from "../rpc";
 import type { Detail, Row, State } from "@/lib/approvals";
+import type { MembershipClass } from "@/lib/membership";
 
 type Counts = Record<State, number>;
 const TABS: [State, string][] = [["pending", "To review"], ["waiting", "Waiting for applicant"], ["rejected", "Declined"], ["approved", "Approved"]];
@@ -19,12 +20,14 @@ export default function Approvals({ initial, canEdit, open, compact }: { initial
   const [tab, setTab] = useState<State>("pending"), [rows, setRows] = useState(initial.rows), [counts, setCounts] = useState(initial.counts);
   const [sel, setSel] = useState<number | null>(open ?? null), [d, setD] = useState<Detail | null>(null);
   const [text, setText] = useState(""), [err, setErr] = useState(""), [msg, setMsg] = useState(""), [busy, setBusy] = useState(false);
-  const [review, setReview] = useState<{ first_name: string; last_name: string; phone: string; ok: boolean } | null>(null);
+  const [review, setReview] = useState<{ first_name: string; last_name: string; phone: string; ok: boolean; level: string } | null>(null);
+  const [classes, setClasses] = useState<MembershipClass[]>([]);
 
   const refresh = async (t = tab) => { const r = await crm<{ rows: Row[]; counts: Counts }>("applicants", { state: t }); setRows(r.rows); setCounts(r.counts); };
   const load = (id: number) => crm<Detail>("applicant", { id }).then((x) => { setD(x); setReview(null); }, (e) => setErr(e.message));
   useEffect(() => { if (sel !== null) load(sel); else setD(null); }, [sel]);
   useEffect(() => { refresh().catch((e) => setErr(e.message)); }, [tab]);
+  useEffect(() => { crm<MembershipClass[]>("membershipClasses").then(setClasses, () => {}); }, []);
 
   // Runs one change: shows the error if it fails, otherwise reloads the list and thread.
   const run = async (op: string, args: Record<string, unknown>, done = "") => {
@@ -38,7 +41,7 @@ export default function Approvals({ initial, canEdit, open, compact }: { initial
   };
   const send = async (wait: boolean) => { if (await run("applicantSay", { body: text, wait }, wait ? "Sent. Now waiting for their reply." : "Sent.")) setText(""); };
   const move = async (to: State) => {
-    if (to === "approved") return setReview({ first_name: d!.first_name, last_name: d!.last_name, phone: d!.phone, ok: false });
+    if (to === "approved") return setReview({ first_name: d!.first_name, last_name: d!.last_name, phone: d!.phone, ok: false, level: "" });
     let reason = "";
     if (to === "rejected") { const r = await promptDialog(`Reject ${d!.name}? They are emailed and shown this reason (optional, be kind and specific):`, "", { multiline: true, ok: "Reject" }); if (r === null) return; reason = r; }
     await run("applicantMove", { from: d!.approval, to, reason }, `Moved to ${LABEL[to]}.`);
@@ -96,14 +99,15 @@ export default function Approvals({ initial, canEdit, open, compact }: { initial
               </div>
             )}
             {review && (
-              <form className="card" style={{ display: "grid", gap: 8 }} onSubmit={async (e) => { e.preventDefault(); if (await run("applicantMove", { from: d.approval, to: "approved", confirmed: true, edit: { first_name: review.first_name, last_name: review.last_name, phone: review.phone } }, "Approved. They've been emailed.")) setReview(null); }}>
+              <form className="card" style={{ display: "grid", gap: 8 }} onSubmit={async (e) => { e.preventDefault(); if (await run("applicantMove", { from: d.approval, to: "approved", confirmed: true, level: review.level, edit: { first_name: review.first_name, last_name: review.last_name, phone: review.phone } }, "Approved. They've been emailed.")) setReview(null); }}>
                 <strong>Check before approving</strong>
                 <div className="sub" style={{ margin: 0 }}>Fix anything that looks wrong. Email ({d.email}) was verified by their sign-in link. On first sign-in they'll be asked for address, phone and an emergency contact.</div>
                 <label>First name<input required autoFocus value={review.first_name} onChange={(e) => setReview({ ...review, first_name: e.target.value })} /></label>
                 <label>Last name<input value={review.last_name} onChange={(e) => setReview({ ...review, last_name: e.target.value })} /></label>
                 <label>Phone<input type="tel" value={review.phone} onChange={(e) => setReview({ ...review, phone: e.target.value })} /></label>
+                {classes.length > 0 && <label>Membership class<select required aria-label="Membership class" value={review.level} onChange={(e) => setReview({ ...review, level: e.target.value })}><option value="">Choose a class…</option>{classes.map((c) => <option key={c.name} value={c.name}>{c.name} (${c.price} per {c.per})</option>)}</select></label>}
                 <label style={{ display: "flex", gap: 8 }}><input type="checkbox" checked={review.ok} onChange={(e) => setReview({ ...review, ok: e.target.checked })} /> I've checked their name and contact details are right</label>
-                <div className="bar"><button className="pri" type="submit" disabled={busy || !review.ok}>Approve {review.first_name}</button><button type="button" onClick={() => setReview(null)}>Cancel</button></div>
+                <div className="bar"><button className="pri" type="submit" disabled={busy || !review.ok || (classes.length > 0 && !review.level)}>Approve {review.first_name}</button><button type="button" onClick={() => setReview(null)}>Cancel</button></div>
               </form>
             )}
             {msg && <Notice kind={msgKind(msg)}>{msg}</Notice>}

@@ -4,6 +4,7 @@ import { notifyUser } from "./notifications";
 import { addRegistered, getMailCfg, mailReady, sendQueued as send } from "./mail";
 import { afterSignIn, loginLink } from "./readers";
 import { updateProfile } from "./profiles";
+import { pickClass } from "./membership";
 
 // Sign-up approval. States: pending (needs staff), waiting (staff asked something, waiting for the applicant), rejected, approved.
 // Staff may move between any two states; the thread (approval_events) records every message, note and move with who did it.
@@ -106,7 +107,7 @@ export async function note(id: number, who: string, bodyIn: string) {
   await addEvent(c, id, who, false, "note", null, body);
 }
 
-export type Review = { confirmed?: boolean; reason?: string; edit?: { first_name?: string; last_name?: string; phone?: string } };
+export type Review = { confirmed?: boolean; reason?: string; level?: string; edit?: { first_name?: string; last_name?: string; phone?: string } };
 
 /** Moves an applicant from `from` (what the staff member was looking at) to `to`. Approving needs the details confirmed and may correct name and phone. */
 export async function move(id: number, from: string, to: string, who: string, r: Review, base: string) {
@@ -120,7 +121,7 @@ export async function move(id: number, from: string, to: string, who: string, r:
     if (!r.confirmed) throw new Error("Confirm you've checked their name and contact details first.");
     if (!r.edit && !u.first_name) throw new Error("They need a name before they can be approved.");
   }
-  const reason = clip(r.reason, 500);
+  const reason = clip(r.reason, 500), cls = to === "approved" ? await pickClass(r.level) : null;
   // Flip first (a lost race changes nothing); if the corrected details are refused, put the state back.
   if (!(await c.query("UPDATE site_users SET approval = $3 WHERE id = $1 AND approval = $2", [id, from, to])).rowCount) throw stale();
   if (to === "approved") await c.query("UPDATE site_users SET onboarding = 'waiver' WHERE id = $1 AND NOT EXISTS (SELECT 1 FROM sign_docs WHERE user_id = $1 AND kind = 'waiver' AND status = 'complete')", [id]);
@@ -128,6 +129,7 @@ export async function move(id: number, from: string, to: string, who: string, r:
     try { await updateProfile(id, r.edit, ["first_name", "last_name", "phone"], who); }
     catch (e) { await c.query("UPDATE site_users SET approval = $2 WHERE id = $1 AND approval = $3", [id, from, to]); throw e; }
   }
+  if (cls) await c.query("INSERT INTO memberships (user_id, level) VALUES ($1,$2) ON CONFLICT DO NOTHING", [id, cls]);
   await addEvent(c, id, who, false, "state", to, to === "approved" ? "Name and contact details checked" : to === "rejected" ? reason : "");
   await logAudit(who, "crm.approval", `${u.email}: ${from} → ${to}${reason ? ` (${reason})` : ""}`);
   const fresh = (await c.query("SELECT id, email, name FROM site_users WHERE id = $1", [id])).rows[0];
@@ -140,7 +142,7 @@ export async function move(id: number, from: string, to: string, who: string, r:
 }
 
 /** Staff activate a walk-up on the spot (they showed up early): make or find their account, approve it and put them at the waiver step, then email the sign-in link. Idempotent for someone already approved. */
-export async function activateWalkup(requestId: number, who: string, base: string) {
+export async function activateWalkup(requestId: number, who: string, base: string, level?: string) {
   const c = await conn(), r = (await c.query("SELECT first_name, last_name, email, phone, status FROM tour_requests WHERE id = $1", [requestId])).rows[0];
   if (!r) throw new Error("No such request.");
   if (r.status !== "open" && r.status !== "offered") throw new Error("This request is already scheduled or dismissed.");
@@ -148,10 +150,12 @@ export async function activateWalkup(requestId: number, who: string, base: strin
   const old = (await c.query("SELECT id, approval, disabled_at FROM site_users WHERE email = $1", [email])).rows[0];
   if (old?.disabled_at) throw new Error("This person's account is disabled. Enable it in the CRM first.");
   if (old?.approval === "rejected") throw new Error("This person was turned down earlier. Change that in CRM > Approvals first.");
+  const cls = await pickClass(level);
   const id: number = old?.id ?? (await c.query("INSERT INTO site_users (email, name, first_name, last_name, phone, approval, verified_at) VALUES ($1,$2,$3,$4,$5,'approved', now()) ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email RETURNING id", [email, name, r.first_name, r.last_name, r.phone])).rows[0].id;
   const was = old?.approval ?? "new";
   await c.query("UPDATE site_users SET approval = 'approved', verified_at = COALESCE(verified_at, now()), phone = CASE WHEN phone = '' THEN $2 ELSE phone END WHERE id = $1", [id, r.phone]);
   await c.query("UPDATE site_users SET onboarding = 'waiver' WHERE id = $1 AND NOT EXISTS (SELECT 1 FROM sign_docs WHERE user_id = $1 AND kind = 'waiver' AND status = 'complete')", [id]);
+  if (cls) await c.query("INSERT INTO memberships (user_id, level) VALUES ($1,$2) ON CONFLICT DO NOTHING", [id, cls]);
   if (was !== "approved") await addEvent(c, id, who, false, "state", "approved", "Activated on site from a walk-up request");
   await logAudit(who, "crm.approval", `${email}: ${was} → approved (activated from a walk-up request)`);
   await addRegistered(email, name, base).catch(() => {});

@@ -1,10 +1,12 @@
 "use client";
 import Notice from "@/components/notice";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { alertDialog, confirmDialog } from "@/components/dialog";
 import type { Offer, WalkupRequest } from "@/lib/tours";
 import { AdminThread } from "@/components/tour-thread";
 import { tours } from "../rpc";
+import { crm } from "../../crm/rpc";
+import type { MembershipClass } from "@/lib/membership";
 import "./walkups.css";
 
 const ago = (d: string) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -15,6 +17,8 @@ const blank: Offer = { date: "", start: "10:00", end: "11:00" };
 export default function Walkups({ initial, email, name }: { initial: WalkupRequest[]; email: string; name: string }) {
   const [rows, setRows] = useState(initial), [all, setAll] = useState(false), [msg, setMsg] = useState(""), [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [classes, setClasses] = useState<MembershipClass[]>([]), [tier, setTier] = useState<Record<number, string>>({});
+  useEffect(() => { crm<MembershipClass[]>("membershipClasses").then(setClasses, () => {}); }, []);
   const [open, setOpen] = useState(0),[offers, setOffers] = useState<Offer[]>([blank]), [g, setG] = useState({ guide_name: name, guide_email: email });
   const load = async (a = all) => { setAll(a); setRows(await tours("requests", { all: a })); };
   const run = async (fn: () => Promise<unknown>) => { setMsg(""); setBusy(true); try { await fn(); await load(); return true; } catch (e: any) { setMsg(e.message); return false; } finally { setBusy(false); } };
@@ -31,9 +35,10 @@ export default function Walkups({ initial, email, name }: { initial: WalkupReque
   const close = async (r: WalkupRequest) => { if (await confirmDialog(`Dismiss ${r.first_name} ${r.last_name}'s request? They will not be emailed.`, { ok: "Dismiss", danger: true })) run(() => tours("close", { id: r.id })); };
   const takeBack = async (r: WalkupRequest) => { if (await confirmDialog(`Take back the offer to ${r.first_name}? Their emailed links stop working and the request returns to the queue.`, { ok: "Take back" })) run(() => tours("reopen", { id: r.id })); };
   const activate = async (r: WalkupRequest) => {
-    if (!(await confirmDialog(`Activate ${r.first_name} ${r.last_name} now? This approves ${r.email} as a member right away, emails them a sign-in link to sign the membership agreement, read the handbook and upload an ID, and takes this request off the list.`, { ok: "Activate now", title: "Activate now" }))) return;
+    const level = tier[r.id] ?? classes[0]?.name ?? "";
+    if (!(await confirmDialog(`Activate ${r.first_name} ${r.last_name} now as ${level || "a member"}? This approves ${r.email} as a member right away, emails them a sign-in link to sign the membership agreement, read the handbook and upload an ID, and takes this request off the list.`, { ok: "Activate now", title: "Activate now" }))) return;
     setMsg(""); setBusy(true);
-    try { const j = await tours("activate", { id: r.id }); await load(); await alertDialog(j.emailed ? `${r.first_name} is activated. The sign-in link was emailed to ${r.email}.` : `${r.first_name} is activated, but the email could not be sent. Have them sign in with ${r.email} on the sign-in page; the agreement will be waiting.`); }
+    try { const j = await tours("activate", { id: r.id, level }); await load(); await alertDialog(j.emailed ? `${r.first_name} is activated. The sign-in link was emailed to ${r.email}.` : `${r.first_name} is activated, but the email could not be sent. Have them sign in with ${r.email} on the sign-in page; the agreement will be waiting.`); }
     catch (e: any) { setMsg(e.message); } finally { setBusy(false); }
   };
   return (
@@ -93,6 +98,7 @@ export default function Walkups({ initial, email, name }: { initial: WalkupReque
             ) : r.status === "open" || r.status === "offered" ? (
               <div className="wk-actions">
                 <button className="pri" onClick={() => start(r)}>{r.status === "offered" ? "Change times" : "Offer times"}</button>
+                {classes.length > 0 && <select aria-label="Membership class" value={tier[r.id] ?? classes[0].name} onChange={(e) => setTier({ ...tier, [r.id]: e.target.value })}>{classes.map((c) => <option key={c.name} value={c.name}>{c.name} (${c.price} per {c.per})</option>)}</select>}
                 <button disabled={busy} onClick={() => activate(r)}>Activate now</button>
                 {r.status === "offered" && <button onClick={() => takeBack(r)}>Take back</button>}
                 <button className="danger" onClick={() => close(r)}>Dismiss</button>

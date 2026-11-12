@@ -6,7 +6,7 @@ import type { Auth } from "@/lib/crm";
 
 type D = { levels: { level: string }[]; auths: Auth[]; skills: { optin: boolean; bio: string; skills: { name: string; level: string }[] }; classes: { id: number; title: string; starts_at: string }[]; tools: { id: number; name: string; category: string }[]; plans: string[] };
 
-// Membership levels (the plans on the Pricing page), tool authorizations, and what this person lists / has signed up for.
+// Membership classes (set up under Admin → Setup), tool authorizations, and what this person lists / has signed up for.
 export default function Extras({ id, canEdit }: { id: number; canEdit: boolean }) {
   const [d, setD] = useState<D | null>(null), [tool, setTool] = useState(""), [exp, setExp] = useState(""), [note, setNote] = useState("");
   const load = useCallback(() => crm<D>("member", { id }).then(setD, (e) => alertDialog(e.message)), [id]);
@@ -18,9 +18,9 @@ export default function Extras({ id, canEdit }: { id: number; canEdit: boolean }
     <>
       <h2>Membership</h2>
       <div className="card" style={{ padding: 16 }}>
-        {all.map((l) => <label key={l} style={{ display: "block", padding: "4px 0" }}><input type="checkbox" disabled={!canEdit} checked={held.includes(l)} onChange={() => toggle(l)} /> {l}{!d.plans.includes(l) && <span className="tag"> no longer on the Pricing page</span>}</label>)}
+        {all.map((l) => <label key={l} style={{ display: "block", padding: "4px 0" }}><input type="checkbox" disabled={!canEdit} checked={held.includes(l)} onChange={() => toggle(l)} /> {l}{!d.plans.includes(l) && <span className="tag"> no longer offered</span>}</label>)}
         {!all.length && <p className="sub">The Pricing page has no plans yet.</p>}
-        <p className="sub" style={{ margin: "8px 0 0" }}>Levels come from the plans on the Pricing page (Website → Guided → Learn More → Pricing).</p>
+        <p className="sub" style={{ margin: "8px 0 0" }}>Classes and fees are set up under Admin → Setup.</p>
       </div>
 
       <h2>Tool authorizations</h2>

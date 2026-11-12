@@ -62,11 +62,7 @@ export const GUIDED: GuidedDef[] = [
   ] },
   { slug: "pricing", label: "Pricing", icon: "💲", blurb: "Membership plans and sign-up banners.", fields: [
     t("tagline", "Top banner", "area"), t("title", "Heading"), t("intro", "Intro", "area"),
-    { key: "plans", label: "Plans", kind: "list", item: "name", of: [
-      t("name", "Plan name"), t("price", "Price (number)"), t("per", "Per"), t("normal", "Normal price label", "text", "Optional, e.g. Normally $45/m"), t("offer", "Offer badge", "text", "Optional"),
-      t("blurb", "Short description", "area"), t("note", "Requirement note", "text", "Optional"),
-      t("features", "Features", "lines", "One per line; wrap in **stars** for bold"), ...cta("button", "Plan"),
-    ] },
+    // The plans are the membership classes, edited under Admin > Setup.
     t("footnote", "Footnote"), t("footLabel", "Footnote link text"), t("footHref", "Footnote link"), t("footEnd", "Footnote ending"),
     t("ctaTitle", "Bottom banner heading"), t("ctaText", "Bottom banner text", "area"), ...cta("cta", "Bottom banner"),
   ] },
