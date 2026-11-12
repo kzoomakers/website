@@ -57,11 +57,11 @@ export default function Editor({ id, state }: { id: number; state: State }) {
     <C.Provider value={ctx}>
       <style>{CSS}</style>
       <div className="bar">
-        <button onClick={() => router.push("/admin/mail/emails")}>← Emails</button>
+        <button onClick={() => router.push("/admin/mailer/emails")}>← Emails</button>
         <input aria-label="Internal name" style={{ fontWeight: 600, minWidth: 220 }} value={c.name} disabled={locked} onChange={(e) => setC({ ...c, name: e.target.value })} />
         {!locked && <>
           <button onClick={() => run("Saving", async () => { await save(); setMsg("Saved."); })}>Save</button>
-          <button className="pri" onClick={() => run("Saving", async () => { await save(); router.push(`/admin/mail/email/${id}/send`); })}>Next →</button></>}
+          <button className="pri" onClick={() => run("Saving", async () => { await save(); router.push(`/admin/mailer/email/${id}/send`); })}>Next →</button></>}
         <button onClick={() => setMobile(!mobile)}>{mobile ? "🖥 Desktop" : "📱 Mobile"} view</button>
         {msg && <Notice kind={msgKind(msg)}>{msg}</Notice>}
       </div>

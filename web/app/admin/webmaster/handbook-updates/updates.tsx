@@ -69,7 +69,7 @@ export default function Updates({ initial, canEdit, ai }: { initial: State; canE
             <summary style={{ cursor: "pointer" }}><b>{when(h.at)}</b> · {h.recipients} {h.recipients === 1 ? "person" : "people"} · by {h.by} · {summarize(h.changes)}</summary>
             <div style={{ marginTop: 8, display: "grid", gap: 8 }}>
               {h.summary && <p style={{ whiteSpace: "pre-wrap", margin: 0 }}><b>Summary sent:</b> {h.summary}</p>}
-              <p className="sub" style={{ margin: 0 }}>{h.exact ? "Included the exact changes." : "Did not include the exact changes."}{h.campaign ? <> <a href={`/admin/mail/email/${h.campaign}`}>See the email and its stats</a>.</> : null}</p>
+              <p className="sub" style={{ margin: 0 }}>{h.exact ? "Included the exact changes." : "Did not include the exact changes."}{h.campaign ? <> <a href={`/admin/mailer/email/${h.campaign}`}>See the email and its stats</a>.</> : null}</p>
               <Changes changes={h.changes} />
             </div>
           </details>

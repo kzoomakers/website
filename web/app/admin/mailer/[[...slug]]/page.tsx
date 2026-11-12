@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export default async function MailAdminPage({ params }: { params: Promise<{ slug?: string[] }> }) {
   const slug = (await params).slug ?? [];
-  await gate("mail", "/admin/mail/" + slug.join("/"));
+  await gate("mail", "/admin/mailer/" + slug.join("/"));
   if (!getConfig()) redirect("/admin/services");
   return <MailAdmin slug={slug} />;
 }

@@ -189,6 +189,9 @@ async function migrate(pool: Pool) {
   await pool.query("ALTER TABLE waiver_versions ADD COLUMN IF NOT EXISTS kind text NOT NULL DEFAULT 'member'");
   await pool.query("ALTER TABLE waiver_versions DROP CONSTRAINT IF EXISTS waiver_versions_revision_key");
   await pool.query("CREATE UNIQUE INDEX IF NOT EXISTS waiver_versions_kind_revision ON waiver_versions (kind, lower(revision))");
+  // Revisions are named YYYY.N (N restarts each year). Rename any that aren't named for the year they were created, e.g. the imported 2025.1 / 1.0.
+  await pool.query(`UPDATE waiver_versions v SET revision = x.r FROM (SELECT id, extract(year FROM created_at)::int || '.' || row_number() OVER (PARTITION BY kind, extract(year FROM created_at) ORDER BY id) AS r FROM waiver_versions) x
+    WHERE v.id = x.id AND v.revision !~ ('^' || extract(year FROM v.created_at)::int || '\\.[0-9]+$')`);
   await pool.query("INSERT INTO waiver_versions (kind, revision, title, sections, closing, summary, created_by) SELECT 'guest',$1,$2,$3,$4,'First version.','system' WHERE NOT EXISTS (SELECT 1 FROM waiver_versions WHERE kind = 'guest')",
     [guestSeed.revision, guestSeed.title, JSON.stringify(guestSeed.sections), guestSeed.closing]);
   await pool.query("CREATE TABLE IF NOT EXISTS agreement_drafts (kind text PRIMARY KEY, data jsonb NOT NULL, updated_by text NOT NULL DEFAULT '', updated_at timestamptz NOT NULL DEFAULT now())");

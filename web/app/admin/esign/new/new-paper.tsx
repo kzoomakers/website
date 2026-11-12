@@ -80,7 +80,7 @@ export default function NewPaper({ buckets, templates }: { buckets: { id: number
   const f = fields[sel];
   const setF = (v: Partial<F>) => setFields(fields.map((x, j) => (j === sel ? { ...x, ...v } : x)));
 
-  if (done) return <><h1>New document</h1><p role="status">{done}</p><p><a href="/admin/signed-docs">Back to documents</a> · <a href="/admin/signed-docs/new" onClick={() => location.assign("/admin/signed-docs/new")}>Start another</a></p></>;
+  if (done) return <><h1>New document</h1><p role="status">{done}</p><p><a href="/admin/esign">Back to documents</a> · <a href="/admin/esign/new" onClick={() => location.assign("/admin/esign/new")}>Start another</a></p></>;
   return (
     <>
       <h1>New document</h1>

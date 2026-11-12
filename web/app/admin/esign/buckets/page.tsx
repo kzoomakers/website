@@ -7,7 +7,7 @@ import Buckets from "./buckets";
 export const dynamic = "force-dynamic";
 
 export default async function BucketsPage() {
-  await gate("board", "/admin/signed-docs/buckets");
+  await gate("board", "/admin/esign/buckets");
   if (!getConfig()) redirect("/admin/services");
   return <Buckets initial={await listBuckets()} />;
 }

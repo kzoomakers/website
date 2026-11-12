@@ -5,7 +5,7 @@ import { DEFAULT_STYLE, type Design } from "./mail-render";
 import { changesPrompt, diffVersions, summarize, type Change, type Word } from "./waiver-diff";
 
 // Handbook updates: every save of the handbook is recorded as a before/after snapshot (one open row collects edits), staff then email the change to the
-// "Request Handbook Updates" list as an ordinary campaign (so it shows under Email > Emails with its stats), optionally with the exact wording changes and an AI summary.
+// "Request Handbook Updates" list as an ordinary campaign (so it shows under Mailer > Emails with its stats), optionally with the exact wording changes and an AI summary.
 
 /** The handbook as the sections the agreement diff understands: the introduction, then every rule as "Section: Rule". */
 export function toVersion(d: any) {

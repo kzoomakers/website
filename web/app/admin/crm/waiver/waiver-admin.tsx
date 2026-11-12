@@ -15,12 +15,13 @@ const rpcFor = (kind: string) => async <T,>(op: string, args: Record<string, unk
   return r.json();
 };
 const when = (s: string) => new Date(s).toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
-const nextRev = (r: string) => r.replace(/(\d+)$/, (n) => String(Number(n) + 1));
+// YYYY.N: N counts up within the year and restarts at 1 in a new year.
+const nextRev = (vs: { revision: string }[]) => { const y = new Date().getFullYear(); return `${y}.${Math.max(0, ...vs.map((v) => (v.revision.startsWith(`${y}.`) ? Number(v.revision.slice(5)) || 0 : 0))) + 1}`; };
 
 export default function WaiverAdmin({ initial, canEdit, canPublish, ai, kind = "member", draft = null }: { initial: V[]; canEdit: boolean; canPublish: boolean; ai: boolean; kind?: "member" | "guest"; draft?: Draft | null }) {
   const rpc = rpcFor(kind), guest = kind === "guest", who = guest ? "guests" : "members", name = guest ? "Guest agreement" : "Membership agreement";
   const [vs, setVs] = useState(initial), [tab, setTab] = useState<"edit" | "preview" | "versions" | "members">("edit"), cur = vs[0], [saves, setSaves] = useState(0), [hasDraft, setHasDraft] = useState(!!draft);
-  const fresh = (v: V, rev = nextRev(v.revision)): Draft => ({ revision: rev, title: v.title, closing: v.closing, sections: v.sections.map((s) => ({ ...s })), summary: "", mandatory: true });
+  const fresh = (v: V, rev = nextRev(vs)): Draft => ({ revision: rev, title: v.title, closing: v.closing, sections: v.sections.map((s) => ({ ...s })), summary: "", mandatory: true });
   const [d, setD] = useState<Draft>(draft ?? fresh(cur));
   useDirtyGuard(d, vs.length + saves);
   const [msg, setMsg] = useState(""), [busy, setBusy] = useState(false), [thinking, setThinking] = useState(false);
@@ -49,7 +50,7 @@ export default function WaiverAdmin({ initial, canEdit, canPublish, ai, kind = "
       : d.mandatory ? ` Every approved member will be emailed and must sign it at their next sign-in.` : " Members who already signed are not asked again.";
     if (!(await confirmDialog(`Publish revision ${d.revision}? It can never be edited or deleted afterwards; changes mean a new revision.${n}`, { ok: "Publish" }))) return;
     setBusy(true); setMsg("");
-    try { await rpc("publish", { draft: d }); const nv = await rpc<V[]>("versions"); setVs(nv); setD({ revision: nextRev(d.revision), title: d.title, closing: d.closing, sections: d.sections, summary: "", mandatory: true }); setMem(null); setHasDraft(false); setMsg(`Revision ${d.revision} is live.`); setTab("versions"); }
+    try { await rpc("publish", { draft: d }); const nv = await rpc<V[]>("versions"); setVs(nv); setD({ revision: nextRev(nv), title: d.title, closing: d.closing, sections: d.sections, summary: "", mandatory: true }); setMem(null); setHasDraft(false); setMsg(`Revision ${d.revision} is live.`); setTab("versions"); }
     catch (e: any) { setMsg(e.message); }
     setBusy(false);
   };

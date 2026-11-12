@@ -6,7 +6,7 @@ import Needs from "./needs";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Admin home · Kzoo Makers" };
 
-const QUICK: [Section, string, string][] = [["blog", "/admin/blog/new", "New post"], ["mail", "/admin/mail/email/new", "New email"], ["board", "/admin/signed-docs/new", "New document"], ["tours", "/admin/tours", "Tours this week"], ["webmaster", "/admin/webmaster", "Edit pages"], ["crm", "/admin/crm", "Find a person"]];
+const QUICK: [Section, string, string][] = [["blog", "/admin/blog/new", "New post"], ["mail", "/admin/mailer/email/new", "New email"], ["board", "/admin/esign/new", "New document"], ["tours", "/admin/tours", "Tours this week"], ["webmaster", "/admin/webmaster", "Edit pages"], ["crm", "/admin/crm", "Find a person"]];
 
 // Where everyone lands after signing in: what is waiting for them, and shortcuts to the common jobs they have access to.
 export default async function Landing() {

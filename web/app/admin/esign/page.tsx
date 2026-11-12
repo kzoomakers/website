@@ -8,7 +8,7 @@ import Papers from "./papers";
 export const dynamic = "force-dynamic";
 
 export default async function SignedDocsPage() {
-  await gate("board", "/admin/signed-docs");
+  await gate("board", "/admin/esign");
   if (!getConfig()) redirect("/admin/services");
   return <Papers sealed={await sealConfigured()} initial={await listDocs()} buckets={await listBuckets()} tags={await listTags()} />;
 }
