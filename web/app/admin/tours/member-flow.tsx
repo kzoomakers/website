@@ -28,12 +28,12 @@ export default function MemberActions({ p, classes, me, canActivate, reload, fai
   const go = async (fn: () => Promise<void>) => { fail(""); setBusy(true); try { await fn(); await reload(); } catch (e: any) { fail(e.message); } finally { setBusy(false); } };
   const activate = async () => {
     // One dialog: the email is how they will sign in, so staff confirm it with the prospect here (and can fix it) before anything is sent.
-    const typed = await promptDialog(`Activate ${name} now as ${chosen || "a member"}?\n\nFirst ask ${p.first}: is this email address correct? It is how they will log in, and the sign-in link is sent to it. If it is wrong, change it below; their other walk-up and tour records are updated too.\n\nThis approves them as a member right away, emails them a sign-in link to sign the membership agreement, read the handbook and upload an ID, and ${p.kind === "request" ? "takes this request off the list" : "marks this tour Signed up"}. You can undo it from this page.`, p.email, { ok: "Activate now", title: "Activate now" });
+    const typed = await promptDialog(`Make ${name} a member now?\n\nStep 1: Ask ${p.first} to confirm this email address. It is how they will log in, and we send the sign-in link to it. Fix it below if it is wrong.\n\nStep 2: Press "Activate now". They get an email to sign the agreement, read the handbook and upload an ID.\n\nChanged your mind? You can undo it afterwards.`, p.email, { ok: "Activate now", title: `Activate ${p.first}` });
     if (typed === null) return;
     const email = typed.trim().toLowerCase() || p.email;
     await go(async () => {
       const j = await tours("activate", { kind: p.kind, id: p.id, level: chosen, email });
-      await alertDialog(j.emailed ? `${p.first} is activated. The sign-in link was emailed to ${email}.` : `${p.first} is activated, but the email could not be sent. Have them sign in with ${email} on the sign-in page; the agreement will be waiting.`);
+      await alertDialog(j.emailed ? `Done! ${p.first} is now a member. We emailed a sign-in link to ${email}.` : `${p.first} is now a member, but the email did not go out. Ask them to sign in at the website with ${email}. Their agreement will be waiting.`);
     });
   };
   const undo = async () => {
@@ -42,9 +42,9 @@ export default function MemberActions({ p, classes, me, canActivate, reload, fai
       const started = c.needsConfirm && g;
       if (started) {
         const done = list([g.waiver && "signed the membership waiver", g.handbook && "read the handbook", g.id && "uploaded a photo ID"].filter(Boolean) as string[]);
-        if (!isStaffEmail(me)) return void (await alertDialog(`${name} has already ${done}. Only staff signed in with a kzoomakers.org address can reset someone who has got that far, so ask one of them to undo this.`));
-        if (!(await confirmDialog(`${name} has already ${done}.\n\nIf you continue, their signed waiver${g.id ? " and photo ID are" : " is"} deleted for good, their membership is removed and their account goes back to how it was before you activated them. They'll have to start over.\n\nDo you still want to continue?`, { ok: "Yes, reset them", danger: true, title: "Reset a signed-up member" }))) return;
-      } else if (!(await confirmDialog(`Undo activating ${name}? Their membership is removed and the ${what} goes back to how it was. They haven't signed anything yet, so nothing is lost.`, { ok: "Undo activation" }))) return;
+        if (!isStaffEmail(me)) return void (await alertDialog(`${name} has already ${done}, so you can\u2019t undo this yourself. Please ask a staff member with a kzoomakers.org login to do it.`));
+        if (!(await confirmDialog(`${name} has already ${done}.\n\nIf you go ahead, their signed waiver${g.id ? " and photo ID will be" : " will be"} deleted for good and they will have to start over.\n\nAre you sure?`, { ok: "Yes, reset them", danger: true, title: "Reset a signed-up member" }))) return;
+      } else if (!(await confirmDialog(`Undo making ${name} a member? The ${what} goes back to how it was. They haven't signed anything yet, so nothing is lost.`, { ok: "Undo activation" }))) return;
       await tours("undoActivation", { kind: p.kind, id: p.id, confirm: !!started });
     });
   };

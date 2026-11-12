@@ -6,7 +6,7 @@ import type { TimelineEvent } from "@/lib/tours";
 import { tours } from "../rpc";
 
 const GROUPS: [string, string][] = [["bookings", "Bookings"], ["walkups", "Walk-ups"], ["messages", "Conversations"], ["reminders", "Reminders"]];
-const ICON: Record<string, string> = { booking: "📅", cancel: "🚫", status: "🏷️", walkup_new: "🚶", walkup_taken: "🙋", walkup_confirmed: "✅", walkup_declined: "↩️", walkup_closed: "🗑️", walkup_reopened: "♻️", message: "✉️", note: "📝", message_visitor: "💬", reminder_6h: "⏰", reminder_3h: "⏰", reminder_1h: "⏰", reminder_now: "🔔" };
+const ICON: Record<string, string> = { booking: "📅", cancel: "🚫", status: "🏷️", walkup_new: "🚶", walkup_taken: "🙋", walkup_confirmed: "✅", walkup_declined: "↩️", walkup_closed: "🗑️", walkup_reopened: "♻️", walkup_reminder: "🔔", message: "✉️", note: "📝", message_visitor: "💬", reminder_6h: "⏰", reminder_3h: "⏰", reminder_1h: "⏰", reminder_now: "🔔" };
 const day = (d: string) => new Date(d).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 const ago = (d: string) => { const s = (Date.now() - +new Date(d)) / 1000; return s < 60 ? "just now" : s < 3600 ? `${Math.floor(s / 60)} min ago` : s < 86400 ? `${Math.floor(s / 3600)} h ago` : ""; };
 
