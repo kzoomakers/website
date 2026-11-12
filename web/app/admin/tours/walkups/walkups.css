@@ -36,3 +36,19 @@ a.wk-chip:hover{border-color:var(--acc);color:var(--acc)!important}
 .wk-form .wk-note{color:var(--mut);font-size:13px;margin:10px 0 0}
 
 .wk-empty{text-align:center;color:var(--mut);padding:32px 0}
+
+/* Bookings: sorting tabs, and bigger, labelled controls for easier reading */
+.wk-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px;border-bottom:1px solid var(--line);padding-bottom:10px}
+.wk-tabs button{font-size:15px;padding:9px 14px;border-radius:10px}
+.wk-tabs button span{opacity:.7;font-weight:600;margin-left:4px}
+.wk-tabs button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.wk-tabs .wk-plus{border-style:dashed;color:var(--acc)}
+.wk-tip{color:var(--mut);font-size:14px;margin:0 0 12px}
+.wk-search{flex:1 1 260px;max-width:420px;font-size:16px;padding:10px 12px}
+.wk-big{align-items:flex-end;gap:12px}
+.wk-big select,.wk-big button{font-size:15px;padding:9px 12px;min-height:42px}
+.wk-lbl{display:flex;flex-direction:column;gap:4px;margin:0;font-size:13px;font-weight:600;color:var(--mut)}
+.wk-bulk{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;padding:10px 12px;background:var(--bg);border:1px solid var(--line);border-radius:10px;position:sticky;top:0;z-index:2}
+.wk-bulk .wk-check{display:flex;align-items:center;gap:6px;margin:0;font-size:15px}
+.wk-bulk .wk-check input,.wk-pick{width:20px;height:20px;margin:0}
+.wk-bulk select,.wk-bulk button{font-size:15px;min-height:40px}

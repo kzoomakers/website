@@ -21,13 +21,14 @@ export const STATUSES = ["booked", "no_show", "signed_up", "sign_up_later", "may
 export type Block = { future: number; id: number; date: string; start_time: string; end_time: string; slot_minutes: number; max_per_slot: number; guide_name: string; guide_email: string; booked: number };
 /** The site account behind a walk-up or booking, matched by email: what stage of becoming a member they are at. */
 export type Acct = { approval: string; step: string; waiver: boolean; level: string | null } | null;
-export type Booking = { id: number; block_id: number; date: string; start_time: string; name: string; first_name: string; last_name: string; zip: string; contact_method: string; activated_at: string | null; activated_by: string; acct: Acct; email: string; phone: string; interest: string; heard: string; status: string; visitor_notes: string; client_ip: string; user_agent: string; screen: string; created_at: string; guide_name: string; guide_email: string; msgs: number; last_from: string | null };
+export type Tab = { id: number; name: string };
+export type Booking = { tab_id: number | null; id: number; block_id: number; date: string; start_time: string; name: string; first_name: string; last_name: string; zip: string; contact_method: string; activated_at: string | null; activated_by: string; acct: Acct; email: string; phone: string; interest: string; heard: string; status: string; visitor_notes: string; client_ip: string; user_agent: string; screen: string; created_at: string; guide_name: string; guide_email: string; msgs: number; last_from: string | null };
 export type Device = { ip: string; ua: string; screen: string };
 export type Msg = { id: number; kind: "staff" | "visitor" | "note"; author: string; body: string; created_at: string };
 export type { Offer };
 export { fmtOffer };
 export type WalkupRequest = { id: number; first_name: string; last_name: string; email: string; phone: string; zip: string; contact_method: string; interest: string; heard: string; notes: string; status: string; activated_at: string | null; activated_by: string; acct: Acct;
-  reschedules: number; offers: Offer[]; guide_name: string; decline_note: string; client_ip: string; user_agent: string; screen: string; created_at: string; msgs: number; last_from: string | null };
+  reschedules: number; reminded_at: string | null; offers: Offer[]; guide_name: string; decline_note: string; client_ip: string; user_agent: string; screen: string; created_at: string; msgs: number; last_from: string | null };
 
 const EMAIL_OK = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/;
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
@@ -53,6 +54,7 @@ async function conn() {
       booking_id int, ip_hash text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now())`);
     for (const t of ["tour_bookings", "tour_requests"]) await p.query(`ALTER TABLE ${t} ADD COLUMN IF NOT EXISTS client_ip text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS user_agent text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS screen text NOT NULL DEFAULT ''`);
     await p.query("ALTER TABLE tour_requests ADD COLUMN IF NOT EXISTS stale_notified_at timestamptz");
+    await p.query("ALTER TABLE tour_requests ADD COLUMN IF NOT EXISTS reminded_at timestamptz");
     await p.query("ALTER TABLE tour_requests ADD COLUMN IF NOT EXISTS reject_reason text NOT NULL DEFAULT ''");
     await p.query("ALTER TABLE tour_bookings ADD COLUMN IF NOT EXISTS status_at timestamptz");
     // Walk-ups and bookings collect the same details, and both can be turned into a member (activated_*: who, when, and what their account was before, so it can be undone).
@@ -70,6 +72,10 @@ async function conn() {
     // The old per-booking notes box becomes the first internal note.
     await p.query("INSERT INTO tour_messages (kind, ref_id, author_kind, author, body) SELECT 'booking', id, 'note', 'earlier note', notes FROM tour_bookings k WHERE notes <> '' AND NOT EXISTS (SELECT 1 FROM tour_messages m WHERE m.kind = 'booking' AND m.ref_id = k.id AND m.author = 'earlier note')");
     await p.query("CREATE INDEX IF NOT EXISTS tour_bookings_block ON tour_bookings (block_id)");
+    // Staff-made tabs for sorting bookings ("Couldn't reach"...). Deleting a tab only un-sorts its bookings.
+    await p.query("CREATE TABLE IF NOT EXISTS tour_tabs (id serial PRIMARY KEY, name text NOT NULL, created_at timestamptz NOT NULL DEFAULT now())");
+    await p.query("CREATE UNIQUE INDEX IF NOT EXISTS tour_tabs_name ON tour_tabs (lower(name))");
+    await p.query("ALTER TABLE tour_bookings ADD COLUMN IF NOT EXISTS tab_id int REFERENCES tour_tabs ON DELETE SET NULL");
     // The Google Form is retired: point the menu link and the redirect page at the new booking page.
     await p.query("UPDATE settings SET data = replace(data::text, $1, '/tours')::jsonb WHERE key = 'menu'", [GOOGLE_FORM]);
     await p.query("UPDATE pages SET data = replace(data::text, $1, '/tours')::jsonb WHERE slug = 'tour-form-redirect'", [GOOGLE_FORM]);
@@ -171,9 +177,33 @@ export async function calendar(from: string, to: string) {
 }
 
 export async function listBookings(past: boolean): Promise<Booking[]> {
-  return (await (await conn()).query(`SELECT k.id, k.block_id, b.date, k.start_time, k.name, k.first_name, k.last_name, k.zip, k.contact_method, k.activated_at, k.activated_by, ${ACCT("k.email")}, k.email, k.phone, k.interest, k.heard,
+  return (await (await conn()).query(`SELECT k.id, k.tab_id, k.block_id, b.date, k.start_time, k.name, k.first_name, k.last_name, k.zip, k.contact_method, k.activated_at, k.activated_by, ${ACCT("k.email")}, k.email, k.phone, k.interest, k.heard,
     CASE WHEN k.cancelled THEN 'cancelled' ELSE k.status END AS status, k.visitor_notes, k.client_ip, k.user_agent, k.screen, k.created_at, b.guide_name, b.guide_email, (SELECT count(*)::int FROM tour_messages m WHERE m.kind = 'booking' AND m.ref_id = k.id AND m.author_kind <> 'note') AS msgs, (SELECT m.author_kind FROM tour_messages m WHERE m.kind = 'booking' AND m.ref_id = k.id ORDER BY m.id DESC LIMIT 1) AS last_from
     FROM tour_bookings k JOIN tour_blocks b ON b.id = k.block_id WHERE ($1 OR b.date >= $2) ORDER BY b.date ${past ? "DESC" : ""}, k.start_time, k.id`, [past, localNow().slice(0, 10)])).rows;
+}
+
+export async function listTabs(): Promise<Tab[]> {
+  return (await (await conn()).query("SELECT id, name FROM tour_tabs ORDER BY id")).rows;
+}
+export async function addTab(name: unknown): Promise<Tab> {
+  const n = String(name ?? "").trim().replace(/\s+/g, " ").slice(0, 40);
+  if (!n) throw new Error("Type a name for the tab.");
+  try { return (await (await conn()).query("INSERT INTO tour_tabs (name) VALUES ($1) RETURNING id, name", [n])).rows[0]; }
+  catch (e: any) { throw new Error(e.code === "23505" ? `There is already a tab called "${n}".` : e.message); }
+}
+export async function deleteTab(id: number) { await (await conn()).query("DELETE FROM tour_tabs WHERE id = $1", [id]); }
+export async function renameTab(id: number, name: unknown) {
+  const n = String(name ?? "").trim().replace(/\s+/g, " ").slice(0, 40);
+  if (!n) throw new Error("Type a name for the tab.");
+  try { if (!(await (await conn()).query("UPDATE tour_tabs SET name = $2 WHERE id = $1", [id, n])).rowCount) throw new Error("That tab is gone."); }
+  catch (e: any) { throw new Error(e.code === "23505" ? `There is already a tab called "${n}".` : e.message); }
+}
+/** Moves one or many bookings; tab null = back to no tab. */
+export async function moveToTab(ids: unknown, tab: number | null) {
+  const list = (Array.isArray(ids) ? ids : []).filter(Number.isInteger) as number[];
+  if (!list.length) throw new Error("Pick at least one tour.");
+  try { await (await conn()).query("UPDATE tour_bookings SET tab_id = $2 WHERE id = ANY($1)", [list, tab]); }
+  catch (e: any) { throw new Error(e.code === "23503" ? "That tab was just deleted." : e.message); }
 }
 
 export async function setStatus(id: number, status: string) {
@@ -205,7 +235,7 @@ async function logEvent(kind: string, title: string, o: { detail?: string; actor
 }
 
 export type TimelineEvent = { id: number; at: string; kind: string; title: string; detail: string; actor: string; guide: string };
-const GROUPS: Record<string, string[]> = { bookings: ["booking", "cancel", "status"], walkups: ["walkup_new", "walkup_taken", "walkup_confirmed", "walkup_declined", "walkup_closed", "walkup_reopened"], messages: ["message", "note", "message_visitor"], reminders: ["reminder_6h", "reminder_3h", "reminder_1h", "reminder_now"] };
+const GROUPS: Record<string, string[]> = { bookings: ["booking", "cancel", "status"], walkups: ["walkup_new", "walkup_taken", "walkup_confirmed", "walkup_declined", "walkup_closed", "walkup_reopened", "walkup_reminder"], messages: ["message", "note", "message_visitor"], reminders: ["reminder_6h", "reminder_3h", "reminder_1h", "reminder_now"] };
 /** Newest first, 100 at a time (`before` is the last id of the previous page). `groups` limits to bookings / walkups / messages / reminders; `q` searches the text. */
 export async function timeline(o: { before?: number; groups?: string[]; q?: string }) {
   const kinds = (o.groups ?? []).flatMap((g) => GROUPS[g] ?? []), ps: unknown[] = [], w: string[] = [];
@@ -370,7 +400,8 @@ export async function importBlocks(csv: unknown, who: string) {
 }
 /** Bookings as CSV (cancelled ones left out). */
 export async function exportBookings(past: boolean) {
-  return bookingsToCsv((await listBookings(past)).filter((b) => b.status !== "cancelled"));
+  const names = new Map((await listTabs()).map((t) => [t.id, t.name]));
+  return bookingsToCsv((await listBookings(past)).filter((b) => b.status !== "cancelled").map((b) => ({ ...b, tab: names.get(b.tab_id!) ?? "" })));
 }
 /** Adds each row as a booking in an existing availability block (found by day and start time). Quiet: nobody is emailed. Skipped, with the reason: no such time, a full tour, or the person already there. */
 export async function importBookings(csv: unknown) {
@@ -400,8 +431,35 @@ export async function exportRequests(all: boolean) {
 }
 
 export async function listRequests(all: boolean): Promise<WalkupRequest[]> {
-  return (await (await conn()).query(`SELECT id, first_name, last_name, email, phone, zip, contact_method, interest, heard, activated_at, activated_by, ${ACCT("tour_requests.email")}, notes, status, reschedules, offers, guide_name, decline_note, client_ip, user_agent, screen, created_at, (SELECT count(*)::int FROM tour_messages m WHERE m.kind = 'request' AND m.ref_id = tour_requests.id AND m.author_kind <> 'note') AS msgs, (SELECT m.author_kind FROM tour_messages m WHERE m.kind = 'request' AND m.ref_id = tour_requests.id ORDER BY m.id DESC LIMIT 1) AS last_from
+  return (await (await conn()).query(`SELECT id, first_name, last_name, email, phone, zip, contact_method, interest, heard, activated_at, activated_by, ${ACCT("tour_requests.email")}, notes, status, reschedules, reminded_at, offers, guide_name, decline_note, client_ip, user_agent, screen, created_at, (SELECT count(*)::int FROM tour_messages m WHERE m.kind = 'request' AND m.ref_id = tour_requests.id AND m.author_kind <> 'note') AS msgs, (SELECT m.author_kind FROM tour_messages m WHERE m.kind = 'request' AND m.ref_id = tour_requests.id ORDER BY m.id DESC LIMIT 1) AS last_from
     FROM tour_requests WHERE ($1 OR status IN ('open','offered')) ORDER BY created_at`, [all])).rows;
+}
+
+/** Walk-ups that were sent times and haven't picked yet, oldest first. */
+export async function listWaiting() { return (await listRequests(false)).filter((r) => r.status === "offered"); }
+
+/** The email with one link per offered time plus a "none of these work" link. */
+function offerMail(first: string, token: string, offers: Offer[], intro: string, base: string) {
+  const link = `${base}/tours/respond?token=${token}`, outro = "If these don't work for you, click here to request other available times, and your request will go back to the volunteers.";
+  return {
+    html: `<p>Hi ${esc(first)},</p><p>${esc(intro)}</p><ul>${offers.map((o, i) => `<li><a href="${esc(link)}&pick=${i}">${esc(fmtOffer(o))}</a></li>`).join("")}</ul><p><a href="${esc(link)}&none=1">${esc(outro)}</a></p>`,
+    text: `Hi ${first},\n\n${intro}\n\n${offers.map((o, i) => `* ${fmtOffer(o)}\n  ${link}&pick=${i}`).join("\n")}\n\n${outro}\n${link}&none=1`,
+  };
+}
+
+/** Nudge someone who was offered times but hasn't picked one: the same links again, minus times that have already gone by. */
+export async function remindOffer(id: number, base: string) {
+  const c = await conn(), cfg = await getMailCfg();
+  if (!mailReady(cfg)) throw new Error("Email isn't set up yet, so the reminder can't be sent. An admin can fix this under Services.");
+  const r = (await c.query("SELECT first_name, last_name, email, token, offers, guide_name, status, reminded_at FROM tour_requests WHERE id = $1", [id])).rows[0];
+  if (!r || r.status !== "offered") throw new Error("They already picked a time or the offer was taken back, so there's nothing to remind them about.");
+  if (r.reminded_at && Date.now() - +new Date(r.reminded_at) < 3600e3) throw new Error(`A reminder went to ${r.first_name} less than an hour ago. Give them a little time.`);
+  const now = localNow(MIN_ADVANCE_H), offers = (r.offers as Offer[]).filter((o) => `${o.date} ${o.start}` >= now);
+  if (!offers.length) throw new Error(`All the times offered to ${r.first_name} have passed. Open Walk-ups and use "Change times" to offer new ones.`);
+  const m = offerMail(r.first_name, r.token, offers, `Just a friendly reminder: we're holding these tour times for you${r.guide_name ? ` with ${r.guide_name}` : ""}. Click the one that works for you:`, base);
+  await send({ to: r.email, subject: "Reminder: please pick a time for your Kzoo Makers tour", ...m }, cfg);
+  await c.query("UPDATE tour_requests SET reminded_at = now() WHERE id = $1", [id]);
+  await logEvent("walkup_reminder", `Reminded ${r.first_name} ${r.last_name} to pick a tour time`, { detail: offers.map(fmtOffer).join("\n") });
 }
 
 /** A volunteer proposes dates; the visitor is emailed one link per option plus a "none of these work" link. */
@@ -413,11 +471,8 @@ export async function offerTimes(id: number, raw: unknown, guide: { name: string
   if (!gemail) throw new Error("Enter your email so the visitor's confirmation reaches you.");
   const r = (await c.query("UPDATE tour_requests SET offers = $2, status = 'offered', guide_name = $3, guide_email = $4 WHERE id = $1 AND status IN ('open','offered') RETURNING first_name, email, token, reschedules", [id, JSON.stringify(offers), gname, gemail])).rows[0];
   if (!r) throw new Error("That request was already scheduled or closed.");
-  const link = `${base}/tours/respond?token=${r.token}`, intro = `Good news! We found a volunteer${gname ? ` (${gname})` : ""} who wants to give you a tour. Here are the dates available to them, click if this works for you:`;
-  const outro = "If these don't work for you, click here to request other available times, and your request will go back to the volunteers.";
-  const html = `<p>Hi ${esc(r.first_name)},</p><p>${esc(intro)}</p><ul>${offers.map((o, i) => `<li><a href="${esc(link)}&pick=${i}">${esc(fmtOffer(o))}</a></li>`).join("")}</ul><p><a href="${esc(link)}&none=1">${esc(outro)}</a></p>`;
-  const text = `Hi ${r.first_name},\n\n${intro}\n\n${offers.map((o, i) => `* ${fmtOffer(o)}\n  ${link}&pick=${i}`).join("\n")}\n\n${outro}\n${link}&none=1`;
-  await send({ to: r.email, subject: "Good news! A Kzoo Makers volunteer can give you a tour", text, html }, cfg);
+  const m = offerMail(r.first_name, r.token, offers, `Good news! We found a volunteer${gname ? ` (${gname})` : ""} who wants to give you a tour. Here are the dates available to them, click if this works for you:`, base);
+  await send({ to: r.email, subject: "Good news! A Kzoo Makers volunteer can give you a tour", ...m }, cfg);
   await logEvent("walkup_taken", `${gname || gemail} took ${r.first_name}'s walk-up request and offered ${offers.length} time(s)`, { detail: offers.map(fmtOffer).join("\n"), guide: gname || gemail, actor: gname || gemail });
   await announce("walkup_taken", { subject: `Walk-up taken: ${r.first_name}`, lines: [`${gname || gemail} offered ${r.first_name} ${offers.length} time(s) for a tour.`], tags: "white_check_mark", click: `${base}/admin/tours/walkups` });
 }

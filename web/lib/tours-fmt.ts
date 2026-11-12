@@ -170,9 +170,9 @@ export function csvToBlocks(text: string) {
   return { rows: out, skipped };
 }
 
-export const BOOKING_HEAD = ["Date", "Start", "First name", "Last name", "Email", "Phone", "Zip", "Contact", "Areas", "Heard", "Notes", "Status", "Guide email"];
-export function bookingsToCsv(rows: { date: string; start_time: string; first_name: string; last_name: string; email: string; phone: string; zip: string; contact_method: string; interest: string; heard: string; visitor_notes: string; status: string; guide_email: string }[]) {
-  return toCsv(BOOKING_HEAD, rows.map((r) => [r.date, r.start_time, r.first_name, r.last_name, r.email, r.phone, r.zip, r.contact_method, r.interest, r.heard, r.visitor_notes, r.status, r.guide_email]));
+export const BOOKING_HEAD = ["Date", "Start", "First name", "Last name", "Email", "Phone", "Zip", "Contact", "Areas", "Heard", "Notes", "Status", "Guide email", "Tab"];
+export function bookingsToCsv(rows: { date: string; start_time: string; first_name: string; last_name: string; email: string; phone: string; zip: string; contact_method: string; interest: string; heard: string; visitor_notes: string; status: string; guide_email: string; tab?: string }[]) {
+  return toCsv(BOOKING_HEAD, rows.map((r) => [r.date, r.start_time, r.first_name, r.last_name, r.email, r.phone, r.zip, r.contact_method, r.interest, r.heard, r.visitor_notes, r.status, r.guide_email, r.tab ?? ""]));
 }
 export function csvToBookings(text: string) {
   const out: { date: string; start: string; first: string; last: string; email: string; phone: string; zip: string; contact: string; interest: string; heard: string; notes: string; status: string; guide_email: string }[] = [], skipped: string[] = [];

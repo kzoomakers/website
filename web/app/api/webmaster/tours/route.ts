@@ -11,11 +11,11 @@ import { isStaffEmail } from "@/lib/tours-fmt";
 
 // Tours admin RPC: POST { op, ...args }. Reads need Tours view access, everything else Tours edit access.
 export const dynamic = "force-dynamic";
-const READS = new Set(["blocks", "bookings", "requests", "exportRequests", "exportBlocks", "exportBookings", "thread", "notifyGet", "calendar", "timeline", "stats"]);
+const READS = new Set(["blocks", "bookings", "tabs", "waiting", "requests", "exportRequests", "exportBlocks", "exportBookings", "thread", "notifyGet", "calendar", "timeline", "stats"]);
 // The admin page each op belongs to (see lib/access.ts), so a person given just that page can use it. An op not listed here needs a whole-section grant.
 const PAGE: Record<string, string | string[]> = {
   blocks: ["availability", "bookings"], saveBlock: "availability", deleteBlocks: "availability", exportBlocks: "availability", importBlocks: "availability", calendar: "*",
-  bookings: "bookings", cancel: "bookings", setStatus: "bookings", exportBookings: "bookings", importBookings: "bookings",
+  bookings: "bookings", tabs: "bookings", waiting: "bookings", addTab: "bookings", deleteTab: "bookings", renameTab: "bookings", moveToTab: "bookings", remind: "bookings", cancel: "bookings", setStatus: "bookings", exportBookings: "bookings", importBookings: "bookings",
   requests: "walkups", offer: "walkups", reopen: "walkups", close: "walkups", exportRequests: "walkups", import: "walkups", thread: ["bookings", "walkups"], post: ["bookings", "walkups"],
   stats: "stats", timeline: "timeline",
   notifyGet: "notifications", emailAdd: "notifications", emailRemove: "notifications", staleSave: "notifications", subAdd: "notifications", subRemove: "notifications",
@@ -31,6 +31,9 @@ export async function POST(req: Request) {
     switch (a.op) {
       case "blocks": return NextResponse.json(await t.listBlocks(!!a.past));
       case "bookings": return NextResponse.json(await t.listBookings(!!a.past));
+      case "waiting": return NextResponse.json(await t.listWaiting());
+      case "tabs": return NextResponse.json(await t.listTabs());
+      case "addTab": { const r = await t.addTab(a.name); await logAudit(who, "tour.addTab", r.name); return NextResponse.json(r); }
       case "requests": return NextResponse.json(await t.listRequests(!!a.all));
       case "calendar": return NextResponse.json(await t.calendar(String(a.from), String(a.to)));
       case "stats": return NextResponse.json(await t.stats(Number(a.days) || 0, typeof a.guide === "string" ? a.guide.slice(0, 200) : ""));
@@ -71,6 +74,10 @@ export async function POST(req: Request) {
       case "thread": return NextResponse.json(await t.thread(String(a.kind), id));
       case "post": { const m = await me(); await t.postStaff(String(a.kind), id, String(a.body ?? ""), !!a.internal, m?.name || who, await baseUrl(req)); break; }
       case "setStatus": await t.setStatus(id, String(a.status)); break;
+      case "deleteTab": await t.deleteTab(id); break;
+      case "remind": await t.remindOffer(id, await baseUrl(req)); break;
+      case "renameTab": await t.renameTab(id, a.name); break;
+      case "moveToTab": await t.moveToTab(a.ids, a.tab == null ? null : Number(a.tab)); break;
       case "cancel": await t.cancelBooking(id); break;
       default: return new NextResponse("unknown op", { status: 400 });
     }
