@@ -332,10 +332,14 @@ export async function requestTour(x: Record<string, unknown>, ipHash: string, de
   await announce("walkup_new", { subject: `Walk-up tour request: ${r.first} ${r.last}`, lines: [`${r.first} ${r.last} (${r.email}, ${r.phone}, prefers ${contact}) asked for a tour.`, interest && `Interested in: ${interest}`, r.notes && `Notes: ${r.notes}`].filter(Boolean) as string[], tags: "raising_hand", click: `${base}/admin/tours/walkups` });
 }
 
+/** Imports run a few queries per row, so one file is capped. */
+const MAX_IMPORT_ROWS = 2000;
+const tooMany = (rows: unknown[]) => { if (rows.length > MAX_IMPORT_ROWS) throw new Error(`That file has ${rows.length} rows. Import at most ${MAX_IMPORT_ROWS} at a time.`); };
 /** Bulk-adds sign-up sheet rows as open walk-ups dated from their original timestamp (Kalamazoo time). Quiet: no alerts. Rows already imported (same email and time) are skipped. */
 export async function importRequests(csv: unknown) {
   if (typeof csv !== "string" || !csv.trim()) throw new Error("That file is empty.");
   const { rows, skipped } = csvToRequests(csv), c = await conn();
+  tooMany(rows);
   let added = 0, dupes = 0;
   for (const r of rows) {
     const res = await c.query(`INSERT INTO tour_requests (first_name, last_name, email, phone, contact_method, interest, notes, token, created_at)
@@ -355,6 +359,7 @@ export async function exportBlocks(past: boolean) {
 export async function importBlocks(csv: unknown, who: string) {
   if (typeof csv !== "string" || !csv.trim()) throw new Error("That file is empty.");
   const { rows, skipped } = csvToBlocks(csv), c = await conn();
+  tooMany(rows);
   let added = 0, dupes = 0;
   for (const b of rows) {
     if ((await c.query("SELECT 1 FROM tour_blocks WHERE date = $1 AND start_time = $2 AND end_time = $3 AND lower(guide_email) = $4", [b.date, b.start_time, b.end_time, b.guide_email])).rowCount) { dupes++; continue; }
@@ -371,6 +376,7 @@ export async function exportBookings(past: boolean) {
 export async function importBookings(csv: unknown) {
   if (typeof csv !== "string" || !csv.trim()) throw new Error("That file is empty.");
   const { rows, skipped } = csvToBookings(csv), c = await conn();
+  tooMany(rows);
   let added = 0, dupes = 0;
   for (const r of rows) {
     const label = `${r.first} ${r.last} on ${r.date} ${r.start}`;
@@ -427,7 +433,7 @@ const NAGS = [
   ["The queue has become sentient and is drafting a strongly worded Yelp review.", "Archaeologists will find these requests and conclude that our civilization valued procrastination above all else."],
 ];
 
-/** Open walk-up requests older than the configured number of days are announced, and announced again every that-many days until someone takes them, as one summary of the whole pile that gets grimmer as it grows. Run by a timer; safe on several machines (the UPDATE hands the batch to one). */
+/** Open walk-up requests older than the configured number of days are announced, and announced again every that-many days until someone takes them, as one summary of the whole pile that gets grimmer as it grows. Run by a timer under withLock (instrumentation.ts), so two machines never run it at once. */
 export async function checkStale() {
   const days = (await notifyCfg()).staleDays;
   if (!days) return;

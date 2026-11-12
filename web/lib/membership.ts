@@ -36,8 +36,9 @@ export const toPlan = (c: MembershipClass) => ({ name: c.name, price: c.price, p
 
 /** Replaces the whole list. Removing a class stops offering it; members already in it keep it. */
 export async function saveMembershipClasses(input: unknown, who: string): Promise<MembershipClass[]> {
+  if (!Array.isArray(input) || !input.length) throw new Error("Add at least one membership class.");
   const out: MembershipClass[] = [];
-  for (const r of Array.isArray(input) ? input : []) {
+  for (const r of input) {
     const name = clip(r?.name, 80), per = clip(r?.per, 30) || "month";
     const price = r?.price === "" || r?.price == null ? NaN : Number(r.price);
     if (!name) throw new Error("Every membership class needs a name.");

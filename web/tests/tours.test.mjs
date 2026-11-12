@@ -87,3 +87,20 @@ test("only kzoomakers.org staff (or the local dev admin) may reset a signed-up m
   assert.equal(isStaffEmail("jo@kzoomakers.org"), true); assert.equal(isStaffEmail("JO@KzooMakers.org"), true); assert.equal(isStaffEmail("dev"), true);
   assert.equal(isStaffEmail("jo@gmail.com"), false); assert.equal(isStaffEmail("jo@kzoomakers.org.evil.com"), false); assert.equal(isStaffEmail("kzoomakers.org"), false);
 });
+
+const { cell, parseCsv } = await import("../lib/tours-fmt.ts");
+test("CSV export: text a spreadsheet would run as a formula is defused; phones and plain text are not changed", () => {
+  assert.equal(cell('=HYPERLINK("http://x","go")'), `"'=HYPERLINK(""http://x"",""go"")"`);
+  assert.equal(cell("@SUM(A1)"), "'@SUM(A1)");
+  assert.equal(cell("-2+3x"), "'-2+3x");
+  assert.equal(cell("+1 (269) 555-0100"), "+1 (269) 555-0100");
+  assert.equal(cell("hello, world"), '"hello, world"');
+  const row = { first_name: "=1+1", last_name: "Doe", interest: "", phone: "2695550100", email: "a@b.co", contact_method: "Text message", notes: "+cmd|' /C calc'!A0", created_at: "2026-11-01T12:00:00Z" };
+  const text = requestsToCsv([row]);
+  assert.ok(text.includes(",'=1+1,") && text.includes("'+cmd|"), "the file itself carries the mark");
+  const line = parseCsv(text)[1];
+  assert.equal(line[1], "=1+1");
+  assert.equal(line[11], "+cmd|' /C calc'!A0");
+  const back = parseCsv(`a,b\r\n${cell("=1+1")},${cell("+cmd")}\r\n`)[1]; // import undoes the mark
+  assert.deepEqual(back, ["=1+1", "+cmd"]);
+});
