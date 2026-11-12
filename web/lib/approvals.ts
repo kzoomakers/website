@@ -3,7 +3,7 @@ import { logAudit } from "./store";
 import { notifyUser } from "./notifications";
 import { addRegistered, getMailCfg, mailReady, sendQueued as send } from "./mail";
 import { afterSignIn, loginLink } from "./readers";
-import { updateProfile } from "./profiles";
+import { deleteUser, updateProfile } from "./profiles";
 import { pickClass } from "./membership";
 
 // Sign-up approval. States: pending (needs staff), waiting (staff asked something, waiting for the applicant), rejected, approved.
@@ -141,25 +141,67 @@ export async function move(id: number, from: string, to: string, who: string, r:
   return { emailed: false };
 }
 
-/** Staff activate a walk-up on the spot (they showed up early): make or find their account, approve it and put them at the waiver step, then email the sign-in link. Idempotent for someone already approved. */
-export async function activateWalkup(requestId: number, who: string, base: string, level?: string) {
-  const c = await conn(), r = (await c.query("SELECT first_name, last_name, email, phone, status FROM tour_requests WHERE id = $1", [requestId])).rows[0];
-  if (!r) throw new Error("No such request.");
-  if (r.status !== "open" && r.status !== "offered") throw new Error("This request is already scheduled or dismissed.");
+type TourKind = "request" | "booking";
+const TOUR_TABLE = { request: "tour_requests", booking: "tour_bookings" } as const;
+const kindOf = (k: unknown): TourKind => (k === "booking" ? "booking" : "request");
+
+/** Staff activate someone on the spot (a walk-up or a booked tour who showed up ready to join): make or find their account, approve it and put them at the waiver step, then email the sign-in link. Idempotent for someone already approved.
+ *  Remembers what their account was before (activated_prev) so Undo knows what to put back. The caller then closes the request or marks the booking signed up. */
+export async function activateTourPerson(kindIn: unknown, id: number, who: string, base: string, level?: string) {
+  const kind = kindOf(kindIn), t = TOUR_TABLE[kind], c = await conn();
+  const r = (await c.query(`SELECT first_name, last_name, email, phone, status, activated_at${kind === "booking" ? ", cancelled" : ""} FROM ${t} WHERE id = $1`, [id])).rows[0];
+  if (!r) throw new Error(kind === "request" ? "No such request." : "No such booking.");
+  if (r.activated_at) throw new Error("This person was already activated. Undo that first if it was a mistake.");
+  if (kind === "request" ? r.status !== "open" && r.status !== "offered" : r.cancelled) throw new Error(kind === "request" ? "This request is already scheduled or dismissed." : "This booking was cancelled.");
   const email = String(r.email).trim().toLowerCase(), name = `${r.first_name} ${r.last_name}`.trim();
   const old = (await c.query("SELECT id, approval, disabled_at FROM site_users WHERE email = $1", [email])).rows[0];
   if (old?.disabled_at) throw new Error("This person's account is disabled. Enable it in the CRM first.");
   if (old?.approval === "rejected") throw new Error("This person was turned down earlier. Change that in CRM > Approvals first.");
-  const cls = await pickClass(level);
-  const id: number = old?.id ?? (await c.query("INSERT INTO site_users (email, name, first_name, last_name, phone, approval, verified_at) VALUES ($1,$2,$3,$4,$5,'approved', now()) ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email RETURNING id", [email, name, r.first_name, r.last_name, r.phone])).rows[0].id;
+  const cls = await pickClass(level), from = kind === "request" ? "a walk-up request" : "a tour booking";
+  const userId: number = old?.id ?? (await c.query("INSERT INTO site_users (email, name, first_name, last_name, phone, approval, verified_at) VALUES ($1,$2,$3,$4,$5,'approved', now()) ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email RETURNING id", [email, name, r.first_name, r.last_name, r.phone])).rows[0].id;
   const was = old?.approval ?? "new";
-  await c.query("UPDATE site_users SET approval = 'approved', verified_at = COALESCE(verified_at, now()), phone = CASE WHEN phone = '' THEN $2 ELSE phone END WHERE id = $1", [id, r.phone]);
-  await c.query("UPDATE site_users SET onboarding = 'waiver' WHERE id = $1 AND NOT EXISTS (SELECT 1 FROM sign_docs WHERE user_id = $1 AND kind = 'waiver' AND status = 'complete')", [id]);
-  if (cls) await c.query("INSERT INTO memberships (user_id, level) VALUES ($1,$2) ON CONFLICT DO NOTHING", [id, cls]);
-  if (was !== "approved") await addEvent(c, id, who, false, "state", "approved", "Activated on site from a walk-up request");
-  await logAudit(who, "crm.approval", `${email}: ${was} → approved (activated from a walk-up request)`);
+  await c.query("UPDATE site_users SET approval = 'approved', verified_at = COALESCE(verified_at, now()), phone = CASE WHEN phone = '' THEN $2 ELSE phone END WHERE id = $1", [userId, r.phone]);
+  await c.query("UPDATE site_users SET onboarding = 'waiver' WHERE id = $1 AND NOT EXISTS (SELECT 1 FROM sign_docs WHERE user_id = $1 AND kind = 'waiver' AND status = 'complete')", [userId]);
+  if (cls) await c.query("INSERT INTO memberships (user_id, level) VALUES ($1,$2) ON CONFLICT DO NOTHING", [userId, cls]);
+  await c.query(`UPDATE ${t} SET activated_at = now(), activated_by = $2, activated_prev = $3 WHERE id = $1`, [id, who, was]);
+  if (was !== "approved") await addEvent(c, userId, who, false, "state", "approved", `Activated on site from ${from}`);
+  await logAudit(who, "crm.approval", `${email}: ${was} → approved (activated from ${from})`);
   await addRegistered(email, name, base).catch(() => {});
-  return { emailed: await mailTo({ id, email, name }, "Welcome to Kzoo Makers: sign your agreement", "You're activated! Sign in to sign our liability waiver, read the membership handbook, upload a photo ID and finish setting up your profile.", "", "Get started", "/members", base) };
+  return { emailed: await mailTo({ id: userId, email, name }, "Welcome to Kzoo Makers: sign your agreement", "You're activated! Sign in to sign our liability waiver, read the membership handbook, upload a photo ID and finish setting up your profile.", "", "Get started", "/members", base) };
+}
+
+/** Where someone has got to since they were activated, and so what an undo would throw away. */
+async function progress(c: Awaited<ReturnType<typeof conn>>, userId: number) {
+  const u = (await c.query("SELECT onboarding, EXISTS (SELECT 1 FROM sign_docs WHERE user_id = $1 AND kind = 'waiver' AND status = 'complete') AS waiver, EXISTS (SELECT 1 FROM member_ids WHERE user_id = $1) AS id FROM site_users WHERE id = $1", [userId])).rows[0];
+  return { waiver: !!u.waiver, handbook: u.onboarding === "id" || u.onboarding === "done", id: !!u.id };
+}
+
+/** Undo an activation: the walk-up or booking goes back to where it was (the caller reopens it) and, unless they were already a member before, the account goes back too.
+ *  Someone who has already signed the waiver, read the handbook or uploaded an ID is only reset after `confirm`, and only by staff on a kzoomakers.org address (`staff`): the signed waiver and ID are deleted. */
+export async function undoActivation(kindIn: unknown, id: number, who: string, o: { confirm: boolean; staff: boolean; check?: boolean }) {
+  const kind = kindOf(kindIn), t = TOUR_TABLE[kind], c = await conn();
+  const r = (await c.query(`SELECT email, activated_at, activated_prev FROM ${t} WHERE id = $1`, [id])).rows[0];
+  if (!r?.activated_at) throw new Error("This person wasn't activated from here.");
+  const u = r.activated_prev === "approved" ? null : (await c.query("SELECT id, email FROM site_users WHERE lower(email) = lower($1)", [r.email])).rows[0]; // already a member before: leave their account alone
+  if (u) {
+    if ((await c.query("SELECT 1 FROM user_perms WHERE user_id = $1", [u.id])).rowCount) throw new Error("This person has admin access, so their account can't be reset here.");
+    const p = await progress(c, u.id), started = p.waiver || p.handbook || p.id;
+    if (o.check) return { needsConfirm: started, progress: p, done: false }; // just looking: what would be lost?
+    if (started && !o.confirm) return { needsConfirm: true, progress: p, done: false };
+    if (started && !o.staff) throw new Error("Only staff signed in with a kzoomakers.org address can reset someone who has already signed the waiver or uploaded an ID.");
+    await c.query("DELETE FROM sign_docs WHERE user_id = $1 AND kind = 'waiver'", [u.id]);
+    await c.query("DELETE FROM member_ids WHERE user_id = $1", [u.id]);
+    await c.query("DELETE FROM memberships WHERE user_id = $1", [u.id]);
+    if (r.activated_prev === "new") await deleteUser(u.id, who);
+    else if (r.activated_prev) {
+      await c.query("UPDATE site_users SET approval = $2, onboarding = 'done' WHERE id = $1", [u.id, r.activated_prev]);
+      await addEvent(c, u.id, who, false, "state", r.activated_prev, "Activation undone");
+    }
+  }
+  if (o.check) return { needsConfirm: false, progress: null, done: false };
+  await c.query(`UPDATE ${t} SET activated_at = NULL, activated_by = '', activated_prev = '' WHERE id = $1`, [id]);
+  await logAudit(who, "crm.approval", `${r.email}: activation undone${u ? " (account reset)" : ""}`);
+  return { needsConfirm: false, progress: null, done: true };
 }
 
 /** The applicant answers. Waiting becomes Pending again, which puts them back at the top of the queue. */

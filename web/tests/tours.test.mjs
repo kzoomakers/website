@@ -66,3 +66,24 @@ test("walk-up export re-imports to the same rows (quotes, commas, newlines, Kala
   assert.deepEqual([rows[0].first, rows[0].last, rows[0].email, rows[0].phone, rows[0].contact, rows[0].at], ["Ann", 'Lee "AL"', "a@b.co", "269", "Phone call", "2026-02-13 11:04:13"]);
   assert.match(rows[0].notes, /Why: hi, there\nline two/);
 });
+
+const { blocksToCsv, csvToBlocks, bookingsToCsv, csvToBookings, normDate, normTime, isStaffEmail } = await import("../lib/tours-fmt.ts");
+test("availability CSV round-trips, and accepts US dates and 12-hour times", () => {
+  const b = { date: "2026-11-14", start_time: "10:00", end_time: "12:00", slot_minutes: 30, max_per_slot: 2, guide_name: 'Sam "S" Lee, Jr.', guide_email: "sam@x.org" };
+  const { rows, skipped } = csvToBlocks(blocksToCsv([b]));
+  assert.equal(skipped.length, 0); assert.deepEqual(rows, [b]);
+  const loose = csvToBlocks("Date,Start,End,Minutes per tour,People per tour,Guide name,Guide email\n11/14/2026,2:30 PM,4:00pm,,,,\nnot a date,10:00,11:00,30,1,,");
+  assert.deepEqual([loose.rows[0].date, loose.rows[0].start_time, loose.rows[0].end_time, loose.rows[0].slot_minutes, loose.rows[0].max_per_slot], ["2026-11-14", "14:30", "16:00", 30, 1]);
+  assert.equal(loose.skipped.length, 1);
+  assert.deepEqual([normDate("2026-1-5"), normDate("13/40/2026"), normTime("12:15 AM"), normTime("12:15 PM"), normTime("25:00")], ["2026-01-05", "", "00:15", "12:15", ""]);
+});
+test("bookings CSV round-trips and skips rows without a name, time or email", () => {
+  const r = { date: "2026-11-14", start_time: "10:30", first_name: "Ann", last_name: "Lee", email: "a@b.co", phone: "269 555 0123", zip: "49001", contact_method: "Phone call", interest: "Wood shop, Metal shop", heard: "Web search", visitor_notes: "line one\nline, two", status: "no_show", guide_email: "sam@x.org" };
+  const { rows, skipped } = csvToBookings(bookingsToCsv([r]) + "2026-11-14,10:30,,,x@y.co,,,,,,,,\n");
+  assert.equal(skipped.length, 1); assert.equal(rows.length, 1);
+  assert.deepEqual([rows[0].date, rows[0].start, rows[0].first, rows[0].last, rows[0].email, rows[0].zip, rows[0].interest, rows[0].notes, rows[0].status, rows[0].guide_email], ["2026-11-14", "10:30", "Ann", "Lee", "a@b.co", "49001", "Wood shop, Metal shop", "line one\nline, two", "no_show", "sam@x.org"]);
+});
+test("only kzoomakers.org staff (or the local dev admin) may reset a signed-up member", () => {
+  assert.equal(isStaffEmail("jo@kzoomakers.org"), true); assert.equal(isStaffEmail("JO@KzooMakers.org"), true); assert.equal(isStaffEmail("dev"), true);
+  assert.equal(isStaffEmail("jo@gmail.com"), false); assert.equal(isStaffEmail("jo@kzoomakers.org.evil.com"), false); assert.equal(isStaffEmail("kzoomakers.org"), false);
+});

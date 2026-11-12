@@ -1,7 +1,7 @@
 import { randomBytes } from "crypto";
 import { db } from "./db";
 import { notify, TOURS_TOPIC } from "./ntfy";
-import { csvToRequests, requestsToCsv, checkOffers, DATE, summarize, fmtOffer, mins, reminderDue, TIME, TZ, type Offer } from "./tours-fmt";
+import { csvToRequests, requestsToCsv, blocksToCsv, csvToBlocks, bookingsToCsv, csvToBookings, checkOffers, DATE, summarize, fmtOffer, mins, reminderDue, TIME, TZ, type Offer } from "./tours-fmt";
 import { announce, getCfg as notifyCfg } from "./tours-notify";
 import { getMailCfg, mailReady, sendQueued as send } from "./mail";
 import MI_ZIPS from "./mi-zips.json"; // from the Michigan rows of GeoNames US.txt; refresh if zips are ever added
@@ -19,12 +19,14 @@ export const HEARD = ["Friend or member", "Web search", "Social media", "Event o
 export const STATUSES = ["booked", "no_show", "signed_up", "sign_up_later", "maybe_later", "no_interest"] as const;
 
 export type Block = { future: number; id: number; date: string; start_time: string; end_time: string; slot_minutes: number; max_per_slot: number; guide_name: string; guide_email: string; booked: number };
-export type Booking = { id: number; block_id: number; date: string; start_time: string; name: string; email: string; phone: string; interest: string; heard: string; status: string; visitor_notes: string; client_ip: string; user_agent: string; screen: string; created_at: string; guide_name: string; msgs: number; last_from: string | null };
+/** The site account behind a walk-up or booking, matched by email: what stage of becoming a member they are at. */
+export type Acct = { approval: string; step: string; waiver: boolean; level: string | null } | null;
+export type Booking = { id: number; block_id: number; date: string; start_time: string; name: string; first_name: string; last_name: string; zip: string; contact_method: string; activated_at: string | null; activated_by: string; acct: Acct; email: string; phone: string; interest: string; heard: string; status: string; visitor_notes: string; client_ip: string; user_agent: string; screen: string; created_at: string; guide_name: string; guide_email: string; msgs: number; last_from: string | null };
 export type Device = { ip: string; ua: string; screen: string };
 export type Msg = { id: number; kind: "staff" | "visitor" | "note"; author: string; body: string; created_at: string };
 export type { Offer };
 export { fmtOffer };
-export type WalkupRequest = { id: number; first_name: string; last_name: string; email: string; phone: string; zip: string; contact_method: string; interest: string; notes: string; status: string;
+export type WalkupRequest = { id: number; first_name: string; last_name: string; email: string; phone: string; zip: string; contact_method: string; interest: string; heard: string; notes: string; status: string; activated_at: string | null; activated_by: string; acct: Acct;
   reschedules: number; offers: Offer[]; guide_name: string; decline_note: string; client_ip: string; user_agent: string; screen: string; created_at: string; msgs: number; last_from: string | null };
 
 const EMAIL_OK = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/;
@@ -53,6 +55,11 @@ async function conn() {
     await p.query("ALTER TABLE tour_requests ADD COLUMN IF NOT EXISTS stale_notified_at timestamptz");
     await p.query("ALTER TABLE tour_requests ADD COLUMN IF NOT EXISTS reject_reason text NOT NULL DEFAULT ''");
     await p.query("ALTER TABLE tour_bookings ADD COLUMN IF NOT EXISTS status_at timestamptz");
+    // Walk-ups and bookings collect the same details, and both can be turned into a member (activated_*: who, when, and what their account was before, so it can be undone).
+    for (const t of ["tour_bookings", "tour_requests"]) await p.query(`ALTER TABLE ${t} ADD COLUMN IF NOT EXISTS activated_at timestamptz, ADD COLUMN IF NOT EXISTS activated_by text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS activated_prev text NOT NULL DEFAULT ''`);
+    await p.query("ALTER TABLE tour_requests ADD COLUMN IF NOT EXISTS heard text NOT NULL DEFAULT ''");
+    await p.query("ALTER TABLE tour_bookings ADD COLUMN IF NOT EXISTS first_name text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS last_name text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS zip text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS contact_method text NOT NULL DEFAULT ''");
+    await p.query(`UPDATE tour_bookings SET first_name = regexp_replace(trim(name), '\\s+\\S+$', ''), last_name = CASE WHEN trim(name) ~ '\\s' THEN substring(trim(name) from '\\S+$') ELSE '' END WHERE first_name = '' AND last_name = ''`);
     // The timeline: one row per thing that happened. `dedupe` makes a row fire once (reminders), whichever machine gets there first.
     await p.query(`CREATE TABLE IF NOT EXISTS tour_events (id bigserial PRIMARY KEY, at timestamptz NOT NULL DEFAULT now(), kind text NOT NULL, title text NOT NULL, detail text NOT NULL DEFAULT '',
       actor text NOT NULL DEFAULT '', guide text NOT NULL DEFAULT '', dedupe text UNIQUE)`);
@@ -82,6 +89,9 @@ export const localNow = (h = 0) => new Date(Date.now() + h * 3600e3).toLocaleStr
 
 const BLOCKS = `SELECT b.id, b.date, b.start_time, b.end_time, b.slot_minutes, b.max_per_slot, b.guide_name, b.guide_email,
   (SELECT count(*)::int FROM tour_bookings k WHERE k.block_id = b.id AND NOT k.cancelled) AS booked FROM tour_blocks b`;
+
+const ACCT = (email: string) => `(SELECT jsonb_build_object('approval', u.approval, 'step', u.onboarding, 'waiver', EXISTS (SELECT 1 FROM sign_docs d WHERE d.user_id = u.id AND d.kind = 'waiver' AND d.status = 'complete'),
+  'level', (SELECT string_agg(m.level, ', ') FROM memberships m WHERE m.user_id = u.id)) FROM site_users u WHERE lower(u.email) = lower(${email}) LIMIT 1) AS acct`;
 
 export async function listBlocks(past: boolean): Promise<Block[]> {
   // future = people booked into tours that haven't started: the ones a delete would cancel.
@@ -161,8 +171,8 @@ export async function calendar(from: string, to: string) {
 }
 
 export async function listBookings(past: boolean): Promise<Booking[]> {
-  return (await (await conn()).query(`SELECT k.id, k.block_id, b.date, k.start_time, k.name, k.email, k.phone, k.interest, k.heard,
-    CASE WHEN k.cancelled THEN 'cancelled' ELSE k.status END AS status, k.visitor_notes, k.client_ip, k.user_agent, k.screen, k.created_at, b.guide_name, (SELECT count(*)::int FROM tour_messages m WHERE m.kind = 'booking' AND m.ref_id = k.id AND m.author_kind <> 'note') AS msgs, (SELECT m.author_kind FROM tour_messages m WHERE m.kind = 'booking' AND m.ref_id = k.id ORDER BY m.id DESC LIMIT 1) AS last_from
+  return (await (await conn()).query(`SELECT k.id, k.block_id, b.date, k.start_time, k.name, k.first_name, k.last_name, k.zip, k.contact_method, k.activated_at, k.activated_by, ${ACCT("k.email")}, k.email, k.phone, k.interest, k.heard,
+    CASE WHEN k.cancelled THEN 'cancelled' ELSE k.status END AS status, k.visitor_notes, k.client_ip, k.user_agent, k.screen, k.created_at, b.guide_name, b.guide_email, (SELECT count(*)::int FROM tour_messages m WHERE m.kind = 'booking' AND m.ref_id = k.id AND m.author_kind <> 'note') AS msgs, (SELECT m.author_kind FROM tour_messages m WHERE m.kind = 'booking' AND m.ref_id = k.id ORDER BY m.id DESC LIMIT 1) AS last_from
     FROM tour_bookings k JOIN tour_blocks b ON b.id = k.block_id WHERE ($1 OR b.date >= $2) ORDER BY b.date ${past ? "DESC" : ""}, k.start_time, k.id`, [past, localNow().slice(0, 10)])).rows;
 }
 
@@ -233,11 +243,30 @@ async function mail(to: string, subject: string, lines: string[], link?: [string
 const when = (date: string, start: string) => new Date(`${date}T${start}:00Z`).toLocaleString("en-US", { timeZone: "UTC", weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" });
 
 /** A visitor books a tour. Locks the block so two people can't take the last place. */
-export async function book(x: { block: number; start: string; name: string; email: string; phone: string; areas: string[]; heard: string; notes?: string }, ipHash: string, dev: Device, base: string) {
-  const name = x.name.trim().slice(0, 100), email = x.email.trim().toLowerCase().slice(0, 200), phone = x.phone.trim().slice(0, 30);
-  if (!name || !EMAIL_OK.test(email)) throw new Error("Please enter your name and a valid email address.");
-  if (phone.replace(/\D/g, "").length < 10) throw new Error("Please enter a phone number with 10 digits.");
-  const interest = x.areas.filter((a) => AREAS.includes(a)).join(", "), heard = HEARD.includes(x.heard) ? x.heard : "", vnotes = (x.notes ?? "").trim().slice(0, 1000);
+const OUT_OF_AREA = "Your request for a tour is appreciated, but we can't accommodate your membership right now.";
+/** The details asked of everyone, whether they book a time or ask for one, so both are checked and stored the same way. */
+function cleanPerson(x: Record<string, unknown>) {
+  const s = (k: string, n: number) => (typeof x[k] === "string" ? (x[k] as string).trim().slice(0, n) : "");
+  const p = { first: s("first", 60), last: s("last", 60), email: s("email", 200).toLowerCase(), phone: s("phone", 30), zip: s("zip", 10), contact: s("contact", 20), heard: s("heard", 40), notes: s("notes", 1000) };
+  if (!p.first || !p.last || !EMAIL_OK.test(p.email)) throw new Error("Please enter your first and last name and a valid email address.");
+  if (p.phone.replace(/\D/g, "").length < 10) throw new Error("Please enter a phone number with 10 digits.");
+  if (!/^\d{5}(-\d{4})?$/.test(p.zip)) throw new Error("Please enter a 5-digit zip code.");
+  const interest = (Array.isArray(x.areas) ? (x.areas as unknown[]) : []).filter((a): a is string => typeof a === "string" && AREAS.includes(a)).join(", ");
+  return { ...p, interest, contact: CONTACT_PREFS.has(p.contact) ? p.contact : "Text message", heard: HEARD.includes(p.heard) ? p.heard : "", outOfArea: !MI.has(p.zip.slice(0, 5)) };
+}
+type Person = ReturnType<typeof cleanPerson>;
+/** A walk-up request row. Out-of-area people are stored dismissed (so the monthly summary lists them) rather than shown to staff. */
+const saveRequest = async (c: Awaited<ReturnType<typeof conn>>, p: Person, ipHash: string, dev: Device) =>
+  c.query("INSERT INTO tour_requests (first_name, last_name, email, phone, zip, contact_method, interest, heard, notes, token, ip_hash, client_ip, user_agent, screen, status, reject_reason) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)",
+    [p.first, p.last, p.email, p.phone, p.zip, p.contact, p.interest, p.heard, p.notes, randomBytes(24).toString("hex"), ipHash, dev.ip, dev.ua, dev.screen, p.outOfArea ? "closed" : "open", p.outOfArea ? "out_of_area" : ""]);
+
+export async function book(x: Record<string, unknown> & { block: number; start: string }, ipHash: string, dev: Device, base: string) {
+  const p = cleanPerson(x), name = `${p.first} ${p.last}`, { email, phone, interest, heard } = p, vnotes = p.notes;
+  if (p.outOfArea) {
+    const c = await conn();
+    if ((await c.query("SELECT count(*)::int AS n FROM tour_requests WHERE ip_hash = $1 AND created_at > now() - interval '1 hour'", [ipHash])).rows[0].n < 5) await saveRequest(c, p, ipHash, dev);
+    throw new Error(OUT_OF_AREA);
+  }
   await conn();
   const client = await db()!.pool.connect(), token = randomBytes(24).toString("hex");
   let b: Block | undefined;
@@ -251,7 +280,7 @@ export async function book(x: { block: number; start: string; name: string; emai
     if ((await client.query("SELECT 1 FROM tour_bookings WHERE block_id = $1 AND start_time = $2 AND email = $3 AND NOT cancelled", [b.id, x.start, email])).rowCount) throw new Error("You're already booked for that tour.");
     const n = (await client.query("SELECT count(*)::int AS n FROM tour_bookings WHERE block_id = $1 AND start_time = $2 AND NOT cancelled", [b.id, x.start])).rows[0].n;
     if (n >= b.max_per_slot) throw new Error("Sorry, that tour just filled up. Please pick another time.");
-    await client.query("INSERT INTO tour_bookings (block_id, start_time, name, email, phone, interest, heard, token, ip_hash, visitor_notes, client_ip, user_agent, screen) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)", [b.id, x.start, name, email, phone, interest, heard, token, ipHash, vnotes, dev.ip, dev.ua, dev.screen]);
+    await client.query("INSERT INTO tour_bookings (block_id, start_time, name, first_name, last_name, zip, contact_method, email, phone, interest, heard, token, ip_hash, visitor_notes, client_ip, user_agent, screen) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)", [b.id, x.start, name, p.first, p.last, p.zip, p.contact, email, phone, interest, heard, token, ipHash, vnotes, dev.ip, dev.ua, dev.screen]);
     await client.query("COMMIT");
   } catch (e) { await client.query("ROLLBACK").catch(() => {}); throw e; } finally { client.release(); }
   const w = when(b.date, x.start);
@@ -291,20 +320,13 @@ export async function cancelBooking(id: number) {
 const CONTACT_PREFS = new Set(CONTACT);
 
 export async function requestTour(x: Record<string, unknown>, ipHash: string, dev: Device, base: string) {
-  const s = (k: string, n: number) => (typeof x[k] === "string" ? (x[k] as string).trim().slice(0, n) : "");
-  const r = { first: s("first", 60), last: s("last", 60), email: s("email", 200).toLowerCase(), phone: s("phone", 30), zip: s("zip", 10), contact: s("contact", 20), notes: s("notes", 1000) };
-  if (!r.first || !r.last || !EMAIL_OK.test(r.email)) throw new Error("Please enter your first and last name and a valid email address.");
-  if (r.phone.replace(/\D/g, "").length < 10) throw new Error("Please enter a phone number with 10 digits.");
-  if (!/^\d{5}(-\d{4})?$/.test(r.zip)) throw new Error("Please enter a 5-digit zip code.");
-  const interest = (Array.isArray(x.areas) ? (x.areas as unknown[]) : []).filter((a): a is string => typeof a === "string" && AREAS.includes(a)).join(", "), contact = CONTACT_PREFS.has(r.contact) ? r.contact : "Text message";
+  const r = cleanPerson(x), { interest, contact } = r;
   const c = await conn();
-  const outOfArea = !MI.has(r.zip.slice(0, 5));
   const recent = (await c.query("SELECT count(*) FILTER (WHERE ip_hash = $1)::int AS mine, count(*)::int AS everyone FROM tour_requests WHERE created_at > now() - interval '1 hour'", [ipHash])).rows[0];
   if (recent.mine >= 5 || recent.everyone >= 40) throw new Error("Too many requests right now. Please try again later.");
-  await c.query("INSERT INTO tour_requests (first_name, last_name, email, phone, zip, contact_method, interest, notes, token, ip_hash, client_ip, user_agent, screen, status, reject_reason) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)",
-    [r.first, r.last, r.email, r.phone, r.zip, contact, interest, r.notes, randomBytes(24).toString("hex"), ipHash, dev.ip, dev.ua, dev.screen, outOfArea ? "closed" : "open", outOfArea ? "out_of_area" : ""]);
+  await saveRequest(c, r, ipHash, dev);
   // Dismissed on arrival: no staff alert; it shows up in the monthly summary (sendRejectedSummary).
-  if (outOfArea) throw new Error("Your request for a tour is appreciated, but we can't accommodate your membership right now.");
+  if (r.outOfArea) throw new Error(OUT_OF_AREA);
   await notify(TOURS_TOPIC, { title: `Tour request: ${r.first} ${r.last}`, message: `${r.email} · ${r.phone} (prefers ${contact})${interest ? `\nInterested in: ${interest}` : ""}`, tags: "raising_hand", click: `${base}/admin/tours/walkups` });
   await logEvent("walkup_new", `${r.first} ${r.last} asked for a walk-up tour`, { detail: [`${r.email} · ${r.phone} (prefers ${contact})`, interest && `Interested in: ${interest}`].filter(Boolean).join("\n"), actor: `${r.first} ${r.last}` });
   await announce("walkup_new", { subject: `Walk-up tour request: ${r.first} ${r.last}`, lines: [`${r.first} ${r.last} (${r.email}, ${r.phone}, prefers ${contact}) asked for a tour.`, interest && `Interested in: ${interest}`, r.notes && `Notes: ${r.notes}`].filter(Boolean) as string[], tags: "raising_hand", click: `${base}/admin/tours/walkups` });
@@ -325,12 +347,54 @@ export async function importRequests(csv: unknown) {
   return { added, dupes, skipped };
 }
 
+/** Availability as CSV, in the order the Availability page shows it. */
+export async function exportBlocks(past: boolean) {
+  return blocksToCsv(await listBlocks(past));
+}
+/** Adds each row as a block (the same checks as the form). A block already there (same day, times and guide) is skipped; a row that fails a check is reported, not added. */
+export async function importBlocks(csv: unknown, who: string) {
+  if (typeof csv !== "string" || !csv.trim()) throw new Error("That file is empty.");
+  const { rows, skipped } = csvToBlocks(csv), c = await conn();
+  let added = 0, dupes = 0;
+  for (const b of rows) {
+    if ((await c.query("SELECT 1 FROM tour_blocks WHERE date = $1 AND start_time = $2 AND end_time = $3 AND lower(guide_email) = $4", [b.date, b.start_time, b.end_time, b.guide_email])).rowCount) { dupes++; continue; }
+    try { await saveBlock(b, who); added++; } catch (e: any) { skipped.push(`${b.date} ${b.start_time}-${b.end_time}: ${e.message}`); }
+  }
+  await logEvent("blocks_imported", `${added} availability block(s) imported from a CSV`, { actor: who });
+  return { added, dupes, skipped };
+}
+/** Bookings as CSV (cancelled ones left out). */
+export async function exportBookings(past: boolean) {
+  return bookingsToCsv((await listBookings(past)).filter((b) => b.status !== "cancelled"));
+}
+/** Adds each row as a booking in an existing availability block (found by day and start time). Quiet: nobody is emailed. Skipped, with the reason: no such time, a full tour, or the person already there. */
+export async function importBookings(csv: unknown) {
+  if (typeof csv !== "string" || !csv.trim()) throw new Error("That file is empty.");
+  const { rows, skipped } = csvToBookings(csv), c = await conn();
+  let added = 0, dupes = 0;
+  for (const r of rows) {
+    const label = `${r.first} ${r.last} on ${r.date} ${r.start}`;
+    const blocks = (await c.query(`${BLOCKS} WHERE b.date = $1 AND ($2 = '' OR lower(b.guide_email) = $2) ORDER BY b.id`, [r.date, r.guide_email])).rows.filter((b) => slotStarts(b).includes(r.start));
+    const b = blocks.find((x) => x.booked < x.max_per_slot) ?? blocks[0];
+    if (!b) { skipped.push(`${label}: no availability at that time`); continue; }
+    if ((await c.query("SELECT 1 FROM tour_bookings WHERE block_id = $1 AND start_time = $2 AND lower(email) = $3 AND NOT cancelled", [b.id, r.start, r.email])).rowCount) { dupes++; continue; }
+    if ((await c.query("SELECT count(*)::int AS n FROM tour_bookings WHERE block_id = $1 AND start_time = $2 AND NOT cancelled", [b.id, r.start])).rows[0].n >= b.max_per_slot) { skipped.push(`${label}: that tour is full`); continue; }
+    const interest = r.interest.split(/[;,]/).map((a) => a.trim()).filter((a) => AREAS.includes(a)).join(", ");
+    await c.query("INSERT INTO tour_bookings (block_id, start_time, name, first_name, last_name, zip, contact_method, email, phone, interest, heard, token, visitor_notes, status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)",
+      [b.id, r.start, `${r.first} ${r.last}`.trim(), r.first, r.last, r.zip, CONTACT_PREFS.has(r.contact) ? r.contact : "", r.email, r.phone, interest, HEARD.includes(r.heard) ? r.heard : "", randomBytes(24).toString("hex"), r.notes,
+        (STATUSES as readonly string[]).includes(r.status) ? r.status : "booked"]);
+    added++;
+  }
+  await logEvent("bookings_imported", `${added} booking(s) imported from a CSV`);
+  return { added, dupes, skipped };
+}
+
 export async function exportRequests(all: boolean) {
   return requestsToCsv(await listRequests(all));
 }
 
 export async function listRequests(all: boolean): Promise<WalkupRequest[]> {
-  return (await (await conn()).query(`SELECT id, first_name, last_name, email, phone, zip, contact_method, interest, notes, status, reschedules, offers, guide_name, decline_note, client_ip, user_agent, screen, created_at, (SELECT count(*)::int FROM tour_messages m WHERE m.kind = 'request' AND m.ref_id = tour_requests.id AND m.author_kind <> 'note') AS msgs, (SELECT m.author_kind FROM tour_messages m WHERE m.kind = 'request' AND m.ref_id = tour_requests.id ORDER BY m.id DESC LIMIT 1) AS last_from
+  return (await (await conn()).query(`SELECT id, first_name, last_name, email, phone, zip, contact_method, interest, heard, activated_at, activated_by, ${ACCT("tour_requests.email")}, notes, status, reschedules, offers, guide_name, decline_note, client_ip, user_agent, screen, created_at, (SELECT count(*)::int FROM tour_messages m WHERE m.kind = 'request' AND m.ref_id = tour_requests.id AND m.author_kind <> 'note') AS msgs, (SELECT m.author_kind FROM tour_messages m WHERE m.kind = 'request' AND m.ref_id = tour_requests.id ORDER BY m.id DESC LIMIT 1) AS last_from
     FROM tour_requests WHERE ($1 OR status IN ('open','offered')) ORDER BY created_at`, [all])).rows;
 }
 
@@ -414,8 +478,8 @@ export async function respond(token: string, pick: number | null, note: string, 
       if (!o || `${o.date} ${o.start}` < localNow()) throw new Error("That time has passed. Please request other times instead.");
       const blk = (await client.query("INSERT INTO tour_blocks (date, start_time, end_time, slot_minutes, max_per_slot, guide_name, guide_email, created_by) VALUES ($1,$2,$3,$4,1,$5,$6,'walk-up') RETURNING id",
         [o.date, o.start, o.end, mins(o.end) - mins(o.start), r.guide_name, r.guide_email])).rows[0].id;
-      const bk = (await client.query("INSERT INTO tour_bookings (block_id, start_time, name, email, phone, interest, token, visitor_notes, client_ip, user_agent, screen) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id",
-        [blk, o.start, `${r.first_name} ${r.last_name}`, r.email, r.phone, r.interest, bookingToken, r.notes, r.client_ip, r.user_agent, r.screen])).rows[0].id;
+      const bk = (await client.query("INSERT INTO tour_bookings (block_id, start_time, name, first_name, last_name, zip, contact_method, email, phone, interest, heard, token, visitor_notes, client_ip, user_agent, screen) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING id",
+        [blk, o.start, `${r.first_name} ${r.last_name}`, r.first_name, r.last_name, r.zip, r.contact_method, r.email, r.phone, r.interest, r.heard, bookingToken, r.notes, r.client_ip, r.user_agent, r.screen])).rows[0].id;
       await client.query("UPDATE tour_requests SET status = 'scheduled', booking_id = $2 WHERE id = $1", [r.id, bk]);
     }
     await client.query("COMMIT");
