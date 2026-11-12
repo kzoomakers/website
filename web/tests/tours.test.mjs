@@ -47,3 +47,12 @@ test("stats: rates count held tours only, guides group by email, empty days are 
   assert.equal(summarize([], 30, "2026-11-08").days, null);
   assert.equal(summarize([], 365, "2026-11-08").weekly, true);
 });
+
+const { csvToRequests } = await import("../lib/tours-fmt.ts");
+test("sign-up CSV rows become walk-ups, skipping rows with no email", () => {
+  const csv = 'Timestamp,First Name,Last Name,Desired,"Area\n(all)",Phone,Email,Contact,Heard,,Why,Q\n2/13/2026 11:04:13,Ann,Lee,Makers,"Woodshop, Welding Shop, Soldering",269,a@b.co,Phone,Reddit,,"hi, there",\n2/14/2026 9:00:00,No,Mail,,,,,Text,,,,\n';
+  const { rows, skipped } = csvToRequests(csv);
+  assert.equal(rows.length, 1); assert.equal(skipped.length, 1);
+  assert.deepEqual([rows[0].at, rows[0].interest, rows[0].contact], ["2026-02-13 11:04:13", "Wood shop, Metal shop", "Phone call"]);
+  assert.match(rows[0].notes, /Why: hi, there/);
+});
