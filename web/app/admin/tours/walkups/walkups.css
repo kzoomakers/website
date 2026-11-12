@@ -1,0 +1,38 @@
+/* Walk-ups admin: request cards and the offer form. Builds on the .adm tokens from webmaster.css. */
+.wk-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px}
+.wk-toolbar .wk-sp{flex:1}
+.wk-toolbar .wk-check{display:flex;align-items:center;gap:6px;color:var(--mut);font-size:14px;margin:0}
+.wk-toolbar .wk-check input{width:auto;margin:0}
+.wk-err{margin:0 0 12px}
+
+.wk-list{padding:0}
+.wk{padding:16px 0;border-top:1px solid var(--line)}
+.wk:first-child{border-top:0}
+.wk.closed{opacity:.55}
+.wk-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.wk-name{font-size:16px;font-weight:650}
+.wk-when{color:var(--mut);font-size:13px}
+.wk-status{border-radius:99px;padding:2px 10px;font-size:12px;font-weight:600;background:var(--bg);color:var(--mut)}
+.wk-status.open{background:rgba(210,153,34,.18);color:#9a6700}
+.wk-status.offered{background:var(--acc-bg);color:var(--acc)}
+.wk-status.scheduled{background:rgba(46,160,67,.16);color:var(--ok)}
+.wk-status.dismissed{background:var(--bg);color:var(--mut)}
+.wk-flag{border-radius:99px;padding:2px 10px;font-size:12px;font-weight:600;background:#fff3cd;color:#7a5b00}
+.wk-contact{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 4px}
+.wk-chip{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:8px;padding:3px 9px;font-size:13px;color:var(--ink)!important;background:var(--card)}
+a.wk-chip:hover{border-color:var(--acc);color:var(--acc)!important}
+.wk-line{color:var(--mut);font-size:14px;margin:4px 0;overflow-wrap:anywhere}
+.wk-line b{color:var(--ink);font-weight:600}
+.wk-meta{font-size:12px}
+.wk-offers{margin:4px 0;padding-left:18px;color:var(--mut);font-size:14px}
+.wk-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+
+.wk-form{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:10px}
+.wk-form h3{margin:0 0 8px;font-size:15px}
+.wk-slot{display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin:8px 0}
+.wk-slot label{margin:0;font-size:13px}
+.wk-fields{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.wk-fields label{margin:0;font-size:13px;flex:1 1 220px}
+.wk-form .wk-note{color:var(--mut);font-size:13px;margin:10px 0 0}
+
+.wk-empty{text-align:center;color:var(--mut);padding:32px 0}

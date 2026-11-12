@@ -10,7 +10,7 @@ import { activateWalkup } from "@/lib/approvals";
 
 // Tours admin RPC: POST { op, ...args }. Reads need Tours view access, everything else Tours edit access.
 export const dynamic = "force-dynamic";
-const READS = new Set(["blocks", "bookings", "requests", "thread", "notifyGet", "calendar", "timeline", "stats"]);
+const READS = new Set(["blocks", "bookings", "requests", "exportRequests", "thread", "notifyGet", "calendar", "timeline", "stats"]);
 
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
@@ -31,6 +31,7 @@ export async function POST(req: Request) {
       case "staleSave": await n.setStaleDays(a.days); break;
       case "subAdd": await n.subscribe(a.event, a.topic); break;
       case "subRemove": await n.unsubscribe(a.event, a.topic); break;
+      case "exportRequests": return NextResponse.json({ csv: await t.exportRequests(!!a.all) });
       case "import": return NextResponse.json(await t.importRequests(a.csv));
       case "offer": await t.offerTimes(id, a.offers, { name: String(a.guide_name ?? ""), email: String(a.guide_email ?? "") }, await baseUrl(req)); break;
       case "activate": { // approves a member, so it needs CRM write too

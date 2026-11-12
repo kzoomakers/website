@@ -100,3 +100,16 @@ export function csvToRequests(text: string) {
   return { rows: out, skipped };
 }
 const EMAIL = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/;
+
+/** Writes walk-ups in the sign-up sheet's column order, so an export can be imported again (same email + time is skipped). */
+export function requestsToCsv(rows: { first_name: string; last_name: string; interest: string; phone: string; email: string; contact_method: string; notes: string; created_at: Date | string }[]) {
+  const when = new Intl.DateTimeFormat("en-US", { timeZone: TZ, year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit", hourCycle: "h23" });
+  const cell = (v: string) => (/[",\r\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
+  const head = ["Timestamp", "First Name", "Last Name", "Desired Membership", "Area of Interest (Select all that apply)", "Phone", "Email", "Contact", "Heard About Us", "", "Purpose", "Comments"];
+  const lines = rows.map((r) => {
+    const p = Object.fromEntries(when.formatToParts(new Date(r.created_at)).map((x) => [x.type, x.value]));
+    const ts = `${p.month}/${p.day}/${p.year} ${p.hour}:${p.minute}:${p.second}`;
+    return [ts, r.first_name, r.last_name, "", r.interest, r.phone, r.email, /^phone/i.test(r.contact_method) ? "Phone" : "Text", "", "", "", r.notes].map((c) => cell(c ?? "")).join(",");
+  });
+  return [head.map(cell).join(","), ...lines].join("\r\n") + "\r\n";
+}
