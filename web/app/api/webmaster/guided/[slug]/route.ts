@@ -5,7 +5,7 @@ import { actor, editingAllowed } from "@/lib/guard";
 
 type Ctx = { params: Promise<{ slug: string }> };
 const off = () => new NextResponse("not found", { status: 404 });
-const ok = async (c: Ctx, need: "read" | "write" = "write") => ((await editingAllowed("webmaster", need)) && guidedDef((await c.params).slug) ? (await c.params).slug : null);
+const ok = async (c: Ctx, need: "read" | "write" = "write") => ((await editingAllowed("webmaster", need, "guided")) && guidedDef((await c.params).slug) ? (await c.params).slug : null);
 
 export async function GET(_: Request, c: Ctx) {
   const slug = await ok(c, "read");

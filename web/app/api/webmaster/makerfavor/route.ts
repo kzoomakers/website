@@ -7,11 +7,16 @@ import * as c from "@/lib/chores";
 // Chores admin RPC: POST { op, ...args }. Reads need Chores view access, everything else Chores edit access.
 export const dynamic = "force-dynamic";
 const READS = new Set(["list", "chores", "log", "open", "members", "hours", "stats", "achievements"]);
+// The admin page each op belongs to (see lib/access.ts), so a person given just that page can use it. An op not listed here needs a whole-section grant.
+const PAGE: Record<string, string | string[]> = {
+  list: "todo", chores: "todo", open: "todo", save: "todo", snooze: "todo", delete: "todo", start: "todo", finish: "todo", members: ["todo", "log"],
+  log: "log", hours: "log", logTime: "log", deleteLog: "log", stats: "stats", achievements: "achievements", saveAchievement: "achievements", deleteAchievement: "achievements",
+};
 
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
   if (!a?.op) return new NextResponse("bad request", { status: 400 });
-  if (!(await editingAllowed("chores", READS.has(a.op) ? "read" : "write"))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("chores", READS.has(a.op) ? "read" : "write", PAGE[a.op]))) return new NextResponse("not found", { status: 404 });
   const who = await actor(), id = Number(a.id);
   try {
     switch (a.op) {

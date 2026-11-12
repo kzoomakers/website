@@ -5,7 +5,7 @@ import { editingAllowed } from "@/lib/guard";
 const off = () => new NextResponse("not found", { status: 404 });
 
 export async function GET(req: Request) {
-  if (!(await editingAllowed("admin", "read"))) return off();
+  if (!(await editingAllowed("admin", "read", "httplog"))) return off();
   const p = new URL(req.url).searchParams;
   try {
     if (p.has("id")) { const d = await detail(Number(p.get("id")), p.get("at") ?? ""); return d ? NextResponse.json(d) : off(); }

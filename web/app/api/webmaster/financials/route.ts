@@ -5,12 +5,12 @@ import { deleteFinancial, isPdf, validYear, getOrg, listFinancials, MAX_PDF, put
 const off = () => new NextResponse("not found", { status: 404 });
 
 export async function GET() {
-  if (!(await editingAllowed("webmaster", "read"))) return off();
+  if (!(await editingAllowed("webmaster", "read", "financials"))) return off();
   return NextResponse.json({ org: await getOrg(), files: await listFinancials() });
 }
 
 export async function PUT(req: Request) {
-  if (!(await editingAllowed("webmaster"))) return off();
+  if (!(await editingAllowed("webmaster", "write", "financials"))) return off();
   const b = await req.json().catch(() => null);
   const org = typeof b?.org === "string" ? b.org.trim() : "";
   if (!org || org.length > 200) return new NextResponse("organization name required", { status: 400 });
@@ -19,7 +19,7 @@ export async function PUT(req: Request) {
 }
 
 export async function POST(req: Request) {
-  if (!(await editingAllowed("webmaster"))) return off();
+  if (!(await editingAllowed("webmaster", "write", "financials"))) return off();
   const form = await req.formData().catch(() => null);
   if (!form) return new NextResponse("could not read the upload (10MB max)", { status: 400 });
   const file = form.get("file"), year = Number(form.get("year"));
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  if (!(await editingAllowed("webmaster"))) return off();
+  if (!(await editingAllowed("webmaster", "write", "financials"))) return off();
   const year = Number(new URL(req.url).searchParams.get("year"));
   if (!validYear(year)) return new NextResponse("bad year", { status: 400 });
   await deleteFinancial(year, await actor());

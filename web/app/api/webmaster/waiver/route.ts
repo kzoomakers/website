@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
   if (!a?.op) return new NextResponse("bad request", { status: 400 });
   const kind: w.Kind = a.kind === "guest" ? "guest" : "member";
-  if (!(await editingAllowed("crm", WRITE.includes(a.op) ? "write" : "read"))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("crm", WRITE.includes(a.op) ? "write" : "read", kind === "guest" ? "guest-agreement" : "waiver"))) return new NextResponse("not found", { status: 404 });
   if (a.op === "publish" && !(await canSpecial(`agreement.${kind}`))) return new NextResponse("You don't have the special permission to publish this agreement. Ask an administrator (Admin > Access > Special permissions).", { status: 403 });
   try {
     switch (a.op) {

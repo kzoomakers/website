@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
-  if (!(await editingAllowed("admin"))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("admin", "write", "google-analytics"))) return new NextResponse("not found", { status: 404 });
   try {
     if (a?.op === "test") { await ga.test(); return NextResponse.json({ ok: true }); }
     if (a?.op === "overview") return NextResponse.json(await notice.overview());

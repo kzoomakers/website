@@ -12,11 +12,20 @@ import { isStaffEmail } from "@/lib/tours-fmt";
 // Tours admin RPC: POST { op, ...args }. Reads need Tours view access, everything else Tours edit access.
 export const dynamic = "force-dynamic";
 const READS = new Set(["blocks", "bookings", "requests", "exportRequests", "exportBlocks", "exportBookings", "thread", "notifyGet", "calendar", "timeline", "stats"]);
+// The admin page each op belongs to (see lib/access.ts), so a person given just that page can use it. An op not listed here needs a whole-section grant.
+const PAGE: Record<string, string | string[]> = {
+  blocks: ["availability", "bookings"], saveBlock: "availability", deleteBlocks: "availability", exportBlocks: "availability", importBlocks: "availability", calendar: "*",
+  bookings: "bookings", cancel: "bookings", setStatus: "bookings", exportBookings: "bookings", importBookings: "bookings",
+  requests: "walkups", offer: "walkups", reopen: "walkups", close: "walkups", exportRequests: "walkups", import: "walkups", thread: ["bookings", "walkups"], post: ["bookings", "walkups"],
+  stats: "stats", timeline: "timeline",
+  notifyGet: "notifications", emailAdd: "notifications", emailRemove: "notifications", staleSave: "notifications", subAdd: "notifications", subRemove: "notifications",
+  activate: ["bookings", "walkups"], undoActivation: ["bookings", "walkups"],
+};
 
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
   if (!a?.op) return new NextResponse("bad request", { status: 400 });
-  if (!(await editingAllowed("tours", READS.has(a.op) ? "read" : "write"))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("tours", READS.has(a.op) ? "read" : "write", PAGE[a.op]))) return new NextResponse("not found", { status: 404 });
   const who = await actor(), id = Number(a.id);
   try {
     switch (a.op) {
@@ -40,7 +49,7 @@ export async function POST(req: Request) {
       case "importBookings": return NextResponse.json(await t.importBookings(a.csv));
       case "offer": await t.offerTimes(id, a.offers, { name: String(a.guide_name ?? ""), email: String(a.guide_email ?? "") }, await baseUrl(req)); break;
       case "activate": case "undoActivation": { // both change a member's account, so they need CRM write too
-        if (!(await editingAllowed("crm", "write"))) return new NextResponse("Activating or undoing a member needs CRM access.", { status: 403 });
+        if (!(await editingAllowed("crm", "write", ["people", "approvals"]))) return new NextResponse("Activating or undoing a member needs CRM access.", { status: 403 });
         const kind = a.kind === "booking" ? "booking" : "request", base = await baseUrl(req);
         if (a.op === "activate") {
           const r = await activateTourPerson(kind, id, who, base, String(a.level ?? ""));

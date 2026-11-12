@@ -15,7 +15,7 @@ const uid = async (c: Ctx) => { const n = Number((await c.params).id); return Nu
 // A member's details and emergency contacts.
 export async function GET(_: Request, c: Ctx) {
   const id = await uid(c);
-  if (id === null || !(await editingAllowed("crm", "read"))) return off();
+  if (id === null || !(await editingAllowed("crm", "read", ["people", "approvals"]))) return off();
   const profile = await getProfile(id);
   return profile ? NextResponse.json({ profile, contacts: await listContacts(id) }) : off();
 }
@@ -23,7 +23,7 @@ export async function GET(_: Request, c: Ctx) {
 // PUT { first_name, last_name, email, phone, address1, ..., access_card_number, qb_id, notes }
 export async function PUT(req: Request, c: Ctx) {
   const id = await uid(c), b = await req.json().catch(() => null);
-  if (id === null || !b || !(await editingAllowed("crm"))) return off();
+  if (id === null || !b || !(await editingAllowed("crm", "write", "people"))) return off();
   const cur = await getProfile(id);
   if (!cur) return off();
   if (typeof b.email === "string" && b.email.trim().toLowerCase() !== cur.email && !(await mayTakeOver(await fullAdmin(), id))) return locked();
@@ -33,7 +33,7 @@ export async function PUT(req: Request, c: Ctx) {
 // POST { action: "sendReset" | "setPassword", password } or { action: "disable", reason } / { action: "enable" }
 export async function POST(req: Request, c: Ctx) {
   const id = await uid(c), b = await req.json().catch(() => null);
-  if (id === null || !(await editingAllowed("crm"))) return off();
+  if (id === null || !(await editingAllowed("crm", "write", "people"))) return off();
   if (!(await mayTakeOver(await fullAdmin(), id))) return locked();
   try {
     const p = await getProfile(id);
@@ -49,7 +49,7 @@ export async function POST(req: Request, c: Ctx) {
 
 export async function DELETE(_: Request, c: Ctx) {
   const id = await uid(c);
-  if (id === null || !(await editingAllowed("crm"))) return off();
+  if (id === null || !(await editingAllowed("crm", "write", "people"))) return off();
   if (!(await mayTakeOver(await fullAdmin(), id))) return locked();
   try { return (await deleteUser(id, await actor())) ? NextResponse.json({ ok: true }) : off(); } catch (e) { return fail(e); }
 }

@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 // GET ?days=7|30|90 or ?from=YYYY-MM-DD&to=YYYY-MM-DD: the report. Add &extra=1 for the parts that come from elsewhere (crawlers, conversions, Search Console), which fail on their own. ?live=1: who is on the site now.
 export async function GET(req: Request) {
-  if (!(await editingAllowed("webmaster", "read"))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("webmaster", "read", "analytics"))) return new NextResponse("not found", { status: 404 });
   const q = new URL(req.url).searchParams, from = q.get("from"), to = q.get("to");
   const range: Range = from && to ? { from, to } : { days: Number(q.get("days")) };
   try {

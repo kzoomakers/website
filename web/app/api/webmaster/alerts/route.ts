@@ -6,8 +6,9 @@ import { alertSummary } from "@/lib/approvals";
 
 // What is waiting for an admin: pending reviews, comments, held contact messages and walk-ups needing times, with the newest id of each (the popup uses it to know what is new).
 export async function GET() {
-  if (!(await Promise.all((["webmaster", "blog", "forms", "crm", "tours"] as const).map((s) => editingAllowed(s, "read")))).some(Boolean)) return new NextResponse("not found", { status: 404 });
-  const [web, blog, forms, crm, tours] = await Promise.all((["webmaster", "blog", "forms", "crm", "tours"] as const).map((s) => editingAllowed(s, "read")));
+  // Each kind of alert is for people who can open the page that handles it.
+  const [web, blog, forms, crm, tours] = await Promise.all([editingAllowed("webmaster", "read", "reviews"), editingAllowed("blog", "read", "comments"), editingAllowed("forms", "read"), editingAllowed("crm", "read", "approvals"), editingAllowed("tours", "read", "walkups")]);
+  if (![web, blog, forms, crm, tours].some(Boolean)) return new NextResponse("not found", { status: 404 });
   const d = db();
   if (!d) return NextResponse.json({ reviews: 0, reviewMax: 0, comments: 0, commentMax: 0, forms: 0, formMax: 0, applicants: 0, applicantMax: 0, walkups: 0 });
   await d.ready;

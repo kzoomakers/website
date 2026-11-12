@@ -11,7 +11,7 @@ const READS = new Set(["topics", "messages", "clients", "tokens", "links", "conf
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
   if (!a?.op) return new NextResponse("bad request", { status: 400 });
-  if (!(await editingAllowed("admin", READS.has(a.op) ? "read" : "write"))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("admin", READS.has(a.op) ? "read" : "write", "ntfy"))) return new NextResponse("not found", { status: 404 });
   const who = await actor();
   try {
     let out: unknown = { ok: true }, target = String(a.topic?.name ?? a.name ?? a.token?.label ?? "");

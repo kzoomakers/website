@@ -6,7 +6,7 @@ import { actor, editingAllowed } from "@/lib/guard";
 const off = () => new NextResponse("not found", { status: 404 });
 
 export async function GET(req: Request) {
-  if (!(await editingAllowed("webmaster", "read"))) return off();
+  if (!(await editingAllowed("webmaster", "read", "pages"))) return off();
   const q = new URL(req.url).searchParams;
   if (q.has("deleted")) return NextResponse.json(await deletedPages());
   if (q.has("tree")) return NextResponse.json((await siteTree()).tree);
@@ -22,7 +22,7 @@ export async function GET(req: Request) {
 }
 
 export async function PUT(req: Request) {
-  if (!await editingAllowed("webmaster")) return off();
+  if (!await editingAllowed("webmaster", "write", "pages")) return off();
   const { slug, data } = await req.json();
   if (typeof slug !== "string" || !Array.isArray(data?.content)) return new NextResponse("bad request", { status: 400 });
   try { await savePage(slug, data, await actor()); } catch { return new NextResponse("bad slug", { status: 400 }); }
@@ -31,7 +31,7 @@ export async function PUT(req: Request) {
 
 // Revert a page to an old revision, or restore a deleted one (same thing, but the slug must be free).
 export async function POST(req: Request) {
-  if (!await editingAllowed("webmaster")) return off();
+  if (!await editingAllowed("webmaster", "write", "pages")) return off();
   const { slug, revision, restore } = await req.json();
   const rev = Number.isInteger(revision) ? await pageRevision(revision) : undefined;
   if (!rev || rev.slug !== slug) return off();
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  if (!await editingAllowed("webmaster")) return off();
+  if (!await editingAllowed("webmaster", "write", "pages")) return off();
   const q = new URL(req.url).searchParams;
   const slug = q.get("slug") ?? "";
   try { await deletePage(slug, await actor(), q.has("menu")); } catch { return new NextResponse("bad slug", { status: 400 }); }

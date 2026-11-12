@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
-  if (!(await editingAllowed("admin", "write"))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("admin", "write", "setup"))) return new NextResponse("not found", { status: 404 });
   try {
     await setUploadLimits({ mb: Number(a?.mb), publicMb: Number(a?.publicMb) });
     await logAudit(await actor(), "upload.limit", `signed-in ${a.mb} MB, public ${a.publicMb} MB`);

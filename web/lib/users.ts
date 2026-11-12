@@ -1,8 +1,8 @@
 import { adminFloor, conn } from "./db";
-import { SECTIONS, type Level, type Section } from "./guard";
+import { PAGES, SECTIONS, type Perms } from "./access";
 import { logAudit } from "./store";
 
-export type UserRow = { id: number; email: string; name: string; perms: Partial<Record<Section, Level>>; founder: boolean; disabled: boolean };
+export type UserRow = { id: number; email: string; name: string; perms: Perms; founder: boolean; disabled: boolean };
 export const MIN_ADMINS = 3;
 
 
@@ -16,9 +16,11 @@ export async function listUsers(q: string): Promise<UserRow[]> {
      GROUP BY u.id ORDER BY count(p.section) > 0 DESC, lower(u.name) LIMIT 50`, [q.trim(), like])).rows;
 }
 
-/** Sets (or with level=null removes) one user's access to one section. Returns the user's email, or null if there is no such user. */
+/** Sets (or with level=null removes) one user's access to a whole section ("tours") or to one page of it ("tours:walkups"). Giving a whole section replaces any single pages they had in it.
+ *  Returns the user's email, or null if there is no such user. */
 export async function setAccess(userId: number, section: string, level: string | null, who: string) {
-  if (!(SECTIONS as readonly string[]).includes(section) || (level !== null && level !== "read" && level !== "write")) throw new Error("bad section or level");
+  const [sec, page] = section.split(":");
+  if (!(SECTIONS as readonly string[]).includes(sec) || (page !== undefined && !PAGES.some((p) => p.section === sec && p.key === page && !p.full)) || (level !== null && level !== "read" && level !== "write")) throw new Error("bad section or level");
   const u = await adminFloor(async (c) => {
   const u = (await c.query("SELECT email FROM site_users WHERE id = $1 AND verified_at IS NOT NULL", [userId])).rows[0];
   if (!u) return null;
@@ -26,6 +28,13 @@ export async function setAccess(userId: number, section: string, level: string |
   if (section === "admin" && u.email.toLowerCase() === who.toLowerCase()) throw new Error("You can't change your own Admin access.");
   const cur = (await c.query("SELECT level, locked FROM user_perms WHERE user_id = $1 AND section = $2", [userId, section])).rows[0];
   if ((await c.query("SELECT 1 FROM user_perms WHERE user_id = $1 AND locked", [userId])).rowCount) throw new Error("The founding administrator can't be changed.");
+  if (page !== undefined) { // one page: pointless (and confusing) if they already have the whole section
+    if (level && (await c.query("SELECT 1 FROM user_perms WHERE user_id = $1 AND section = $2", [userId, sec])).rowCount) throw new Error("They already have access to the whole section. Remove that first to choose single pages.");
+    if (level) await c.query("INSERT INTO user_perms (user_id, section, level) VALUES ($1,$2,$3) ON CONFLICT (user_id, section) DO UPDATE SET level = EXCLUDED.level", [userId, section, level]);
+    else await c.query("DELETE FROM user_perms WHERE user_id = $1 AND section = $2", [userId, section]);
+    return u;
+  }
+  if (level) await c.query("DELETE FROM user_perms WHERE user_id = $1 AND section LIKE $2", [userId, sec + ":%"]); // a whole section covers every page in it
   // Taking away full-admin rights is refused unless MIN_ADMINS others-or-more would still remain (checked in the same statement as the change).
   if (section === "admin" && cur?.level === "write" && level !== "write") {
     const n = (await c.query(`${level ? "UPDATE user_perms SET level = 'read'" : "DELETE FROM user_perms"} WHERE user_id = $1 AND section = 'admin'

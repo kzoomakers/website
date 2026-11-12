@@ -5,7 +5,7 @@ import { actor, editingAllowed } from "@/lib/guard";
 const off = () => new NextResponse("not found", { status: 404 });
 
 export async function GET(req: Request) {
-  if (!(await editingAllowed("admin", "read"))) return off();
+  if (!(await editingAllowed("admin", "read", "audit"))) return off();
   const p = new URL(req.url).searchParams;
   if (p.has("id")) {
     const d = Number.isInteger(Number(p.get("id"))) ? await auditDetail(Number(p.get("id"))) : null;
@@ -16,7 +16,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  if (!(await editingAllowed("admin"))) return off();
+  if (!(await editingAllowed("admin", "write", "audit"))) return off();
   const { revert } = await req.json().catch(() => ({}));
   if (!Number.isInteger(revert) || !(await revertAudit(revert, await actor()))) return new NextResponse("This change can't be reverted.", { status: 409 });
   return NextResponse.json({ ok: true });

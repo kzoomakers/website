@@ -7,13 +7,13 @@ import { actor, editingAllowed } from "@/lib/guard";
 const deny = () => new NextResponse("not found", { status: 404 });
 
 export async function GET(req: Request) {
-  if (!(await editingAllowed("webmaster", "read"))) return deny();
+  if (!(await editingAllowed("webmaster", "read", "reviews"))) return deny();
   return NextResponse.json({ reviews: await listReviews(new URL(req.url).searchParams.get("status") || "pending"), counts: await reviewCounts() });
 }
 
 // PATCH { id, action: save | approve | reject | restore, name?, role?, text? }
 export async function PATCH(req: Request) {
-  if (!(await editingAllowed("webmaster"))) return deny();
+  if (!(await editingAllowed("webmaster", "write", "reviews"))) return deny();
   const b = await req.json().catch(() => null);
   if (!Number.isInteger(b?.id) || !["save", "approve", "reject", "restore"].includes(b?.action)) return new NextResponse("bad request", { status: 400 });
   const s = (v: unknown) => (typeof v === "string" ? v : undefined);
@@ -26,7 +26,7 @@ export async function PATCH(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  if (!(await editingAllowed("webmaster"))) return deny();
+  if (!(await editingAllowed("webmaster", "write", "reviews"))) return deny();
   const id = Number(new URL(req.url).searchParams.get("id"));
   if (!Number.isInteger(id)) return new NextResponse("bad id", { status: 400 });
   await deleteReview(id);

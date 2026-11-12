@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { levelOf, me, type Section } from "@/lib/guard";
+import { pageOf } from "@/lib/access";
 import Needs from "./needs";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +13,7 @@ const QUICK: [Section, string, string][] = [["blog", "/admin/blog/new", "New pos
 export default async function Landing() {
   const m = await me();
   if (!m || !Object.keys(m.perms).length) redirect("/admin-login?next=/admin/landing" + (m ? "&denied=1" : ""));
-  const quick = QUICK.filter(([s]) => levelOf(m, s) === "write");
+  const quick = QUICK.filter(([s, href]) => levelOf(m, s, pageOf(href)?.key) === "write");
   return (
     <>
       <h1>Admin home</h1>

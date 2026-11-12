@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
   if (!a?.op) return new NextResponse("bad request", { status: 400 });
-  if (!(await editingAllowed("webmaster", a.op === "state" ? "read" : "write"))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("webmaster", a.op === "state" ? "read" : "write", "handbook-updates"))) return new NextResponse("not found", { status: 404 });
   const id = Number(a.id);
   try {
     switch (a.op) {

@@ -8,13 +8,13 @@ import { logAudit } from "@/lib/store";
 const deny = () => new NextResponse("not found", { status: 404 });
 
 export async function GET(req: Request) {
-  if (!(await editingAllowed("blog", "read"))) return deny();
+  if (!(await editingAllowed("blog", "read", "comments"))) return deny();
   return NextResponse.json({ comments: await allComments(new URL(req.url).searchParams.get("status") || undefined), settings: await getSettings(), counts: await counts() });
 }
 
 // PATCH { id, status } moderates one comment; PATCH { settings } saves the moderation settings.
 export async function PATCH(req: Request) {
-  if (!(await editingAllowed("blog"))) return deny();
+  if (!(await editingAllowed("blog", "write", "comments"))) return deny();
   const b = await req.json().catch(() => null);
   try {
     if (b?.settings) { const r = await saveSettings(b.settings); await logAudit(await actor(), "comment.settings"); return NextResponse.json(r); }
@@ -29,7 +29,7 @@ export async function PATCH(req: Request) {
 
 // DELETE ?id=N removes a comment and its replies; DELETE ?spam=1 empties the spam folder.
 export async function DELETE(req: Request) {
-  if (!(await editingAllowed("blog"))) return deny();
+  if (!(await editingAllowed("blog", "write", "comments"))) return deny();
   const q = new URL(req.url).searchParams;
   if (q.get("spam")) { const removed = await emptySpam(); await logAudit(await actor(), "comment.empty_spam", `${removed} removed`); return NextResponse.json({ removed }); }
   const id = Number(q.get("id"));
