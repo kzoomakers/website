@@ -4,6 +4,10 @@ import { notify, TOURS_TOPIC } from "./ntfy";
 import { checkOffers, DATE, summarize, fmtOffer, mins, reminderDue, TIME, TZ, type Offer } from "./tours-fmt";
 import { announce, getCfg as notifyCfg } from "./tours-notify";
 import { getMailCfg, mailReady, sendQueued as send } from "./mail";
+import MI_ZIPS from "./mi-zips.json"; // from the Michigan rows of GeoNames US.txt; refresh if zips are ever added
+
+const MI = new Set<string>(MI_ZIPS);
+const REPORT_TO = "contact@kzoomakers.org";
 
 // Tour scheduling, ported from kzoomakers/schedulingapp (tours only). Guides publish availability blocks; slots are derived from
 // block start/end/length instead of stored, and visitors book a slot. Skipped from the original: SMS, surveys, ban list, reCAPTCHA.
@@ -47,6 +51,7 @@ async function conn() {
       booking_id int, ip_hash text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now())`);
     for (const t of ["tour_bookings", "tour_requests"]) await p.query(`ALTER TABLE ${t} ADD COLUMN IF NOT EXISTS client_ip text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS user_agent text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS screen text NOT NULL DEFAULT ''`);
     await p.query("ALTER TABLE tour_requests ADD COLUMN IF NOT EXISTS stale_notified_at timestamptz");
+    await p.query("ALTER TABLE tour_requests ADD COLUMN IF NOT EXISTS reject_reason text NOT NULL DEFAULT ''");
     await p.query("ALTER TABLE tour_bookings ADD COLUMN IF NOT EXISTS status_at timestamptz");
     // The timeline: one row per thing that happened. `dedupe` makes a row fire once (reminders), whichever machine gets there first.
     await p.query(`CREATE TABLE IF NOT EXISTS tour_events (id bigserial PRIMARY KEY, at timestamptz NOT NULL DEFAULT now(), kind text NOT NULL, title text NOT NULL, detail text NOT NULL DEFAULT '',
@@ -293,10 +298,13 @@ export async function requestTour(x: Record<string, unknown>, ipHash: string, de
   if (!/^\d{5}(-\d{4})?$/.test(r.zip)) throw new Error("Please enter a 5-digit zip code.");
   const interest = (Array.isArray(x.areas) ? (x.areas as unknown[]) : []).filter((a): a is string => typeof a === "string" && AREAS.includes(a)).join(", "), contact = CONTACT_PREFS.has(r.contact) ? r.contact : "Text message";
   const c = await conn();
+  const outOfArea = !MI.has(r.zip.slice(0, 5));
   const recent = (await c.query("SELECT count(*) FILTER (WHERE ip_hash = $1)::int AS mine, count(*)::int AS everyone FROM tour_requests WHERE created_at > now() - interval '1 hour'", [ipHash])).rows[0];
   if (recent.mine >= 5 || recent.everyone >= 40) throw new Error("Too many requests right now. Please try again later.");
-  await c.query("INSERT INTO tour_requests (first_name, last_name, email, phone, zip, contact_method, interest, notes, token, ip_hash, client_ip, user_agent, screen) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)",
-    [r.first, r.last, r.email, r.phone, r.zip, contact, interest, r.notes, randomBytes(24).toString("hex"), ipHash, dev.ip, dev.ua, dev.screen]);
+  await c.query("INSERT INTO tour_requests (first_name, last_name, email, phone, zip, contact_method, interest, notes, token, ip_hash, client_ip, user_agent, screen, status, reject_reason) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)",
+    [r.first, r.last, r.email, r.phone, r.zip, contact, interest, r.notes, randomBytes(24).toString("hex"), ipHash, dev.ip, dev.ua, dev.screen, outOfArea ? "closed" : "open", outOfArea ? "out_of_area" : ""]);
+  // Dismissed on arrival: no staff alert; it shows up in the monthly summary (sendRejectedSummary).
+  if (outOfArea) throw new Error("Your request for a tour is appreciated, but we can't accommodate your membership right now.");
   await notify(TOURS_TOPIC, { title: `Tour request: ${r.first} ${r.last}`, message: `${r.email} · ${r.phone} (prefers ${contact})${interest ? `\nInterested in: ${interest}` : ""}`, tags: "raising_hand", click: `${base}/admin/tours/walkups` });
   await logEvent("walkup_new", `${r.first} ${r.last} asked for a walk-up tour`, { detail: [`${r.email} · ${r.phone} (prefers ${contact})`, interest && `Interested in: ${interest}`].filter(Boolean).join("\n"), actor: `${r.first} ${r.last}` });
   await announce("walkup_new", { subject: `Walk-up tour request: ${r.first} ${r.last}`, lines: [`${r.first} ${r.last} (${r.email}, ${r.phone}, prefers ${contact}) asked for a tour.`, interest && `Interested in: ${interest}`, r.notes && `Notes: ${r.notes}`].filter(Boolean) as string[], tags: "raising_hand", click: `${base}/admin/tours/walkups` });
@@ -445,4 +453,19 @@ export async function postVisitor(token: string, body: string, base: string) {
   await logEvent("message_visitor", `${t.name} replied about their tour`, { detail: body.slice(0, 300), actor: t.name, guide: p.guide_email });
   await mail(p.guide_email, `${t.name} replied about their tour`, [`${t.name} wrote:`, body], ["Open the conversation", page]);
   await notify(TOURS_TOPIC, { title: `Reply from ${t.name}`, message: body.slice(0, 300), tags: "speech_balloon", click: page });
+}
+
+/** On the 1st (Eastern time), emails contact@ the tour requests dismissed last month for being outside Michigan. Run hourly; the settings row makes it once per month across machines. */
+export async function sendRejectedSummary(now = new Date()) {
+  const c = await conn(), cfg = await getMailCfg();
+  if (!mailReady(cfg)) return;
+  const cur = now.toLocaleDateString("sv-SE", { timeZone: TZ }).slice(0, 7);
+  const first = new Date(`${cur}-01T12:00:00Z`), prev = new Date(first.getTime() - 15 * 864e5).toLocaleDateString("sv-SE", { timeZone: TZ }).slice(0, 7);
+  const claimed = await c.query("INSERT INTO settings (key, data) VALUES ('tours:rejected_report', $1) ON CONFLICT (key) DO UPDATE SET data = $1 WHERE settings.data <> $1 RETURNING key", [JSON.stringify(cur)]);
+  if (!claimed.rowCount) return;
+  const rows = (await c.query("SELECT first_name, last_name, email, zip, created_at FROM tour_requests WHERE reject_reason = 'out_of_area' AND to_char(created_at AT TIME ZONE $2, 'YYYY-MM') = $1 ORDER BY created_at", [prev, TZ])).rows;
+  const lines = [rows.length ? `${rows.length} tour request${rows.length > 1 ? "s were" : " was"} dismissed in ${prev} because the zip code isn't in Michigan:` : `No tour requests were dismissed in ${prev} for being outside Michigan.`,
+    ...rows.map((r) => `${r.first_name} ${r.last_name}, ${r.email}, zip ${r.zip}, ${new Date(r.created_at).toLocaleDateString("en-US", { timeZone: TZ, month: "short", day: "numeric" })}`)];
+  try { await send({ to: REPORT_TO, subject: `Tour requests dismissed for out-of-state zip codes, ${prev}`, text: lines.join("\n"), html: lines.map((l) => `<p>${esc(l)}</p>`).join("") }, cfg); }
+  catch (e) { await c.query("DELETE FROM settings WHERE key = 'tours:rejected_report'"); throw e; } // retry next hour
 }
