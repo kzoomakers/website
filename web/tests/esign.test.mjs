@@ -76,7 +76,7 @@ test("an uploaded .p12 is checked, its name and expiry read, and it signs after 
 test("the unlock cookie only works for its own signer and rejects tampering", () => {
   const c = unlockCookie(5);
   assert.ok(unlocked(5, c.value));
-  assert.ok(!unlocked(6, c.value) && !unlocked(5, undefined) && !unlocked(5, c.value.replace(/.$/, "0")) && !unlocked(5, "1." + c.value.split(".")[1]));
+  assert.ok(!unlocked(6, c.value) && !unlocked(5, undefined) && !unlocked(5, c.value.replace(/.$/, (ch) => (ch === "0" ? "1" : "0"))) && !unlocked(5, "1." + c.value.split(".")[1]));
 });
 
 test("auto-detect finds blank lines, captions, placeholders and form fields, but not words inside sentences", async () => {

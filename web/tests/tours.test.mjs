@@ -104,3 +104,28 @@ test("CSV export: text a spreadsheet would run as a formula is defused; phones a
   const back = parseCsv(`a,b\r\n${cell("=1+1")},${cell("+cmd")}\r\n`)[1]; // import undoes the mark
   assert.deepEqual(back, ["=1+1", "+cmd"]);
 });
+
+test("stats: burnup, weekly conversion, per-guide outcomes, close-time buckets and the guide filter", () => {
+  const rows = [
+    row({ day: "2026-11-02", status: "signed_up", close_days: 0.5, won_day: "2026-11-02", interest: "Wood shop, Laser shop", heard: "Friend", tdow: 2 }),
+    row({ day: "2026-11-03", status: "signed_up", close_days: 5, won_day: "2026-11-08" }),
+    row({ day: "2026-11-04", status: "no_interest", guide: "Lee", guide_email: "" }),
+    row({ day: "2026-11-05", status: "maybe_later", guide: "Lee", guide_email: "" }),
+    row({ day: "2026-11-06", status: "booked", held: false }),
+  ];
+  const s = summarize(rows, 7, "2026-11-08");
+  const last = s.burnup.at(-1);
+  assert.deepEqual([last.booked, last.won], [5, 2], "running totals end at the totals");
+  assert.deepEqual(s.burnup.map((b) => b.won), [1, 1, 1, 1, 1, 1, 2], "a sign-up counts on the day it happened");
+  assert.deepEqual(s.weeks.map((w) => [w.d, w.held, w.won]), [["2026-11-02", 4, 2]], "held tours per booking week");
+  const sam = s.closers.find((c) => c.name === "Sam"), lee = s.closers.find((c) => c.name === "Lee");
+  assert.deepEqual([sam.tours, sam.won, sam.unrecorded], [2, 2, 0]);
+  assert.deepEqual([lee.tours, lee.lost, lee.later], [2, 0 + 1, 1]);
+  assert.deepEqual(s.closeHist.filter(([, n]) => n).map(([l]) => l), ["Same day", "3–7 days"]);
+  assert.deepEqual(s.groups.heard.find((g) => g.name === "Friend"), { name: "Friend", held: 1, won: 1 });
+  assert.deepEqual(s.groups.interest.map((g) => g.name).sort(), ["Laser shop", "Not said", "Wood shop"]);
+  const one = summarize(rows, 7, "2026-11-08", "sam@x.org");
+  assert.equal(one.held, 2); assert.equal(one.won, 2);
+  assert.equal(one.closers.length, 2, "the guide table still lists everyone");
+  assert.deepEqual(one.guides.map((g) => g.name), ["Lee", "Sam"]);
+});
