@@ -16,7 +16,7 @@ export const TOUR_EVENTS = {
   booked: ["kzoomakers-tours-booked", "A tour is booked"],
   walkup_new: ["kzoomakers-tours-walkup-new", "A walk-up request is created"],
   walkup_taken: ["kzoomakers-tours-walkup-taken", "A volunteer takes a walk-up request"],
-  walkup_stale: ["kzoomakers-tours-walkup-stale", "A walk-up request is still untaken after a few days"],
+  walkup_stale: ["kzoomakers-tours-walkup-stale", "A walk-up request is still untaken after a few days (repeats until taken)"],
 } as const;
 export type TourEvent = keyof typeof TOUR_EVENTS;
 export const TOPIC_OK = /^[-_A-Za-z0-9]{1,64}$/;

@@ -69,7 +69,7 @@ export default function Notifications({ initial }: { initial: Data }) {
         <label>Tell the lists above when a walk-up request has gone untaken for{" "}
           <input type="number" min={0} max={90} value={days} onChange={(e) => setDays(e.target.value)} style={{ width: 70 }} /> days</label>{" "}
         <button onClick={() => run(() => tours("staleSave", { days: Number(days) }))}>Save</button>
-        <p className="sub" style={{ margin: "8px 0 0" }}>0 turns this off. Each request is announced once, checked every 30 minutes.</p>
+        <p className="sub" style={{ margin: "8px 0 0" }}>0 turns this off. Repeats every this-many days while any are still untaken, as one summary that gets grimmer the bigger the pile. Checked every 30 minutes.</p>
       </div>
     </>
   );
