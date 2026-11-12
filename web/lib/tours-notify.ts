@@ -19,7 +19,7 @@ async function pool() {
 type Q = { query: (sql: string, args?: unknown[]) => Promise<{ rows: any[] }> };
 async function readCfg(c: Q): Promise<Cfg> {
   const v = (await c.query("SELECT data FROM settings WHERE key = 'tours:notify'")).rows[0]?.data ?? {};
-  return { emails: Object.fromEntries(EVENTS.map((e) => [e, Array.isArray(v.emails?.[e]) ? v.emails[e] : []])) as Cfg["emails"], staleDays: Number.isInteger(v.staleDays) ? v.staleDays : 3 };
+  return { emails: Object.fromEntries(EVENTS.map((e) => [e, Array.isArray(v.emails?.[e]) ? v.emails[e] : []])) as Cfg["emails"], staleDays: Number.isInteger(v.staleDays) ? v.staleDays : 4 };
 }
 export const getCfg = async () => readCfg(await pool());
 

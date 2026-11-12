@@ -333,15 +333,33 @@ export async function offerTimes(id: number, raw: unknown, guide: { name: string
   await announce("walkup_taken", { subject: `Walk-up taken: ${r.first_name}`, lines: [`${gname || gemail} offered ${r.first_name} ${offers.length} time(s) for a tour.`], tags: "white_check_mark", click: `${base}/admin/tours/walkups` });
 }
 
-/** Walk-up requests nobody has taken within the configured number of days are announced once each. Run by a timer; safe on several machines (the UPDATE hands each request to one). */
+// Nag lines by how bad the pile is (count of untaken requests, or weeks the oldest has waited, whichever is worse). Add lines freely.
+const NAGS = [
+  ["Somebody is waiting. Politely. For now."],
+  ["They're still there. Refreshing the page won't make them go away.", "Tour requests are like milk. They do not improve with age."],
+  ["At this point the visitors are practicing their disappointed sigh.", "A walk-up tour is a terrible thing to waste. Please take it."],
+  ["Visitors have started telling friends we're 'more of a museum with sawdust'.", "Rumor has it the 3D printers have begun taking bets on who answers first."],
+  ["The backlog has its own gravity now. Nearby volunteers report a strange urge to 'circle back'.", "These requests have been waiting so long they've started to qualify for membership discounts."],
+  ["Prospective members have now aged into retirees. Still no tour.", "We are no longer a makerspace. We are a waiting room with power tools."],
+  ["The queue has become sentient and is drafting a strongly worded Yelp review.", "Archaeologists will find these requests and conclude that our civilization valued procrastination above all else."],
+];
+
+/** Open walk-up requests older than the configured number of days are announced, and announced again every that-many days until someone takes them, as one summary of the whole pile that gets grimmer as it grows. Run by a timer; safe on several machines (the UPDATE hands the batch to one). */
 export async function checkStale() {
   const days = (await notifyCfg()).staleDays;
   if (!days) return;
   const c = await conn();
-  const rows = (await c.query("UPDATE tour_requests SET stale_notified_at = now() WHERE status = 'open' AND stale_notified_at IS NULL AND created_at < now() - make_interval(days => $1) RETURNING first_name, last_name, created_at", [days])).rows;
+  // Only when at least one request is due for its first or next nag; then everything stale is reported together.
+  const rows = (await c.query(`UPDATE tour_requests SET stale_notified_at = now() WHERE status = 'open' AND created_at < now() - make_interval(days => $1)
+    AND EXISTS (SELECT 1 FROM tour_requests WHERE status = 'open' AND created_at < now() - make_interval(days => $1) AND (stale_notified_at IS NULL OR stale_notified_at < now() - make_interval(days => $1)))
+    RETURNING first_name, last_name, created_at`, [days])).rows.sort((x, y) => +new Date(x.created_at) - +new Date(y.created_at));
   if (!rows.length) return;
   const base = ((await getMailCfg().catch(() => null))?.siteUrl || process.env.SITE_URL || "https://kzoomakers.org").replace(/\/+$/, "");
-  await announce("walkup_stale", { subject: `${rows.length} walk-up request${rows.length > 1 ? "s" : ""} still untaken after ${days} day${days > 1 ? "s" : ""}`, lines: rows.slice(0, 20).map((r) => `${r.first_name} ${r.last_name}, asked ${new Date(r.created_at).toLocaleDateString("en-US", { timeZone: TZ, month: "short", day: "numeric" })}`), tags: "hourglass", click: `${base}/admin/tours/walkups`, priority: 4 });
+  const oldest = Math.floor((Date.now() - +new Date(rows[0].created_at)) / 86400_000), n = rows.length;
+  const tier = Math.min(NAGS.length - 1, Math.max(n - 1, Math.floor(oldest / 7)));
+  const quip = NAGS[tier][Math.floor(Math.random() * NAGS[tier].length)];
+  const d = (r: { created_at: string }) => new Date(r.created_at).toLocaleDateString("en-US", { timeZone: TZ, month: "short", day: "numeric" });
+  await announce("walkup_stale", { subject: `${n} walk-up request${n > 1 ? "s" : ""} untaken, oldest waiting ${oldest} days`, lines: [quip, ...rows.slice(0, 20).map((r) => `${r.first_name} ${r.last_name}, asked ${d(r)}`), ...(n > 20 ? [`...and ${n - 20} more.`] : []), `Reminders repeat every ${days} days until they're taken.`], tags: "hourglass", click: `${base}/admin/tours/walkups`, priority: n > 2 || oldest >= 14 ? 5 : 4 });
 }
 
 export const setRequestStatus = async (id: number, status: "open" | "closed") => {
