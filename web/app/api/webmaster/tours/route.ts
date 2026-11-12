@@ -36,7 +36,7 @@ export async function POST(req: Request) {
       case "offer": await t.offerTimes(id, a.offers, { name: String(a.guide_name ?? ""), email: String(a.guide_email ?? "") }, await baseUrl(req)); break;
       case "activate": { // approves a member, so it needs CRM write too
         if (!(await editingAllowed("crm", "write"))) return new NextResponse("Activating someone approves them as a member, which needs CRM access.", { status: 403 });
-        const base = await baseUrl(req), r = await activateWalkup(id, who, base);
+        const base = await baseUrl(req), r = await activateWalkup(id, who, base, String(a.level ?? ""));
         await t.setRequestStatus(id, "closed");
         await t.postStaff("request", id, `Activated as a member on site by ${who}.`, true, who, base).catch(() => {});
         await logAudit(who, "tour.activate", String(id));

@@ -2,44 +2,6 @@
  "tagline": "A place where curiosity meets craftsmanship \nfor every maker to turn ideas into impact, together.",
  "title": "Membership Prices",
  "intro": "As a non-profit, members fund nearly 100% of our expenses. We rely on your support!",
- "plans": [
-  {
-   "name": "Kzoo Makers Membership",
-   "price": "5",
-   "per": "/month",
-   "normal": "",
-   "offer": "",
-   "blurb": "Collaborative Workspaces\nCome Hangout and Make!",
-   "note": "",
-   "features": "Community of Makers\nCollaborative Workspace\nYour Own Small Tools\nCoffee Machine and Fridge\nWIFI",
-   "buttonLabel": "Signup",
-   "buttonHref": "/tours"
-  },
-  {
-   "name": "Clean Side Tools",
-   "price": "20",
-   "per": "/month",
-   "normal": "Normally $45/m",
-   "offer": "Limited Time Price!",
-   "blurb": "Clean Side Area Tools",
-   "note": "A Membership is Required",
-   "features": "Clean Side Area Tools\nLaser Cutters and Engravers\n3D Printers\nCraft and Fabrics\nStorage Options",
-   "buttonLabel": "Signup",
-   "buttonHref": "/tours"
-  },
-  {
-   "name": "Everything Tools",
-   "price": "60",
-   "per": "/month",
-   "normal": "Normally $85/m",
-   "offer": "Limited Time Price!",
-   "blurb": "The Whole Shebang!\nClean Side, Plus Dust and Chips Tools!",
-   "note": "A Membership is Required",
-   "features": "**Woodshop Tools**\n**Metalshop Equipment**\nClean Side Area Tools\nLaser Cutters and Engravers\n3D Printers\nCraft and Fabrics\nStorage Options",
-   "buttonLabel": "Signup",
-   "buttonHref": "/tours"
-  }
- ],
  "footnote": "Completion of a tour and orientation and agreement to the membership policy and",
  "footLabel": "handbook",
  "footHref": "https://kzoomakers.org/handbook.html",

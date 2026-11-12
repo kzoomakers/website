@@ -1,5 +1,6 @@
 import { conn } from "./db";
-import { getGuided, logAudit } from "./store";
+import { logAudit } from "./store";
+import { membershipClasses } from "./membership";
 import { enqueueMail, getMailCfg, mailReady, sendQueued as send } from "./mail";
 import { loginLink } from "./readers";
 import { MIN_CLASS_DAYS, noticeDays } from "./rules";
@@ -14,18 +15,18 @@ import { processImage } from "./image";
 const clip = (v: unknown, n: number) => (typeof v === "string" ? v.trim().slice(0, n) : "");
 const esc = (s: string) => s.replace(/[<>&"]/g, "");
 
-// ---- Membership levels: the plans on the Pricing page --------------------------------------------------------------------------------
+// ---- Membership levels: the classes set up under Admin > Setup (lib/membership.ts) ---------------------------------------------------
 export async function planNames(): Promise<string[]> {
-  return ((await getGuided("pricing"))?.plans ?? []).map((p: any) => String(p?.name ?? "").trim()).filter(Boolean);
+  return (await membershipClasses()).map((c) => c.name);
 }
 export const memberships = async (userId: number): Promise<{ level: string; since: string }[]> =>
   (await (await conn()).query("SELECT level, since FROM memberships WHERE user_id = $1 ORDER BY since, level", [userId])).rows;
 
-/** Sets which levels a member holds. New ones must be a plan on the Pricing page; a level that has since left that page can be kept or removed. */
+/** Sets which levels a member holds. New ones must be an offered class; a class that has since been removed can be kept or dropped. */
 export async function setMemberships(userId: number, levels: unknown, who: string) {
   const want = [...new Set((Array.isArray(levels) ? levels : []).map((l) => clip(l, 120)).filter(Boolean))];
   const c = await conn(), plans = await planNames(), have = (await memberships(userId)).map((m) => m.level);
-  if (want.some((l) => !plans.includes(l) && !have.includes(l))) throw new Error("That level isn't on the Pricing page.");
+  if (want.some((l) => !plans.includes(l) && !have.includes(l))) throw new Error("That membership class isn't offered.");
   await c.query("DELETE FROM memberships WHERE user_id = $1 AND NOT (level = ANY($2))", [userId, want]);
   for (const l of want) await c.query("INSERT INTO memberships (user_id, level) VALUES ($1,$2) ON CONFLICT DO NOTHING", [userId, l]);
   const e = (await c.query("SELECT email FROM site_users WHERE id = $1", [userId])).rows[0]?.email;

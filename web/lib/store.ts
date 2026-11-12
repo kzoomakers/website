@@ -2,6 +2,7 @@ import { AUDIT_SECTIONS } from "./audit-areas";
 import type { Data } from "@puckeditor/core";
 import { conn, db, LOCKED, CAL_DEFAULT } from "./db";
 import { guidedDef, withDefaults } from "./guided";
+import { membershipClasses, toPlan } from "./membership";
 import boardSeed from "@/data/board.json";
 import robotsSeed from "@/data/robots.json";
 import privacySeed from "@/data/privacy.json";
@@ -304,6 +305,8 @@ export async function revertSetting(prefix: string, id: number, who: string) {
 export async function getGuided(slug: string): Promise<any> {
   if (!guidedDef(slug) || !db()) return null;
   const r = await (await conn()).query("SELECT data FROM settings WHERE key = $1", ["guided:" + slug]);
+  // The Pricing plans are the membership classes (Admin > Setup), so they are read fresh every time.
+  if (slug === "pricing") return { ...withDefaults(guidedDef(slug)!.fields, r.rows[0]?.data ?? {}), plans: (await membershipClasses()).map(toPlan) };
   return r.rows[0] ? withDefaults(guidedDef(slug)!.fields, r.rows[0].data) : null;
 }
 

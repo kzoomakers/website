@@ -4,11 +4,12 @@ import { actor, editingAllowed } from "@/lib/guard";
 import { logAudit } from "@/lib/store";
 import * as c from "@/lib/crm";
 import * as ap from "@/lib/approvals";
+import { membershipClasses } from "@/lib/membership";
 import { baseUrl } from "@/lib/mail";
 
 // One CRM admin RPC endpoint: POST { op, ...args }. Reads need CRM view access, everything else CRM edit access.
 export const dynamic = "force-dynamic";
-const READS = new Set(["member", "plans", "skills", "fieldValues", "tools", "classes", "roster", "proposals", "classRules", "applicants", "applicant"]);
+const READS = new Set(["member", "plans", "skills", "fieldValues", "tools", "classes", "roster", "proposals", "classRules", "applicants", "applicant", "membershipClasses"]);
 
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
@@ -18,6 +19,7 @@ export async function POST(req: Request) {
   try {
     const res = await (async () => { switch (a.op) {
       case "plans": return NextResponse.json(await c.planNames());
+      case "membershipClasses": return NextResponse.json(await membershipClasses());
       case "member": return NextResponse.json({ levels: await c.memberships(a.id), auths: await c.authsFor(a.id), skills: await c.mySkills(a.id), classes: await c.memberClasses(a.id), tools: await c.listTools(), plans: await c.planNames() });
       case "setLevels": await c.setMemberships(a.id, a.levels, who); break;
       case "grant": await c.grantAuth(a.id, a.tool, a.expires, a.note, who); break;
