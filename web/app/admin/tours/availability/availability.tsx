@@ -4,6 +4,7 @@ import { useState } from "react";
 import { confirmDialog } from "@/components/dialog";
 import type { Block } from "@/lib/tours";
 import { tours } from "../rpc";
+import CsvBar from "../csv-bar";
 
 const day = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
 const time = (t: string) => new Date(`2000-01-01T${t}`).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
@@ -51,6 +52,7 @@ export default function Availability({ initial, email, name }: { initial: Block[
         <input type="search" aria-label="Find a block" placeholder="Find a block: date or guide name" value={q} onChange={(e) => setQ(e.target.value)} style={{ minWidth: 220 }} />
         <label><input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} /> Only mine</label>
         <label><input type="checkbox" checked={past} onChange={(e) => load(e.target.checked)} /> Include past blocks</label>
+        <CsvBar what="availability blocks" file="availability" ops={{ export: "exportBlocks", import: "importBlocks" }} args={{ past }} reload={load} fail={setMsg} />
         {upcoming.length > 0 && <button className="danger" onClick={() => remove(upcoming, upcoming.length === 1 ? "this upcoming block" : `all ${upcoming.length} upcoming blocks shown`)}>{q || mine ? `Delete the ${upcoming.length} upcoming shown…` : "Delete all upcoming blocks…"}</button>}
         {msg && <Notice kind="error">{msg}</Notice>}
       </nav>

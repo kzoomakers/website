@@ -102,14 +102,66 @@ export function csvToRequests(text: string) {
 const EMAIL = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/;
 
 /** Writes walk-ups in the sign-up sheet's column order, so an export can be imported again (same email + time is skipped). */
-export function requestsToCsv(rows: { first_name: string; last_name: string; interest: string; phone: string; email: string; contact_method: string; notes: string; created_at: Date | string }[]) {
+export function requestsToCsv(rows: { first_name: string; last_name: string; interest: string; phone: string; email: string; contact_method: string; heard?: string; notes: string; created_at: Date | string }[]) {
   const when = new Intl.DateTimeFormat("en-US", { timeZone: TZ, year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit", hourCycle: "h23" });
   const cell = (v: string) => (/[",\r\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
   const head = ["Timestamp", "First Name", "Last Name", "Desired Membership", "Area of Interest (Select all that apply)", "Phone", "Email", "Contact", "Heard About Us", "", "Purpose", "Comments"];
   const lines = rows.map((r) => {
     const p = Object.fromEntries(when.formatToParts(new Date(r.created_at)).map((x) => [x.type, x.value]));
     const ts = `${p.month}/${p.day}/${p.year} ${p.hour}:${p.minute}:${p.second}`;
-    return [ts, r.first_name, r.last_name, "", r.interest, r.phone, r.email, /^phone/i.test(r.contact_method) ? "Phone" : "Text", "", "", "", r.notes].map((c) => cell(c ?? "")).join(",");
+    return [ts, r.first_name, r.last_name, "", r.interest, r.phone, r.email, /^phone/i.test(r.contact_method) ? "Phone" : "Text", r.heard ?? "", "", "", r.notes].map((c) => cell(c ?? "")).join(",");
   });
   return [head.map(cell).join(","), ...lines].join("\r\n") + "\r\n";
 }
+
+// ---- availability and bookings as CSV (same columns in and out, so an export can be imported again)
+const cell = (v: unknown) => { const s = String(v ?? ""); return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+const toCsv = (head: string[], rows: unknown[][]) => [head, ...rows].map((r) => r.map(cell).join(",")).join("\r\n") + "\r\n";
+/** YYYY-MM-DD or M/D/YYYY to YYYY-MM-DD, else "". */
+export const normDate = (s: string) => {
+  const t = s.trim(), iso = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/), us = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/), p = (n: string) => n.padStart(2, "0");
+  const d = iso ? `${iso[1]}-${p(iso[2])}-${p(iso[3])}` : us ? `${us[3]}-${p(us[1])}-${p(us[2])}` : "";
+  return DATE.test(d) && !isNaN(+new Date(`${d}T12:00:00Z`)) && new Date(`${d}T12:00:00Z`).toISOString().slice(0, 10) === d ? d : ""; // real calendar days only
+};
+/** 14:30, 2:30 PM or 2:30pm to HH:mm, else "". */
+export const normTime = (s: string) => {
+  const m = s.trim().match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*([ap]m)?$/i);
+  if (!m) return "";
+  let h = +m[1];
+  if (m[3]) { if (h < 1 || h > 12) return ""; h = (h % 12) + (m[3].toLowerCase() === "pm" ? 12 : 0); }
+  const t = `${String(h).padStart(2, "0")}:${m[2]}`;
+  return TIME.test(t) ? t : "";
+};
+const body = (text: string) => parseCsv(text).slice(1).map((r) => r.map((c) => (c ?? "").trim()));
+
+export const BLOCK_HEAD = ["Date", "Start", "End", "Minutes per tour", "People per tour", "Guide name", "Guide email"];
+export function blocksToCsv(rows: { date: string; start_time: string; end_time: string; slot_minutes: number; max_per_slot: number; guide_name: string; guide_email: string }[]) {
+  return toCsv(BLOCK_HEAD, rows.map((b) => [b.date, b.start_time, b.end_time, b.slot_minutes, b.max_per_slot, b.guide_name, b.guide_email]));
+}
+export function csvToBlocks(text: string) {
+  const out: { date: string; start_time: string; end_time: string; slot_minutes: number; max_per_slot: number; guide_name: string; guide_email: string }[] = [], skipped: string[] = [];
+  for (const [date, start, end, mins, per, guide, gmail] of body(text)) {
+    const d = normDate(date ?? ""), s = normTime(start ?? ""), e = normTime(end ?? "");
+    if (!d || !s || !e) { skipped.push(`${date} ${start}-${end}`.trim() || "blank row"); continue; }
+    out.push({ date: d, start_time: s, end_time: e, slot_minutes: +mins || 30, max_per_slot: +per || 1, guide_name: (guide ?? "").slice(0, 100), guide_email: (gmail ?? "").toLowerCase().slice(0, 200) });
+  }
+  return { rows: out, skipped };
+}
+
+export const BOOKING_HEAD = ["Date", "Start", "First name", "Last name", "Email", "Phone", "Zip", "Contact", "Areas", "Heard", "Notes", "Status", "Guide email"];
+export function bookingsToCsv(rows: { date: string; start_time: string; first_name: string; last_name: string; email: string; phone: string; zip: string; contact_method: string; interest: string; heard: string; visitor_notes: string; status: string; guide_email: string }[]) {
+  return toCsv(BOOKING_HEAD, rows.map((r) => [r.date, r.start_time, r.first_name, r.last_name, r.email, r.phone, r.zip, r.contact_method, r.interest, r.heard, r.visitor_notes, r.status, r.guide_email]));
+}
+export function csvToBookings(text: string) {
+  const out: { date: string; start: string; first: string; last: string; email: string; phone: string; zip: string; contact: string; interest: string; heard: string; notes: string; status: string; guide_email: string }[] = [], skipped: string[] = [];
+  for (const [date, start, first, last, email, phone, zip, contact, areas, heard, notes, status, gmail] of body(text)) {
+    const d = normDate(date ?? ""), s = normTime(start ?? "");
+    if (!d || !s || !(first || last) || !EMAIL.test((email ?? "").toLowerCase())) { skipped.push(`${first ?? ""} ${last ?? ""} ${email ?? ""}`.trim() || date || "blank row"); continue; }
+    out.push({ date: d, start: s, first: (first ?? "").slice(0, 60), last: (last ?? "").slice(0, 60), email: email.toLowerCase().slice(0, 200), phone: (phone ?? "").slice(0, 30), zip: (zip ?? "").slice(0, 10), contact: contact ?? "", interest: areas ?? "", heard: heard ?? "",
+      notes: (notes ?? "").slice(0, 1000), status: (status ?? "").toLowerCase().replace(/[\s-]+/g, "_"), guide_email: (gmail ?? "").toLowerCase() });
+  }
+  return { rows: out, skipped };
+}
+
+/** The reset of someone's membership is for staff signed in with a kzoomakers.org address ("dev" is the local-development admin, which only exists outside production). */
+export const isStaffEmail = (email: string) => /@kzoomakers\.org$/i.test(email) || email === "dev";

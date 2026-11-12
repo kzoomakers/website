@@ -13,7 +13,7 @@ export async function GET() {
   try { return NextResponse.json({ slots: await openSlots(), areas: AREAS, heard: HEARD, contact: CONTACT }); } catch (e) { return fail(e); }
 }
 
-// POST { block, start, name, email, phone, areas?, heard?, notes?, website? }, or { request: true, first, last, email, phone, zip, contact, areas?, notes?, website? } when no time is open.
+// POST { block, start, first, last, email, phone, zip, contact, areas?, heard?, notes?, website? }, or the same without block/start plus request: true when no time is open.
 export async function POST(req: Request) {
   const b = await req.json().catch(() => null), s = (v: unknown) => (typeof v === "string" ? v : "");
   // Kept so staff can spot abuse and follow up; the booking and request forms say so.
@@ -22,10 +22,10 @@ export async function POST(req: Request) {
     if (b.website) return NextResponse.json({ ok: true });
     try { await requestTour(b, hashIp(req), dev, await baseUrl(req)); await convert(req, "tour"); return NextResponse.json({ ok: true }); } catch (e: any) { return fail(e); }
   }
-  if (!Number.isInteger(b?.block) || !s(b.start) || !s(b.name) || !s(b.email)) return new NextResponse("Please fill in your name, email and phone.", { status: 400 });
+  if (!Number.isInteger(b?.block) || !s(b.start) || !s(b.first) || !s(b.last) || !s(b.email)) return new NextResponse("Please fill in your name, email and phone.", { status: 400 });
   if (b.website) return NextResponse.json({ ok: true }); // honeypot: pretend it worked
   try {
-    const done = await book({ block: b.block, start: s(b.start), name: s(b.name), email: s(b.email), phone: s(b.phone), areas: Array.isArray(b.areas) ? b.areas.map(s) : [], heard: s(b.heard), notes: s(b.notes) }, hashIp(req), dev, await baseUrl(req));
+    const done = await book({ block: b.block, start: s(b.start), first: s(b.first), last: s(b.last), email: s(b.email), phone: s(b.phone), zip: s(b.zip), contact: s(b.contact), areas: Array.isArray(b.areas) ? b.areas.map(s) : [], heard: s(b.heard), notes: s(b.notes) }, hashIp(req), dev, await baseUrl(req));
     await convert(req, "tour");
     return NextResponse.json(done);
   } catch (e: any) { return fail(e); }

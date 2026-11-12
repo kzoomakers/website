@@ -6,11 +6,12 @@ import { baseUrl } from "@/lib/mail";
 import { me } from "@/lib/guard";
 import * as t from "@/lib/tours";
 import * as n from "@/lib/tours-notify";
-import { activateWalkup } from "@/lib/approvals";
+import { activateTourPerson, undoActivation } from "@/lib/approvals";
+import { isStaffEmail } from "@/lib/tours-fmt";
 
 // Tours admin RPC: POST { op, ...args }. Reads need Tours view access, everything else Tours edit access.
 export const dynamic = "force-dynamic";
-const READS = new Set(["blocks", "bookings", "requests", "exportRequests", "thread", "notifyGet", "calendar", "timeline", "stats"]);
+const READS = new Set(["blocks", "bookings", "requests", "exportRequests", "exportBlocks", "exportBookings", "thread", "notifyGet", "calendar", "timeline", "stats"]);
 
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
@@ -33,13 +34,26 @@ export async function POST(req: Request) {
       case "subRemove": await n.unsubscribe(a.event, a.topic); break;
       case "exportRequests": return NextResponse.json({ csv: await t.exportRequests(!!a.all) });
       case "import": return NextResponse.json(await t.importRequests(a.csv));
+      case "exportBlocks": return NextResponse.json({ csv: await t.exportBlocks(!!a.past) });
+      case "importBlocks": return NextResponse.json(await t.importBlocks(a.csv, who));
+      case "exportBookings": return NextResponse.json({ csv: await t.exportBookings(!!a.past) });
+      case "importBookings": return NextResponse.json(await t.importBookings(a.csv));
       case "offer": await t.offerTimes(id, a.offers, { name: String(a.guide_name ?? ""), email: String(a.guide_email ?? "") }, await baseUrl(req)); break;
-      case "activate": { // approves a member, so it needs CRM write too
-        if (!(await editingAllowed("crm", "write"))) return new NextResponse("Activating someone approves them as a member, which needs CRM access.", { status: 403 });
-        const base = await baseUrl(req), r = await activateWalkup(id, who, base, String(a.level ?? ""));
-        await t.setRequestStatus(id, "closed");
-        await t.postStaff("request", id, `Activated as a member on site by ${who}.`, true, who, base).catch(() => {});
-        await logAudit(who, "tour.activate", String(id));
+      case "activate": case "undoActivation": { // both change a member's account, so they need CRM write too
+        if (!(await editingAllowed("crm", "write"))) return new NextResponse("Activating or undoing a member needs CRM access.", { status: 403 });
+        const kind = a.kind === "booking" ? "booking" : "request", base = await baseUrl(req);
+        if (a.op === "activate") {
+          const r = await activateTourPerson(kind, id, who, base, String(a.level ?? ""));
+          await (kind === "request" ? t.setRequestStatus(id, "closed") : t.setStatus(id, "signed_up"));
+          await t.postStaff(kind, id, `Activated as a member on site by ${who}.`, true, who, base).catch(() => {});
+          await logAudit(who, "tour.activate", `${kind} ${id}`);
+          return NextResponse.json(r);
+        }
+        const r = await undoActivation(kind, id, who, { confirm: !!a.confirm, staff: isStaffEmail(who), check: !!a.check });
+        if (!r.done) return NextResponse.json(r);
+        await (kind === "request" ? t.setRequestStatus(id, "open") : t.setStatus(id, "booked"));
+        await t.postStaff(kind, id, `Activation undone by ${who}${a.confirm ? " (account reset, signed agreement deleted)" : ""}.`, true, who, base).catch(() => {});
+        await logAudit(who, "tour.undoActivation", `${kind} ${id}`);
         return NextResponse.json(r);
       }
       case "reopen": case "close": await t.setRequestStatus(id, a.op === "close" ? "closed" : "open"); break;
