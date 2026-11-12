@@ -6,6 +6,7 @@ import { addRegistered, getMailCfg, mailReady, sendQueued as send } from "./mail
 import { afterSignIn, loginLink } from "./readers";
 import { deleteUser, updateProfile } from "./profiles";
 import { pickClass } from "./membership";
+import { cleanEmail } from "./tours-fmt";
 
 // Sign-up approval. States: pending (needs staff), waiting (staff asked something, waiting for the applicant), rejected, approved.
 // Staff may move between any two states; the thread (approval_events) records every message, note and move with who did it.
@@ -148,15 +149,21 @@ const kindOf = (k: unknown): TourKind => (k === "booking" ? "booking" : "request
 
 /** Staff activate someone on the spot (a walk-up or a booked tour who showed up ready to join): make or find their account, approve it and put them at the waiver step, then email the sign-in link. Idempotent for someone already approved.
  *  Remembers what their account was before (activated_prev) so Undo knows what to put back. The caller then closes the request or marks the booking signed up. */
-export async function activateTourPerson(kindIn: unknown, id: number, who: string, base: string, level?: string) {
+export async function activateTourPerson(kindIn: unknown, id: number, who: string, base: string, level?: string, newEmail?: string) {
   const kind = kindOf(kindIn), t = TOUR_TABLE[kind], from = kind === "request" ? "a walk-up request" : "a tour booking";
   // One transaction, and the walk-up/booking row is locked first: a second click waits, then sees activated_at and is refused. Nothing is half-done if a step fails.
+  let from_email = "";
   const { userId, email, name } = await withTx(async (c) => {
     const r = (await c.query(`SELECT first_name, last_name, email, phone, status, activated_at${kind === "booking" ? ", cancelled" : ""} FROM ${t} WHERE id = $1 FOR UPDATE`, [id])).rows[0];
     if (!r) throw new Error(kind === "request" ? "No such request." : "No such booking.");
     if (r.activated_at) throw new Error("This person was already activated. Undo that first if it was a mistake.");
     if (kind === "request" ? r.status !== "open" && r.status !== "offered" : r.cancelled) throw new Error(kind === "request" ? "This request is already scheduled or dismissed." : "This booking was cancelled.");
-    const email = String(r.email).trim().toLowerCase(), name = `${r.first_name} ${r.last_name}`.trim();
+    let email = String(r.email).trim().toLowerCase();
+    const name = `${r.first_name} ${r.last_name}`.trim(), want = newEmail?.trim() ? cleanEmail(newEmail) : email;
+    if (want !== email) { // the prospect says the address on file is wrong: it is how they sign in, so fix it everywhere their open walk-ups and bookings have it. An account at the old address is left alone (it may be someone else's).
+      for (const tt of Object.values(TOUR_TABLE)) await c.query(`UPDATE ${tt} SET email = $2 WHERE lower(email) = $1 AND activated_at IS NULL`, [email, want]);
+      from_email = email; email = want;
+    }
     const old = (await c.query("SELECT id, approval, disabled_at FROM site_users WHERE email = $1", [email])).rows[0];
     if (old?.disabled_at) throw new Error("This person's account is disabled. Enable it in the CRM first.");
     if (old?.approval === "rejected") throw new Error("This person was turned down earlier. Change that in CRM > Approvals first.");
@@ -169,7 +176,7 @@ export async function activateTourPerson(kindIn: unknown, id: number, who: strin
     await c.query(`UPDATE ${t} SET activated_at = now(), activated_by = $2, activated_prev = $3 WHERE id = $1`, [id, who, was]);
     if (was !== "approved") await addEvent(c, userId, who, false, "state", "approved", `Activated on site from ${from}`);
     return { userId, email, name, was };
-  }).then(async (x) => { await logAudit(who, "crm.approval", `${x.email}: ${x.was} → approved (activated from ${from})`); return x; });
+  }).then(async (x) => { await logAudit(who, "crm.approval", `${x.email}: ${x.was} → approved (activated from ${from}${from_email ? `; email changed from ${from_email}` : ""})`); return x; });
   await addRegistered(email, name, base).catch(() => {});
   return { emailed: await mailTo({ id: userId, email, name }, "Welcome to Kzoo Makers: sign your agreement", "You're activated! Sign in to sign our liability waiver, read the membership handbook, upload a photo ID and finish setting up your profile.", "", "Get started", "/members", base) };
 }

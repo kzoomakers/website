@@ -52,7 +52,7 @@ export async function POST(req: Request) {
         if (!(await editingAllowed("crm", "write", ["people", "approvals"]))) return new NextResponse("Activating or undoing a member needs CRM access.", { status: 403 });
         const kind = a.kind === "booking" ? "booking" : "request", base = await baseUrl(req);
         if (a.op === "activate") {
-          const r = await activateTourPerson(kind, id, who, base, String(a.level ?? ""));
+          const r = await activateTourPerson(kind, id, who, base, String(a.level ?? ""), typeof a.email === "string" ? a.email : undefined);
           await (kind === "request" ? t.setRequestStatus(id, "closed") : t.setStatus(id, "signed_up"));
           await t.postStaff(kind, id, `Activated as a member on site by ${who}.`, true, who, base).catch(() => {});
           await logAudit(who, "tour.activate", `${kind} ${id}`);

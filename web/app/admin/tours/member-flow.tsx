@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { alertDialog, confirmDialog } from "@/components/dialog";
+import { alertDialog, confirmDialog, promptDialog } from "@/components/dialog";
 import { crm } from "../crm/rpc";
 import type { MembershipClass } from "@/lib/membership";
 import type { Acct } from "@/lib/tours";
@@ -27,10 +27,13 @@ export default function MemberActions({ p, classes, me, canActivate, reload, fai
   const chosen = level || classes[0]?.name || "", name = `${p.first} ${p.last}`.trim(), what = p.kind === "request" ? "request" : "tour";
   const go = async (fn: () => Promise<void>) => { fail(""); setBusy(true); try { await fn(); await reload(); } catch (e: any) { fail(e.message); } finally { setBusy(false); } };
   const activate = async () => {
-    if (!(await confirmDialog(`Activate ${name} now as ${chosen || "a member"}? This approves ${p.email} as a member right away, emails them a sign-in link to sign the membership agreement, read the handbook and upload an ID, and ${p.kind === "request" ? "takes this request off the list" : "marks this tour Signed up"}. You can undo it from this page.`, { ok: "Activate now", title: "Activate now" }))) return;
+    // One dialog: the email is how they will sign in, so staff confirm it with the prospect here (and can fix it) before anything is sent.
+    const typed = await promptDialog(`Activate ${name} now as ${chosen || "a member"}?\n\nFirst ask ${p.first}: is this email address correct? It is how they will log in, and the sign-in link is sent to it. If it is wrong, change it below; their other walk-up and tour records are updated too.\n\nThis approves them as a member right away, emails them a sign-in link to sign the membership agreement, read the handbook and upload an ID, and ${p.kind === "request" ? "takes this request off the list" : "marks this tour Signed up"}. You can undo it from this page.`, p.email, { ok: "Activate now", title: "Activate now" });
+    if (typed === null) return;
+    const email = typed.trim().toLowerCase() || p.email;
     await go(async () => {
-      const j = await tours("activate", { kind: p.kind, id: p.id, level: chosen });
-      await alertDialog(j.emailed ? `${p.first} is activated. The sign-in link was emailed to ${p.email}.` : `${p.first} is activated, but the email could not be sent. Have them sign in with ${p.email} on the sign-in page; the agreement will be waiting.`);
+      const j = await tours("activate", { kind: p.kind, id: p.id, level: chosen, email });
+      await alertDialog(j.emailed ? `${p.first} is activated. The sign-in link was emailed to ${email}.` : `${p.first} is activated, but the email could not be sent. Have them sign in with ${email} on the sign-in page; the agreement will be waiting.`);
     });
   };
   const undo = async () => {

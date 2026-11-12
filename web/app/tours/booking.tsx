@@ -55,11 +55,11 @@ export default function Booking() {
       <style>{CSS}</style>
       {!pick && (ask || !days.length) ? (
         <form onSubmit={sendReq}>
-          <p>{days.length ? "Can't find a time that works? Tell us a bit about yourself and a volunteer will offer you some dates." : "Tell us a bit about yourself and a volunteer will email you some dates that work for them. You pick the one you like."}</p>
+          <p>{days.length ? "Can't find a time that works? Tell us a bit about yourself and a volunteer will contact you with some different dates." : "Tell us a bit about yourself and a volunteer will email you some dates that work for them. You pick the one you like."}</p>
           {details}
           {err && <p className="tb-err" role="alert">{err}</p>}
           <p><small>You consent to emails strictly to coordinate booking or scheduling this tour.</small></p>
-          <button className="btn btn-main" disabled={busy}>{busy ? "Sending…" : "Request a tour"}</button>
+          <button className="btn btn-main" disabled={busy}>{busy ? "Sending…" : days.length ? "Contact me with different times" : "Request a tour"}</button>
           {days.length > 0 && <> <button type="button" className="btn" onClick={() => { setAsk(false); setErr(""); }}>← Back to open times</button></>}
         </form>
       ) : !pick ? (
@@ -68,7 +68,7 @@ export default function Booking() {
           {days.map((d) => (
             <div key={d}><h3>{day(d)}</h3><div className="tb-slots">{data.slots.filter((s) => s.date === d).map((s) => <button key={s.block + s.start} onClick={() => setPick(s)}>{time(s.start)}–{time(s.end)}</button>)}</div></div>
           ))}
-          <p>Nothing that works? <button type="button" className="btn" onClick={() => setAsk(true)}>Request other times</button></p>
+          <p>Nothing that works? <button type="button" className="btn" onClick={() => setAsk(true)}>Contact me with different times</button></p>
         </>
       ) : (
         <form onSubmit={go}>
