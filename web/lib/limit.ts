@@ -1,22 +1,37 @@
 import { db } from "./db";
 
 // Rate limiter kept in Postgres so limits survive restarts and are shared by every instance. With no database configured (tests, first-run) it falls back to process memory.
-// A database error lets the request through (a hiccup must not lock people out). shortcut: spend() checks then inserts, so a burst can overshoot `max` by a few.
+// A database error lets the request through (a hiccup must not lock people out), except for callers that pass `strict` (sign-in, signing codes): they are refused instead.
+// Each key is locked for the length of its check-and-insert, so a burst of parallel requests can't overshoot `max`.
 const seen = new Map<string, number[]>();
 const pg = async () => { const d = db(); if (!d) return null; await d.ready; return d.pool; };
 const WINDOW = "key = $1 AND at > now() - make_interval(secs => $2)";
+/** Runs `fn` in a transaction that holds a lock on `key`, so two requests for the same key take turns. */
+async function exclusive<T>(p: NonNullable<Awaited<ReturnType<typeof pg>>>, key: string, fn: (q: (sql: string, args: unknown[]) => Promise<any>) => Promise<T>): Promise<T> {
+  const c = await p.connect();
+  try {
+    await c.query("BEGIN");
+    await c.query("SELECT pg_advisory_xact_lock(hashtext($1))", ["rate:" + key]);
+    const r = await fn((sql, args) => c.query(sql, args));
+    await c.query("COMMIT");
+    return r;
+  } catch (e) { await c.query("ROLLBACK").catch(() => {}); throw e; } finally { c.release(); }
+}
 const tidy = (p: NonNullable<Awaited<ReturnType<typeof pg>>>) => { if (Math.random() < 0.01) void p.query("DELETE FROM rate_hits WHERE at < now() - interval '1 day'").catch(() => {}); };
 
 /** Counts one hit on `key`; false once there have been more than `max` in the last `windowMs`. */
-export async function hit(key: string, max: number, windowMs: number): Promise<boolean> {
+export async function hit(key: string, max: number, windowMs: number, strict = false): Promise<boolean> {
   try {
     const p = await pg();
     if (p) {
       tidy(p);
-      // The insert isn't visible to the count in the same statement, so `n` is the hits before this one.
-      return (await p.query(`WITH i AS (INSERT INTO rate_hits (key) VALUES ($1)) SELECT count(*)::int n FROM rate_hits WHERE ${WINDOW}`, [key, windowMs / 1000])).rows[0].n < max;
+      return await exclusive(p, key, async (q) => {
+        const n = (await q(`SELECT count(*)::int n FROM rate_hits WHERE ${WINDOW}`, [key, windowMs / 1000])).rows[0].n;
+        await q("INSERT INTO rate_hits (key) VALUES ($1)", [key]);
+        return n < max;
+      });
     }
-  } catch (e) { console.error("rate limit:", e); return true; }
+  } catch (e) { console.error("rate limit:", e); return !strict; }
   const now = Date.now(), list = (seen.get(key) ?? []).filter((t) => now - t < windowMs);
   list.push(now);
   seen.set(key, list);
@@ -35,9 +50,11 @@ export async function spend(key: string, max: number, windowMs: number) {
     const p = await pg();
     if (p) {
       tidy(p);
-      const r = (await p.query(`SELECT count(*)::int n, min(at) oldest FROM rate_hits WHERE ${WINDOW}`, [key, windowMs / 1000])).rows[0];
-      n = r.n; first = r.oldest ? +r.oldest : now;
-      if (n < max) await p.query("INSERT INTO rate_hits (key) VALUES ($1)", [key]);
+      await exclusive(p, key, async (q) => {
+        const r = (await q(`SELECT count(*)::int n, min(at) oldest FROM rate_hits WHERE ${WINDOW}`, [key, windowMs / 1000])).rows[0];
+        n = r.n; first = r.oldest ? +r.oldest : now;
+        if (n < max) await q("INSERT INTO rate_hits (key) VALUES ($1)", [key]);
+      });
     } else {
       const list = (seen.get(key) ?? []).filter((t) => now - t < windowMs);
       n = list.length; first = list[0] ?? now;

@@ -1,9 +1,17 @@
 import { NextResponse } from "next/server";
 import { deletedPages, deletePage, getPage, listPages, pageExists, pageHistory, pageRevision, restoreMenuFor, savePage } from "@/lib/store";
 import { siteTree } from "@/lib/sitemap";
-import { actor, editingAllowed } from "@/lib/guard";
+import { actor, editingAllowed, levelOf, me } from "@/lib/guard";
+import { execParts } from "@/lib/page-exec";
 
 const off = () => new NextResponse("not found", { status: 404 });
+// Scripts and raw HTML on a page run as whoever visits it, so only a full administrator may change them.
+const NO_SCRIPTS = "Only a full administrator can add or change scripts, raw HTML blocks or redirects on a page.";
+async function scriptsLocked(slug: string, next: unknown) {
+  if (levelOf(await me(), "admin") === "write") return false;
+  const old = await getPage(slug);
+  return execParts(old ?? { content: [] }) !== execParts(next);
+}
 
 export async function GET(req: Request) {
   if (!(await editingAllowed("webmaster", "read", "pages"))) return off();
@@ -25,6 +33,7 @@ export async function PUT(req: Request) {
   if (!await editingAllowed("webmaster", "write", "pages")) return off();
   const { slug, data } = await req.json();
   if (typeof slug !== "string" || !Array.isArray(data?.content)) return new NextResponse("bad request", { status: 400 });
+  if (await scriptsLocked(slug, data)) return new NextResponse(NO_SCRIPTS, { status: 403 });
   try { await savePage(slug, data, await actor()); } catch { return new NextResponse("bad slug", { status: 400 }); }
   return NextResponse.json({ ok: true });
 }
@@ -35,6 +44,7 @@ export async function POST(req: Request) {
   const { slug, revision, restore } = await req.json();
   const rev = Number.isInteger(revision) ? await pageRevision(revision) : undefined;
   if (!rev || rev.slug !== slug) return off();
+  if (await scriptsLocked(slug, rev.data)) return new NextResponse(NO_SCRIPTS, { status: 403 });
   if (restore && await pageExists(slug)) return new NextResponse("a page with that slug already exists", { status: 409 });
   const who = await actor();
   await savePage(slug, rev.data, who, restore ? "page.restore" : "page.revert", `revision #${revision}`);

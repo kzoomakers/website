@@ -5,6 +5,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Collapse from "./collapse";
 import { tabOf } from "./tabs";
+import { levelFor, pageOf, type Perms } from "@/lib/access";
 import { useAlerts, type Alerts } from "./alerts";
 
 type Item = { href: string; icon: string; label: string; exact?: boolean } | { icon: string; label: string; items: Item[] };
@@ -69,9 +70,12 @@ function Node({ item, here, all, n }: { item: Item; here: string; all: string[];
 }
 
 /** The left menu for whichever admin section you are in, plus the account menu at the bottom (same on every page). */
-export default function Nav({ admin, user }: { admin: boolean; user: ReactNode }) {
+export default function Nav({ admin, perms, user }: { admin: boolean; perms: Perms; user: ReactNode }) {
   const here = usePathname(), n = useAlerts(here);
-  const tab = tabOf(here), links = (MENUS.find(([p]) => p === tab)?.[1] ?? []).filter((l) => admin || !("href" in l && l.href.endsWith("/services")));
+  // Only the pages this person may open (a page-only grant must not show the rest of the section).
+  const may = (i: Item): boolean => { if ("items" in i) return i.items.some(may); const pg = pageOf(i.href); return !pg || !!levelFor(perms, pg.section, pg.key); };
+  const prune = (i: Item): Item => ("items" in i ? { ...i, items: i.items.filter(may) } : i);
+  const tab = tabOf(here), links = (MENUS.find(([p]) => p === tab)?.[1] ?? []).filter((l) => (admin || !("href" in l && l.href.endsWith("/services"))) && may(l)).map(prune);
   const all = links.flatMap(hrefs);
   return (
     <Collapse>

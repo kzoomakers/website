@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
   if (!a || typeof a.token !== "string" || !db()) return new NextResponse("bad request", { status: 400 });
-  if (!(await hit(hashIp(req) + (a.action === "direct" ? ":d" : ""), a.action === "direct" ? 5 : 20, 600_000))) return new NextResponse("Too many attempts. Try again in a few minutes.", { status: 429 });
+  if (!(await hit(hashIp(req) + (a.action === "direct" ? ":d" : ""), a.action === "direct" ? 5 : 20, 600_000, true))) return new NextResponse("Too many attempts. Try again in a few minutes.", { status: 429 });
   try {
     const proof = { ip: clientIp(req), ua: req.headers.get("user-agent") ?? "" }, str = (v: unknown) => String(v ?? "");
     if (a.action === "direct") return NextResponse.json({ token: await startPublic(a.token, str(a.name), str(a.email), await baseUrl(req)) });
