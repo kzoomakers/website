@@ -7,9 +7,10 @@ export async function register() {
     const job = (id: number, ms: number, fn: () => Promise<unknown>) => setInterval(() => withLock(id, fn).catch(() => {}), ms);
     const { tick } = await import("./lib/mail");
     job(7351911, 60_000, tick);
-    const { checkStale, checkReminders } = await import("./lib/tours");
+    const { checkStale, checkReminders, sendRejectedSummary } = await import("./lib/tours");
     job(7351912, 60_000, checkReminders); // "due now / in 1, 3, 6 hours" lines in the tours timeline
     job(7351913, 30 * 60_000, checkStale); // untaken walk-ups
+    job(7351918, 3600_000, () => sendRejectedSummary()); // monthly list of out-of-Michigan tour requests to contact@
     const { runAlerts, runDigest } = await import("./lib/ga-notify");
     job(7351915, 3 * 3600_000, runAlerts); // spike/drop notice to the google-analytics-notices topic (once a day at most)
     job(7351916, 3600_000, runDigest); // weekly email summary, Mondays from 8am Eastern, if switched on
