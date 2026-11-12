@@ -9,13 +9,13 @@ const off = () => new NextResponse("not found", { status: 404 });
 
 // GET ?stream= returns the streams, which are on, and recent trapped lines. POST { op: "set", stream, on } or { op: "clear", stream? }. Admin only.
 export async function GET(req: Request) {
-  if (!(await editingAllowed("admin", "read"))) return off();
+  if (!(await editingAllowed("admin", "read", "debug"))) return off();
   const stream = new URL(req.url).searchParams.get("stream") ?? "";
   return NextResponse.json({ streams: STREAMS, on: await enabled(), rows: await recent(stream in STREAMS ? stream : "") }, { headers: { "cache-control": "no-store" } });
 }
 
 export async function POST(req: Request) {
-  if (!(await editingAllowed("admin"))) return off();
+  if (!(await editingAllowed("admin", "write", "debug"))) return off();
   const a = await req.json().catch(() => null), who = await actor();
   try {
     if (a?.op === "set") { await setStream(String(a.stream), !!a.on); await logAudit(who, "debug.set", `${a.stream} ${a.on ? "on" : "off"}`); }

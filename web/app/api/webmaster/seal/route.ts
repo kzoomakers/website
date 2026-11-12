@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   const form = multipart ? await req.formData().catch(() => null) : null;
   const a = multipart ? { op: "upload" } : await req.json().catch(() => null);
   if (!a?.op || (multipart && !form)) return new NextResponse("bad request", { status: 400 });
-  if (!(await editingAllowed("admin", "write"))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("admin", "write", "setup"))) return new NextResponse("not found", { status: 404 });
   try {
     switch (a.op) {
       case "generate": await generateSeal(String(a.org ?? "")); break;

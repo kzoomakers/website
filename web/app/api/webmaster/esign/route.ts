@@ -8,11 +8,16 @@ import * as s from "@/lib/sign";
 // Board papers RPC (papers, templates and their public links): POST { op, ...args }. Reads need Signed Docs view access, everything else edit access.
 export const dynamic = "force-dynamic";
 const READS = new Set(["list", "buckets", "tags", "get", "people", "templates", "template"]);
+// The admin page each op belongs to (see lib/access.ts), so a person given just that page can use it. An op not listed here needs a whole-section grant.
+const PAGE: Record<string, string | string[]> = {
+  list: "documents", get: ["documents", "new"], buckets: "*", tags: "*", people: ["new", "documents"], templates: ["templates", "new"], template: ["templates", "new"], saveTemplate: "templates", deleteTemplate: "templates",
+  setPublic: "documents", create: "new", send: ["documents", "new"], remind: "documents", void: "documents", due: "documents", addBucket: "buckets", deleteBucket: "buckets",
+};
 
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
   if (!a?.op) return new NextResponse("bad request", { status: 400 });
-  if (!(await editingAllowed("board", READS.has(a.op) ? "read" : "write"))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("board", READS.has(a.op) ? "read" : "write", PAGE[a.op]))) return new NextResponse("not found", { status: 404 });
   const who = await actor(), id = Number(a.id), base = await baseUrl(req);
   try {
     switch (a.op) {

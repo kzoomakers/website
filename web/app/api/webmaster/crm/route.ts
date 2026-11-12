@@ -10,11 +10,19 @@ import { baseUrl } from "@/lib/mail";
 // One CRM admin RPC endpoint: POST { op, ...args }. Reads need CRM view access, everything else CRM edit access.
 export const dynamic = "force-dynamic";
 const READS = new Set(["member", "plans", "skills", "fieldValues", "tools", "classes", "roster", "proposals", "classRules", "applicants", "applicant", "membershipClasses"]);
+// The admin page each op belongs to (see lib/access.ts), so a person given just that page can use it. An op not listed here needs a whole-section grant.
+const PAGE: Record<string, string | string[]> = {
+  member: "people", plans: "people", setLevels: "people", grant: "people", revoke: "people", membershipClasses: "*",
+  skills: "skills", renameSkill: "skills", deleteSkill: "skills", mergeSkill: "skills", fieldValues: "values", renameValue: "values", deleteValue: "values",
+  tools: ["tools", "people"], saveTool: "tools", deleteTool: "tools",
+  classes: "classes", saveClass: "classes", deleteClass: "classes", proposals: "classes", classRules: "classes", setMinDays: "classes", decide: "classes", roster: "classes",
+  applicants: "approvals", applicant: "approvals", applicantSay: "approvals", applicantNote: "approvals", applicantMove: "approvals",
+};
 
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
   if (!a?.op) return new NextResponse("bad request", { status: 400 });
-  if (!(await editingAllowed("crm", READS.has(a.op) ? "read" : "write"))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("crm", READS.has(a.op) ? "read" : "write", PAGE[a.op]))) return new NextResponse("not found", { status: 404 });
   const who = await actor();
   try {
     const res = await (async () => { switch (a.op) {

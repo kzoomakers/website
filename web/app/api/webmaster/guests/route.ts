@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
   if (!a?.op) return new NextResponse("bad request", { status: 400 });
-  if (!(await editingAllowed("crm", a.op === "list" || a.op === "visits" ? "read" : "write"))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("crm", a.op === "list" || a.op === "visits" ? "read" : "write", "guests"))) return new NextResponse("not found", { status: 404 });
   try {
     switch (a.op) {
       case "list": return NextResponse.json(await G.adminList(String(a.q ?? "")));

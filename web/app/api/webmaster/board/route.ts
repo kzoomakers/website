@@ -5,7 +5,7 @@ import { actor, editingAllowed } from "@/lib/guard";
 const s = (v: unknown) => typeof v === "string";
 
 export async function PUT(req: Request) {
-  if (!(await editingAllowed("webmaster"))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("webmaster", "write", "board"))) return new NextResponse("not found", { status: 404 });
   const b = await req.json().catch(() => null);
   if (!s(b?.title) || !s(b?.intro) || !Array.isArray(b?.members) || !b.members.every((m: any) => s(m?.name) && s(m?.role) && s(m?.bio) && s(m?.photo)))
     return new NextResponse("bad board", { status: 400 });
@@ -14,12 +14,12 @@ export async function PUT(req: Request) {
 }
 
 export async function GET() {
-  if (!(await editingAllowed("webmaster", "read"))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("webmaster", "read", "board"))) return new NextResponse("not found", { status: 404 });
   return NextResponse.json(await settingHistory("board"));
 }
 
 export async function POST(req: Request) {
-  if (!(await editingAllowed("webmaster"))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("webmaster", "write", "board"))) return new NextResponse("not found", { status: 404 });
   const { revert } = await req.json().catch(() => ({}));
   if (!Number.isInteger(revert) || !(await revertSetting("board", revert, await actor()))) return new NextResponse("no such revision", { status: 404 });
   return NextResponse.json(await getBoard());

@@ -10,7 +10,7 @@ const msg = (e: unknown) => (e instanceof Error ? e.message || e.name : String(e
 // Tests Postgres and storage; only when both pass is anything saved. Postgres is the only bootstrap config (env, or config.json written here);
 // storage is saved in the database (settings row "s3"). A blank URL or key keeps what is already stored.
 export async function POST(req: Request) {
-  if (!(await editingAllowed("admin"))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("admin", "write", "setup"))) return new NextResponse("not found", { status: 404 });
   const b = await req.json().catch(() => ({}));
   const env = envConfig();
   const url = str(b.databaseUrl);

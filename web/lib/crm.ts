@@ -340,7 +340,7 @@ export async function proposeClass(user: { id: number; name: string }, b: any) {
   const level = LEVELS.includes(b?.level) ? b.level : "all", dur = Math.max(15, Math.min(720, Math.floor(Number(b?.duration_min) || 120))), cap = Math.max(0, Math.min(500, Math.floor(Number(b?.capacity) || 0)));
   const id = (await c.query(`INSERT INTO class_proposals (user_id, title, summary, description, level, duration_min, capacity, price, materials, prerequisites, starts_at, location, image, notes)
     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING id`, [user.id, title, clip(b?.summary, 160), clip(b?.description, 2000), level, dur, cap, clip(b?.price, 60), clip(b?.materials, 300), clip(b?.prerequisites, 300), starts.toISOString(), clip(b?.location, 120), artUrl(b?.image), clip(b?.notes, 500)])).rows[0].id;
-  const admins = (await c.query("SELECT DISTINCT user_id FROM user_perms WHERE section = 'crm' OR (section = 'admin' AND level = 'write')")).rows;
+  const admins = (await c.query("SELECT DISTINCT user_id FROM user_perms WHERE section IN ('crm', 'crm:classes') OR (section = 'admin' AND level = 'write')")).rows;
   await Promise.all(admins.map((a) => notifyUser(a.user_id, { kind: "class.proposal", title: `${user.name} proposed a class: ${title}`, url: "/admin/crm/classes" }).catch(() => {})));
   return id;
 }

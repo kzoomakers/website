@@ -1,13 +1,12 @@
 import type { ReactNode } from "react";
-import { levelOf, me, type Section } from "@/lib/guard";
+import { levelOf, me } from "@/lib/guard";
+import { pagesOf, type Section } from "@/lib/access";
+import ReadOnlyBox from "./read-only-box";
 
 // Read-only users see the page but every control inside is disabled. The API refuses their writes regardless; this is just so they aren't tempted.
+// The level can differ page by page, so the server works out each page's level and the box picks the one for the page being shown.
 export default async function ReadOnly({ section, children }: { section: Section; children: ReactNode }) {
-  if (levelOf(await me(), section) !== "read") return <>{children}</>;
-  return (
-    <>
-      <p role="status" className="sub" style={{ background: "var(--acc-bg)", padding: "8px 12px", borderRadius: 8 }}>View only: you can look around, but your account can't change anything here.</p>
-      <fieldset disabled style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>{children}</fieldset>
-    </>
-  );
+  const m = await me();
+  const levels = Object.fromEntries([["", levelOf(m, section) ?? ""], ...pagesOf(section).flatMap((p) => [p.path, ...(p.also ?? [])].map((u) => [u, levelOf(m, section, p.key) ?? ""]))]);
+  return <ReadOnlyBox levels={levels}>{children}</ReadOnlyBox>;
 }

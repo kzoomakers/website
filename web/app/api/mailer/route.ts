@@ -9,11 +9,18 @@ export const dynamic = "force-dynamic";
 
 // Ops that only look; every other op changes something (or sends mail) and needs write access.
 const READS = new Set(["state", "forms", "subscribers", "dashboard", "exportPerson", "exportSubscribers", "emails", "campaign", "recipients", "activity", "stats", "queue"]);
+// The admin page each op belongs to (see lib/access.ts), so a person given just that page can use it. An op not listed here needs a whole-section grant.
+const PAGE: Record<string, string | string[]> = {
+  state: "*", saveCfg: "settings", saveList: "lists", deleteList: "lists", forms: "forms", saveForm: "forms", deleteForm: "forms",
+  subscribers: "subscribers", saveSubscriber: "subscribers", bulkSubscribers: "subscribers", exportPerson: "subscribers", erasePerson: "subscribers", addSubscribers: "subscribers", exportSubscribers: "subscribers", activity: "subscribers",
+  dashboard: "overview", emails: "emails", campaign: "emails", saveCampaign: "emails", campaignAction: "emails", recipients: "emails", stats: "emails", saveTemplate: "emails", deleteTemplate: "emails", test: "emails", send: "emails", ai: "emails",
+  queue: "queue", dropQueued: "queue",
+};
 
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
   if (!a?.op) return new NextResponse("bad request", { status: 400 });
-  if (!(await editingAllowed("mail", READS.has(a.op) ? "read" : "write"))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("mail", READS.has(a.op) ? "read" : "write", PAGE[a.op]))) return new NextResponse("not found", { status: 404 });
   try {
     const res = await (async () => { switch (a.op) {
       case "state": return NextResponse.json({ lists: await m.getLists(), tags: await m.allTags(), templates: await m.getTemplates(), cfg: await m.publicMailCfg() });
