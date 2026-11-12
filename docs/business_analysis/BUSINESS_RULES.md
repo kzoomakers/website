@@ -125,7 +125,7 @@ Every meaningful limit, restriction and decision rule found in the application. 
 | BR-H3 | Only approved, active members can have time logged. | ✅ | `memberById` |
 | BR-H4 | One open shift per member per chore. | ✅ | `startShift` |
 | BR-H5 | A shift open over **12 hours** must be closed with an explicit number of minutes; no logged stretch may exceed **16 hours**, or be dated in the future. | ✅ | `MAX_SHIFT_H`, `MAX_LOG_H` |
-| BR-H6 | Members finish only their own shifts; the outside system may act for any member. | ✅ | `app/api/members/chores/route.ts`, `app/api/chores/route.ts` |
+| BR-H6 | Members finish only their own shifts; the outside system may act for any member. | ✅ | `app/api/members/makerfavor/route.ts`, `app/api/makerfavor/route.ts` |
 | BR-H7 | Retired chores keep their history. Outside-system keys have scopes (read, write) and optional expiry; the key is shown once and only a fingerprint is kept. | ✅ | `deleteChore`, `lib/api-keys.ts` |
 
 ## I. Communications

@@ -671,7 +671,7 @@ sequenceDiagram
 
 **Result:** A time log, hours totals, due dates, achievements.
 
-**Implementation evidence:** `lib/chores.ts`, `lib/chores-calc.ts`, `lib/api-keys.ts`, `app/api/chores/route.ts`, `app/api/members/chores/route.ts`, `app/api/webmaster/chores/route.ts`.
+**Implementation evidence:** `lib/chores.ts`, `lib/chores-calc.ts`, `lib/api-keys.ts`, `app/api/makerfavor/route.ts`, `app/api/members/makerfavor/route.ts`, `app/api/webmaster/makerfavor/route.ts`.
 
 **Open questions:** Staff can delete log entries; every member action is recorded in the audit log, but there is no approval step for logged hours 🔶 ([G-15](PROCESS_GAPS.md#g-15)).
 

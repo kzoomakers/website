@@ -18,7 +18,7 @@ export default function Todo({ initial, members }: { initial: Row[]; members: { 
   const finish = (e: React.FormEvent) => { e.preventDefault(); run(async () => { await chores("logTime", { chore_id: done!.id, user_id: Number(done!.user), minutes: Number(done!.minutes) }); setDone(null); }); };
   return (
     <>
-      <h1>Chores</h1>
+      <h1>MakerFavor™</h1>
       <p className="sub">The chores that keep the space running and how often each wants doing. Overdue ones are read out by Computer at the space. Mark one done for a member here, or they can say so out loud.</p>
       {msg && <Notice kind="error">{msg}</Notice>}
       <form className="card" onSubmit={save} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "end" }}>
