@@ -12,7 +12,7 @@ export default function Templates({ initial }: { initial: Template[] }) {
   return (
     <>
       <h1>Templates</h1>
-      <p className="sub">Saved setups (document, people, fields, options) to start new documents from. A public link lets anyone sign their own copy with no account: it fills the one person left with a blank email. Create templates with "Save as template" on <a href="/admin/signed-docs/new">New document</a>.</p>
+      <p className="sub">Saved setups (document, people, fields, options) to start new documents from. A public link lets anyone sign their own copy with no account: it fills the one person left with a blank email. Create templates with "Save as template" on <a href="/admin/esign/new">New document</a>.</p>
       {msg && <Notice kind="error">{msg}</Notice>}
       <div className="card">
         {rows.map((t) => (

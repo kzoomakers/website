@@ -20,11 +20,11 @@ export function Emails({ s }: { s: State; reload: () => void }) {
   useEffect(() => { const t = setTimeout(load, 200); return () => clearTimeout(t); }, [load]);
   // Counters move while something is sending.
   useEffect(() => { if (!data?.counts.sending) return; const t = setInterval(load, 4000); return () => clearInterval(t); }, [data, load]);
-  const act = async (id: number, action: string) => { try { const r = await rpc("campaignAction", { id, action }); if (action === "duplicate") router.push("/admin/mail/email/" + r.id); else load(); } catch (e: any) { setMsg(e.message); } };
+  const act = async (id: number, action: string) => { try { const r = await rpc("campaignAction", { id, action }); if (action === "duplicate") router.push("/admin/mailer/email/" + r.id); else load(); } catch (e: any) { setMsg(e.message); } };
   const listNames = (ids: number[]) => ids.map((i) => s.lists.find((l) => l.id === i)?.name).filter(Boolean).join(", ");
   return (
     <>
-      <h1>Emails <Link href="/admin/mail/email/new"><button className="pri">New email</button></Link></h1>
+      <h1>Emails <Link href="/admin/mailer/email/new"><button className="pri">New email</button></Link></h1>
       <div className="mp-tabs">{TABS.map(([k, label]) => <button key={k} aria-current={status === k ? "true" : undefined} onClick={() => setStatus(k)}>{label} <small>({data?.counts[k] ?? 0})</small></button>)}</div>
       <p><input type="search" placeholder="Search emails" aria-label="Search emails" value={search} onChange={(e) => setSearch(e.target.value)} style={{ width: 260 }} /></p>
       {msg && <Notice kind="error">{msg}</Notice>}
@@ -36,7 +36,7 @@ export function Emails({ s }: { s: State; reload: () => void }) {
               <td><b>{c.subject || <i className="mut">(no subject)</i>}</b><br /><small>{c.name}</small>
                 <div className="mp-act">
                   {status === "trash" ? <><button onClick={() => act(c.id, "restore")}>Restore</button><button className="bad" onClick={async () => (await confirmDialog("Delete this email permanently? You won't be able to get it back.", { ok: "Delete email", danger: true })) && act(c.id, "delete")}>Delete permanently</button></> : <>
-                    {c.status === "draft" && <Link href={"/admin/mail/email/" + c.id}>Edit</Link>}
+                    {c.status === "draft" && <Link href={"/admin/mailer/email/" + c.id}>Edit</Link>}
                     {c.status === "scheduled" && <button onClick={() => act(c.id, "unschedule")}>Unschedule to edit</button>}
                     {(c.status === "sent" || c.status === "sending") && <button onClick={async () => setModal({ kind: "stats", st: await rpc("stats", { id: c.id }) })}>Statistics</button>}
                     <button onClick={async () => { const full: Camp = await rpc("campaign", { id: c.id }); setModal({ kind: "preview", title: c.subject || c.name, html: fill(renderEmail(full.design, location.origin, full.preview), { name: "Alex", unsubscribe: "#" }) }); }}>Preview</button>
@@ -108,13 +108,13 @@ export function NewEmail({ s }: { s: State }) {
   const router = useRouter();
   const [msg, setMsg] = useState("");
   const use = async (t: State["templates"][number]) => {
-    try { const r = await rpc("saveCampaign", { campaign: { name: t.name === "Blank" ? "Untitled email" : t.name, design: t.design } }); router.push("/admin/mail/email/" + r.id); } catch (e: any) { setMsg(e.message); }
+    try { const r = await rpc("saveCampaign", { campaign: { name: t.name === "Blank" ? "Untitled email" : t.name, design: t.design } }); router.push("/admin/mailer/email/" + r.id); } catch (e: any) { setMsg(e.message); }
   };
   return (
     <div>
       <h1>Pick a template</h1>
       <p className="sub">You can change everything afterwards. Your own templates (saved from the editor) are listed with these.</p>
-      <p><Link href="/admin/mail/emails">← Back to emails</Link> {msg && <span className="err">{msg}</span>}</p>
+      <p><Link href="/admin/mailer/emails">← Back to emails</Link> {msg && <span className="err">{msg}</span>}</p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(210px,1fr))", gap: 14 }}>
         {s.templates.map((t) => (
           <div className="card" style={{ padding: 8 }} key={t.id}>
@@ -139,14 +139,14 @@ export function SendStep({ id, s }: { id: number; s: State }) {
   useEffect(() => { rpc("campaign", { id }).then(setC).catch((e) => setMsg(e.message)); }, [id]);
   const reach = useMemo(() => (c ? s.lists.filter((l) => c.list_ids.includes(l.id)).reduce((n, l) => n + l.subscribed, 0) : 0), [c, s.lists]);
   if (!c) return <p>{msg || "Loading…"}</p>;
-  if (c.status !== "draft") return <p>This email has already been sent or scheduled. <Link href="/admin/mail/emails">Back to emails</Link></p>;
+  if (c.status !== "draft") return <p>This email has already been sent or scheduled. <Link href="/admin/mailer/emails">Back to emails</Link></p>;
   const settings = { id, subject: c.subject, preview: c.preview, list_ids: c.list_ids, tags: c.tags ?? [], sender_name: c.sender_name ?? "", sender_address: c.sender_address ?? "", reply_to: c.reply_to ?? "" };
   const go = async (fn: () => Promise<unknown>) => { setBusy(true); setMsg(""); try { await fn(); } catch (e: any) { setMsg(e.message); } setBusy(false); };
   const set = (p: Partial<Camp>) => setC({ ...c, ...p });
   return (
     <div className="mp-step">
       <h1>Final step: subject, recipients and sending</h1>
-      <p><Link href={"/admin/mail/email/" + id}>← Back to the editor</Link></p>
+      <p><Link href={"/admin/mailer/email/" + id}>← Back to the editor</Link></p>
       <div className="card" style={{ padding: 18 }} >
         <div className="mp">
           <div style={{ gridColumn: "1 / -1" }}>
@@ -177,7 +177,7 @@ export function SendStep({ id, s }: { id: number; s: State }) {
             if (when_ === "now" && !(await confirmDialog(`"${c.subject}" goes out immediately to about ${reach} people and can't be recalled.`, { title: `Send to about ${reach} people?`, ok: `Send to ${reach}`, cancelLabel: "Not yet", danger: true }))) return;
             await rpc("saveCampaign", { campaign: settings });
             await rpc("send", { id, at: when_ === "later" ? new Date(at).toISOString() : undefined });
-            router.push("/admin/mail/emails");
+            router.push("/admin/mailer/emails");
           })}>{when_ === "later" ? "Schedule" : "Send"}</button>
         </div>
       </div>

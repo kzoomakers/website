@@ -7,7 +7,7 @@ import Templates from "./templates";
 export const dynamic = "force-dynamic";
 
 export default async function TemplatesPage() {
-  await gate("board", "/admin/signed-docs/templates");
+  await gate("board", "/admin/esign/templates");
   if (!getConfig()) redirect("/admin/services");
   return <Templates initial={await listTemplates()} />;
 }

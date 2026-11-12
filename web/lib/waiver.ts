@@ -51,6 +51,7 @@ export type Draft = { revision: string; title: string; sections: Section[]; clos
 export async function publish(d: Draft, who: string, base: string, kind: Kind = "member") {
   const c = await conn(), revision = clip(d.revision, 40), title = clip(d.title, 200), closing = clip(d.closing, 3000), summary = clip(d.summary, 6000), sections = check(d.sections);
   if (!revision || !title || !closing) throw new Error("Revision, title and closing statement are required.");
+  if (!/^\d{4}\.\d+$/.test(revision)) throw new Error("Revision must look like 2026.1 (the year, then 1, 2, 3… restarting each year).");
   const prev = await latestVersion(kind);
   if (!diffVersions(prev, { sections, closing }).length && title === prev.title) throw new Error("Nothing has changed from the current version.");
   if (!summary) throw new Error("Describe what changed in plain language: members will read this.");

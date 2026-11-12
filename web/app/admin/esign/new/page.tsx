@@ -7,7 +7,7 @@ import NewPaper from "./new-paper";
 export const dynamic = "force-dynamic";
 
 export default async function NewPage() {
-  await gate("board", "/admin/signed-docs/new");
+  await gate("board", "/admin/esign/new");
   if (!getConfig()) redirect("/admin/services");
   return <NewPaper buckets={await listBuckets()} templates={await listTemplates()} />;
 }

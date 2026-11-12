@@ -27,7 +27,7 @@ export default function MailAdmin({ slug }: { slug: string[] }) {
   return (
     <div className="mp">
       <div style={{ minWidth: 0 }}>
-        {!s.cfg.mail && a !== "settings" && <p className="sub" role="status">⚠️ Sending isn't set up yet — it needs both a sender address and an SMTP2GO key (or SMTP server). Add them under <Link href="/admin/mail/settings">Settings</Link>. You can still build lists and drafts.</p>}
+        {!s.cfg.mail && a !== "settings" && <p className="sub" role="status">⚠️ Sending isn't set up yet — it needs both a sender address and an SMTP2GO key (or SMTP server). Add them under <Link href="/admin/mailer/settings">Settings</Link>. You can still build lists and drafts.</p>}
         {!a && <Home s={s} />}
         {a === "emails" && <Emails s={s} reload={reload} />}
         {a === "forms" && <Forms s={s} reload={reload} />}
@@ -44,15 +44,15 @@ function Home({ s }: { s: State }) {
   const [d, setD] = useState<any>(null);
   useEffect(() => { rpc("dashboard").then(setD).catch(() => {}); }, []);
   if (!d) return <p>Loading…</p>;
-  const stat = (n: number, label: string, href = "") => <Link href={"/admin/mail/subscribers" + href} className="card" style={{ padding: 14, minWidth: 130, textAlign: "center" }}><b style={{ fontSize: 26 }}>{n}</b><br /><small>{label}</small></Link>;
+  const stat = (n: number, label: string, href = "") => <Link href={"/admin/mailer/subscribers" + href} className="card" style={{ padding: 14, minWidth: 130, textAlign: "center" }}><b style={{ fontSize: 26 }}>{n}</b><br /><small>{label}</small></Link>;
   return (
     <>
-      <h1>Overview <Link href="/admin/mail/email/new" className="pri">New email</Link></h1>
+      <h1>Overview <Link href="/admin/mailer/email/new" className="pri">New email</Link></h1>
       <div className="bar" style={{ flexWrap: "wrap" }}>
         {stat(d.subscribed, "subscribed")}{stat(d.new30, "joined in 30 days")}{stat(d.unsubscribed30, "left in 30 days")}{stat(d.unconfirmed, "unconfirmed")}
         {stat(d.inactive, "inactive (never open)", "?status=inactive")}{stat(d.bounced + d.complained, "bounced / complained", "?status=bounced")}
       </div>
-      {d.next.length > 0 && <><h2>Scheduled</h2>{d.next.map((c: any) => <p key={c.id}><Link href="/admin/mail/emails">{c.subject}</Link> <small>{when(c.scheduled_at)}</small></p>)}</>}
+      {d.next.length > 0 && <><h2>Scheduled</h2>{d.next.map((c: any) => <p key={c.id}><Link href="/admin/mailer/emails">{c.subject}</Link> <small>{when(c.scheduled_at)}</small></p>)}</>}
       <h2>Latest emails</h2>
       <table className="mp-table">
         <thead><tr><th>Email</th><th>Sent</th><th>Opened</th><th>Clicked</th><th>Unsubscribed</th></tr></thead>
@@ -84,7 +84,7 @@ function Lists({ s, reload }: Props) {
           {s.lists.map((l) => (
             <tr key={l.id}>
               <td><b>{l.name}</b><br /><small>{l.description}</small>
-                <div className="mp-act"><button onClick={() => setF({ id: l.id, name: l.name, description: l.description })}>Edit</button><Link href={"/admin/mail/subscribers?list=" + l.id}>View subscribers</Link>
+                <div className="mp-act"><button onClick={() => setF({ id: l.id, name: l.name, description: l.description })}>Edit</button><Link href={"/admin/mailer/subscribers?list=" + l.id}>View subscribers</Link>
                   <button className="bad" onClick={async () => { if (await confirmDialog(`Delete the list "${l.name}"? Its subscribers stay; only the list goes.`, { ok: "Delete", danger: true })) { await rpc("deleteList", { id: l.id }); reload(); } }}>Delete</button></div></td>
               <td>{l.subscribed}</td><td>{l.unconfirmed}</td><td>{l.unsubscribed}</td><td>{when(l.created_at)}</td>
             </tr>))}

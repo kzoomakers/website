@@ -1,7 +1,7 @@
 import type { Design } from "@/lib/mail-render";
 
 export async function rpc<T = any>(op: string, args: object = {}): Promise<T> {
-  const r = await fetch("/api/mailadmin", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ op, ...args }) });
+  const r = await fetch("/api/mailer", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ op, ...args }) });
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
