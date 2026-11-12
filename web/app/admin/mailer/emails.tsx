@@ -12,7 +12,7 @@ const TABS = [["all", "All"], ["draft", "Draft"], ["scheduled", "Scheduled"], ["
 export function Emails({ s }: { s: State; reload: () => void }) {
   const [status, setStatus] = useState("all");
   const [search, setSearch] = useState("");
-  const [data, setData] = useState<{ rows: any[]; counts: Record<string, number> } | null>(null);
+  const [data, setData] = useState<{ rows: any[]; counts: Record<string, number>; limitHit?: boolean } | null>(null);
   const [modal, setModal] = useState<{ kind: "preview"; html: string; title: string } | { kind: "stats"; st: any } | null>(null);
   const [msg, setMsg] = useState("");
   const router = useRouter();
@@ -27,6 +27,7 @@ export function Emails({ s }: { s: State; reload: () => void }) {
       <h1>Emails <Link href="/admin/mailer/email/new"><button className="pri">New email</button></Link></h1>
       <div className="mp-tabs">{TABS.map(([k, label]) => <button key={k} aria-current={status === k ? "true" : undefined} onClick={() => setStatus(k)}>{label} <small>({data?.counts[k] ?? 0})</small></button>)}</div>
       <p><input type="search" placeholder="Search emails" aria-label="Search emails" value={search} onChange={(e) => setSearch(e.target.value)} style={{ width: 260 }} /></p>
+      {data?.limitHit && <Notice kind="info">Today's email limit has been reached. Emails that are still sending will carry on after midnight (Detroit time).</Notice>}
       {msg && <Notice kind="error">{msg}</Notice>}
       <table className="mp-table">
         <thead><tr><th>Subject</th><th>Status</th><th>Lists</th><th>Opened</th><th>Clicked</th><th>Updated</th></tr></thead>

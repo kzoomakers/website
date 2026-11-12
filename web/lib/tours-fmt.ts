@@ -80,7 +80,8 @@ export function parseCsv(text: string): string[][] {
     else f += ch;
   }
   if (f || row.length) { row.push(f); rows.push(row); }
-  return rows.filter((r) => r.some((c) => c.trim()));
+  // Undo the ' that exports put before formula-looking text (see cell), so an exported file imports back unchanged.
+  return rows.filter((r) => r.some((c) => c.trim())).map((r) => r.map((c) => c.replace(/^'(?=[=+\-@\t\r])/, "")));
 }
 
 const AREA_MAP: Record<string, string> = { woodshop: "Wood shop", "metal shop / machine shop": "Metal shop", "welding shop": "Metal shop", "laser cutting / engraving": "Laser shop", "3d printing": "3D printing", "craft room": "Craft room", "electronics equipment": "Electronics" };
@@ -102,9 +103,10 @@ export function csvToRequests(text: string) {
 const EMAIL = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/;
 
 /** Writes walk-ups in the sign-up sheet's column order, so an export can be imported again (same email + time is skipped). */
+/** One CSV field. Text a spreadsheet would run as a formula (starts with = + - @ or a tab) gets a leading ' so a visitor can't plant one in a form field; numbers are left alone. */
+export const cell = (v: unknown) => { let s = String(v ?? ""); if (/^[=+\-@\t\r]/.test(s) && !/^[+-]?[\d\s().,-]+$/.test(s)) s = "'" + s; return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
 export function requestsToCsv(rows: { first_name: string; last_name: string; interest: string; phone: string; email: string; contact_method: string; heard?: string; notes: string; created_at: Date | string }[]) {
   const when = new Intl.DateTimeFormat("en-US", { timeZone: TZ, year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit", hourCycle: "h23" });
-  const cell = (v: string) => (/[",\r\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
   const head = ["Timestamp", "First Name", "Last Name", "Desired Membership", "Area of Interest (Select all that apply)", "Phone", "Email", "Contact", "Heard About Us", "", "Purpose", "Comments"];
   const lines = rows.map((r) => {
     const p = Object.fromEntries(when.formatToParts(new Date(r.created_at)).map((x) => [x.type, x.value]));
@@ -115,7 +117,6 @@ export function requestsToCsv(rows: { first_name: string; last_name: string; int
 }
 
 // ---- availability and bookings as CSV (same columns in and out, so an export can be imported again)
-const cell = (v: unknown) => { const s = String(v ?? ""); return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
 const toCsv = (head: string[], rows: unknown[][]) => [head, ...rows].map((r) => r.map(cell).join(",")).join("\r\n") + "\r\n";
 /** YYYY-MM-DD or M/D/YYYY to YYYY-MM-DD, else "". */
 export const normDate = (s: string) => {

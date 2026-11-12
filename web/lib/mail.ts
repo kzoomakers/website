@@ -97,7 +97,6 @@ async function init(p: import("pg").Pool) {
   await run("ALTER TABLE mail_clicks ADD COLUMN IF NOT EXISTS send_id int REFERENCES mail_sends ON DELETE CASCADE");
   // Outgoing one-off emails that failed (or were queued in bulk): retried with exponential backoff, see sendQueued.
   await run("CREATE TABLE IF NOT EXISTS mail_queue (id serial PRIMARY KEY, msg jsonb NOT NULL, tries int NOT NULL DEFAULT 0, next_at timestamptz NOT NULL DEFAULT now(), last_error text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now())");
-  await run("ALTER TABLE mail_queue ADD COLUMN IF NOT EXISTS held boolean NOT NULL DEFAULT false"); // waiting for the daily limit, not retrying after an error
   await run("CREATE TABLE IF NOT EXISTS mail_templates (id serial PRIMARY KEY, name text NOT NULL, design jsonb NOT NULL)");
   await run(`CREATE TABLE IF NOT EXISTS mail_forms (id serial PRIMARY KEY, name text NOT NULL, kind text NOT NULL DEFAULT 'popup', enabled boolean NOT NULL DEFAULT true,
     lists int[] NOT NULL DEFAULT '{}', heading text NOT NULL DEFAULT '', body text NOT NULL DEFAULT '', button text NOT NULL DEFAULT 'Subscribe', success text NOT NULL DEFAULT '',
@@ -402,7 +401,10 @@ export async function getCampaigns(f: { status?: string; search?: string }) {
   const counts = (await q(`SELECT count(*) FILTER (WHERE NOT trashed)::int AS "all", count(*) FILTER (WHERE status='draft' AND NOT trashed)::int AS draft,
     count(*) FILTER (WHERE status='scheduled' AND NOT trashed)::int AS scheduled, count(*) FILTER (WHERE status='sending' AND NOT trashed)::int AS sending,
     count(*) FILTER (WHERE status='sent' AND NOT trashed)::int AS sent, count(*) FILTER (WHERE trashed)::int AS trash FROM mail_campaigns`))[0];
-  return { rows, counts };
+  // Sending newsletters stop at the daily limit and carry on after midnight; say so, or they look stuck.
+  const cfg = counts.sending ? await getMailCfg() : null;
+  const limitHit = !!cfg?.perDay && roomToday(cfg.perDay, await sentToday()) <= 0;
+  return { rows, counts, limitHit };
 }
 export const getCampaign = async (id: number) => (await q("SELECT * FROM mail_campaigns WHERE id=$1", [id]))[0];
 
@@ -464,14 +466,10 @@ const fromHeader = (name: string, addr: string) => (name ? `${name.replace(/[<>"
 /** One send path: SMTP2GO's HTTP API when an SMTP2GO key is saved, otherwise plain SMTP. */
 const TODAY = "(now() AT TIME ZONE 'America/Detroit')::date";
 const sentToday = async () => (await q(`SELECT COALESCE((SELECT n FROM mail_daily WHERE day = ${TODAY}), 0)::int AS n`))[0].n as number;
-/** Sends one message, or, once the daily limit (Settings) is used up, parks it in the queue until tomorrow. Callers can't tell the difference. */
+/** How many more newsletter messages may go out today under the daily limit (Settings): `perDay` (0 = no limit) minus what was sent, never below 0. */
+export const roomToday = (perDay: number, sent: number) => (perDay ? Math.max(0, perDay - sent) : Infinity);
+/** Sends one message and counts it toward today's total (the guest notice trickle backs off as the day fills up). The daily limit does not apply here: sign-in links, resets and codes must go out. Newsletters honour it in work(). */
 export async function send(m: Msg, c: MailCfg) {
-  // shortcut: the check and the count aren't atomic, so two sends racing at the limit can overshoot by a message or two; keep the setting a little under the provider's cap.
-  if (c.perDay && (await sentToday()) >= c.perDay) return void (await enqueueMail(m, 0, "", 0, true));
-  await deliverNow(m, c);
-}
-/** Sends one message and counts it toward today's total (the guest notice trickle backs off as the day fills up). */
-async function deliverNow(m: Msg, c: MailCfg) {
   await sendRaw(m, c);
   await q("INSERT INTO mail_daily (day, n) VALUES ((now() AT TIME ZONE 'America/Detroit')::date, 1) ON CONFLICT (day) DO UPDATE SET n = mail_daily.n + 1").catch(() => {});
 }
@@ -497,25 +495,24 @@ async function sendRaw(m: Msg, c: MailCfg) {
 const pack = (m: Msg) => ({ ...m, attachments: m.attachments?.map((a) => ({ ...a, content: a.content.toString("base64") })) });
 const unpack = (j: any): Msg => ({ ...j, attachments: j.attachments?.map((a: any) => ({ ...a, content: Buffer.from(a.content, "base64") })) });
 /** Puts a message on the queue; the next tick delivers it, or `delayMin` minutes from now. */
-export const enqueueMail = (m: Msg, tries = 0, error = "", delayMin = 0, held = false) =>
-  q("INSERT INTO mail_queue (msg, tries, last_error, next_at, held) VALUES ($1,$2,$3, now() + make_interval(mins => $4), $5)", [JSON.stringify(pack(m)), tries, error.slice(0, 300), delayMin, held]);
+export const enqueueMail = (m: Msg, tries = 0, error = "", delayMin = 0) =>
+  q("INSERT INTO mail_queue (msg, tries, last_error, next_at) VALUES ($1,$2,$3, now() + make_interval(mins => $4))", [JSON.stringify(pack(m)), tries, error.slice(0, 300), delayMin]);
 /** Like send, but a failure never reaches the caller: the message waits in the queue and is retried (2, 4, 8 ... minutes, up to MAX_MAIL_TRIES). */
 export async function sendQueued(m: Msg, c: MailCfg) {
   await send(m, c).catch((e) => enqueueMail(m, 1, String(e?.message ?? e), backoffMinutes(1)));
 }
 /** Delivers what is due. A row is leased for 10 minutes while it is tried, so two servers never send the same message. */
 async function flushQueue() {
+  const rows = await q("UPDATE mail_queue SET next_at = now() + interval '10 minutes' WHERE id IN (SELECT id FROM mail_queue WHERE next_at <= now() AND tries < $1 ORDER BY id LIMIT 50 FOR UPDATE SKIP LOCKED) RETURNING id, msg, tries", [MAX_MAIL_TRIES]);
+  if (!rows.length) return;
   const cfg = await getMailCfg();
   if (!mailReady(cfg)) return;
-  const room = cfg.perDay ? cfg.perDay - (await sentToday()) : 50; // today's remaining allowance; held mail waits for tomorrow
-  if (room <= 0) return;
-  const rows = await q("UPDATE mail_queue SET next_at = now() + interval '10 minutes' WHERE id IN (SELECT id FROM mail_queue WHERE next_at <= now() AND tries < $1 ORDER BY id LIMIT $2 FOR UPDATE SKIP LOCKED) RETURNING id, msg, tries", [MAX_MAIL_TRIES, Math.min(50, room)]);
   for (const r of rows) {
-    try { await deliverNow(unpack(r.msg), cfg); await q("DELETE FROM mail_queue WHERE id=$1", [r.id]); }
-    catch (e: any) { await q("UPDATE mail_queue SET held = false, tries = tries + 1, last_error = $2, next_at = now() + make_interval(mins => $3) WHERE id=$1", [r.id, String(e?.message ?? e).slice(0, 300), backoffMinutes(r.tries + 1)]); }
+    try { await send(unpack(r.msg), cfg); await q("DELETE FROM mail_queue WHERE id=$1", [r.id]); }
+    catch (e: any) { await q("UPDATE mail_queue SET tries = tries + 1, last_error = $2, next_at = now() + make_interval(mins => $3) WHERE id=$1", [r.id, String(e?.message ?? e).slice(0, 300), backoffMinutes(r.tries + 1)]); }
   }
 }
-export const listQueue = () => q("SELECT id, msg->>'to' AS recipient, msg->>'subject' AS subject, held, tries, next_at, last_error, created_at, tries >= $1 AS gave_up FROM mail_queue ORDER BY id LIMIT 500", [MAX_MAIL_TRIES]);
+export const listQueue = () => q("SELECT id, msg->>'to' AS recipient, msg->>'subject' AS subject, tries, next_at, last_error, created_at, tries >= $1 AS gave_up FROM mail_queue ORDER BY id LIMIT 500", [MAX_MAIL_TRIES]);
 /** Deletes the given messages, or every queued message when `ids` is omitted. */
 export const dropQueued = async (ids?: number[]) => (ids ? await q("DELETE FROM mail_queue WHERE id = ANY($1) RETURNING id", [ids]) : await q("DELETE FROM mail_queue RETURNING id")).length;
 
@@ -618,6 +615,7 @@ async function work(id: number) {
         WHERE x.campaign_id=$1 AND x.status='pending' ORDER BY x.id LIMIT 25`, [id]);
       if (!batch.length) break;
       for (const r of batch) {
+        if (cfg.perDay && roomToday(cfg.perDay, await sentToday()) <= 0) return; // daily limit reached: leave it 'sending'; tick() resumes it tomorrow
         try { await deliver(cfg, c, r, c.base, { sendToken: r.send_token, sec }); await q("UPDATE mail_sends SET status='sent', sent_at=now() WHERE id=$1", [r.id]); await q("UPDATE mail_campaigns SET sent = sent + 1 WHERE id=$1", [id]); }
         catch { await q("UPDATE mail_sends SET status='failed' WHERE id=$1", [r.id]); await q("UPDATE mail_campaigns SET failed = failed + 1 WHERE id=$1", [id]); }
         if (cfg.perMinute) await new Promise((ok) => setTimeout(ok, 60_000 / cfg.perMinute));

@@ -3,6 +3,11 @@ import assert from "node:assert/strict";
 const { saveMembershipClasses, DEFAULT_CLASSES, toPlan, fromLegacy } = await import("../lib/membership.ts");
 
 // Validation runs before any database call, so these need no database.
+test("membership classes: a missing or empty list is refused, not saved as 'no classes'", async () => {
+  await assert.rejects(saveMembershipClasses(undefined, "t"), /at least one/);
+  await assert.rejects(saveMembershipClasses([], "t"), /at least one/);
+});
+
 test("membership classes: a class needs a name, a unique name and a sane fee", async () => {
   await assert.rejects(saveMembershipClasses([{ name: "  ", price: 5, per: "month" }], "t"), /needs a name/);
   await assert.rejects(saveMembershipClasses([{ name: "Tools", price: 5 }, { name: "tools", price: 6 }], "t"), /listed twice/);

@@ -125,7 +125,7 @@ function Settings({ s, reload }: Props) {
           <label className="field"><span>Message ({"{{name}}"} is replaced by their name)</span><textarea rows={5} value={f.welcomeBody} onChange={(e) => setF({ ...f, welcomeBody: e.target.value })} /></label></>}
         <h2>Sending speed</h2>
         <label className="field"><span>Emails per minute (0 = as fast as possible)</span><input type="number" min={0} value={f.perMinute} onChange={(e) => setF({ ...f, perMinute: +e.target.value })} /><small>Slower sending protects your sender reputation with new domains.</small></label>
-        <label className="field"><span>Emails per day (0 = no limit)</span><input type="number" min={0} value={f.perDay} onChange={(e) => setF({ ...f, perDay: +e.target.value })} /><small>Set this a little under your email provider's daily cap. Once it is reached, everything else waits on the Queue page and goes out after midnight (Detroit time).</small></label>
+        <label className="field"><span>Emails per day (0 = no limit)</span><input type="number" min={0} value={f.perDay} onChange={(e) => setF({ ...f, perDay: +e.target.value })} /><small>Set this a little under your email provider's daily cap. Once it is reached, a newsletter in progress pauses and carries on after midnight (Detroit time). Sign-in links, password resets and signing codes are never held back.</small></label>
         <h2>Bounces and spam complaints</h2>
         <p className="sub">In SMTP2GO go to Settings → Webhooks and add this URL for the bounce, spam and unsubscribe events. Those people are then never emailed again.</p>
         <code style={{ wordBreak: "break-all" }}>{typeof location !== "undefined" ? (f.siteUrl || location.origin) : ""}/mail/webhook?k={c.webhookKey}</code>
@@ -151,11 +151,11 @@ function Queue() {
   return (
     <>
       <h1>Queue {!!rows?.length && <button style={{ color: "var(--bad)" }} onClick={async () => { if (await confirmDialog(`Delete all ${rows.length} queued emails? They will never be sent.`, { ok: "Delete all", danger: true })) drop({ all: true }); }}>Delete all</button>}</h1>
-      <p className="sub">Emails that are waiting to go out. <b>Daily limit</b> ones are held until tomorrow because today's cap was reached; <b>Retrying</b> ones failed and are tried again (after 2, 4, 8 minutes and so on, up to 8 tries).</p>
+      <p className="sub">Emails that are waiting to go out. These failed and are tried again (after 2, 4, 8 minutes and so on, up to 8 tries).</p>
       {!rows ? <p>Loading…</p> : !rows.length ? <p className="sub">Nothing is waiting. 🎉</p> : (
         <table className="mp-table">
           <thead><tr><th>To</th><th>Subject</th><th>Why waiting</th><th>Tries</th><th>Next try</th><th>Last error</th><th /></tr></thead>
-          <tbody>{rows.map((r) => <tr key={r.id}><td>{r.recipient}</td><td>{r.subject}</td><td>{r.held ? <b>Daily limit</b> : <b style={{ color: "var(--bad)" }}>Retrying</b>}</td><td>{r.tries}</td><td>{r.gave_up ? <b style={{ color: "var(--bad)" }}>gave up</b> : r.held ? "when the limit resets" : when(r.next_at)}</td><td><small>{r.last_error}</small></td>
+          <tbody>{rows.map((r) => <tr key={r.id}><td>{r.recipient}</td><td>{r.subject}</td><td><b style={{ color: "var(--bad)" }}>Retrying</b></td><td>{r.tries}</td><td>{r.gave_up ? <b style={{ color: "var(--bad)" }}>gave up</b> : when(r.next_at)}</td><td><small>{r.last_error}</small></td>
             <td><button onClick={async () => { if (await confirmDialog(`Delete the email to ${r.recipient}?`)) drop({ ids: [r.id] }); }}>Delete</button></td></tr>)}</tbody>
         </table>)}
     </>
