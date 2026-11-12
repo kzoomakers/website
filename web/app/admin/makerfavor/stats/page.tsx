@@ -6,7 +6,7 @@ import Page from "./stats";
 export const dynamic = "force-dynamic";
 
 export default async function StatsPage() {
-  await gate("chores", "/admin/chores/stats");
+  await gate("chores", "/admin/makerfavor/stats");
   if (!getConfig()) redirect("/admin/services");
   return <Page />;
 }

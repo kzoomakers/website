@@ -1,13 +1,13 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { awardText, dueText, every, hrs, measureText, when } from "../../admin/chores/format";
+import { awardText, dueText, every, hrs, measureText, when } from "../../admin/makerfavor/format";
 
 type Chore = { id: number; name: string; every_days: number | null; notes: string; due_at: number | null; overdue_days: number | null; last_done_at: number | null; last_by: string | null; being_done_by: string[] };
 type Shift = { id: number; chore: string; started_at: number };
 type Hour = { name: string; user_id: number | null; hours: number; times: number };
 type Data = { me: number; name: string; chores: Chore[]; mine: Shift[]; hours: Hour[] };
 const rpc = async (op: string, args: Record<string, unknown> = {}) => {
-  const r = await fetch("/api/members/chores", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ op, ...args }) });
+  const r = await fetch("/api/members/makerfavor", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ op, ...args }) });
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 };

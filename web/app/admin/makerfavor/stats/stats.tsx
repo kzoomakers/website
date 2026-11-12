@@ -17,7 +17,7 @@ export default function Stats() {
     ["On time", p.on_time === null ? "–" : p.on_time + "%", `${p.scored} scheduled visits`], ["Average shift", p.avg_minutes === null ? "–" : p.avg_minutes + " min", ""]];
   return (
     <>
-      <h1>Chore stats</h1>
+      <h1>MakerFavor™ stats</h1>
       <nav className="bar">{PERIODS.map(([k, l]) => <button key={k} aria-pressed={period === k} className={period === k ? "primary" : ""} onClick={() => setPeriod(k)}>{l}</button>)}</nav>
       {p.new.length > 0 && <p className="sub">New this period: {p.new.join(", ")}.</p>}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>

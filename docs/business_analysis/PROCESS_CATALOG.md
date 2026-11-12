@@ -70,4 +70,4 @@ These are stated plainly so nobody assumes they are handled by the software. See
 | Google Calendar feed | Public calendar page | `lib/calendar-feed.ts` |
 | AI model provider (configurable) | Draft summaries of handbook/agreement changes; email and blog drafting help | `lib/ai.ts` |
 | ntfy.sh (optional) | Relaying iPhone push alerts | `lib/ntfy.ts` |
-| "YAMNet" volunteer system | Reads/writes chores through scoped API keys | `app/api/chores/route.ts` |
+| "YAMNet" volunteer system | Reads/writes chores through scoped API keys | `app/api/makerfavor/route.ts` |

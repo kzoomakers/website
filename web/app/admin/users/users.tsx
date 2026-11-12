@@ -7,7 +7,7 @@ import { confirmDialog } from "@/components/dialog";
 
 type Level = "read" | "write";
 type Row = { id: number; email: string; name: string; perms: Record<string, Level>; founder: boolean; disabled: boolean };
-const COLS = [["webmaster", "Website"], ["mail", "Email"], ["blog", "Blog"], ["forms", "Forms"], ["crm", "CRM"], ["board", "Signatures"], ["tours", "Tours"], ["chores", "Chores"], ["admin", "Admin"]] as const;
+const COLS = [["webmaster", "Website"], ["mail", "Email"], ["blog", "Blog"], ["forms", "Forms"], ["crm", "CRM"], ["board", "Signatures"], ["tours", "Tours"], ["chores", "MakerFavor™"], ["admin", "Admin"]] as const;
 
 // Who can open each top-level admin page: none, view only, or view + change. Search finds ordinary site accounts to grant access to.
 export default function Users({ initial, canEdit }: { initial: Row[]; canEdit: boolean }) {
