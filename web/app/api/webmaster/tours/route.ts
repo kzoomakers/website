@@ -31,6 +31,7 @@ export async function POST(req: Request) {
       case "staleSave": await n.setStaleDays(a.days); break;
       case "subAdd": await n.subscribe(a.event, a.topic); break;
       case "subRemove": await n.unsubscribe(a.event, a.topic); break;
+      case "import": return NextResponse.json(await t.importRequests(a.csv));
       case "offer": await t.offerTimes(id, a.offers, { name: String(a.guide_name ?? ""), email: String(a.guide_email ?? "") }, await baseUrl(req)); break;
       case "activate": { // approves a member, so it needs CRM write too
         if (!(await editingAllowed("crm", "write"))) return new NextResponse("Activating someone approves them as a member, which needs CRM access.", { status: 403 });

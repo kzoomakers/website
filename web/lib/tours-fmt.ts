@@ -67,3 +67,36 @@ export function summarize(rows: StatRow[], days: number, today: string) {
     closers, interests: tally(live.flatMap((r) => (r.interest ? r.interest.split(", ") : []))), heard: tally(live.map((r) => r.heard || "Not said")), series, weekly, heat,
   };
 }
+
+/** Minimal RFC-4180 parser: quoted fields may hold commas, quotes ("") and newlines. */
+export function parseCsv(text: string): string[][] {
+  const rows: string[][] = []; let row: string[] = [], f = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) { if (ch === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += ch; }
+    else if (ch === '"') q = true;
+    else if (ch === ",") { row.push(f); f = ""; }
+    else if (ch === "\n" || ch === "\r") { if (ch === "\r" && text[i + 1] === "\n") i++; row.push(f); rows.push(row); row = []; f = ""; }
+    else f += ch;
+  }
+  if (f || row.length) { row.push(f); rows.push(row); }
+  return rows.filter((r) => r.some((c) => c.trim()));
+}
+
+const AREA_MAP: Record<string, string> = { woodshop: "Wood shop", "metal shop / machine shop": "Metal shop", "welding shop": "Metal shop", "laser cutting / engraving": "Laser shop", "3d printing": "3D printing", "craft room": "Craft room", "electronics equipment": "Electronics" };
+
+/** Sign-up sheet rows (Timestamp, First, Last, Membership, Areas, Phone, Email, Contact, Heard, _, Purpose, Comments) to walk-up requests. Rows without a name, email or valid M/D/YYYY time are returned in `skipped`. */
+export function csvToRequests(text: string) {
+  const out: { first: string; last: string; email: string; phone: string; contact: string; interest: string; notes: string; at: string }[] = [], skipped: string[] = [];
+  for (const r of parseCsv(text).slice(1)) {
+    const [ts, first, last, member, areas, phone, email, contact, heard, , purpose, comments] = r.map((c) => (c ?? "").trim());
+    const m = ts?.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+    if (!m || !first || !EMAIL.test(email.toLowerCase())) { skipped.push(`${first} ${last} ${email}`.trim() || ts || "blank row"); continue; }
+    const p = (n: string | undefined) => (n ?? "0").padStart(2, "0");
+    const parts = areas.split(",").map((a) => a.trim()).filter(Boolean), known = new Set(parts.map((a) => AREA_MAP[a.toLowerCase()]).filter(Boolean)), other = parts.filter((a) => !AREA_MAP[a.toLowerCase()]);
+    const notes = [member && `Wants: ${member}`, heard && `Heard about us: ${heard}`, other.length && `Also interested in: ${other.join(", ")}`, purpose && `Why: ${purpose}`, comments && `Comments: ${comments}`, "Imported from sign-up sheet"].filter(Boolean).join("\n").slice(0, 1000);
+    out.push({ first: first.slice(0, 60), last: last.slice(0, 60), email: email.toLowerCase().slice(0, 200), phone: phone.slice(0, 30), contact: /^phone/i.test(contact) ? "Phone call" : "Text message", interest: [...known].join(", "), notes, at: `${m[3]}-${p(m[1])}-${p(m[2])} ${p(m[4])}:${p(m[5])}:${p(m[6])}` });
+  }
+  return { rows: out, skipped };
+}
+const EMAIL = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/;

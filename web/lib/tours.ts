@@ -1,7 +1,7 @@
 import { randomBytes } from "crypto";
 import { db } from "./db";
 import { notify, TOURS_TOPIC } from "./ntfy";
-import { checkOffers, DATE, summarize, fmtOffer, mins, reminderDue, TIME, TZ, type Offer } from "./tours-fmt";
+import { csvToRequests, checkOffers, DATE, summarize, fmtOffer, mins, reminderDue, TIME, TZ, type Offer } from "./tours-fmt";
 import { announce, getCfg as notifyCfg } from "./tours-notify";
 import { getMailCfg, mailReady, sendQueued as send } from "./mail";
 import MI_ZIPS from "./mi-zips.json"; // from the Michigan rows of GeoNames US.txt; refresh if zips are ever added
@@ -308,6 +308,21 @@ export async function requestTour(x: Record<string, unknown>, ipHash: string, de
   await notify(TOURS_TOPIC, { title: `Tour request: ${r.first} ${r.last}`, message: `${r.email} · ${r.phone} (prefers ${contact})${interest ? `\nInterested in: ${interest}` : ""}`, tags: "raising_hand", click: `${base}/admin/tours/walkups` });
   await logEvent("walkup_new", `${r.first} ${r.last} asked for a walk-up tour`, { detail: [`${r.email} · ${r.phone} (prefers ${contact})`, interest && `Interested in: ${interest}`].filter(Boolean).join("\n"), actor: `${r.first} ${r.last}` });
   await announce("walkup_new", { subject: `Walk-up tour request: ${r.first} ${r.last}`, lines: [`${r.first} ${r.last} (${r.email}, ${r.phone}, prefers ${contact}) asked for a tour.`, interest && `Interested in: ${interest}`, r.notes && `Notes: ${r.notes}`].filter(Boolean) as string[], tags: "raising_hand", click: `${base}/admin/tours/walkups` });
+}
+
+/** Bulk-adds sign-up sheet rows as open walk-ups dated from their original timestamp (Kalamazoo time). Quiet: no alerts. Rows already imported (same email and time) are skipped. */
+export async function importRequests(csv: unknown) {
+  if (typeof csv !== "string" || !csv.trim()) throw new Error("That file is empty.");
+  const { rows, skipped } = csvToRequests(csv), c = await conn();
+  let added = 0, dupes = 0;
+  for (const r of rows) {
+    const res = await c.query(`INSERT INTO tour_requests (first_name, last_name, email, phone, contact_method, interest, notes, token, created_at)
+      SELECT $1,$2,$3,$4,$5,$6,$7,$8, $9::timestamp AT TIME ZONE '${TZ}' WHERE NOT EXISTS (SELECT 1 FROM tour_requests WHERE lower(email) = $3 AND created_at = $9::timestamp AT TIME ZONE '${TZ}')`,
+      [r.first, r.last, r.email, r.phone, r.contact, r.interest, r.notes, randomBytes(24).toString("hex"), r.at]);
+    res.rowCount ? added++ : dupes++;
+  }
+  await logEvent("walkup_new", `${added} walk-up request(s) imported from a CSV`);
+  return { added, dupes, skipped };
 }
 
 export async function listRequests(all: boolean): Promise<WalkupRequest[]> {

@@ -16,6 +16,7 @@ export default function Walkups({ initial, email, name }: { initial: WalkupReque
   const [open, setOpen] = useState(0), [offers, setOffers] = useState<Offer[]>([blank]), [g, setG] = useState({ guide_name: name, guide_email: email });
   const load = async (a = all) => { setAll(a); setRows(await tours("requests", { all: a })); };
   const run = async (fn: () => Promise<unknown>) => { setMsg(""); setBusy(true); try { await fn(); await load(); return true; } catch (e: any) { setMsg(e.message); return false; } finally { setBusy(false); } };
+  const upload = async (f?: File) => { if (!f) return; setMsg(""); setBusy(true); try { const j = await tours("import", { csv: await f.text() }); await load(); await alertDialog(`Added ${j.added} request${j.added === 1 ? "" : "s"}${j.dupes ? `; ${j.dupes} already here` : ""}.${j.skipped.length ? ` Skipped ${j.skipped.length} without a valid name, email or time: ${j.skipped.join("; ")}` : ""}`); } catch (e: any) { setMsg(e.message); } finally { setBusy(false); } };
   const start = (r: WalkupRequest) => { setOpen(r.id); setMsg(""); setOffers(r.offers.length ? r.offers : [blank]); };
   const edit = (i: number, k: keyof Offer, v: string) => setOffers(offers.map((o, j) => (j === i ? { ...o, [k]: v } : o)));
   const add = () => { const l = offers[offers.length - 1]; setOffers([...offers, { ...l, date: nextWeek(l.date) }]); };
@@ -34,6 +35,7 @@ export default function Walkups({ initial, email, name }: { initial: WalkupReque
       <p className="sub">People who asked for a tour when no time was open. Click <b>Offer times</b>, add the dates and time blocks you could give a tour, and we email them the choices. When they pick one, it appears under Bookings. If none work, the request comes back here.</p>
       <nav className="bar">
         <label><input type="checkbox" checked={all} onChange={(e) => load(e.target.checked)} /> Include scheduled and dismissed</label>
+        <label className="tag" style={{ cursor: "pointer" }}>Import CSV…<input type="file" accept=".csv,text/csv" hidden disabled={busy} onChange={(e) => { upload(e.target.files?.[0]); e.target.value = ""; }} /></label>
         {msg && <Notice kind="error">{msg}</Notice>}
       </nav>
       <div className="card">
