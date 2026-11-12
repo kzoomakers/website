@@ -8,7 +8,7 @@ export async function rpc<T = any>(op: string, args: object = {}): Promise<T> {
 export type List = { id: number; name: string; description: string; created_at: string; subscribed: number; unconfirmed: number; unsubscribed: number };
 export type Cfg = {
   fromName: string; from: string; replyTo: string; siteUrl: string; aiModel: string; doubleOptIn: boolean; confirmSubject: string; confirmBody: string;
-  welcomeOn: boolean; welcomeSubject: string; welcomeBody: string; perMinute: number; webhookKey: string;
+  welcomeOn: boolean; welcomeSubject: string; welcomeBody: string; perMinute: number; perDay: number; webhookKey: string;
   smtp2goKey: string; smtpUrl: string; deepseekKey: string; isSet: Record<string, boolean>; mail: boolean; ai: boolean;
 };
 export type State = { lists: List[]; tags: string[]; templates: { id: number; name: string; design: Design }[]; cfg: Cfg };
