@@ -1,9 +1,9 @@
 "use client";
 import Notice, { msgKind } from "@/components/notice";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { confirmDialog } from "@/components/dialog";
 import type { Offer, WalkupRequest } from "@/lib/tours";
-import { queueOrder, tabOf } from "@/lib/tours-fmt";
+import { CHECKIN_BATCH, goneQuiet, queueOrder, tabOf } from "@/lib/tours-fmt";
 import { AdminThread } from "@/components/tour-thread";
 import { tours } from "../rpc";
 import MemberActions, { useClasses } from "../member-flow";
@@ -29,9 +29,23 @@ export default function Walkups({ initial, email, name }: { initial: WalkupReque
   // Waiting: people who confirmed come first; only requests still needing times are re-ordered, offered ones follow.
   const shown = tab === "waiting" ? [...queueOrder(inTab.filter((r) => r.status === "open"), latest), ...inTab.filter((r) => r.status !== "open")] : inTab;
   const waiting = rows.filter((r) => r.status === "open" && tabOf(r, today) === "waiting");
-  const counts = { waiting: waiting.length, confirmed: waiting.filter((r) => r.first_confirmed).length, quiet: waiting.filter((r) => r.checkins.length && !r.checkins.some((c) => c.answered_at)).length };
+  const counts = { waiting: waiting.length, confirmed: waiting.filter((r) => r.first_confirmed).length, quiet: waiting.filter((r) => goneQuiet(r.checkins)).length };
   const openPreview = async () => { setMsg(""); try { setPv(await tours("checkinPreview")); setSkip([]); } catch (e: any) { setMsg(e.message); } };
-  const sendAll = async () => { if (!pv) return; setBusy(true); try { const r = await tours("checkinSend", { ids: pv.people.map((p) => p.id).filter((i) => !skip.includes(i)) }); setPv(null); setMsg(`Sent ${r.sent} check-in${r.sent === 1 ? "" : "s"}${r.failed ? `. ${r.failed} failed to send.` : "."}`); await load(); } catch (e: any) { setMsg(e.message); } finally { setBusy(false); } };
+  const [prog, setProg] = useState<{ done: number; total: number } | null>(null), stop = useRef(false);
+  // Sends in small batches so a long list can't time out, and so the screen shows how far along it is. Stop leaves the rest unasked.
+  const sendAll = async () => {
+    if (!pv) return;
+    const ids = pv.people.map((p) => p.id).filter((i) => !skip.includes(i));
+    let sent = 0, failed = 0, done = 0; stop.current = false; setBusy(true); setMsg(""); setProg({ done: 0, total: ids.length });
+    try {
+      for (let i = 0; i < ids.length && !stop.current; i += CHECKIN_BATCH) {
+        const chunk = ids.slice(i, i + CHECKIN_BATCH), r = await tours("checkinSend", { ids: chunk });
+        sent += r.sent; failed += r.failed; done += chunk.length; setProg({ done, total: ids.length });
+      }
+      setMsg(`Sent ${sent} check-in${sent === 1 ? "" : "s"}${failed ? `. ${failed} failed to send` : ""}${stop.current ? `. Stopped early: ${ids.length - done} not asked` : ""}.`);
+    } catch (e: any) { setMsg(`${e.message} (${sent} went out before this.)`); }
+    finally { setBusy(false); setProg(null); setPv(null); await load(); }
+  };
   const [open, setOpen] = useState(0),[offers, setOffers] = useState<Offer[]>([blank]), [g, setG] = useState({ guide_name: name, guide_email: email });
   const load = async (a = all) => { setAll(a); setRows(await tours("requests", { all: a })); };
   const run = async (fn: () => Promise<unknown>) => { setMsg(""); setBusy(true); try { await fn(); await load(); return true; } catch (e: any) { setMsg(e.message); return false; } finally { setBusy(false); } };
@@ -55,7 +69,7 @@ export default function Walkups({ initial, email, name }: { initial: WalkupReque
       <div className="wk-toolbar">
         {TABS.map(([k, t]) => <button key={k} className={tab === k ? "pri" : ""} aria-pressed={tab === k} onClick={() => setTab(k)}>{t} ({rows.filter((r) => tabOf(r, today) === k).length})</button>)}
         <span className="wk-sp" />
-        <span className="sub" style={{ margin: 0 }}>{counts.waiting} waiting · {counts.confirmed} confirmed · {counts.quiet} never answered</span>
+        <span className="sub" style={{ margin: 0 }}>{counts.waiting} waiting · {counts.confirmed} confirmed · {counts.quiet} gone quiet</span>
       </div>
       {tab === "waiting" && (
         <div className="wk-toolbar">
@@ -72,7 +86,8 @@ export default function Walkups({ initial, email, name }: { initial: WalkupReque
           {!pv.people.length && <p>No one needs a check-in right now.</p>}
           <div className="wk-actions">
             <button className="pri" disabled={busy || !pv.ready || pv.people.length === skip.length} onClick={sendAll}>{busy ? "Sending…" : "Send check-ins"}</button>
-            <button onClick={() => setPv(null)}>Cancel</button>
+            {prog ? <button onClick={() => { stop.current = true; }}>Stop</button> : <button onClick={() => setPv(null)}>Cancel</button>}
+            {prog && <span role="status" style={{ marginLeft: 12 }}><progress value={prog.done} max={prog.total || 1} /> Asked {prog.done} of {prog.total}</span>}
           </div>
         </div>
       )}
@@ -88,7 +103,7 @@ export default function Walkups({ initial, email, name }: { initial: WalkupReque
             <PersonInfo p={r} />
             {r.first_confirmed && <div className="wk-line"><b>Confirmed interest</b> {ago(r.first_confirmed)}{r.checkins.filter((c) => c.answer === "interested").length > 1 && `, and again ${r.checkins.filter((c) => c.answer === "interested").length - 1} time(s), last ${ago(r.last_confirmed!)}`}</div>}
             {r.snooze_until && r.interest_state === "not_now" && <div className="wk-line"><b>Check back</b> {r.snooze_until}</div>}
-            {r.checkins.length > 0 && <div className="wk-line"><b>Check-ins</b> {r.checkins.map((c) => `${ago(c.sent_at)}: ${c.answered_at ? `${SAID[c.answer ?? ""] ?? c.answer} (${ago(c.answered_at)})` : "no reply"}`).join(" · ")}{r.checkins.filter((c) => !c.answered_at).length >= 2 && <span className="wk-flag">Gone quiet</span>}</div>}
+            {r.checkins.length > 0 && <div className="wk-line"><b>Check-ins</b> {r.checkins.map((c) => `${ago(c.sent_at)}: ${c.answered_at ? `${SAID[c.answer ?? ""] ?? c.answer} (${ago(c.answered_at)})` : "no reply"}`).join(" · ")}{goneQuiet(r.checkins) && <span className="wk-flag">Gone quiet</span>}</div>}
             {r.decline_note && r.status === "open" && <div className="wk-line"><b>Last reply</b> “{r.decline_note}”</div>}
             {r.status === "offered" && <ul className="wk-offers">{r.offers.map((o) => <li key={o.date + o.start}>{o.date} {o.start}–{o.end}</li>)}</ul>}
             {open === r.id ? (

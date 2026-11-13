@@ -1,7 +1,7 @@
 import { randomBytes } from "crypto";
 import { db } from "./db";
 import { notify, TOURS_TOPIC } from "./ntfy";
-import { csvToRequests, requestsToCsv, blocksToCsv, csvToBlocks, bookingsToCsv, csvToBookings, checkOffers, addMonths, canCheckIn, CHECKIN_ANSWERS, DATE, summarize, fmtOffer, mins, reminderDue, TIME, TZ, type Offer } from "./tours-fmt";
+import { csvToRequests, requestsToCsv, blocksToCsv, csvToBlocks, bookingsToCsv, csvToBookings, checkOffers, addMonths, canCheckIn, CHECKIN_ANSWERS, CHECKIN_BATCH, DATE, summarize, fmtOffer, mins, reminderDue, TIME, TZ, type Offer } from "./tours-fmt";
 import { announce, getCfg as notifyCfg, getPause, savePause } from "./tours-notify";
 import { getMailCfg, mailReady, sendQueued as send } from "./mail";
 import MI_ZIPS from "./mi-zips.json"; // from the Michigan rows of GeoNames US.txt; refresh if zips are ever added
@@ -147,8 +147,8 @@ export async function deleteBlocks(ids: unknown, base: string) {
   for (const p of people) {
     const w = when(p.date, p.start_time), sorry = `Hi ${p.name}, we're sorry: the volunteer who was going to give your tour on ${w} can no longer make it, so it's cancelled.`;
     await (walk.has(p.id)
-      ? mail(p.email, "Your Kzoo Makers tour needs a new time", [sorry, "We've put your request back in line, and a volunteer will email you new dates soon."])
-      : mail(p.email, "Your Kzoo Makers tour was cancelled", [sorry, "Please pick another time. If none are open, you'll be able to request a tour and a volunteer will offer you dates."], ["Rebook your tour", `${base}/tours`]));
+      ? mailVisitor(p.email, "Your Kzoo Makers tour needs a new time", [sorry, "We've put your request back in line, and a volunteer will email you new dates soon."])
+      : mailVisitor(p.email, "Your Kzoo Makers tour was cancelled", [sorry, "Please pick another time. If none are open, you'll be able to request a tour and a volunteer will offer you dates."], ["Rebook your tour", `${base}/tours`]));
   }
   if (people.length) await notify(TOURS_TOPIC, { title: `${people.length} tour(s) cancelled`, message: `${blocks} availability block(s) were deleted. ${people.map((p) => p.name).join(", ")} were emailed to rebook.`, tags: "warning", priority: 4 });
   return { blocks, people: people.length };
@@ -274,6 +274,11 @@ async function mail(to: string, subject: string, lines: string[], link?: [string
     await send({ to, subject, text: lines.join("\n\n") + (link ? `\n\n${link[0]}: ${link[1]}` : ""), html }, cfg);
   } catch (e) { console.error("tour email failed:", e); }
 }
+/** Email to a visitor. Anyone who unsubscribed is skipped here, so no path (cancellations, staff changes) can contact them by mistake. Fails closed: if we can't check, we don't send. */
+async function mailVisitor(to: string, subject: string, lines: string[], link?: [string, string]) {
+  try { if (await isUnsubscribed(to)) return; } catch (e) { console.error("unsubscribe check failed, email skipped:", e); return; }
+  await mail(to, subject, lines, link);
+}
 const when = (date: string, start: string) => new Date(`${date}T${start}:00Z`).toLocaleString("en-US", { timeZone: "UTC", weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" });
 
 /** A visitor books a tour. Locks the block so two people can't take the last place. */
@@ -356,7 +361,7 @@ export async function cancelBooking(id: number) {
   await c.query("UPDATE tour_requests SET status = 'closed' WHERE booking_id = $1", [id]);
   const b = (await c.query("SELECT date FROM tour_blocks WHERE id = $1", [r.block_id])).rows[0];
   await logEvent("cancel", `${r.name}'s tour on ${when(b.date, r.start_time)} was cancelled by staff`);
-  await mail(r.email, "Your Kzoo Makers tour was cancelled", [`Hi ${r.name}, your tour on ${when(b.date, r.start_time)} has been cancelled. Sorry for the trouble. You're welcome to book another time at kzoomakers.org/tours.`]);
+  await mailVisitor(r.email, "Your Kzoo Makers tour was cancelled", [`Hi ${r.name}, your tour on ${when(b.date, r.start_time)} has been cancelled. Sorry for the trouble. You're welcome to book another time at kzoomakers.org/tours.`]);
 }
 
 // ---- walk-up requests
@@ -513,7 +518,7 @@ function checkinMail(first: string, token: string, base: string) {
 export async function sendCheckins(ids: unknown, who: string, base: string) {
   const cfg = await getMailCfg();
   if (!mailReady(cfg)) throw new Error("Email isn't set up yet, so check-ins can't be sent. An admin can fix this under Services.");
-  const want = new Set(Array.isArray(ids) ? ids.slice(0, 500).map(Number) : []), c = await conn();
+  const want = new Set(Array.isArray(ids) ? ids.slice(0, CHECKIN_BATCH).map(Number) : []), c = await conn();
   let sent = 0, failed = 0;
   for (const r of (await checkinTargets()).filter((x) => want.has(x.id))) {
     try {
@@ -526,11 +531,13 @@ export async function sendCheckins(ids: unknown, who: string, base: string) {
   return { sent, failed };
 }
 
-/** What the check-in page needs. */
+/** What the check-in page needs, including what unsubscribing would cut off for this person (so the page can say so). */
 export async function checkinByToken(token: string) {
-  const r = (await (await conn()).query("SELECT first_name, status FROM tour_requests WHERE token = $1", [token])).rows[0];
+  const c = await conn(), r = (await c.query("SELECT first_name, status, email FROM tour_requests WHERE token = $1", [token])).rows[0];
   if (!r) throw new Error("This link isn't valid.");
-  return { name: r.first_name as string, open: r.status === "open" || r.status === "offered" };
+  const upcoming = (await c.query("SELECT b.date, k.start_time FROM tour_bookings k JOIN tour_blocks b ON b.id = k.block_id WHERE lower(k.email) = lower($1) AND NOT k.cancelled AND b.date || ' ' || k.start_time >= $2 ORDER BY b.date, k.start_time", [r.email, localNow()])).rows.map((x) => when(x.date, x.start_time));
+  const live = (await c.query("SELECT DISTINCT status FROM tour_requests WHERE lower(email) = lower($1) AND status IN ('open','offered')", [r.email])).rows.map((x) => x.status);
+  return { name: r.first_name as string, open: r.status === "open" || r.status === "offered", upcoming, offered: live.includes("offered"), waiting: live.includes("open"), paused: (await getPause()).paused };
 }
 const SAID = { interested: "is still interested", not_now: "isn't ready right now", not_interested: "is no longer interested", unsubscribed: "unsubscribed from all tour emails" } as const;
 /** Records someone's answer for every open request under their email. "Not now" with months 1 or 3 snoozes them; anything else (0) means never ask again. */
@@ -677,6 +684,7 @@ export async function postStaff(kind: string, id: number, body: string, internal
   if (!KINDS.includes(kind) || !body) throw new Error("Write a message first.");
   const p = await party(kind as Kind, id);
   if (!internal) {
+    if (await isUnsubscribed(p.email)) throw new Error(`${UNSUB_ERR} You can still save this as an internal note.`);
     const cfg = await getMailCfg();
     if (!mailReady(cfg)) throw new Error("Email isn't set up yet, so the message can't be sent. You can still save it as an internal note.");
     await send({ to: p.email, subject: "A message about your Kzoo Makers tour",

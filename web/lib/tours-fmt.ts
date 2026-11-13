@@ -190,6 +190,10 @@ export const isStaffEmail = (email: string) => /@kzoomakers\.org$/i.test(email) 
 
 // ---- walk-up check-ins ("are you still interested?")
 export const CHECKIN_GAP_DAYS = 7;
+export const CHECKIN_BATCH = 25; // emails per request, so one slow send can't time out a big list
+export const GONE_QUIET_AFTER = 2;
+/** Gone quiet: the last two (or more) check-ins in a row went unanswered. `checkins` is oldest first. */
+export const goneQuiet = (checkins: { answered_at: string | null }[]) => { let n = 0; for (let i = checkins.length - 1; i >= 0 && !checkins[i].answered_at; i--) n++; return n >= GONE_QUIET_AFTER; };
 export const CHECKIN_ANSWERS = ["interested", "not_now", "not_interested", "unsubscribed"] as const;
 export const addMonths = (date: string, n: number) => { const d = new Date(date + "T12:00:00Z"); d.setUTCMonth(d.getUTCMonth() + n); return d.toISOString().slice(0, 10); };
 type Interest = { interest_state: string; snooze_until: string | null };

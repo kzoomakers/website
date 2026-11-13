@@ -165,3 +165,11 @@ test("unsubscribed people are never checked in and sit under Not interested", ()
   assert.ok(!canCheckIn(ci({ interest_state: "unsubscribed" }), TODAY, NOWMS));
   assert.equal(tabOf(ci({ interest_state: "unsubscribed" }), TODAY), "no");
 });
+
+const { goneQuiet, CHECKIN_BATCH } = await import("../lib/tours-fmt.ts");
+test("gone quiet means the last two check-ins in a row had no reply", () => {
+  const k = (...a) => a.map((x) => ({ answered_at: x ? "2026-11-01" : null }));
+  assert.equal(goneQuiet(k()), false); assert.equal(goneQuiet(k(0)), false); assert.equal(goneQuiet(k(0, 0)), true);
+  assert.equal(goneQuiet(k(0, 0, 1)), false, "they answered since"); assert.equal(goneQuiet(k(1, 0, 0)), true); assert.equal(goneQuiet(k(0, 1, 0)), false);
+  assert.ok(CHECKIN_BATCH > 0 && CHECKIN_BATCH <= 50);
+});
