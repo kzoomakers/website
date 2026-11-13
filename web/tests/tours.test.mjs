@@ -129,3 +129,39 @@ test("stats: burnup, weekly conversion, per-guide outcomes, close-time buckets a
   assert.equal(one.closers.length, 2, "the guide table still lists everyone");
   assert.deepEqual(one.guides.map((g) => g.name), ["Lee", "Sam"]);
 });
+
+const { canCheckIn, tabOf, queueOrder, addMonths } = await import("../lib/tours-fmt.ts");
+const TODAY = "2026-11-13", NOWMS = +new Date("2026-11-13T12:00:00Z");
+const ci = (o = {}) => ({ status: "open", interest_state: "active", snooze_until: null, last_sent: null, ...o });
+
+test("check-ins go to open, active people not asked in the last 7 days", () => {
+  assert.ok(canCheckIn(ci(), TODAY, NOWMS));
+  assert.ok(!canCheckIn(ci({ status: "closed" }), TODAY, NOWMS), "dismissed/closed are left out");
+  assert.ok(!canCheckIn(ci({ status: "offered" }), TODAY, NOWMS), "times already offered");
+  assert.ok(!canCheckIn(ci({ interest_state: "not_interested" }), TODAY, NOWMS));
+  assert.ok(!canCheckIn(ci({ interest_state: "not_now", snooze_until: "2026-12-01" }), TODAY, NOWMS), "still snoozed");
+  assert.ok(canCheckIn(ci({ interest_state: "not_now", snooze_until: "2026-11-13" }), TODAY, NOWMS), "snooze date has arrived");
+  assert.ok(!canCheckIn(ci({ last_sent: "2026-11-10T12:00:00Z" }), TODAY, NOWMS), "asked 3 days ago");
+  assert.ok(canCheckIn(ci({ last_sent: "2026-11-05T12:00:00Z" }), TODAY, NOWMS));
+});
+
+test("tabs and snooze dates", () => {
+  assert.equal(tabOf(ci(), TODAY), "waiting");
+  assert.equal(tabOf(ci({ interest_state: "not_now", snooze_until: "2026-12-13" }), TODAY), "later");
+  assert.equal(tabOf(ci({ interest_state: "not_now", snooze_until: "2026-11-01" }), TODAY), "waiting");
+  assert.equal(tabOf(ci({ interest_state: "not_interested" }), TODAY), "no");
+  assert.equal(addMonths("2026-11-30", 3), "2027-03-02"); // JS rolls Feb 30 over; fine for a check-back date
+  assert.equal(addMonths("2026-11-13", 1), "2026-12-13");
+});
+
+test("queue: confirmed first by earliest (or latest) yes, then by request date", () => {
+  const r = (id, created, first, last) => ({ id, created_at: created, first_confirmed: first, last_confirmed: last });
+  const rows = [r(1, "2026-01-01", null, null), r(2, "2026-02-01", "2026-11-05", "2026-11-10"), r(3, "2026-03-01", "2026-11-01", "2026-11-02"), r(4, "2025-12-01", null, null)];
+  assert.deepEqual(queueOrder(rows, false).map((x) => x.id), [3, 2, 4, 1]);
+  assert.deepEqual(queueOrder(rows, true).map((x) => x.id), [2, 3, 4, 1]);
+});
+
+test("unsubscribed people are never checked in and sit under Not interested", () => {
+  assert.ok(!canCheckIn(ci({ interest_state: "unsubscribed" }), TODAY, NOWMS));
+  assert.equal(tabOf(ci({ interest_state: "unsubscribed" }), TODAY), "no");
+});

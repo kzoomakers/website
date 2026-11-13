@@ -11,14 +11,14 @@ import { isStaffEmail } from "@/lib/tours-fmt";
 
 // Tours admin RPC: POST { op, ...args }. Reads need Tours view access, everything else Tours edit access.
 export const dynamic = "force-dynamic";
-const READS = new Set(["blocks", "bookings", "tabs", "waiting", "requests", "exportRequests", "exportBlocks", "exportBookings", "thread", "notifyGet", "calendar", "timeline", "stats"]);
+const READS = new Set(["blocks", "bookings", "tabs", "waiting", "requests", "exportRequests", "exportBlocks", "exportBookings", "thread", "notifyGet", "checkinPreview", "calendar", "timeline", "stats"]);
 // The admin page each op belongs to (see lib/access.ts), so a person given just that page can use it. An op not listed here needs a whole-section grant.
 const PAGE: Record<string, string | string[]> = {
   blocks: ["availability", "bookings"], saveBlock: "availability", deleteBlocks: "availability", exportBlocks: "availability", importBlocks: "availability", calendar: "*",
   bookings: "bookings", tabs: "bookings", waiting: "bookings", addTab: "bookings", deleteTab: "bookings", renameTab: "bookings", moveToTab: "bookings", remind: "bookings", cancel: "bookings", setStatus: "bookings", exportBookings: "bookings", importBookings: "bookings",
-  requests: "walkups", offer: "walkups", reopen: "walkups", close: "walkups", exportRequests: "walkups", import: "walkups", thread: ["bookings", "walkups"], post: ["bookings", "walkups"],
+  requests: "walkups", checkinPreview: "walkups", checkinSend: "walkups", offer: "walkups", reopen: "walkups", close: "walkups", exportRequests: "walkups", import: "walkups", thread: ["bookings", "walkups"], post: ["bookings", "walkups"],
   stats: "stats", timeline: "timeline",
-  notifyGet: "notifications", emailAdd: "notifications", emailRemove: "notifications", staleSave: "notifications", subAdd: "notifications", subRemove: "notifications",
+  notifyGet: "notifications", emailAdd: "notifications", emailRemove: "notifications", staleSave: "notifications", pauseSave: "notifications", subAdd: "notifications", subRemove: "notifications",
   activate: ["bookings", "walkups"], undoActivation: ["bookings", "walkups"],
 };
 
@@ -41,6 +41,9 @@ export async function POST(req: Request) {
       case "notifyGet": return NextResponse.json(await n.overview());
       case "emailAdd": await n.addEmail(a.event, a.email); break;
       case "emailRemove": await n.removeEmail(a.event, a.email); break;
+      case "checkinPreview": return NextResponse.json(await t.checkinPreview());
+      case "checkinSend": { const m = await me(), r = await t.sendCheckins(a.ids, m?.name || who, await baseUrl(req)); await logAudit(who, "tour.checkinSend", `${r.sent} sent, ${r.failed} failed`); return NextResponse.json(r); }
+      case "pauseSave": await t.setPaused(a.paused, a.message, who); break;
       case "staleSave": await n.setStaleDays(a.days); break;
       case "subAdd": await n.subscribe(a.event, a.topic); break;
       case "subRemove": await n.unsubscribe(a.event, a.topic); break;

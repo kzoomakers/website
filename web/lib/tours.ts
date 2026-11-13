@@ -1,8 +1,8 @@
 import { randomBytes } from "crypto";
 import { db } from "./db";
 import { notify, TOURS_TOPIC } from "./ntfy";
-import { csvToRequests, requestsToCsv, blocksToCsv, csvToBlocks, bookingsToCsv, csvToBookings, checkOffers, DATE, summarize, fmtOffer, mins, reminderDue, TIME, TZ, type Offer } from "./tours-fmt";
-import { announce, getCfg as notifyCfg } from "./tours-notify";
+import { csvToRequests, requestsToCsv, blocksToCsv, csvToBlocks, bookingsToCsv, csvToBookings, checkOffers, addMonths, canCheckIn, CHECKIN_ANSWERS, DATE, summarize, fmtOffer, mins, reminderDue, TIME, TZ, type Offer } from "./tours-fmt";
+import { announce, getCfg as notifyCfg, getPause, savePause } from "./tours-notify";
 import { getMailCfg, mailReady, sendQueued as send } from "./mail";
 import MI_ZIPS from "./mi-zips.json"; // from the Michigan rows of GeoNames US.txt; refresh if zips are ever added
 
@@ -28,7 +28,7 @@ export type Msg = { id: number; kind: "staff" | "visitor" | "note"; author: stri
 export type { Offer };
 export { fmtOffer };
 export type WalkupRequest = { id: number; first_name: string; last_name: string; email: string; phone: string; zip: string; contact_method: string; interest: string; heard: string; notes: string; status: string; activated_at: string | null; activated_by: string; acct: Acct;
-  reschedules: number; reminded_at: string | null; offers: Offer[]; guide_name: string; decline_note: string; client_ip: string; user_agent: string; screen: string; created_at: string; msgs: number; last_from: string | null };
+  interest_state: string; snooze_until: string | null; first_confirmed: string | null; last_confirmed: string | null; checkins: { sent_at: string; answered_at: string | null; answer: string | null }[]; reschedules: number; reminded_at: string | null; offers: Offer[]; guide_name: string; decline_note: string; client_ip: string; user_agent: string; screen: string; created_at: string; msgs: number; last_from: string | null };
 
 const EMAIL_OK = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/;
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
@@ -76,6 +76,10 @@ async function conn() {
     await p.query("CREATE TABLE IF NOT EXISTS tour_tabs (id serial PRIMARY KEY, name text NOT NULL, created_at timestamptz NOT NULL DEFAULT now())");
     await p.query("CREATE UNIQUE INDEX IF NOT EXISTS tour_tabs_name ON tour_tabs (lower(name))");
     await p.query("ALTER TABLE tour_bookings ADD COLUMN IF NOT EXISTS tab_id int REFERENCES tour_tabs ON DELETE SET NULL");
+    await p.query(`CREATE TABLE IF NOT EXISTS tour_checkins (id serial PRIMARY KEY, request_id int NOT NULL REFERENCES tour_requests ON DELETE CASCADE, sent_at timestamptz NOT NULL DEFAULT now(), sent_by text NOT NULL DEFAULT '',
+      answered_at timestamptz, answer text, snooze_until date, note text NOT NULL DEFAULT '')`);
+    await p.query("CREATE INDEX IF NOT EXISTS tour_checkins_request ON tour_checkins (request_id)");
+    await p.query("ALTER TABLE tour_requests ADD COLUMN IF NOT EXISTS interest_state text NOT NULL DEFAULT 'active', ADD COLUMN IF NOT EXISTS snooze_until date");
     // The Google Form is retired: point the menu link and the redirect page at the new booking page.
     await p.query("UPDATE settings SET data = replace(data::text, $1, '/tours')::jsonb WHERE key = 'menu'", [GOOGLE_FORM]);
     await p.query("UPDATE pages SET data = replace(data::text, $1, '/tours')::jsonb WHERE slug = 'tour-form-redirect'", [GOOGLE_FORM]);
@@ -235,7 +239,7 @@ async function logEvent(kind: string, title: string, o: { detail?: string; actor
 }
 
 export type TimelineEvent = { id: number; at: string; kind: string; title: string; detail: string; actor: string; guide: string };
-const GROUPS: Record<string, string[]> = { bookings: ["booking", "cancel", "status"], walkups: ["walkup_new", "walkup_taken", "walkup_confirmed", "walkup_declined", "walkup_closed", "walkup_reopened", "walkup_reminder"], messages: ["message", "note", "message_visitor"], reminders: ["reminder_6h", "reminder_3h", "reminder_1h", "reminder_now"] };
+const GROUPS: Record<string, string[]> = { bookings: ["booking", "cancel", "status"], walkups: ["walkup_new", "walkup_taken", "walkup_confirmed", "walkup_declined", "walkup_closed", "walkup_reopened", "walkup_reminder", "walkup_checkin", "walkup_checkin_answer", "signups_paused", "signups_resumed"], messages: ["message", "note", "message_visitor"], reminders: ["reminder_6h", "reminder_3h", "reminder_1h", "reminder_now"] };
 /** Newest first, 100 at a time (`before` is the last id of the previous page). `groups` limits to bookings / walkups / messages / reminders; `q` searches the text. */
 export async function timeline(o: { before?: number; groups?: string[]; q?: string }) {
   const kinds = (o.groups ?? []).flatMap((g) => GROUPS[g] ?? []), ps: unknown[] = [], w: string[] = [];
@@ -290,7 +294,16 @@ const saveRequest = async (c: Awaited<ReturnType<typeof conn>>, p: Person, ipHas
   c.query("INSERT INTO tour_requests (first_name, last_name, email, phone, zip, contact_method, interest, heard, notes, token, ip_hash, client_ip, user_agent, screen, status, reject_reason) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)",
     [p.first, p.last, p.email, p.phone, p.zip, p.contact, p.interest, p.heard, p.notes, randomBytes(24).toString("hex"), ipHash, dev.ip, dev.ua, dev.screen, p.outOfArea ? "closed" : "open", p.outOfArea ? "out_of_area" : ""]);
 
+export { getPause };
+/** Turns signups on or off (see the Notifications page) and notes who did it on the timeline. */
+export async function setPaused(paused: unknown, message: unknown, who: string) {
+  const was = (await getPause()).paused, r = await savePause(paused, message);
+  if (was !== r.paused) await logEvent(r.paused ? "signups_paused" : "signups_resumed", r.paused ? "Signups paused" : "Signups resumed", { actor: who });
+}
+
 export async function book(x: Record<string, unknown> & { block: number; start: string }, ipHash: string, dev: Device, base: string) {
+  const pause = await getPause();
+  if (pause.paused) throw new Error(pause.message);
   const p = cleanPerson(x), name = `${p.first} ${p.last}`, { email, phone, interest, heard } = p, vnotes = p.notes;
   if (p.outOfArea) {
     const c = await conn();
@@ -431,19 +444,28 @@ export async function exportRequests(all: boolean) {
 }
 
 export async function listRequests(all: boolean): Promise<WalkupRequest[]> {
-  return (await (await conn()).query(`SELECT id, first_name, last_name, email, phone, zip, contact_method, interest, heard, activated_at, activated_by, ${ACCT("tour_requests.email")}, notes, status, reschedules, reminded_at, offers, guide_name, decline_note, client_ip, user_agent, screen, created_at, (SELECT count(*)::int FROM tour_messages m WHERE m.kind = 'request' AND m.ref_id = tour_requests.id AND m.author_kind <> 'note') AS msgs, (SELECT m.author_kind FROM tour_messages m WHERE m.kind = 'request' AND m.ref_id = tour_requests.id ORDER BY m.id DESC LIMIT 1) AS last_from
+  return (await (await conn()).query(`SELECT id, first_name, last_name, email, phone, zip, contact_method, interest, heard, activated_at, activated_by, ${ACCT("tour_requests.email")}, notes, status, interest_state, to_char(snooze_until, 'YYYY-MM-DD') AS snooze_until, reschedules, reminded_at, offers, guide_name, decline_note, client_ip, user_agent, screen, created_at, (SELECT count(*)::int FROM tour_messages m WHERE m.kind = 'request' AND m.ref_id = tour_requests.id AND m.author_kind <> 'note') AS msgs, (SELECT m.author_kind FROM tour_messages m WHERE m.kind = 'request' AND m.ref_id = tour_requests.id ORDER BY m.id DESC LIMIT 1) AS last_from,
+    (SELECT min(answered_at) FROM tour_checkins k WHERE k.request_id = tour_requests.id AND k.answer = 'interested') AS first_confirmed, (SELECT max(answered_at) FROM tour_checkins k WHERE k.request_id = tour_requests.id AND k.answer = 'interested') AS last_confirmed,
+    COALESCE((SELECT json_agg(json_build_object('sent_at', k.sent_at, 'answered_at', k.answered_at, 'answer', k.answer) ORDER BY k.sent_at) FROM tour_checkins k WHERE k.request_id = tour_requests.id), '[]') AS checkins
     FROM tour_requests WHERE ($1 OR status IN ('open','offered')) ORDER BY created_at`, [all])).rows;
 }
 
 /** Walk-ups that were sent times and haven't picked yet, oldest first. */
 export async function listWaiting() { return (await listRequests(false)).filter((r) => r.status === "offered"); }
 
+/** The footer on every tour email we start: the link says what unsubscribing costs, and the page it opens asks again before doing anything. */
+const unsubText = "Unsubscribe from tour emails. You will no longer be contacted about tour signups, scheduling or openings.";
+const unsubLink = (base: string, token: string) => `${base}/tours/checkin?token=${token}&a=unsubscribed`;
+/** True when anyone with this email has unsubscribed, so staff can't email them by mistake. */
+const isUnsubscribed = async (email: string) => !!(await (await conn()).query("SELECT 1 FROM tour_requests WHERE lower(email) = lower($1) AND interest_state = 'unsubscribed' LIMIT 1", [email])).rowCount;
+const UNSUB_ERR = "This person unsubscribed from tour emails, so we can't contact them about tours.";
+
 /** The email with one link per offered time plus a "none of these work" link. */
 function offerMail(first: string, token: string, offers: Offer[], intro: string, base: string) {
-  const link = `${base}/tours/respond?token=${token}`, outro = "If these don't work for you, click here to request other available times, and your request will go back to the volunteers.";
+  const link = `${base}/tours/respond?token=${token}`, outro = "If these don't work for you, click here to request other available times, and your request will go back to the volunteers.", bye = "Not interested anymore? Let us know";
   return {
-    html: `<p>Hi ${esc(first)},</p><p>${esc(intro)}</p><ul>${offers.map((o, i) => `<li><a href="${esc(link)}&pick=${i}">${esc(fmtOffer(o))}</a></li>`).join("")}</ul><p><a href="${esc(link)}&none=1">${esc(outro)}</a></p>`,
-    text: `Hi ${first},\n\n${intro}\n\n${offers.map((o, i) => `* ${fmtOffer(o)}\n  ${link}&pick=${i}`).join("\n")}\n\n${outro}\n${link}&none=1`,
+    html: `<p>Hi ${esc(first)},</p><p>${esc(intro)}</p><ul>${offers.map((o, i) => `<li><a href="${esc(link)}&pick=${i}">${esc(fmtOffer(o))}</a></li>`).join("")}</ul><p><a href="${esc(link)}&none=1">${esc(outro)}</a></p><p><small><a href="${esc(`${base}/tours/checkin?token=${token}&a=not_interested`)}">${bye}</a></small></p><p><small><a href="${esc(unsubLink(base, token))}">${esc(unsubText)}</a></small></p>`,
+    text: `Hi ${first},\n\n${intro}\n\n${offers.map((o, i) => `* ${fmtOffer(o)}\n  ${link}&pick=${i}`).join("\n")}\n\n${outro}\n${link}&none=1\n\n${bye}: ${base}/tours/checkin?token=${token}&a=not_interested\n\n${unsubText}\n${unsubLink(base, token)}`,
   };
 }
 
@@ -452,6 +474,7 @@ export async function remindOffer(id: number, base: string) {
   const c = await conn(), cfg = await getMailCfg();
   if (!mailReady(cfg)) throw new Error("Email isn't set up yet, so the reminder can't be sent. An admin can fix this under Services.");
   const r = (await c.query("SELECT first_name, last_name, email, token, offers, guide_name, status, reminded_at FROM tour_requests WHERE id = $1", [id])).rows[0];
+  if (r && await isUnsubscribed(r.email)) throw new Error(UNSUB_ERR);
   if (!r || r.status !== "offered") throw new Error("They already picked a time or the offer was taken back, so there's nothing to remind them about.");
   if (r.reminded_at && Date.now() - +new Date(r.reminded_at) < 3600e3) throw new Error(`A reminder went to ${r.first_name} less than an hour ago. Give them a little time.`);
   const now = localNow(MIN_ADVANCE_H), offers = (r.offers as Offer[]).filter((o) => `${o.date} ${o.start}` >= now);
@@ -462,6 +485,76 @@ export async function remindOffer(id: number, base: string) {
   await logEvent("walkup_reminder", `Reminded ${r.first_name} ${r.last_name} to pick a tour time`, { detail: offers.map(fmtOffer).join("\n") });
 }
 
+// ---- check-ins: staff send "are you still interested?" in bulk; each answer is a button on /tours/checkin
+const CANDIDATES = `SELECT r.id, r.first_name, r.last_name, r.email, r.token, r.status, r.interest_state, to_char(r.snooze_until, 'YYYY-MM-DD') AS snooze_until,
+  (SELECT max(k.sent_at) FROM tour_checkins k WHERE k.request_id = r.id) AS last_sent FROM tour_requests r WHERE r.status = 'open' ORDER BY r.created_at`;
+/** Who a bulk check-in would email: one row per email address. */
+export async function checkinCandidates() {
+  const today = localNow().slice(0, 10), seen = new Set<string>();
+  return (await (await conn()).query(CANDIDATES)).rows.filter((r) => canCheckIn(r, today, Date.now())).filter((r) => { const e = r.email.toLowerCase(); return !seen.has(e) && !!seen.add(e); });
+}
+async function checkinTargets() {
+  const out = [];
+  for (const r of await checkinCandidates()) if (!(await isUnsubscribed(r.email))) out.push(r);
+  return out;
+}
+export async function checkinPreview() {
+  return { ready: mailReady(await getMailCfg()), people: (await checkinTargets()).map((r) => ({ id: r.id, name: `${r.first_name} ${r.last_name}`, email: r.email })) };
+}
+function checkinMail(first: string, token: string, base: string) {
+  const link = (a: string) => `${base}/tours/checkin?token=${token}&a=${a}`, ask = "We're still keeping a spot for you in line for a Kzoo Makers tour. Are you still interested?";
+  const opts = [["Yes, I'm still interested", "interested"], ["Not right now", "not_now"], ["No longer interested", "not_interested"]] as const;
+  return {
+    html: `<p>Hi ${esc(first)},</p><p>${esc(ask)}</p><ul>${opts.map(([t, a]) => `<li><a href="${esc(link(a))}">${t}</a></li>`).join("")}</ul><p><small><a href="${esc(unsubLink(base, token))}">${esc(unsubText)}</a></small></p>`,
+    text: `Hi ${first},\n\n${ask}\n\n${opts.map(([t, a]) => `* ${t}\n  ${link(a)}`).join("\n")}\n\n${unsubText}\n${unsubLink(base, token)}`,
+  };
+}
+/** Emails the check-in to the chosen people (re-checked here, so a stale preview can't double-send). Returns how many went out. */
+export async function sendCheckins(ids: unknown, who: string, base: string) {
+  const cfg = await getMailCfg();
+  if (!mailReady(cfg)) throw new Error("Email isn't set up yet, so check-ins can't be sent. An admin can fix this under Services.");
+  const want = new Set(Array.isArray(ids) ? ids.slice(0, 500).map(Number) : []), c = await conn();
+  let sent = 0, failed = 0;
+  for (const r of (await checkinTargets()).filter((x) => want.has(x.id))) {
+    try {
+      await send({ to: r.email, subject: "Are you still interested in a Kzoo Makers tour?", ...checkinMail(r.first_name, r.token, base) }, cfg);
+      await c.query("INSERT INTO tour_checkins (request_id, sent_by) SELECT id, $2 FROM tour_requests WHERE lower(email) = lower($1) AND status = 'open'", [r.email, who]);
+      sent++;
+    } catch (e) { failed++; console.error("check-in email failed:", e); }
+  }
+  if (sent) await logEvent("walkup_checkin", `${who} asked ${sent} waiting walk-up${sent > 1 ? "s" : ""} if they are still interested`, { actor: who });
+  return { sent, failed };
+}
+
+/** What the check-in page needs. */
+export async function checkinByToken(token: string) {
+  const r = (await (await conn()).query("SELECT first_name, status FROM tour_requests WHERE token = $1", [token])).rows[0];
+  if (!r) throw new Error("This link isn't valid.");
+  return { name: r.first_name as string, open: r.status === "open" || r.status === "offered" };
+}
+const SAID = { interested: "is still interested", not_now: "isn't ready right now", not_interested: "is no longer interested", unsubscribed: "unsubscribed from all tour emails" } as const;
+/** Records someone's answer for every open request under their email. "Not now" with months 1 or 3 snoozes them; anything else (0) means never ask again. */
+export async function respondCheckin(token: string, answer: unknown, months: unknown, note: unknown, base: string) {
+  const c = await conn();
+  const r = (await c.query("SELECT first_name, last_name, email, status FROM tour_requests WHERE token = $1", [token])).rows[0];
+  if (!r) throw new Error("This link isn't valid.");
+  if (!CHECKIN_ANSWERS.includes(answer as any)) throw new Error("Please pick one of the answers.");
+  if (answer !== "unsubscribed" && r.status !== "open" && r.status !== "offered") throw new Error("This request is already scheduled or closed, so there's nothing to answer. Thank you!");
+  const m = Number(months), snoozing = answer === "not_now" && (m === 1 || m === 3), a = (answer === "not_now" && !snoozing ? "not_interested" : answer) as (typeof CHECKIN_ANSWERS)[number];
+  const state = a === "interested" ? "active" : a === "unsubscribed" ? "unsubscribed" : snoozing ? "not_now" : "not_interested", until = snoozing ? addMonths(localNow().slice(0, 10), m) : null, text = String(note ?? "").trim().slice(0, 500);
+  const ids: number[] = (await c.query("SELECT id FROM tour_requests WHERE lower(email) = lower($1) AND ($2 OR status IN ('open','offered'))", [r.email, a === "unsubscribed"])).rows.map((x) => x.id);
+  const done: number[] = (await c.query(`UPDATE tour_checkins SET answered_at = now(), answer = $2, snooze_until = $3, note = $4 WHERE id IN
+    (SELECT DISTINCT ON (request_id) id FROM tour_checkins WHERE request_id = ANY($1) AND answered_at IS NULL ORDER BY request_id, sent_at DESC) RETURNING request_id`, [ids, a, until, text])).rows.map((x) => x.request_id);
+  const rest = ids.filter((i) => !done.includes(i)); // answered from a footer link, with no check-in sent
+  if (rest.length) await c.query("INSERT INTO tour_checkins (request_id, sent_by, answered_at, answer, snooze_until, note) SELECT id, '(from an email link)', now(), $2, $3, $4 FROM tour_requests WHERE id = ANY($1)", [rest, a, until, text]);
+  // Someone who is out takes back any times we offered, so the request lands in its tab instead of staying "waiting for their reply".
+  await c.query("UPDATE tour_requests SET interest_state = $2::text, snooze_until = $3, status = CASE WHEN $2::text <> 'active' AND status = 'offered' THEN 'open' ELSE status END, offers = CASE WHEN $2::text <> 'active' AND status = 'offered' THEN '[]' ELSE offers END WHERE id = ANY($1)", [ids, state, until]);
+  const name = `${r.first_name} ${r.last_name}`;
+  await logEvent("walkup_checkin_answer", `${name} ${SAID[a]}${until ? ` (check back ${until})` : ""}`, { detail: text, actor: name });
+  await notify(TOURS_TOPIC, { title: `Check-in answer: ${name}`, message: `${name} ${SAID[a]}${until ? `. Check back ${until}.` : ""}${text ? `\n"${text}"` : ""}`, tags: a === "interested" ? "white_check_mark" : "wave", click: `${base}/admin/tours/walkups` });
+  return { answer: a, until };
+}
+
 /** A volunteer proposes dates; the visitor is emailed one link per option plus a "none of these work" link. */
 export async function offerTimes(id: number, raw: unknown, guide: { name: string; email: string }, base: string) {
   const c = await conn(), cfg = await getMailCfg();
@@ -469,6 +562,8 @@ export async function offerTimes(id: number, raw: unknown, guide: { name: string
   const offers = checkOffers(raw, localNow(MIN_ADVANCE_H));
   const gname = guide.name.trim().slice(0, 100), gemail = EMAIL_OK.test(guide.email.trim()) ? guide.email.trim().slice(0, 200) : "";
   if (!gemail) throw new Error("Enter your email so the visitor's confirmation reaches you.");
+  const who = (await c.query("SELECT email FROM tour_requests WHERE id = $1", [id])).rows[0];
+  if (who && await isUnsubscribed(who.email)) throw new Error(UNSUB_ERR);
   const r = (await c.query("UPDATE tour_requests SET offers = $2, status = 'offered', guide_name = $3, guide_email = $4 WHERE id = $1 AND status IN ('open','offered') RETURNING first_name, email, token, reschedules", [id, JSON.stringify(offers), gname, gemail])).rows[0];
   if (!r) throw new Error("That request was already scheduled or closed.");
   const m = offerMail(r.first_name, r.token, offers, `Good news! We found a volunteer${gname ? ` (${gname})` : ""} who wants to give you a tour. Here are the dates available to them, click if this works for you:`, base);
@@ -507,7 +602,7 @@ export async function checkStale() {
 }
 
 export const setRequestStatus = async (id: number, status: "open" | "closed") => {
-  const r = (await (await conn()).query("UPDATE tour_requests SET status = $2, offers = '[]' WHERE id = $1 AND status <> 'scheduled' RETURNING first_name, last_name", [id, status])).rows[0];
+  const r = (await (await conn()).query("UPDATE tour_requests SET status = $2::text, offers = '[]', interest_state = CASE WHEN $2::text = 'open' AND interest_state <> 'unsubscribed' THEN 'active' ELSE interest_state END, snooze_until = CASE WHEN $2::text = 'open' AND interest_state <> 'unsubscribed' THEN NULL ELSE snooze_until END WHERE id = $1 AND status <> 'scheduled' RETURNING first_name, last_name", [id, status])).rows[0];
   if (!r) throw new Error("That request is already scheduled.");
   await logEvent(status === "closed" ? "walkup_closed" : "walkup_reopened", `${r.first_name} ${r.last_name}'s walk-up request was ${status === "closed" ? "dismissed or offer taken back" : "reopened"}`);
 };

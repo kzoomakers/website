@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { errMsg } from "@/lib/errmsg";
-import { book, openSlots, requestTour, AREAS, HEARD, CONTACT } from "@/lib/tours";
+import { book, getPause, openSlots, requestTour, AREAS, HEARD, CONTACT } from "@/lib/tours";
 import { baseUrl } from "@/lib/mail";
 import { clientIp, hashIp } from "@/lib/comments";
 import { convert } from "@/lib/ga-attr";
@@ -10,7 +10,7 @@ const fail = (e: any) => new NextResponse(e.message === "not configured" ? "Book
 
 // GET: open tours in the next four weeks, plus the form's choices.
 export async function GET() {
-  try { return NextResponse.json({ slots: await openSlots(), areas: AREAS, heard: HEARD, contact: CONTACT }); } catch (e) { return fail(e); }
+  try { const pause = await getPause(); return NextResponse.json({ pause: pause.paused ? pause.message : null, slots: pause.paused ? [] : await openSlots(), areas: AREAS, heard: HEARD, contact: CONTACT }); } catch (e) { return fail(e); }
 }
 
 // POST { block, start, first, last, email, phone, zip, contact, areas?, heard?, notes?, website? }, or the same without block/start plus request: true when no time is open.
