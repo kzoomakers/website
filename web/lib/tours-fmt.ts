@@ -187,3 +187,20 @@ export function csvToBookings(text: string) {
 
 /** The reset of someone's membership is for staff signed in with a kzoomakers.org address ("dev" is the local-development admin, which only exists outside production). */
 export const isStaffEmail = (email: string) => /@kzoomakers\.org$/i.test(email) || email === "dev";
+
+// ---- walk-up check-ins ("are you still interested?")
+export const CHECKIN_GAP_DAYS = 7;
+export const CHECKIN_ANSWERS = ["interested", "not_now", "not_interested", "unsubscribed"] as const;
+export const addMonths = (date: string, n: number) => { const d = new Date(date + "T12:00:00Z"); d.setUTCMonth(d.getUTCMonth() + n); return d.toISOString().slice(0, 10); };
+type Interest = { interest_state: string; snooze_until: string | null };
+/** "Not right now" people sleep until their snooze date, then count as waiting again. */
+export const asleep = (r: Interest, today: string) => r.interest_state === "not_now" && !!r.snooze_until && r.snooze_until > today;
+/** Who the bulk check-in may email: open (no times offered), still interested or past their snooze, and not checked in during the last week. */
+export const canCheckIn = (r: Interest & { status: string; last_sent: string | Date | null }, today: string, nowMs: number) =>
+  r.status === "open" && r.interest_state !== "not_interested" && r.interest_state !== "unsubscribed" && !asleep(r, today) && !(r.last_sent && nowMs - +new Date(r.last_sent) < CHECKIN_GAP_DAYS * 864e5);
+export const tabOf = (r: Interest, today: string) => (r.interest_state === "not_interested" || r.interest_state === "unsubscribed" ? "no" : asleep(r, today) ? "later" : "waiting") as "waiting" | "later" | "no";
+/** Queue order: people who confirmed interest first (by their first "yes", or newest "yes" first when `latest`), everyone else by request date. */
+export function queueOrder<T extends { created_at: string; first_confirmed: string | null; last_confirmed: string | null }>(rows: T[], latest: boolean): T[] {
+  const t = (s: string | null) => +new Date(s!), yes = (r: T) => !!r.first_confirmed;
+  return [...rows].sort((a, b) => yes(a) !== yes(b) ? (yes(a) ? -1 : 1) : yes(a) ? (latest ? t(b.last_confirmed) - t(a.last_confirmed) : t(a.first_confirmed) - t(b.first_confirmed)) : t(a.created_at) - t(b.created_at));
+}

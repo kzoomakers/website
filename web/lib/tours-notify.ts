@@ -23,6 +23,20 @@ async function readCfg(c: Q): Promise<Cfg> {
 }
 export const getCfg = async () => readCfg(await pool());
 
+export const PAUSE_MESSAGE = "We are in the middle of moving and can't book tours right now. Leave your details and you'll be added to our queue. We'll reach out as soon as tours resume.";
+/** Signups-paused switch and its public message, in settings. Never throws, so a database hiccup can't take down the homepage. */
+export async function getPause(): Promise<{ paused: boolean; message: string }> {
+  try {
+    const v = (await (await pool()).query("SELECT data FROM settings WHERE key = 'tours:pause'")).rows[0]?.data ?? {};
+    return { paused: v.paused === true, message: typeof v.message === "string" && v.message.trim() ? v.message : PAUSE_MESSAGE };
+  } catch { return { paused: false, message: PAUSE_MESSAGE }; }
+}
+export async function savePause(paused: unknown, message: unknown) {
+  const m = String(message ?? "").trim().slice(0, 600) || PAUSE_MESSAGE;
+  await (await pool()).query("INSERT INTO settings (key, data) VALUES ('tours:pause', $1) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data", [JSON.stringify({ paused: paused === true, message: m })]);
+  return { paused: paused === true, message: m };
+}
+
 /** Changes one thing in the settings while holding a lock, so two staff editing at once (or two machines) can't overwrite each other's change. */
 async function edit(change: (c: Cfg) => void) {
   const client = await (await pool()).connect();
@@ -48,7 +62,7 @@ export const setStaleDays = (days: unknown) => { const n = cleanDays(days); retu
 export async function overview() {
   const [cfg, people] = await Promise.all([getCfg(), personalTopics()]);
   const subs = Object.fromEntries(await Promise.all(EVENTS.map(async (e) => [e, await subscribersOf(TOUR_EVENTS[e][0])])));
-  return { cfg, subs, people, events: Object.fromEntries(EVENTS.map((e) => [e, TOUR_EVENTS[e][1]])) };
+  return { cfg, pause: await getPause(), subs, people, events: Object.fromEntries(EVENTS.map((e) => [e, TOUR_EVENTS[e][1]])) };
 }
 
 export const subscribe = async (event: unknown, topic: unknown) => {

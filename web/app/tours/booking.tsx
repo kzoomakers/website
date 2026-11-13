@@ -13,7 +13,7 @@ const fields = (f: FormData) => ({ first: f.get("first"), last: f.get("last"), e
 
 // Public tour booking: pick an open time, give your details. Replaces the old Google Form.
 export default function Booking() {
-  const [data, setData] = useState<{ slots: Slot[]; areas: string[]; heard: string[]; contact: string[] } | null>(null), [pick, setPick] = useState<Slot | null>(null);
+  const [data, setData] = useState<{ pause: string | null; slots: Slot[]; areas: string[]; heard: string[]; contact: string[] } | null>(null), [pick, setPick] = useState<Slot | null>(null);
   const [busy, setBusy] = useState(false), [err, setErr] = useState(""), [done, setDone] = useState<Slot | null>(null), [ask, setAsk] = useState(false), [asked, setAsked] = useState(false);
   useEffect(() => { fetch("/api/tours").then((r) => (r.ok ? r.json() : Promise.reject())).then(setData, () => setErr("Couldn't load tour times. Please try again later.")); }, []);
   const go = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -32,7 +32,7 @@ export default function Booking() {
     setBusy(false);
     if (r?.ok) setAsked(true); else setErr(r ? await r.text() : "Couldn't reach the server. Please try again.");
   };
-  if (asked) return <div role="status"><h2>Request received!</h2><p>Thanks. A volunteer will email you a few dates that work for them, and you pick the one you like. Keep an eye on your inbox (and spam folder).</p></div>;
+  if (asked) return <div role="status"><h2>Request received!</h2>{data?.pause ? <p>{data.pause}</p> : <p>Thanks. A volunteer will email you a few dates that work for them, and you pick the one you like. Keep an eye on your inbox (and spam folder).</p>}</div>;
   if (done) return <div role="status"><h2>You're booked!</h2><p>See you on <strong>{day(done.date)} at {time(done.start)}</strong>. We've emailed you a confirmation with a link to cancel if your plans change.</p></div>;
   if (!data) return <p role={err ? "alert" : undefined} className={err ? "tb-err" : undefined}>{err || "Loading tour times…"}</p>;
   const days = [...new Set(data.slots.map((s) => s.date))];
@@ -55,7 +55,8 @@ export default function Booking() {
       <style>{CSS}</style>
       {!pick && (ask || !days.length) ? (
         <form onSubmit={sendReq}>
-          <p>{days.length ? "Can't find a time that works? Tell us a bit about yourself and a volunteer will contact you with some different dates." : "Tell us a bit about yourself and a volunteer will email you some dates that work for them. You pick the one you like."}</p>
+          {data.pause && <p role="status"><strong>{data.pause}</strong></p>}
+          <p>{data.pause ? "" : days.length ? "Can't find a time that works? Tell us a bit about yourself and a volunteer will contact you with some different dates." : "Tell us a bit about yourself and a volunteer will email you some dates that work for them. You pick the one you like."}</p>
           {details}
           {err && <p className="tb-err" role="alert">{err}</p>}
           <p><small>You consent to emails strictly to coordinate booking or scheduling this tour.</small></p>

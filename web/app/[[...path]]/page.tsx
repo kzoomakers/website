@@ -7,6 +7,7 @@ import { listPosts } from "@/lib/blog";
 import { siteTree } from "@/lib/sitemap";
 import { canonicalOf, jsonLd, ldScript } from "@/lib/aiseo";
 import { SITE } from "@/lib/sitemap";
+import { getPause } from "@/lib/tours-notify";
 import LegacyScripts from "@/components/legacy-scripts";
 
 export const dynamic = "force-dynamic"; // POC: always read fresh; Phase 2 moves to ISR + revalidate on publish
@@ -27,11 +28,12 @@ export default async function Page({ params }: P) {
   if (!data) notFound();
   const bodyClass = ((data.root?.props as any)?.bodyClass ?? "").replace(/[^\w\- ]/g, "");
   const rp: any = data.root?.props ?? {};
-  const bare = !!rp.bare;
+  const bare = !!rp.bare, pause = !bare && slugOf((await params).path) === "index" ? await getPause() : null;
   const refresh = rp.refresh;
   return (
     <>
       {!bare && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldScript(jsonLd(slugOf((await params).path), data, contact, SITE)) }} />}
+      {pause?.paused && <div role="status" style={{ background: "#fff6e0", borderBottom: "1px solid #f9b234", padding: "10px 16px", textAlign: "center", position: "relative", zIndex: 1000 }}>{pause.message} <a href="/tours">Join the tour queue</a></div>}
       {refresh && <meta httpEquiv="refresh" content={refresh} />}
       {/* Inline script runs during parse, so the body class is set before first paint (no flash). */}
       {bodyClass && <script dangerouslySetInnerHTML={{ __html: `document.body.className+=" ${bodyClass}"` }} />}
