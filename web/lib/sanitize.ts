@@ -5,7 +5,7 @@ import { load } from "cheerio";
 // Plain-text posts (not starting with "<") are escaped when shown, so they pass through.
 const TAGS = new Set("a abbr b blockquote br caption cite code col colgroup dd del div dl dt em figcaption figure h1 h2 h3 h4 h5 h6 hr i iframe img ins kbd li mark ol p picture pre q s samp small source span strike strong sub sup table tbody td tfoot th thead tr u ul video audio".split(" "));
 const REMOVE = "script,style,svg,math,object,embed,form,input,button,select,textarea,link,meta,base,noscript,template,applet,frame,frameset,head,title";
-const ATTRS = new Set(["href", "src", "alt", "title", "width", "height", "class", "colspan", "rowspan", "target", "rel", "loading", "allowfullscreen", "controls", "poster", "type", "dir", "lang", "id"]);
+const ATTRS = new Set(["href", "src", "alt", "title", "width", "height", "class", "colspan", "rowspan", "target", "rel", "loading", "allowfullscreen", "controls", "poster", "type", "dir", "lang"]);
 const URL_ATTRS = new Set(["href", "src", "poster"]);
 const EMBED = /^https:\/\/(www\.)?(youtube(-nocookie)?\.com|player\.vimeo\.com)\//i;
 const SAFE_URL = /^(https?:|mailto:|tel:)|^[^:/?#]*([/?#]|$)/i; // http(s)/mailto/tel, or a relative link (no colon before the first / ? #); javascript: and the like are refused

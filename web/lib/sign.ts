@@ -70,10 +70,11 @@ export async function sendCode(token: string) {
 export async function unlock(token: string, password: string, code: string) {
   const f = await byToken(token);
   if (!f) throw new Error("This signing link isn't valid.");
-  const c = await conn(), r = (await c.query("SELECT pw_hash, verify_email, code_hash, code_exp > now() AS fresh, tries FROM sign_signers WHERE id = $1", [f.signer.id])).rows[0];
-  if (r.tries >= 10) throw new Error("Too many wrong tries. Ask for a new signing link.");
+  // The try is counted first, in one statement, so a burst of parallel guesses can't all slip under the limit.
+  const c = await conn(), r = (await c.query("UPDATE sign_signers SET tries = tries + 1 WHERE id = $1 AND tries < 10 RETURNING pw_hash, verify_email, code_hash, code_exp > now() AS fresh", [f.signer.id])).rows[0];
+  if (!r) throw new Error("Too many wrong tries. Ask for a new signing link.");
   const bad = (r.pw_hash && !checkPw(password.slice(0, 200), r.pw_hash)) || (r.verify_email && !(r.fresh && r.code_hash && r.code_hash === hashTok(code.trim() + ":" + f.signer.id)));
-  if (bad) { await c.query("UPDATE sign_signers SET tries = tries + 1 WHERE id = $1", [f.signer.id]); throw new Error(r.verify_email && !r.fresh ? "Ask for a code first (or it expired)." : "That didn't match. Check the password and code and try again."); }
+  if (bad) throw new Error(r.verify_email && !r.fresh ? "Ask for a code first (or it expired)." : "That didn't match. Check the password and code and try again.");
   await c.query("UPDATE sign_signers SET tries = 0, code_hash = '' WHERE id = $1", [f.signer.id]);
   return f.signer.id;
 }

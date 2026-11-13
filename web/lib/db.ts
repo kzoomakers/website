@@ -289,10 +289,11 @@ export async function conn(): Promise<Pool> {
 /** Run `fn` only if no other process holds the lock `id` (a machine started alongside this one skips the job instead of double-firing it). */
 export async function withLock(id: number, fn: () => Promise<unknown>) {
   const c = await (await conn()).connect();
+  let broken = false; // if the unlock fails, the lock would stay with this pooled connection for good: close the connection instead of reusing it
   try {
     if (!(await c.query("SELECT pg_try_advisory_lock($1) AS ok", [id])).rows[0].ok) return;
-    try { await fn(); } finally { await c.query("SELECT pg_advisory_unlock($1)", [id]).catch(() => {}); }
-  } finally { c.release(); }
+    try { await fn(); } finally { await c.query("SELECT pg_advisory_unlock($1)", [id]).catch(() => { broken = true; }); }
+  } finally { c.release(broken); }
 }
 
 /** BEGIN/COMMIT around `fn`; rolls back (without hiding the original error) if it throws. */

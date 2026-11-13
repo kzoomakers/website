@@ -21,7 +21,7 @@ export function toRow(req: Pick<Request, "url" | "method" | "headers">): Row {
     const old = params[k];
     params[k] = old === undefined ? val : Array.isArray(old) ? [...old, val] : [old, val];
   }
-  const ip = h.get("fly-client-ip") ?? h.get("x-forwarded-for")?.split(",")[0].trim() ?? h.get("x-real-ip") ?? "";
+  const ip = h.get("fly-client-ip") ?? h.get("x-forwarded-for")?.split(",").at(-1)?.trim() ?? h.get("x-real-ip") ?? "";
   return { at: new Date(), ip: cut(ip, 100), method: req.method, host: cut(h.get("host") ?? u.host, 255), path: cut(u.pathname, 2000), query: cut(clean.toString(), 4000), params, ua: cut(h.get("user-agent") ?? "", 1000), referer: cut(h.get("referer") ?? "", 2000) };
 }
 
