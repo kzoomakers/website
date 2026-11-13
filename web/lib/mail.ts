@@ -3,6 +3,7 @@ import nodemailer from "nodemailer";
 import type { Transporter } from "nodemailer";
 import { randomBytes, randomUUID } from "crypto";
 import { clickOk, same, sign } from "./signing";
+import { engagement, type Touch } from "./mail-track";
 import { applyOnce, db, withLock, withTx } from "./db";
 import { openText, sealText } from "./vault";
 import { backoffMinutes, MAX_MAIL_TRIES } from "./rules";
@@ -14,11 +15,12 @@ export type MailCfg = {
   fromName: string; from: string; replyTo: string; siteUrl: string; smtp2goKey: string; smtpUrl: string; deepseekKey: string; aiModel: string;
   doubleOptIn: boolean; confirmSubject: string; confirmBody: string;
   welcomeOn: boolean; welcomeSubject: string; welcomeBody: string; perMinute: number; perDay: number;
+  trackOpens: boolean; trackClicks: boolean;
 };
 const EMPTY: MailCfg = {
   fromName: "", from: "", replyTo: "", siteUrl: "", smtp2goKey: "", smtpUrl: "", deepseekKey: "", aiModel: "",
   doubleOptIn: true, confirmSubject: "Confirm your subscription", confirmBody: "Hello!\n\nPlease confirm your subscription by clicking this link:\n\n{{link}}\n\nIf you didn't ask for this, you can ignore this email.",
-  welcomeOn: false, welcomeSubject: "Welcome!", welcomeBody: "Hi {{name}},\n\nThanks for subscribing. We'll be in touch with news and events.", perMinute: 0, perDay: 0,
+  welcomeOn: false, welcomeSubject: "Welcome!", welcomeBody: "Hi {{name}},\n\nThanks for subscribing. We'll be in touch with news and events.", perMinute: 0, perDay: 0, trackOpens: true, trackClicks: true,
 };
 const SECRETS = ["smtp2goKey", "smtpUrl", "deepseekKey"] as const;
 export const getMailCfg = async (): Promise<MailCfg> => {
@@ -37,7 +39,7 @@ export async function saveMailCfg(x: Partial<MailCfg>) {
   const old = await getMailCfg(), n: any = { ...old };
   for (const k of Object.keys(EMPTY) as (keyof MailCfg)[]) {
     if (x[k] === undefined) continue; // fields you don't send keep their value
-    if (k === "doubleOptIn" || k === "welcomeOn") { n[k] = !!x[k]; continue; }
+    if (k === "doubleOptIn" || k === "welcomeOn" || k === "trackOpens" || k === "trackClicks") { n[k] = !!x[k]; continue; }
     if (k === "perMinute") { n.perMinute = Math.min(6000, Math.max(0, Math.floor(Number(x.perMinute)) || 0)); continue; }
     if (k === "perDay") { n.perDay = Math.min(1_000_000, Math.max(0, Math.floor(Number(x.perDay)) || 0)); continue; }
     const raw = String(x[k] ?? ""), v = (k === "confirmBody" || k === "welcomeBody" ? raw : raw.trim()).slice(0, 2000);
@@ -522,12 +524,12 @@ async function secret() {
   return (await q("SELECT data FROM settings WHERE key='mail:secret'"))[0].data.v as string;
 }
 
-function track(html: string, base: string, token: string, sec: string) {
-  const out = html.replace(/href="(https?:\/\/[^"]+)"/g, (m, u: string) => {
+function track(html: string, base: string, token: string, sec: string, on = { opens: true, clicks: true }) {
+  const out = !on.clicks ? html : html.replace(/href="(https?:\/\/[^"]+)"/g, (m, u: string) => {
     const url = u.replace(/&amp;/g, "&");
     return url.startsWith(base + "/mail/") ? m : `href="${base}/mail/click?s=${token}&amp;u=${encodeURIComponent(url)}&amp;h=${sign(sec, token, url)}"`;
   });
-  return out.replace("</body>", `<img src="${base}/mail/open?s=${token}" width="1" height="1" alt="" style="display:block;border:0"></body>`);
+  return !on.opens ? out : out.replace("</body>", `<img src="${base}/mail/open?s=${token}" width="1" height="1" alt="" style="display:block;border:0"></body>`);
 }
 export async function trackOpen(token: string) { await q("UPDATE mail_sends SET opened_at = COALESCE(opened_at, now()), opens = opens + 1 WHERE token=$1", [token]); }
 /** Returns the destination if the signature is valid. */
@@ -549,7 +551,7 @@ async function deliver(cfg: MailCfg, c: any, s: { email: string; name: string; t
   const unsub = `${base}/mail/unsubscribe?t=${s.token}` + (o.sendToken ? `&s=${o.sendToken}` : ""), prefs = `${base}/mail/preferences?t=${s.token}`;
   let html = fill(renderEmail(c.design as Design, base, c.preview), { name: s.name, unsubscribe: unsub, preferences: prefs });
   const text = htmlToText(html);
-  if (o.sendToken) html = track(html, base, o.sendToken, o.sec!);
+  if (o.sendToken) html = track(html, base, o.sendToken, o.sec!, { opens: cfg.trackOpens, clicks: cfg.trackClicks });
   await send({
     to: s.email, subject: (o.prefix ?? "") + c.subject, html, text,
     from: fromHeader(c.sender_name || cfg.fromName, c.sender_address || cfg.from),
@@ -654,3 +656,36 @@ export async function composeWithAI(prompt: string, current?: unknown) {
   try { j = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1)); } catch { throw new Error("The AI reply wasn't usable, please try again"); }
   return { subject: String(j.subject ?? ""), preview: String(j.preview ?? ""), design: cleanDesign(j.design) };
 }
+
+// ---- tracking reports. Everything here is totals; who did what is `clickLog` and `campaignRecipients`, which the API only gives to site admins.
+/** One sent email: how many were opened and clicked, how fast, when in the day, per link, and how it compares with the last 10. */
+export async function trackingReport(id: number) {
+  const camp = (await q("SELECT id, name, subject, status, sent_at FROM mail_campaigns WHERE id=$1", [id]))[0];
+  if (!camp) throw new Error("Email not found");
+  const rows = await q(`SELECT x.status, x.unsubscribed_at IS NOT NULL AS unsub, GREATEST(x.opens, CASE WHEN x.opened_at IS NULL THEN 0 ELSE 1 END) AS opens,
+      extract(epoch FROM (x.opened_at - x.sent_at)) AS opened, (SELECT extract(epoch FROM (min(k.at) - x.sent_at)) FROM mail_clicks k WHERE k.send_id = x.id) AS clicked,
+      extract(hour FROM x.opened_at AT TIME ZONE 'America/Detroit')::int AS hour FROM mail_sends x WHERE x.campaign_id = $1 AND x.status IN ('sent','failed')`, [id]);
+  const sent = rows.filter((r) => r.status === "sent"), touches: Touch[] = sent.map((r) => ({ opened: r.opened == null ? null : +r.opened, clicked: r.clicked == null ? null : +r.clicked, hour: r.hour }));
+  const opened = sent.filter((r) => r.opens > 0).length, clicked = touches.filter((t) => t.clicked != null).length;
+  const prior = await q(`SELECT count(*) FILTER (WHERE x.status='sent')::float AS sent, count(*) FILTER (WHERE x.opened_at IS NOT NULL)::float AS opened, count(*) FILTER (WHERE x.clicks > 0)::float AS clicked
+    FROM mail_campaigns c JOIN mail_sends x ON x.campaign_id = c.id WHERE c.id IN (SELECT id FROM mail_campaigns WHERE status='sent' AND NOT trashed AND id <> $1 AND sent_at < $2 ORDER BY sent_at DESC LIMIT 10) GROUP BY c.id`, [id, camp.sent_at ?? new Date()]);
+  const avg = (k: "opened" | "clicked") => (prior.length ? prior.reduce((a, r) => a + (r.sent ? r[k] / r.sent : 0), 0) / prior.length : null);
+  return {
+    campaign: camp, sent: sent.length, failed: rows.length - sent.length, opened, clicked, unsubscribed: sent.filter((r) => r.unsub).length, repeat: sent.filter((r) => r.opens > 1).length,
+    ...engagement(touches), benchmark: { opened: avg("opened"), clicked: avg("clicked"), n: prior.length },
+    links: await q("SELECT url, count(*)::int AS clicks, count(DISTINCT send_id)::int AS people FROM mail_clicks WHERE campaign_id=$1 GROUP BY url ORDER BY people DESC, clicks DESC LIMIT 30", [id]),
+  };
+}
+/** The Tracking front page: the last 30 sent emails side by side, and how engaged the subscribed people are. */
+export async function trackingOverview() {
+  const emails = await q(`SELECT c.id, c.subject, c.sent_at, count(*) FILTER (WHERE x.status='sent')::int AS sent, count(*) FILTER (WHERE x.opened_at IS NOT NULL)::int AS opened,
+      count(*) FILTER (WHERE x.clicks > 0)::int AS clicked, count(*) FILTER (WHERE x.unsubscribed_at IS NOT NULL)::int AS unsubscribed
+    FROM mail_campaigns c JOIN mail_sends x ON x.campaign_id = c.id WHERE c.status='sent' AND NOT c.trashed GROUP BY c.id ORDER BY c.sent_at DESC LIMIT 30`);
+  const [seg] = await q(`SELECT count(*) FILTER (WHERE t.got = 0)::int AS fresh, count(*) FILTER (WHERE t.got > 0 AND t.recent > 0)::int AS engaged,
+      count(*) FILTER (WHERE t.got > 0 AND t.recent = 0 AND t.ever > 0)::int AS lapsed, count(*) FILTER (WHERE t.got > 0 AND t.ever = 0)::int AS never
+    FROM mail_subscribers s CROSS JOIN LATERAL (SELECT count(*) FILTER (WHERE x.status='sent') AS got, count(*) FILTER (WHERE x.opened_at IS NOT NULL) AS ever,
+      count(*) FILTER (WHERE x.opened_at > now() - interval '90 days') AS recent FROM mail_sends x WHERE x.subscriber_id = s.id) t WHERE s.status = 'subscribed'`);
+  return { emails: emails.reverse(), segments: seg, trackOpens: (await getMailCfg()).trackOpens, trackClicks: (await getMailCfg()).trackClicks };
+}
+/** Every click on one email: who, when, which link. Site admins only (the API enforces it). */
+export const clickLog = (id: number) => q(`SELECT s.email, s.name, k.at, k.url FROM mail_clicks k JOIN mail_sends x ON x.id = k.send_id JOIN mail_subscribers s ON s.id = x.subscriber_id WHERE k.campaign_id = $1 ORDER BY k.at DESC LIMIT 500`, [id]);

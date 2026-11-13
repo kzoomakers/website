@@ -28,7 +28,7 @@ export type Msg = { id: number; kind: "staff" | "visitor" | "note"; author: stri
 export type { Offer };
 export { fmtOffer };
 export type WalkupRequest = { id: number; first_name: string; last_name: string; email: string; phone: string; zip: string; contact_method: string; interest: string; heard: string; notes: string; status: string; activated_at: string | null; activated_by: string; acct: Acct;
-  interest_state: string; snooze_until: string | null; first_confirmed: string | null; last_confirmed: string | null; checkins: { sent_at: string; answered_at: string | null; answer: string | null }[]; reschedules: number; reminded_at: string | null; offers: Offer[]; guide_name: string; decline_note: string; client_ip: string; user_agent: string; screen: string; created_at: string; msgs: number; last_from: string | null };
+  interest_state: string; snooze_until: string | null; first_confirmed: string | null; last_confirmed: string | null; checkins: { sent_at: string; viewed_at: string | null; answered_at: string | null; answer: string | null }[]; reschedules: number; reminded_at: string | null; offers: Offer[]; guide_name: string; decline_note: string; client_ip: string; user_agent: string; screen: string; created_at: string; msgs: number; last_from: string | null };
 
 const EMAIL_OK = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/;
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
@@ -79,6 +79,11 @@ async function conn() {
     await p.query(`CREATE TABLE IF NOT EXISTS tour_checkins (id serial PRIMARY KEY, request_id int NOT NULL REFERENCES tour_requests ON DELETE CASCADE, sent_at timestamptz NOT NULL DEFAULT now(), sent_by text NOT NULL DEFAULT '',
       answered_at timestamptz, answer text, snooze_until date, note text NOT NULL DEFAULT '')`);
     await p.query("CREATE INDEX IF NOT EXISTS tour_checkins_request ON tour_checkins (request_id)");
+    await p.query("ALTER TABLE tour_checkins ADD COLUMN IF NOT EXISTS viewed_at timestamptz");
+    await p.query("CREATE TABLE IF NOT EXISTS tour_mail (id text PRIMARY KEY, kind text NOT NULL, email text NOT NULL, subject text NOT NULL DEFAULT '', sent_at timestamptz NOT NULL DEFAULT now())");
+    await p.query("CREATE INDEX IF NOT EXISTS tour_mail_email ON tour_mail (lower(email))");
+    await p.query("CREATE TABLE IF NOT EXISTS tour_mail_events (id bigserial PRIMARY KEY, mail_id text NOT NULL REFERENCES tour_mail ON DELETE CASCADE, at timestamptz NOT NULL DEFAULT now(), kind text NOT NULL, detail text NOT NULL DEFAULT '', ua text NOT NULL DEFAULT '')");
+    await p.query("CREATE INDEX IF NOT EXISTS tour_mail_events_mail ON tour_mail_events (mail_id)");
     await p.query("ALTER TABLE tour_requests ADD COLUMN IF NOT EXISTS interest_state text NOT NULL DEFAULT 'active', ADD COLUMN IF NOT EXISTS snooze_until date");
     // The Google Form is retired: point the menu link and the redirect page at the new booking page.
     await p.query("UPDATE settings SET data = replace(data::text, $1, '/tours')::jsonb WHERE key = 'menu'", [GOOGLE_FORM]);
@@ -265,19 +270,61 @@ export async function checkReminders() {
   }
 }
 
+// ---- email tracking: every email to a visitor gets a 1x1 image (opens) and its links to our site go through /api/tours/go (clicks)
+const siteBase = async () => ((await getMailCfg().catch(() => null))?.siteUrl || process.env.SITE_URL || "").replace(/\/+$/, "");
+type Mail = { to: string; subject: string; html: string; text: string };
+/** Records the email and returns it with the pixel and click links added. With no site address set, or on any failure, the email goes out untracked rather than not at all. */
+async function track(kind: string, m: Mail): Promise<Mail> {
+  try {
+    const base = await siteBase();
+    if (!base) return m;
+    const id = randomBytes(12).toString("hex");
+    await (await conn()).query("INSERT INTO tour_mail (id, kind, email, subject) VALUES ($1,$2,$3,$4)", [id, kind, m.to.toLowerCase(), m.subject.slice(0, 200)]);
+    const html = m.html.replace(new RegExp(`href="${base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(/tours/[^"]*)"`, "g"), (_, path: string) => `href="${esc(`${base}/api/tours/go?m=${id}&p=${encodeURIComponent(path.replace(/&amp;/g, "&"))}`)}"`);
+    return { ...m, html: html + `<img src="${esc(`${base}/api/tours/open?m=${id}`)}" width="1" height="1" alt="" style="display:block;border:0">` };
+  } catch (e) { console.error("email tracking failed, sending untracked:", e); return m; }
+}
+/** A pixel load or a link click. Returns where a click should go (the path on our site), or null. */
+export async function mailEvent(id: string, kind: "open" | "click", ua: string, path = "") {
+  const c = await conn(), m = (await c.query("SELECT kind, email FROM tour_mail WHERE id = $1", [id])).rows[0];
+  if (!m) return null;
+  const detail = path ? path.replace(/([?&])token=[^&]*&?/, "$1").replace(/[?&]$/, "").slice(0, 200) : "";
+  await c.query("INSERT INTO tour_mail_events (mail_id, kind, detail, ua) VALUES ($1,$2,$3,$4)", [id, kind, detail, ua.slice(0, 200)]);
+  if (m.kind === "checkin") await c.query("UPDATE tour_checkins SET viewed_at = now() WHERE viewed_at IS NULL AND answered_at IS NULL AND request_id IN (SELECT id FROM tour_requests WHERE lower(email) = lower($1))", [m.email]);
+  return path || null;
+}
+export type MailTrail = { id: string; kind: string; subject: string; sent_at: string; events: { at: string; kind: "open" | "click"; detail: string; ua: string }[] }[];
+/** Everything we sent this person and what they did with it, newest first. */
+export async function mailTrail(email: unknown): Promise<MailTrail> {
+  return (await (await conn()).query(`SELECT m.id, m.kind, m.subject, m.sent_at, COALESCE((SELECT json_agg(json_build_object('at', e.at, 'kind', e.kind, 'detail', e.detail, 'ua', e.ua) ORDER BY e.at) FROM (SELECT * FROM tour_mail_events WHERE mail_id = m.id ORDER BY id LIMIT 100) e), '[]') AS events
+    FROM tour_mail m WHERE lower(m.email) = lower($1) ORDER BY m.sent_at DESC LIMIT 30`, [String(email ?? "")])).rows;
+}
+/** How each kind of email performs: sent, opened, clicked, and when people open (hour of day, club time). */
+export async function mailStats(days: number) {
+  const c = await conn(), d = Math.max(0, Math.min(3650, Math.floor(days) || 0));
+  const kinds = (await c.query(`SELECT m.kind, count(*)::int AS sent, count(*) FILTER (WHERE o.n > 0)::int AS opened, count(*) FILTER (WHERE o.k > 0)::int AS clicked,
+      percentile_cont(0.5) WITHIN GROUP (ORDER BY o.first_open) FILTER (WHERE o.first_open IS NOT NULL) AS median_min
+    FROM tour_mail m LEFT JOIN LATERAL (SELECT count(*) FILTER (WHERE kind = 'open') AS n, count(*) FILTER (WHERE kind = 'click') AS k, extract(epoch FROM (min(at) FILTER (WHERE kind = 'open') - m.sent_at)) / 60 AS first_open FROM tour_mail_events WHERE mail_id = m.id) o ON true
+    WHERE $1::int = 0 OR m.sent_at > now() - make_interval(days => $1::int) GROUP BY m.kind ORDER BY sent DESC`, [d])).rows;
+  const hours = Array(24).fill(0);
+  for (const r of (await c.query("SELECT extract(hour FROM e.at AT TIME ZONE $2)::int AS h, count(*)::int AS n FROM tour_mail_events e JOIN tour_mail m ON m.id = e.mail_id WHERE e.kind = 'open' AND ($1::int = 0 OR m.sent_at > now() - make_interval(days => $1::int)) GROUP BY 1", [d, TZ])).rows) hours[r.h] = r.n;
+  return { kinds: kinds.map((k) => ({ ...k, median_min: k.median_min == null ? null : +k.median_min })), hours };
+}
+
 // ---- email (best effort: a booking is never lost because mail failed)
-async function mail(to: string, subject: string, lines: string[], link?: [string, string]) {
+async function mail(to: string, subject: string, lines: string[], link?: [string, string], kind?: string) {
   try {
     const cfg = await getMailCfg();
     if (!mailReady(cfg) || !to) return;
     const html = lines.map((l) => `<p>${esc(l)}</p>`).join("") + (link ? `<p><a href="${esc(link[1])}">${esc(link[0])}</a></p>` : "");
-    await send({ to, subject, text: lines.join("\n\n") + (link ? `\n\n${link[0]}: ${link[1]}` : ""), html }, cfg);
+    const m = { to, subject, text: lines.join("\n\n") + (link ? `\n\n${link[0]}: ${link[1]}` : ""), html };
+    await send(kind ? await track(kind, m) : m, cfg);
   } catch (e) { console.error("tour email failed:", e); }
 }
 /** Email to a visitor. Anyone who unsubscribed is skipped here, so no path (cancellations, staff changes) can contact them by mistake. Fails closed: if we can't check, we don't send. */
-async function mailVisitor(to: string, subject: string, lines: string[], link?: [string, string]) {
+async function mailVisitor(to: string, subject: string, lines: string[], link?: [string, string], kind = "cancelled") {
   try { if (await isUnsubscribed(to)) return; } catch (e) { console.error("unsubscribe check failed, email skipped:", e); return; }
-  await mail(to, subject, lines, link);
+  await mail(to, subject, lines, link, kind);
 }
 const when = (date: string, start: string) => new Date(`${date}T${start}:00Z`).toLocaleString("en-US", { timeZone: "UTC", weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" });
 
@@ -332,7 +379,7 @@ export async function book(x: Record<string, unknown> & { block: number; start: 
     await client.query("COMMIT");
   } catch (e) { await client.query("ROLLBACK").catch(() => {}); throw e; } finally { client.release(); }
   const w = when(b.date, x.start);
-  await mail(email, "Your Kzoo Makers tour", [`Hi ${name}, you're booked for a tour on ${w}.`, "If your plans change, please cancel so someone else can have the spot."], ["Cancel this tour", `${base}/tours/cancel?token=${token}`]);
+  await mail(email, "Your Kzoo Makers tour", [`Hi ${name}, you're booked for a tour on ${w}.`, "If your plans change, please cancel so someone else can have the spot."], ["Cancel this tour", `${base}/tours/cancel?token=${token}`], "booked");
   await mail(b.guide_email, `New tour booking: ${name}`, [`${name} (${email}, ${phone}) booked a tour on ${w}.`, interest && `Interested in: ${interest}`, vnotes && `Notes: ${vnotes}`].filter(Boolean) as string[]);
   await notify(TOURS_TOPIC, { title: `Tour booked: ${name}`, message: `${w}\n${name} · ${email} · ${phone}${interest ? `\nInterested in: ${interest}` : ""}`, tags: "calendar", click: `${base}/admin/tours` });
   await logEvent("booking", `${name} booked a tour for ${w}`, { detail: [interest && `Interested in: ${interest}`, `${email} · ${phone}`].filter(Boolean).join("\n"), guide: b.guide_name || b.guide_email, actor: name });
@@ -451,7 +498,7 @@ export async function exportRequests(all: boolean) {
 export async function listRequests(all: boolean): Promise<WalkupRequest[]> {
   return (await (await conn()).query(`SELECT id, first_name, last_name, email, phone, zip, contact_method, interest, heard, activated_at, activated_by, ${ACCT("tour_requests.email")}, notes, status, interest_state, to_char(snooze_until, 'YYYY-MM-DD') AS snooze_until, reschedules, reminded_at, offers, guide_name, decline_note, client_ip, user_agent, screen, created_at, (SELECT count(*)::int FROM tour_messages m WHERE m.kind = 'request' AND m.ref_id = tour_requests.id AND m.author_kind <> 'note') AS msgs, (SELECT m.author_kind FROM tour_messages m WHERE m.kind = 'request' AND m.ref_id = tour_requests.id ORDER BY m.id DESC LIMIT 1) AS last_from,
     (SELECT min(answered_at) FROM tour_checkins k WHERE k.request_id = tour_requests.id AND k.answer = 'interested') AS first_confirmed, (SELECT max(answered_at) FROM tour_checkins k WHERE k.request_id = tour_requests.id AND k.answer = 'interested') AS last_confirmed,
-    COALESCE((SELECT json_agg(json_build_object('sent_at', k.sent_at, 'answered_at', k.answered_at, 'answer', k.answer) ORDER BY k.sent_at) FROM tour_checkins k WHERE k.request_id = tour_requests.id), '[]') AS checkins
+    COALESCE((SELECT json_agg(json_build_object('sent_at', k.sent_at, 'viewed_at', k.viewed_at, 'answered_at', k.answered_at, 'answer', k.answer) ORDER BY k.sent_at) FROM tour_checkins k WHERE k.request_id = tour_requests.id), '[]') AS checkins
     FROM tour_requests WHERE ($1 OR status IN ('open','offered')) ORDER BY created_at`, [all])).rows;
 }
 
@@ -485,7 +532,7 @@ export async function remindOffer(id: number, base: string) {
   const now = localNow(MIN_ADVANCE_H), offers = (r.offers as Offer[]).filter((o) => `${o.date} ${o.start}` >= now);
   if (!offers.length) throw new Error(`All the times offered to ${r.first_name} have passed. Open Walk-ups and use "Change times" to offer new ones.`);
   const m = offerMail(r.first_name, r.token, offers, `Just a friendly reminder: we're holding these tour times for you${r.guide_name ? ` with ${r.guide_name}` : ""}. Click the one that works for you:`, base);
-  await send({ to: r.email, subject: "Reminder: please pick a time for your Kzoo Makers tour", ...m }, cfg);
+  await send(await track("offer_reminder", { to: r.email, subject: "Reminder: please pick a time for your Kzoo Makers tour", ...m }), cfg);
   await c.query("UPDATE tour_requests SET reminded_at = now() WHERE id = $1", [id]);
   await logEvent("walkup_reminder", `Reminded ${r.first_name} ${r.last_name} to pick a tour time`, { detail: offers.map(fmtOffer).join("\n") });
 }
@@ -506,23 +553,24 @@ async function checkinTargets() {
 export async function checkinPreview() {
   return { ready: mailReady(await getMailCfg()), people: (await checkinTargets()).map((r) => ({ id: r.id, name: `${r.first_name} ${r.last_name}`, email: r.email })) };
 }
-function checkinMail(first: string, token: string, base: string) {
+function checkinMail(first: string, token: string, base: string, note: string) {
   const link = (a: string) => `${base}/tours/checkin?token=${token}&a=${a}`, ask = "We're still keeping a spot for you in line for a Kzoo Makers tour. Are you still interested?";
   const opts = [["Yes, I'm still interested", "interested"], ["Not right now", "not_now"], ["No longer interested", "not_interested"]] as const;
   return {
-    html: `<p>Hi ${esc(first)},</p><p>${esc(ask)}</p><ul>${opts.map(([t, a]) => `<li><a href="${esc(link(a))}">${t}</a></li>`).join("")}</ul><p><small><a href="${esc(unsubLink(base, token))}">${esc(unsubText)}</a></small></p>`,
-    text: `Hi ${first},\n\n${ask}\n\n${opts.map(([t, a]) => `* ${t}\n  ${link(a)}`).join("\n")}\n\n${unsubText}\n${unsubLink(base, token)}`,
+    html: `<p>Hi ${esc(first)},</p><p>${esc(ask)}</p>${note ? `<p>${esc(note).replace(/\n/g, "<br>")}</p>` : ""}<ul>${opts.map(([t, a]) => `<li><a href="${esc(link(a))}">${t}</a></li>`).join("")}</ul><p><small><a href="${esc(unsubLink(base, token))}">${esc(unsubText)}</a></small></p>`,
+    text: `Hi ${first},\n\n${ask}\n\n${note ? note + "\n\n" : ""}${opts.map(([t, a]) => `* ${t}\n  ${link(a)}`).join("\n")}\n\n${unsubText}\n${unsubLink(base, token)}`,
   };
 }
 /** Emails the check-in to the chosen people (re-checked here, so a stale preview can't double-send). Returns how many went out. */
-export async function sendCheckins(ids: unknown, who: string, base: string) {
+export async function sendCheckins(ids: unknown, who: string, base: string, note: unknown = "") {
   const cfg = await getMailCfg();
   if (!mailReady(cfg)) throw new Error("Email isn't set up yet, so check-ins can't be sent. An admin can fix this under Services.");
   const want = new Set(Array.isArray(ids) ? ids.slice(0, CHECKIN_BATCH).map(Number) : []), c = await conn();
+  const text = String(note ?? "").trim().slice(0, 1000);
   let sent = 0, failed = 0;
   for (const r of (await checkinTargets()).filter((x) => want.has(x.id))) {
     try {
-      await send({ to: r.email, subject: "Are you still interested in a Kzoo Makers tour?", ...checkinMail(r.first_name, r.token, base) }, cfg);
+      await send(await track("checkin", { to: r.email, subject: "Are you still interested in a Kzoo Makers tour?", ...checkinMail(r.first_name, r.token, base, text) }), cfg);
       await c.query("INSERT INTO tour_checkins (request_id, sent_by) SELECT id, $2 FROM tour_requests WHERE lower(email) = lower($1) AND status = 'open'", [r.email, who]);
       sent++;
     } catch (e) { failed++; console.error("check-in email failed:", e); }
@@ -531,12 +579,17 @@ export async function sendCheckins(ids: unknown, who: string, base: string) {
   return { sent, failed };
 }
 
+/** Marks the latest unanswered check-in as opened (first time only), from the email's tracking pixel or a visit to the answer page. */
+export async function markOpened(token: string) {
+  await (await conn()).query("UPDATE tour_checkins SET viewed_at = now() WHERE viewed_at IS NULL AND answered_at IS NULL AND request_id IN (SELECT o.id FROM tour_requests o JOIN tour_requests t ON lower(t.email) = lower(o.email) WHERE t.token = $1)", [token]);
+}
 /** What the check-in page needs, including what unsubscribing would cut off for this person (so the page can say so). */
 export async function checkinByToken(token: string) {
   const c = await conn(), r = (await c.query("SELECT first_name, status, email FROM tour_requests WHERE token = $1", [token])).rows[0];
   if (!r) throw new Error("This link isn't valid.");
   const upcoming = (await c.query("SELECT b.date, k.start_time FROM tour_bookings k JOIN tour_blocks b ON b.id = k.block_id WHERE lower(k.email) = lower($1) AND NOT k.cancelled AND b.date || ' ' || k.start_time >= $2 ORDER BY b.date, k.start_time", [r.email, localNow()])).rows.map((x) => when(x.date, x.start_time));
   const live = (await c.query("SELECT DISTINCT status FROM tour_requests WHERE lower(email) = lower($1) AND status IN ('open','offered')", [r.email])).rows.map((x) => x.status);
+  await markOpened(token); // visiting the page also counts as reading, for mail apps that block images
   return { name: r.first_name as string, open: r.status === "open" || r.status === "offered", upcoming, offered: live.includes("offered"), waiting: live.includes("open"), paused: (await getPause()).paused };
 }
 const SAID = { interested: "is still interested", not_now: "isn't ready right now", not_interested: "is no longer interested", unsubscribed: "unsubscribed from all tour emails" } as const;
@@ -574,7 +627,7 @@ export async function offerTimes(id: number, raw: unknown, guide: { name: string
   const r = (await c.query("UPDATE tour_requests SET offers = $2, status = 'offered', guide_name = $3, guide_email = $4 WHERE id = $1 AND status IN ('open','offered') RETURNING first_name, email, token, reschedules", [id, JSON.stringify(offers), gname, gemail])).rows[0];
   if (!r) throw new Error("That request was already scheduled or closed.");
   const m = offerMail(r.first_name, r.token, offers, `Good news! We found a volunteer${gname ? ` (${gname})` : ""} who wants to give you a tour. Here are the dates available to them, click if this works for you:`, base);
-  await send({ to: r.email, subject: "Good news! A Kzoo Makers volunteer can give you a tour", ...m }, cfg);
+  await send(await track("offer", { to: r.email, subject: "Good news! A Kzoo Makers volunteer can give you a tour", ...m }), cfg);
   await logEvent("walkup_taken", `${gname || gemail} took ${r.first_name}'s walk-up request and offered ${offers.length} time(s)`, { detail: offers.map(fmtOffer).join("\n"), guide: gname || gemail, actor: gname || gemail });
   await announce("walkup_taken", { subject: `Walk-up taken: ${r.first_name}`, lines: [`${gname || gemail} offered ${r.first_name} ${offers.length} time(s) for a tour.`], tags: "white_check_mark", click: `${base}/admin/tours/walkups` });
 }
@@ -654,7 +707,7 @@ export async function respond(token: string, pick: number | null, note: string, 
     return { declined: true as const };
   }
   const w = fmtOffer(o);
-  await mail(r.email, "Your Kzoo Makers tour", [`Hi ${r.first_name}, you're booked for a tour on ${w}.`, "If your plans change, please cancel so we can offer the time to someone else."], ["Cancel this tour", `${base}/tours/cancel?token=${bookingToken}`]);
+  await mail(r.email, "Your Kzoo Makers tour", [`Hi ${r.first_name}, you're booked for a tour on ${w}.`, "If your plans change, please cancel so we can offer the time to someone else."], ["Cancel this tour", `${base}/tours/cancel?token=${bookingToken}`], "booked");
   await mail(r.guide_email, `Tour confirmed: ${name}`, [`${name} (${r.email}, ${r.phone}) accepted your tour time: ${w}.`, r.interest && `Interested in: ${r.interest}`, r.notes && `Notes: ${r.notes}`].filter(Boolean) as string[]);
   await logEvent("walkup_confirmed", `${name} picked a time: ${w}`, { guide: r.guide_name, actor: name });
   await notify(TOURS_TOPIC, { title: `Walk-up tour confirmed: ${name}`, message: w, tags: "calendar", click: `${base}/admin/tours` });
@@ -687,9 +740,9 @@ export async function postStaff(kind: string, id: number, body: string, internal
     if (await isUnsubscribed(p.email)) throw new Error(`${UNSUB_ERR} You can still save this as an internal note.`);
     const cfg = await getMailCfg();
     if (!mailReady(cfg)) throw new Error("Email isn't set up yet, so the message can't be sent. You can still save it as an internal note.");
-    await send({ to: p.email, subject: "A message about your Kzoo Makers tour",
+    await send(await track("message", { to: p.email, subject: "A message about your Kzoo Makers tour",
       text: `${author} from Kzoo Makers wrote:\n\n${body}\n\nReply here: ${base}/tours/thread?token=${p.token}`,
-      html: `<p>${esc(author)} from Kzoo Makers wrote:</p><blockquote style="margin:0 0 16px;padding-left:12px;border-left:3px solid #f9b234;white-space:pre-wrap">${esc(body)}</blockquote><p><a href="${esc(`${base}/tours/thread?token=${p.token}`)}">Click here to reply</a></p>` }, cfg);
+      html: `<p>${esc(author)} from Kzoo Makers wrote:</p><blockquote style="margin:0 0 16px;padding-left:12px;border-left:3px solid #f9b234;white-space:pre-wrap">${esc(body)}</blockquote><p><a href="${esc(`${base}/tours/thread?token=${p.token}`)}">Click here to reply</a></p>` }), cfg);
   }
   await (await conn()).query("INSERT INTO tour_messages (kind, ref_id, author_kind, author, body) VALUES ($1,$2,$3,$4,$5)", [kind, id, internal ? "note" : "staff", author.slice(0, 100), body]);
   await logEvent(internal ? "note" : "message", `${author} ${internal ? "added an internal note on" : "emailed"} ${p.name}`, { detail: body.slice(0, 300), actor: author, guide: p.guide_email });

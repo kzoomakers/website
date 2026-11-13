@@ -11,13 +11,13 @@ import { isStaffEmail } from "@/lib/tours-fmt";
 
 // Tours admin RPC: POST { op, ...args }. Reads need Tours view access, everything else Tours edit access.
 export const dynamic = "force-dynamic";
-const READS = new Set(["blocks", "bookings", "tabs", "waiting", "requests", "exportRequests", "exportBlocks", "exportBookings", "thread", "notifyGet", "checkinPreview", "calendar", "timeline", "stats"]);
+const READS = new Set(["blocks", "bookings", "tabs", "waiting", "requests", "exportRequests", "exportBlocks", "exportBookings", "thread", "notifyGet", "checkinPreview", "calendar", "timeline", "stats", "mailTrail", "mailStats"]);
 // The admin page each op belongs to (see lib/access.ts), so a person given just that page can use it. An op not listed here needs a whole-section grant.
 const PAGE: Record<string, string | string[]> = {
   blocks: ["availability", "bookings"], saveBlock: "availability", deleteBlocks: "availability", exportBlocks: "availability", importBlocks: "availability", calendar: "*",
   bookings: "bookings", tabs: "bookings", waiting: "bookings", addTab: "bookings", deleteTab: "bookings", renameTab: "bookings", moveToTab: "bookings", remind: "bookings", cancel: "bookings", setStatus: "bookings", exportBookings: "bookings", importBookings: "bookings",
   requests: "walkups", checkinPreview: "walkups", checkinSend: "walkups", offer: "walkups", reopen: "walkups", close: "walkups", exportRequests: "walkups", import: "walkups", thread: ["bookings", "walkups"], post: ["bookings", "walkups"],
-  stats: "stats", timeline: "timeline",
+  stats: "stats", mailStats: "stats", timeline: "timeline", mailTrail: ["bookings", "walkups"],
   notifyGet: "notifications", emailAdd: "notifications", emailRemove: "notifications", staleSave: "notifications", pauseSave: "notifications", subAdd: "notifications", subRemove: "notifications",
   activate: ["bookings", "walkups"], undoActivation: ["bookings", "walkups"],
 };
@@ -36,13 +36,15 @@ export async function POST(req: Request) {
       case "addTab": { const r = await t.addTab(a.name); await logAudit(who, "tour.addTab", r.name); return NextResponse.json(r); }
       case "requests": return NextResponse.json(await t.listRequests(!!a.all));
       case "calendar": return NextResponse.json(await t.calendar(String(a.from), String(a.to)));
+      case "mailTrail": return NextResponse.json(await t.mailTrail(a.email));
+      case "mailStats": return NextResponse.json(await t.mailStats(Number(a.days) || 0));
       case "stats": return NextResponse.json(await t.stats(Number(a.days) || 0, typeof a.guide === "string" ? a.guide.slice(0, 200) : ""));
       case "timeline": return NextResponse.json(await t.timeline({ before: Number(a.before) || undefined, groups: Array.isArray(a.groups) ? a.groups.map(String) : [], q: typeof a.q === "string" ? a.q : "" }));
       case "notifyGet": return NextResponse.json(await n.overview());
       case "emailAdd": await n.addEmail(a.event, a.email); break;
       case "emailRemove": await n.removeEmail(a.event, a.email); break;
       case "checkinPreview": return NextResponse.json(await t.checkinPreview());
-      case "checkinSend": { const m = await me(), r = await t.sendCheckins(a.ids, m?.name || who, await baseUrl(req)); await logAudit(who, "tour.checkinSend", `${r.sent} sent, ${r.failed} failed`); return NextResponse.json(r); }
+      case "checkinSend": { const m = await me(), r = await t.sendCheckins(a.ids, m?.name || who, await baseUrl(req), a.note); await logAudit(who, "tour.checkinSend", `${r.sent} sent, ${r.failed} failed`); return NextResponse.json(r); }
       case "pauseSave": await t.setPaused(a.paused, a.message, who); break;
       case "staleSave": await n.setStaleDays(a.days); break;
       case "subAdd": await n.subscribe(a.event, a.topic); break;

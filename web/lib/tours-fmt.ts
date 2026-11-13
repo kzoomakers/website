@@ -203,8 +203,29 @@ export const asleep = (r: Interest, today: string) => r.interest_state === "not_
 export const canCheckIn = (r: Interest & { status: string; last_sent: string | Date | null }, today: string, nowMs: number) =>
   r.status === "open" && r.interest_state !== "not_interested" && r.interest_state !== "unsubscribed" && !asleep(r, today) && !(r.last_sent && nowMs - +new Date(r.last_sent) < CHECKIN_GAP_DAYS * 864e5);
 export const tabOf = (r: Interest, today: string) => (r.interest_state === "not_interested" || r.interest_state === "unsubscribed" ? "no" : asleep(r, today) ? "later" : "waiting") as "waiting" | "later" | "no";
+type Ck = { sent_at: string; viewed_at?: string | null; answered_at: string | null; answer: string | null };
+/** Where someone in the waiting pile is in the email flow: not contacted, emailed (not opened), opened (no answer yet), said yes, or already sent times. */
+export const stageOf = (r: { status: string; checkins: Ck[] }) => {
+  const k = r.checkins[r.checkins.length - 1];
+  return (r.status === "offered" ? "offered" : !k || (k.answered_at && k.answer !== "interested") ? "new" : k.answered_at ? "yes" : k.viewed_at ? "opened" : "sent") as "new" | "sent" | "opened" | "yes" | "offered";
+};
 /** Queue order: people who confirmed interest first (by their first "yes", or newest "yes" first when `latest`), everyone else by request date. */
 export function queueOrder<T extends { created_at: string; first_confirmed: string | null; last_confirmed: string | null }>(rows: T[], latest: boolean): T[] {
   const t = (s: string | null) => +new Date(s!), yes = (r: T) => !!r.first_confirmed;
   return [...rows].sort((a, b) => yes(a) !== yes(b) ? (yes(a) ? -1 : 1) : yes(a) ? (latest ? t(b.last_confirmed) - t(a.last_confirmed) : t(a.first_confirmed) - t(b.first_confirmed)) : t(a.created_at) - t(b.created_at));
 }
+
+// ---- email tracking, for the activity view
+export const MAIL_KIND: Record<string, string> = { checkin: "Check-in", offer: "Times offered", offer_reminder: "Offer reminder", message: "Staff message", booked: "Booking confirmation", cancelled: "Cancellation notice" };
+const CLICKED: Record<string, string> = { interested: "Yes, still interested", not_now: "Not right now", not_interested: "No longer interested", unsubscribed: "Unsubscribe" };
+/** A tracked link as a person would name it: "/tours/checkin?a=interested" is "Yes, still interested". */
+export function linkLabel(path: string) {
+  const [p, q = ""] = path.split("?"), a = new URLSearchParams(q);
+  if (p.startsWith("/tours/checkin")) return CLICKED[a.get("a") ?? ""] ?? "Answer page";
+  if (p.startsWith("/tours/respond")) return a.has("pick") ? `Picked time ${+a.get("pick")! + 1}` : a.has("none") ? "Asked for other times" : "Times page";
+  if (p.startsWith("/tours/cancel")) return "Cancel link";
+  if (p.startsWith("/tours/thread")) return "Reply link";
+  return "Link";
+}
+/** Mail apps (Apple Mail, some proxies) fetch images the moment mail arrives, so an "open" this soon after sending probably wasn't a person. */
+export const autoOpen = (sentAt: string, at: string) => +new Date(at) - +new Date(sentAt) < 30e3;

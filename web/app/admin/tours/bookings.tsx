@@ -4,6 +4,7 @@ import { useState } from "react";
 import { confirmDialog, promptDialog } from "@/components/dialog";
 import type { Booking, Tab, WalkupRequest } from "@/lib/tours";
 import { AdminThread } from "@/components/tour-thread";
+import EmailTrail from "./email-trail";
 import { tours } from "./rpc";
 import MemberActions, { useClasses } from "./member-flow";
 import PersonInfo from "./person-info";
@@ -135,6 +136,7 @@ export default function Bookings({ initial, tabs: t0, waiting: w0, email }: { in
                 <button className="danger" onClick={() => cancel(b)}>Cancel tour</button>
               </div>
             )}
+            <EmailTrail email={b.email} />
             <AdminThread kind="booking" id={b.id} name={b.name} msgs={b.msgs} lastFrom={b.last_from} />
           </div>
         ))}
