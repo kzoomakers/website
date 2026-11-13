@@ -15,3 +15,12 @@
 .mp-step{max-width:720px;margin:0 auto}
 @media (hover:none){.mp-act{opacity:1}}
 @media (max-width:820px){.mp{grid-template-columns:1fr}.mp-nav{position:static;flex-direction:row;flex-wrap:wrap}.mp-act{opacity:1}}
+
+/* Tracking */
+.trk{--t1:#2a78d6;--t2:#eb6834;--t3:#eda100;--t4:#8b929c;--open:#d5d9de}
+@media (prefers-color-scheme:dark){.trk{--t1:#3987e5;--t2:#d95926;--t3:#c98500;--t4:#8b929c;--open:#3a3f47}}
+.trk .card{padding:16px;margin:0 0 12px}.trk h2{margin:0 0 6px;font-size:18px}
+.trk-kpis{display:flex;gap:12px;flex-wrap:wrap;margin:0 0 12px}.trk-kpi{flex:1 1 150px;margin:0!important}.trk-n{font-size:30px;font-weight:800;line-height:1.1}
+.trk-leg{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0;font-size:13px}.trk-leg i{display:inline-block;width:10px;height:10px;border-radius:5px;margin-right:5px}
+.trk-split{display:flex;height:22px;border-radius:6px;overflow:hidden;background:var(--open)}.trk-split span{display:block;height:100%}
+.trk-bar{display:inline-block;width:80px;height:8px;background:var(--open);border-radius:4px;vertical-align:middle;overflow:hidden}.trk-bar i{display:block;height:100%;background:var(--t2)}

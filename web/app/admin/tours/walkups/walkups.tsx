@@ -9,6 +9,7 @@ import { tours } from "../rpc";
 import MemberActions, { useClasses } from "../member-flow";
 import PersonInfo from "../person-info";
 import CsvBar from "../csv-bar";
+import EmailTrail from "../email-trail";
 import "./walkups.css";
 
 const ago = (d: string) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -148,6 +149,7 @@ export default function Walkups({ initial, email, name }: { initial: WalkupReque
             ) : r.activated_at ? (
               <div className="wk-actions"><MemberActions p={who(r)} classes={classes} me={email} canActivate={false} reload={load} fail={setMsg} /></div>
             ) : null}
+            <EmailTrail email={r.email} />
             <AdminThread kind="request" id={r.id} name={r.first_name} msgs={r.msgs} lastFrom={r.last_from} />
           </div>
         ))}

@@ -214,3 +214,18 @@ export function queueOrder<T extends { created_at: string; first_confirmed: stri
   const t = (s: string | null) => +new Date(s!), yes = (r: T) => !!r.first_confirmed;
   return [...rows].sort((a, b) => yes(a) !== yes(b) ? (yes(a) ? -1 : 1) : yes(a) ? (latest ? t(b.last_confirmed) - t(a.last_confirmed) : t(a.first_confirmed) - t(b.first_confirmed)) : t(a.created_at) - t(b.created_at));
 }
+
+// ---- email tracking, for the activity view
+export const MAIL_KIND: Record<string, string> = { checkin: "Check-in", offer: "Times offered", offer_reminder: "Offer reminder", message: "Staff message", booked: "Booking confirmation", cancelled: "Cancellation notice" };
+const CLICKED: Record<string, string> = { interested: "Yes, still interested", not_now: "Not right now", not_interested: "No longer interested", unsubscribed: "Unsubscribe" };
+/** A tracked link as a person would name it: "/tours/checkin?a=interested" is "Yes, still interested". */
+export function linkLabel(path: string) {
+  const [p, q = ""] = path.split("?"), a = new URLSearchParams(q);
+  if (p.startsWith("/tours/checkin")) return CLICKED[a.get("a") ?? ""] ?? "Answer page";
+  if (p.startsWith("/tours/respond")) return a.has("pick") ? `Picked time ${+a.get("pick")! + 1}` : a.has("none") ? "Asked for other times" : "Times page";
+  if (p.startsWith("/tours/cancel")) return "Cancel link";
+  if (p.startsWith("/tours/thread")) return "Reply link";
+  return "Link";
+}
+/** Mail apps (Apple Mail, some proxies) fetch images the moment mail arrives, so an "open" this soon after sending probably wasn't a person. */
+export const autoOpen = (sentAt: string, at: string) => +new Date(at) - +new Date(sentAt) < 30e3;

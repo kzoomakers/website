@@ -13,7 +13,7 @@ export function Emails({ s }: { s: State; reload: () => void }) {
   const [status, setStatus] = useState("all");
   const [search, setSearch] = useState("");
   const [data, setData] = useState<{ rows: any[]; counts: Record<string, number>; limitHit?: boolean } | null>(null);
-  const [modal, setModal] = useState<{ kind: "preview"; html: string; title: string } | { kind: "stats"; st: any } | null>(null);
+  const [modal, setModal] = useState<{ kind: "preview"; html: string; title: string } | null>(null);
   const [msg, setMsg] = useState("");
   const router = useRouter();
   const load = useCallback(() => rpc("emails", { status, search }).then(setData).catch((e) => setMsg(e.message)), [status, search]);
@@ -39,7 +39,7 @@ export function Emails({ s }: { s: State; reload: () => void }) {
                   {status === "trash" ? <><button onClick={() => act(c.id, "restore")}>Restore</button><button className="bad" onClick={async () => (await confirmDialog("Delete this email permanently? You won't be able to get it back.", { ok: "Delete email", danger: true })) && act(c.id, "delete")}>Delete permanently</button></> : <>
                     {c.status === "draft" && <Link href={"/admin/mailer/email/" + c.id}>Edit</Link>}
                     {c.status === "scheduled" && <button onClick={() => act(c.id, "unschedule")}>Unschedule to edit</button>}
-                    {(c.status === "sent" || c.status === "sending") && <button onClick={async () => setModal({ kind: "stats", st: await rpc("stats", { id: c.id }) })}>Statistics</button>}
+                    {(c.status === "sent" || c.status === "sending") && <Link href={"/admin/mailer/tracking/" + c.id}>Tracking</Link>}
                     <button onClick={async () => { const full: Camp = await rpc("campaign", { id: c.id }); setModal({ kind: "preview", title: c.subject || c.name, html: fill(renderEmail(full.design, location.origin, full.preview), { name: "Alex", unsubscribe: "#" }) }); }}>Preview</button>
                     <button onClick={() => act(c.id, "duplicate")}>Duplicate</button>
                     <button className="bad" disabled={c.status === "sending"} onClick={() => act(c.id, "trash")}>Move to trash</button></>}
@@ -55,19 +55,7 @@ export function Emails({ s }: { s: State; reload: () => void }) {
       {modal && (
         <div className="modal-bg" onClick={() => setModal(null)}>
           <div className="modal" style={{ maxWidth: modal.kind === "preview" ? 680 : 800, maxHeight: "90vh", overflow: "auto" }} onClick={(e) => e.stopPropagation()}>
-            {modal.kind === "preview" ? <><h2>{modal.title}</h2><iframe title="Preview" sandbox="" srcDoc={modal.html} style={{ width: "100%", height: "65vh", border: "1px solid var(--line)" }} /></> : (
-              <>
-                <h2>{modal.st.campaign?.subject || modal.st.campaign?.name}</h2>
-                <table className="mp-table"><tbody>
-                  <tr><td>Delivered</td><td><b>{modal.st.sent}</b>{modal.st.failed > 0 && <small> ({modal.st.failed} failed)</small>}</td></tr>
-                  <tr><td>Opened</td><td><b>{pct(modal.st.opened, modal.st.sent)}</b> <small>({modal.st.opened})</small></td></tr>
-                  <tr><td>Clicked</td><td><b>{pct(modal.st.clicked, modal.st.sent)}</b> <small>({modal.st.clicked})</small></td></tr>
-                  <tr><td>Unsubscribed</td><td><b>{pct(modal.st.unsubscribed, modal.st.sent)}</b> <small>({modal.st.unsubscribed})</small></td></tr>
-                </tbody></table>
-                {modal.st.links.length > 0 && <><h3>Links clicked</h3>{modal.st.links.map((l: any) => <div key={l.url} className="row"><span className="grow" title={l.url}>{l.url}</span><b>{l.clicks}</b></div>)}</>}
-                <Recipients id={modal.st.campaign.id} />
-                <p className="sub">Opens are counted when the email's tiny tracking image loads, so mail apps that block images or pre-load them make this approximate.</p>
-              </>)}
+            <><h2>{modal.title}</h2><iframe title="Preview" sandbox="" srcDoc={modal.html} style={{ width: "100%", height: "65vh", border: "1px solid var(--line)" }} /></>
             <div className="bar" style={{ marginTop: 12 }}><button onClick={() => setModal(null)}>Close</button></div>
           </div>
         </div>)}
@@ -78,7 +66,7 @@ export function Emails({ s }: { s: State; reload: () => void }) {
 const FILTERS = [["", "Everyone"], ["opened", "Opened"], ["clicked", "Clicked"], ["unopened", "Didn't open"]] as const;
 
 /** Per-person results for one email: who opened it (how many times), and which links they clicked. */
-function Recipients({ id }: { id: number }) {
+export function Recipients({ id }: { id: number }) {
   const [filter, setFilter] = useState("");
   const [rows, setRows] = useState<any[] | null>(null);
   useEffect(() => { setRows(null); rpc("recipients", { id, filter }).then(setRows).catch(() => setRows([])); }, [id, filter]);

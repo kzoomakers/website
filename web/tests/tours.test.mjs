@@ -184,3 +184,13 @@ test("email stage follows the latest check-in", () => {
   assert.equal(stageOf({ status: "open", checkins: [k({ answered_at: "2026-11-02", answer: "not_now" })] }), "new", "snooze ran out, so they need contacting again");
   assert.equal(stageOf({ status: "offered", checkins: [k()] }), "offered");
 });
+
+const { linkLabel, autoOpen } = await import("../lib/tours-fmt.ts");
+test("tracked links get plain names; instant opens are flagged as automatic", () => {
+  assert.equal(linkLabel("/tours/checkin?a=interested"), "Yes, still interested");
+  assert.equal(linkLabel("/tours/respond?pick=1"), "Picked time 2");
+  assert.equal(linkLabel("/tours/respond?none=1"), "Asked for other times");
+  assert.equal(linkLabel("/tours/cancel"), "Cancel link");
+  assert.ok(autoOpen("2026-11-13T12:00:00Z", "2026-11-13T12:00:05Z"));
+  assert.ok(!autoOpen("2026-11-13T12:00:00Z", "2026-11-13T12:20:00Z"));
+});

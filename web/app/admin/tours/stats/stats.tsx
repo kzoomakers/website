@@ -3,6 +3,7 @@ import Notice from "@/components/notice";
 import { useRef, useState } from "react";
 import type { stats } from "@/lib/tours";
 import { tours } from "../rpc";
+import MailStats from "./mail-stats";
 
 type S = Awaited<ReturnType<typeof stats>>;
 const RANGES: [number, string][] = [[7, "7 days"], [30, "30 days"], [90, "90 days"], [365, "1 year"], [0, "All time"]];
@@ -156,6 +157,8 @@ export default function Stats({ initial }: { initial: S }) {
           {[...s.closers].sort((a, b) => b.won / (b.tours || 1) - a.won / (a.tours || 1) || b.won - a.won).map((c) => <tr key={c.key} style={{ borderTop: "1px solid var(--line)" }}><td>{c.name}{c === top && " 🏆"}</td><td>{c.tours}</td><td>{c.won}</td><td>{pct(c.won, c.tours)}{c.tours < MIN_TOURS && <small className="sub"> (few tours)</small>}</td><td>{c.lost}</td><td>{c.noShow}</td><td>{dur(c.days)}</td></tr>)}
         </tbody></table></div>}
       </div>
+
+      <MailStats days={days} />
 
       <h2>Leaders and losses</h2>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12, marginBottom: 12 }}>

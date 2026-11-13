@@ -6,6 +6,7 @@ import { pct, rpc, when, type Cfg, type State } from "./api";
 import Editor from "./editor";
 import { Emails, NewEmail, SendStep } from "./emails";
 import Subscribers from "./subscribers";
+import Tracking from "./tracking";
 import Forms from "./forms";
 import { alertDialog, confirmDialog } from "@/components/dialog";
 
@@ -35,6 +36,7 @@ export default function MailAdmin({ slug }: { slug: string[] }) {
         {a === "queue" && <Queue />}
         {a === "lists" && <Lists s={s} reload={reload} />}
         {a === "settings" && <Settings s={s} reload={reload} />}
+        {a === "tracking" && <Tracking id={b ? Number(b) : undefined} />}
       </div>
     </div>
   );
@@ -97,7 +99,7 @@ function Lists({ s, reload }: Props) {
 
 function Settings({ s, reload }: Props) {
   const c: Cfg = s.cfg;
-  const [f, setF] = useState({ fromName: c.fromName, from: c.from, replyTo: c.replyTo, siteUrl: c.siteUrl, aiModel: c.aiModel, doubleOptIn: c.doubleOptIn, confirmSubject: c.confirmSubject, confirmBody: c.confirmBody, welcomeOn: c.welcomeOn, welcomeSubject: c.welcomeSubject, welcomeBody: c.welcomeBody, perMinute: c.perMinute, perDay: c.perDay, smtp2goKey: "", smtpUrl: "", deepseekKey: "" });
+  const [f, setF] = useState({ fromName: c.fromName, from: c.from, replyTo: c.replyTo, siteUrl: c.siteUrl, aiModel: c.aiModel, doubleOptIn: c.doubleOptIn, trackOpens: c.trackOpens, trackClicks: c.trackClicks, confirmSubject: c.confirmSubject, confirmBody: c.confirmBody, welcomeOn: c.welcomeOn, welcomeSubject: c.welcomeSubject, welcomeBody: c.welcomeBody, perMinute: c.perMinute, perDay: c.perDay, smtp2goKey: "", smtpUrl: "", deepseekKey: "" });
   const [msg, setMsg] = useState("");
   const text = (k: keyof typeof f, label: string, ph = "", secret = false, hint = "") => (
     <label className="field"><span>{label}</span>
@@ -123,6 +125,10 @@ function Settings({ s, reload }: Props) {
         {f.welcomeOn && <>
           {text("welcomeSubject", "Welcome email subject")}
           <label className="field"><span>Message ({"{{name}}"} is replaced by their name)</span><textarea rows={5} value={f.welcomeBody} onChange={(e) => setF({ ...f, welcomeBody: e.target.value })} /></label></>}
+        <h2>Tracking</h2>
+        <label className="in"><input type="checkbox" checked={f.trackOpens} onChange={(e) => setF({ ...f, trackOpens: e.target.checked })} /> Count opens (adds a 1×1 image to each email)</label>
+        <label className="in"><input type="checkbox" checked={f.trackClicks} onChange={(e) => setF({ ...f, trackClicks: e.target.checked })} /> Count link clicks (links pass through this site first)</label>
+        <p className="sub">See the results under <Link href="/admin/mailer/tracking">Tracking</Link>. Only site administrators can see who opened or clicked.</p>
         <h2>Sending speed</h2>
         <label className="field"><span>Emails per minute (0 = as fast as possible)</span><input type="number" min={0} value={f.perMinute} onChange={(e) => setF({ ...f, perMinute: +e.target.value })} /><small>Slower sending protects your sender reputation with new domains.</small></label>
         <label className="field"><span>Emails per day (0 = no limit)</span><input type="number" min={0} value={f.perDay} onChange={(e) => setF({ ...f, perDay: +e.target.value })} /><small>Set this a little under your email provider's daily cap. Once it is reached, a newsletter in progress pauses and carries on after midnight (Detroit time). Sign-in links, password resets and signing codes are never held back.</small></label>

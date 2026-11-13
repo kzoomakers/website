@@ -60,3 +60,10 @@ export async function canSpecial(perm: "agreement.member" | "agreement.guest") {
   const list = (await d.pool.query("SELECT email FROM special_perms WHERE perm = $1", [perm])).rows.map((r) => String(r.email).toLowerCase());
   return list.length ? list.includes(m.email.toLowerCase()) : levelOf(m, "admin") === "write";
 }
+
+/** A hard-coded site admin (ADMIN_EMAILS, signed in with Google), not just someone granted a section. Some data, like who clicked which link in an email, is for these people only. */
+export async function siteAdmin() {
+  if (process.env.ALLOW_DEV_ADMIN === "1" && process.env.NODE_ENV !== "production") return true;
+  const e = (await auth())?.user?.email;
+  return !!e && isAdmin(e);
+}

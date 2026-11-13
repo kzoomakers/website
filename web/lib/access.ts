@@ -17,7 +17,7 @@ export const PAGES: Page[] = [
     ["hours", "Hours & address", "/admin/webmaster/hours"], ["menu", "Menu", "/admin/webmaster/menu"], ["robots", "Search engine settings", "/admin/webmaster/robots"], ["reviews", "Reviews", "/admin/webmaster/reviews"],
     ["analytics", "Analytics", "/admin/webmaster/analytics"], ["handbook-updates", "Handbook updates", "/admin/webmaster/handbook-updates"]]),
   ...P("mail", [["overview", "Overview", "/admin/mailer"], ["emails", "Emails", "/admin/mailer/emails"], ["forms", "Signup forms", "/admin/mailer/forms"], ["subscribers", "Subscribers", "/admin/mailer/subscribers"], ["lists", "Lists", "/admin/mailer/lists"],
-    ["queue", "Queue", "/admin/mailer/queue"], ["settings", "Settings", "/admin/mailer/settings"]]),
+    ["queue", "Queue", "/admin/mailer/queue"], ["settings", "Settings", "/admin/mailer/settings"], ["tracking", "Tracking", "/admin/mailer/tracking"]]),
   ...P("blog", [["posts", "Posts", "/admin/blog"], ["categories", "Categories", "/admin/blog/categories"], ["authors", "Authors", "/admin/blog/authors"], ["media", "Media", "/admin/blog/media"], ["comments", "Comments", "/admin/blog/comments"]]),
   ...P("forms", [["messages", "Messages", "/admin/forms"]]),
   ...P("crm", [["people", "People", "/admin/crm"], ["approvals", "New members", "/admin/crm/approvals"], ["classes", "Classes", "/admin/crm/classes"], ["tools", "Tools & sign-offs", "/admin/crm/tools"], ["skills", "Skills", "/admin/crm/skills"],
