@@ -42,7 +42,7 @@ export async function POST(req: Request) {
       case "emailAdd": await n.addEmail(a.event, a.email); break;
       case "emailRemove": await n.removeEmail(a.event, a.email); break;
       case "checkinPreview": return NextResponse.json(await t.checkinPreview());
-      case "checkinSend": { const m = await me(), r = await t.sendCheckins(a.ids, m?.name || who, await baseUrl(req)); await logAudit(who, "tour.checkinSend", `${r.sent} sent, ${r.failed} failed`); return NextResponse.json(r); }
+      case "checkinSend": { const m = await me(), r = await t.sendCheckins(a.ids, m?.name || who, await baseUrl(req), a.note); await logAudit(who, "tour.checkinSend", `${r.sent} sent, ${r.failed} failed`); return NextResponse.json(r); }
       case "pauseSave": await t.setPaused(a.paused, a.message, who); break;
       case "staleSave": await n.setStaleDays(a.days); break;
       case "subAdd": await n.subscribe(a.event, a.topic); break;

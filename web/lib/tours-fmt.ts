@@ -203,6 +203,12 @@ export const asleep = (r: Interest, today: string) => r.interest_state === "not_
 export const canCheckIn = (r: Interest & { status: string; last_sent: string | Date | null }, today: string, nowMs: number) =>
   r.status === "open" && r.interest_state !== "not_interested" && r.interest_state !== "unsubscribed" && !asleep(r, today) && !(r.last_sent && nowMs - +new Date(r.last_sent) < CHECKIN_GAP_DAYS * 864e5);
 export const tabOf = (r: Interest, today: string) => (r.interest_state === "not_interested" || r.interest_state === "unsubscribed" ? "no" : asleep(r, today) ? "later" : "waiting") as "waiting" | "later" | "no";
+type Ck = { sent_at: string; viewed_at?: string | null; answered_at: string | null; answer: string | null };
+/** Where someone in the waiting pile is in the email flow: not contacted, emailed (not opened), opened (no answer yet), said yes, or already sent times. */
+export const stageOf = (r: { status: string; checkins: Ck[] }) => {
+  const k = r.checkins[r.checkins.length - 1];
+  return (r.status === "offered" ? "offered" : !k || (k.answered_at && k.answer !== "interested") ? "new" : k.answered_at ? "yes" : k.viewed_at ? "opened" : "sent") as "new" | "sent" | "opened" | "yes" | "offered";
+};
 /** Queue order: people who confirmed interest first (by their first "yes", or newest "yes" first when `latest`), everyone else by request date. */
 export function queueOrder<T extends { created_at: string; first_confirmed: string | null; last_confirmed: string | null }>(rows: T[], latest: boolean): T[] {
   const t = (s: string | null) => +new Date(s!), yes = (r: T) => !!r.first_confirmed;

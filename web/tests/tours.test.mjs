@@ -173,3 +173,14 @@ test("gone quiet means the last two check-ins in a row had no reply", () => {
   assert.equal(goneQuiet(k(0, 0, 1)), false, "they answered since"); assert.equal(goneQuiet(k(1, 0, 0)), true); assert.equal(goneQuiet(k(0, 1, 0)), false);
   assert.ok(CHECKIN_BATCH > 0 && CHECKIN_BATCH <= 50);
 });
+
+const { stageOf } = await import("../lib/tours-fmt.ts");
+test("email stage follows the latest check-in", () => {
+  const k = (o = {}) => ({ sent_at: "2026-11-01", viewed_at: null, answered_at: null, answer: null, ...o });
+  assert.equal(stageOf({ status: "open", checkins: [] }), "new");
+  assert.equal(stageOf({ status: "open", checkins: [k()] }), "sent");
+  assert.equal(stageOf({ status: "open", checkins: [k({ viewed_at: "2026-11-02" })] }), "opened");
+  assert.equal(stageOf({ status: "open", checkins: [k({ answered_at: "2026-11-02", answer: "interested" })] }), "yes");
+  assert.equal(stageOf({ status: "open", checkins: [k({ answered_at: "2026-11-02", answer: "not_now" })] }), "new", "snooze ran out, so they need contacting again");
+  assert.equal(stageOf({ status: "offered", checkins: [k()] }), "offered");
+});

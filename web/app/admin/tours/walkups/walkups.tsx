@@ -3,7 +3,7 @@ import Notice, { msgKind } from "@/components/notice";
 import { useEffect, useRef, useState } from "react";
 import { confirmDialog } from "@/components/dialog";
 import type { Offer, WalkupRequest } from "@/lib/tours";
-import { CHECKIN_BATCH, goneQuiet, queueOrder, tabOf } from "@/lib/tours-fmt";
+import { CHECKIN_BATCH, goneQuiet, queueOrder, stageOf, tabOf } from "@/lib/tours-fmt";
 import { AdminThread } from "@/components/tour-thread";
 import { tours } from "../rpc";
 import MemberActions, { useClasses } from "../member-flow";
@@ -13,36 +13,41 @@ import "./walkups.css";
 
 const ago = (d: string) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 const nextWeek = (d: string) => (d ? new Date(new Date(d + "T12:00:00").getTime() + 7 * 864e5).toISOString().slice(0, 10) : "");
-const TABS = [["waiting", "Waiting"], ["later", "Maybe later"], ["no", "Not interested"]] as const;
+type Tab = "new" | "emailed" | "yes" | "offered" | "later" | "no";
+const TABS: [Tab, string, string][] = [["new", "Not contacted", "Haven't been emailed yet"], ["emailed", "Emailed", "Asked if they're still interested; waiting on a reply"], ["yes", "Said yes", "Replied that they still want a tour"], ["offered", "Times offered", "Sent tour times; waiting for them to pick"], ["later", "Maybe later", "Asked us to check back on a date"], ["no", "Not interested", "Said no, unsubscribed or dismissed"]];
+const tabKey = (r: WalkupRequest, today: string): Tab => { const t = tabOf(r, today); if (t !== "waiting") return t; const s = stageOf(r); return s === "sent" || s === "opened" ? "emailed" : s; };
+const NOTE = "We have a long list right now, so it may be a few months before we can book your tour. If you're still interested, tell us and we'll hold your place in line. If the timing is bad, choose \"Not right now\" and we'll check back when you pick.";
 const SAID: Record<string, string> = { interested: "still interested", not_now: "not right now", not_interested: "not interested", unsubscribed: "unsubscribed" };
 type Preview = { ready: boolean; people: { id: number; name: string; email: string }[] };
+const WAVE = 50;
 const blank: Offer = { date: "", start: "10:00", end: "11:00" };
 
 // Walk-ups: people who asked for a tour because none was open. Offer 1-5 times; they pick one (it lands in Bookings) or send it back here.
 export default function Walkups({ initial, email, name }: { initial: WalkupRequest[]; email: string; name: string }) {
   const [rows, setRows] = useState(initial), [all, setAll] = useState(false), [msg, setMsg] = useState(""), [busy, setBusy] = useState(false);
   const classes = useClasses();
-  const [tab, setTab] = useState<"waiting" | "later" | "no">("waiting"), [latest, setLatest] = useState(false), [pv, setPv] = useState<Preview | null>(null), [skip, setSkip] = useState<number[]>([]);
+  const [tab, setTab] = useState<Tab>("new"), [latest, setLatest] = useState(false), [pv, setPv] = useState<Preview | null>(null), [skip, setSkip] = useState<number[]>([]), [q, setQ] = useState(""), [wave, setWave] = useState(WAVE), [note, setNote] = useState(NOTE);
   useEffect(() => { try { setLatest(localStorage.getItem("walkups:latest") === "1"); } catch {} }, []);
   const flip = () => { setLatest(!latest); try { localStorage.setItem("walkups:latest", latest ? "0" : "1"); } catch {} };
-  const today = new Date().toLocaleDateString("sv-SE"), inTab = rows.filter((r) => tabOf(r, today) === tab);
-  // Waiting: people who confirmed come first; only requests still needing times are re-ordered, offered ones follow.
-  const shown = tab === "waiting" ? [...queueOrder(inTab.filter((r) => r.status === "open"), latest), ...inTab.filter((r) => r.status !== "open")] : inTab;
-  const waiting = rows.filter((r) => r.status === "open" && tabOf(r, today) === "waiting");
-  const counts = { waiting: waiting.length, confirmed: waiting.filter((r) => r.first_confirmed).length, quiet: waiting.filter((r) => goneQuiet(r.checkins)).length };
-  const openPreview = async () => { setMsg(""); try { setPv(await tours("checkinPreview")); setSkip([]); } catch (e: any) { setMsg(e.message); } };
+  const today = new Date().toLocaleDateString("sv-SE"), by = (t: Tab) => rows.filter((r) => tabKey(r, today) === t);
+  const find = q.trim().toLowerCase(), inTab = by(tab).filter((r) => !find || `${r.first_name} ${r.last_name} ${r.email}`.toLowerCase().includes(find));
+  // Warmest first: people who opened the email but haven't answered lead the Emailed list; "Said yes" follows the confirmed-first ordering.
+  const shown = tab === "yes" ? queueOrder(inTab, latest) : tab === "emailed" ? [...inTab.filter((r) => stageOf(r) === "opened"), ...inTab.filter((r) => stageOf(r) !== "opened")] : inTab;
+  const opened = by("emailed").filter((r) => stageOf(r) === "opened").length;
+  const canEmail = tab === "new" || tab === "emailed";
+  const openPreview = async () => { setMsg(""); try { const p: Preview = await tours("checkinPreview"), ids = new Set(by(tab).map((r) => r.id)); setPv({ ...p, people: p.people.filter((x) => ids.has(x.id)) }); setSkip([]); } catch (e: any) { setMsg(e.message); } };
   const [prog, setProg] = useState<{ done: number; total: number } | null>(null), stop = useRef(false);
   // Sends in small batches so a long list can't time out, and so the screen shows how far along it is. Stop leaves the rest unasked.
   const sendAll = async () => {
     if (!pv) return;
-    const ids = pv.people.map((p) => p.id).filter((i) => !skip.includes(i));
+    const ids = pv.people.slice(0, wave).map((p) => p.id).filter((i) => !skip.includes(i));
     let sent = 0, failed = 0, done = 0; stop.current = false; setBusy(true); setMsg(""); setProg({ done: 0, total: ids.length });
     try {
       for (let i = 0; i < ids.length && !stop.current; i += CHECKIN_BATCH) {
-        const chunk = ids.slice(i, i + CHECKIN_BATCH), r = await tours("checkinSend", { ids: chunk });
+        const chunk = ids.slice(i, i + CHECKIN_BATCH), r = await tours("checkinSend", { ids: chunk, note });
         sent += r.sent; failed += r.failed; done += chunk.length; setProg({ done, total: ids.length });
       }
-      setMsg(`Sent ${sent} check-in${sent === 1 ? "" : "s"}${failed ? `. ${failed} failed to send` : ""}${stop.current ? `. Stopped early: ${ids.length - done} not asked` : ""}.`);
+      setMsg(`Emailed ${sent} ${sent === 1 ? "person" : "people"}; they moved to Emailed${failed ? `. ${failed} failed to send` : ""}${stop.current ? `. Stopped early: ${ids.length - done} not asked` : ""}.`);
     } catch (e: any) { setMsg(`${e.message} (${sent} went out before this.)`); }
     finally { setBusy(false); setProg(null); setPv(null); await load(); }
   };
@@ -66,31 +71,34 @@ export default function Walkups({ initial, email, name }: { initial: WalkupReque
         <CsvBar what="walk-ups" file="walkups" ops={{ export: "exportRequests", import: "import" }} args={{ all }} reload={load} fail={setMsg} />
       </div>
       {msg && <div className="wk-err"><Notice kind={msgKind(msg)}>{msg}</Notice></div>}
-      <div className="wk-toolbar">
-        {TABS.map(([k, t]) => <button key={k} className={tab === k ? "pri" : ""} aria-pressed={tab === k} onClick={() => setTab(k)}>{t} ({rows.filter((r) => tabOf(r, today) === k).length})</button>)}
-        <span className="wk-sp" />
-        <span className="sub" style={{ margin: 0 }}>{counts.waiting} waiting · {counts.confirmed} confirmed · {counts.quiet} gone quiet</span>
+      <div className="wk-flow" role="tablist">
+        {TABS.map(([k, t, tip]) => <button key={k} role="tab" title={tip} className={"wk-step" + (tab === k ? " on" : "")} aria-selected={tab === k} onClick={() => { setTab(k); setPv(null); }}><b>{by(k).length}</b><span>{t}</span>{k === "emailed" && opened > 0 && <small>{opened} opened</small>}</button>)}
       </div>
-      {tab === "waiting" && (
-        <div className="wk-toolbar">
-          <button onClick={openPreview}>Check in with everyone waiting</button>
-          <button onClick={flip} aria-label="Change how confirmed people are ordered">Confirmed first: {latest ? "latest" : "earliest"} confirmation</button>
-        </div>
-      )}
-      {pv && (
+      <p className="wk-tip">{TABS.find((t) => t[0] === tab)![2]}. Emailing someone moves them along on its own: Not contacted → Emailed → Said yes.</p>
+      <div className="wk-toolbar">
+        <input className="wk-search" type="search" placeholder="Find a name or email" aria-label="Find a name or email" value={q} onChange={(e) => setQ(e.target.value)} />
+        <span className="wk-sp" />
+        {canEmail && <button className="pri" onClick={openPreview}>{tab === "new" ? "Email people who haven't been contacted…" : "Nudge people who haven't answered…"}</button>}
+        {tab === "yes" && <button onClick={flip} aria-label="Change how confirmed people are ordered">Order: {latest ? "latest" : "earliest"} confirmation first</button>}
+      </div>
+      {pv && (() => {
+        const list = pv.people.slice(0, wave), n = list.length - list.filter((p) => skip.includes(p.id)).length;
+        return (
         <div className="card wk-form" style={{ marginBottom: 16 }}>
-          <h3>Ask {pv.people.length - skip.length} of {pv.people.length} waiting if they are still interested?</h3>
-          <p className="wk-note">Skipped automatically: asked in the last 7 days, not interested, not right now (until their date), and dismissed requests. Untick anyone you'd rather leave out.</p>
+          <h3>{tab === "new" ? "First email" : "Nudge"}: {pv.people.length} {pv.people.length === 1 ? "person is" : "people are"} ready</h3>
+          <p className="wk-note">Skipped automatically: asked in the last 7 days, not interested, not right now (until their date), unsubscribed and dismissed. Oldest requests go first. Send a wave, watch who opens it and replies, then send the next.</p>
+          <label className="wk-lbl" style={{ maxWidth: 220 }}>How many to email this time<input type="number" min={1} max={pv.people.length || 1} value={wave} onChange={(e) => setWave(Math.max(1, +e.target.value || 1))} /></label>
+          <label className="wk-lbl" style={{ margin: "12px 0" }}>Your note, added under "Are you still interested?" (plain text; change it or empty it)<textarea rows={5} maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)} /></label>
           {!pv.ready && <Notice kind="error">Email isn't set up yet, so check-ins can't be sent. An admin can fix this under Services.</Notice>}
-          {pv.people.map((p) => <label key={p.id} className="wk-check" style={{ display: "block" }}><input type="checkbox" checked={!skip.includes(p.id)} onChange={(e) => setSkip(e.target.checked ? skip.filter((i) => i !== p.id) : [...skip, p.id])} /> {p.name} <small>{p.email}</small></label>)}
-          {!pv.people.length && <p>No one needs a check-in right now.</p>}
+          <div className="wk-pick-list">{list.map((p) => <label key={p.id} className="wk-check" style={{ display: "block" }}><input type="checkbox" checked={!skip.includes(p.id)} onChange={(e) => setSkip(e.target.checked ? skip.filter((i) => i !== p.id) : [...skip, p.id])} /> {p.name} <small>{p.email}</small></label>)}</div>
+          {!pv.people.length && <p>No one needs an email right now.</p>}
           <div className="wk-actions">
-            <button className="pri" disabled={busy || !pv.ready || pv.people.length === skip.length} onClick={sendAll}>{busy ? "Sending…" : "Send check-ins"}</button>
+            <button className="pri" disabled={busy || !pv.ready || !n} onClick={sendAll}>{busy ? "Sending…" : `Email ${n} ${n === 1 ? "person" : "people"}`}</button>
             {prog ? <button onClick={() => { stop.current = true; }}>Stop</button> : <button onClick={() => setPv(null)}>Cancel</button>}
             {prog && <span role="status" style={{ marginLeft: 12 }}><progress value={prog.done} max={prog.total || 1} /> Asked {prog.done} of {prog.total}</span>}
           </div>
-        </div>
-      )}
+        </div>);
+      })()}
       <div className="card wk-list">
         {shown.map((r) => (
           <div key={r.id} className={"wk" + (r.status === "closed" || r.status === "dismissed" ? " closed" : "")}>
@@ -103,7 +111,7 @@ export default function Walkups({ initial, email, name }: { initial: WalkupReque
             <PersonInfo p={r} />
             {r.first_confirmed && <div className="wk-line"><b>Confirmed interest</b> {ago(r.first_confirmed)}{r.checkins.filter((c) => c.answer === "interested").length > 1 && `, and again ${r.checkins.filter((c) => c.answer === "interested").length - 1} time(s), last ${ago(r.last_confirmed!)}`}</div>}
             {r.snooze_until && r.interest_state === "not_now" && <div className="wk-line"><b>Check back</b> {r.snooze_until}</div>}
-            {r.checkins.length > 0 && <div className="wk-line"><b>Check-ins</b> {r.checkins.map((c) => `${ago(c.sent_at)}: ${c.answered_at ? `${SAID[c.answer ?? ""] ?? c.answer} (${ago(c.answered_at)})` : "no reply"}`).join(" · ")}{goneQuiet(r.checkins) && <span className="wk-flag">Gone quiet</span>}</div>}
+            {r.checkins.length > 0 && <div className="wk-line"><b>Check-ins</b> {r.checkins.map((c) => `${ago(c.sent_at)}: ${c.answered_at ? `${SAID[c.answer ?? ""] ?? c.answer} (${ago(c.answered_at)})` : c.viewed_at ? `opened ${ago(c.viewed_at)}, no reply` : "not opened"}`).join(" · ")}{goneQuiet(r.checkins) && <span className="wk-flag">Gone quiet</span>}</div>}
             {r.decline_note && r.status === "open" && <div className="wk-line"><b>Last reply</b> “{r.decline_note}”</div>}
             {r.status === "offered" && <ul className="wk-offers">{r.offers.map((o) => <li key={o.date + o.start}>{o.date} {o.start}–{o.end}</li>)}</ul>}
             {open === r.id ? (
@@ -128,8 +136,8 @@ export default function Walkups({ initial, email, name }: { initial: WalkupReque
                 </div>
                 <p className="wk-note">Times are in Kalamazoo time. They get one link per time, plus a link to ask for different ones.</p>
               </div>
-            ) : r.status === "open" && tab !== "waiting" ? (
-              <div className="wk-actions">{r.interest_state === "unsubscribed" ? <span className="wk-flag">Unsubscribed: do not email about tours</span> : <button className="pri" onClick={() => run(() => tours("reopen", { id: r.id }))}>Back to waiting</button>}<button className="danger" onClick={() => close(r)}>Dismiss</button></div>
+            ) : r.status === "open" && (tab === "later" || tab === "no") ? (
+              <div className="wk-actions">{r.interest_state === "unsubscribed" ? <span className="wk-flag">Unsubscribed: do not email about tours</span> : <button className="pri" onClick={() => run(() => tours("reopen", { id: r.id }))}>Back to the list</button>}<button className="danger" onClick={() => close(r)}>Dismiss</button></div>
             ) : r.status === "open" || r.status === "offered" ? (
               <div className="wk-actions">
                 <button className="pri" onClick={() => start(r)}>{r.status === "offered" ? "Change times" : "Offer times"}</button>
@@ -143,7 +151,7 @@ export default function Walkups({ initial, email, name }: { initial: WalkupReque
             <AdminThread kind="request" id={r.id} name={r.first_name} msgs={r.msgs} lastFrom={r.last_from} />
           </div>
         ))}
-        {!shown.length && <p className="wk-empty">{tab === "waiting" ? "No one is waiting for a tour. 🎉" : "No one here."}</p>}
+        {!shown.length && <p className="wk-empty">{find ? "No match." : tab === "new" ? "Everyone has been contacted. 🎉" : "No one here."}</p>}
       </div>
     </>
   );
