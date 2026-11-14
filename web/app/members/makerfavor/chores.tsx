@@ -34,7 +34,7 @@ const CSS = `
 .ch .chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
 .ch .chips button{border-radius:99px;transition:transform .15s}
 .ch .chips button:hover{transform:translateY(-2px)}
-.ch .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.ch .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px}
 .ch .c{position:relative;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:6px;transition:transform .18s,box-shadow .18s;animation:chUp .4s both}
 .ch .c:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,.12)}
 .ch .c.late{border-left-color:var(--bad)}.ch .c.soon{border-left-color:#e6a100}.ch .c.ok{border-left-color:var(--ok)}.ch .c.free{border-left-color:var(--acc)}
@@ -62,6 +62,15 @@ const CSS = `
 .ch .bit{position:fixed;top:-12px;width:10px;height:14px;border-radius:2px;z-index:60;pointer-events:none;animation:chFall linear forwards}
 .ch .skel{height:110px;border-radius:var(--r);background:linear-gradient(90deg,var(--line),var(--card),var(--line));background-size:200% 100%;animation:chShim 1.2s infinite}
 .ch .empty{text-align:center;padding:32px 12px;font-size:1.1rem}.ch .empty b{display:block;font-size:2.6rem}
+.ch .wins{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 12px;padding:10px 14px;border-radius:var(--r);background:var(--acc-bg);font-size:.9em}
+.ch .win{padding:2px 10px;border-radius:99px;background:var(--card)}
+.ch .sec{font-size:1.1rem;margin:16px 0 8px}
+.ch .more{display:block;margin:16px auto}
+.ch .list{display:flex;flex-direction:column;gap:6px}
+.ch .li{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:10px;padding:8px 12px}
+.ch .li.late{border-left-color:var(--bad)}.ch .li.soon{border-left-color:#e6a100}.ch .li.ok{border-left-color:var(--ok)}.ch .li.free{border-left-color:var(--acc)}
+.ch .lr{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.ch .lr .nm{flex:1;min-width:160px;display:flex;flex-direction:column}.ch .lr .nm .sub{margin:0}
+.ch .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:12px}.ch .tile{text-align:center;padding:12px;border-radius:var(--r);background:var(--acc-bg)}.ch .tile b{display:block;font-size:1.8rem}
 @keyframes chUp{from{opacity:0;transform:translateY(10px)}}
 @keyframes chWig{50%{transform:rotate(14deg) scale(1.2)}}
 @keyframes chPulse{50%{box-shadow:0 0 0 6px var(--acc-bg)}}
@@ -78,7 +87,7 @@ function Confetti({ n }: { n: number }) {
 
 // Members see the chores, everyone's hours and achievements, and log their own time.
 export default function Chores() {
-  const [tab, setTab] = useState("todo"), [period, setPeriod] = useState("this_month"), [msg, setMsg] = useState(""), [filter, setFilter] = useState("all");
+  const [tab, setTab] = useState("todo"), [period, setPeriod] = useState("this_month"), [msg, setMsg] = useState(""), [filter, setFilter] = useState("all"), [more, setMore] = useState(false), [allH, setAllH] = useState(false), [locked, setLocked] = useState(false);
   const [d, setD] = useState<Data | null>(null), [ach, setAch] = useState<any[] | null>(null), [stats, setStats] = useState<any>(null), [mine, setMine] = useState<Hour[] | null>(null);
   const [fin, setFin] = useState<{ id: number; minutes: string } | null>(null), [log, setLog] = useState<{ id: number; minutes: string } | null>(null);
   const [toast, setToast] = useState(""), [boom, setBoom] = useState(0), [now, setNow] = useState(() => Math.floor(Date.now() / 1000)), [busy, setBusy] = useState(false);
@@ -97,16 +106,39 @@ export default function Chores() {
   const submit = (e: React.FormEvent) => { e.preventDefault(); run(async () => { await rpc("log", { chore_id: log!.id, minutes: Number(log!.minutes) }); setLog(null); }, CHEERS[Math.floor(Math.random() * CHEERS.length)]); };
   const done = (s: Shift) => run(() => rpc("finish", { shift_id: s.id, minutes: fin?.id === s.id ? Number(fin.minutes) : undefined }).catch((e) => { if (/open over/.test(e.message)) setFin({ id: s.id, minutes: "60" }); throw e; }), CHEERS[Math.floor(Math.random() * CHEERS.length)]);
 
-  const chores = useMemo(() => {
+  const sorted = useMemo(() => {
     const rank = { late: 0, soon: 1, free: 2, ok: 3 } as const;
-    return (d?.chores ?? []).filter((c) => filter === "all" || (filter === "free" ? !c.being_done_by.length : urgency(c) === filter)).sort((a, b) => rank[urgency(a)] - rank[urgency(b)] || (b.overdue_days ?? -999) - (a.overdue_days ?? -999));
-  }, [d, filter]);
+    return [...(d?.chores ?? [])].sort((a, b) => rank[urgency(a)] - rank[urgency(b)] || (b.overdue_days ?? -999) - (a.overdue_days ?? -999));
+  }, [d]);
+  // Top 3 are the "start here" picks; the rest hide behind a toggle with filters.
+  const picks = sorted.slice(0, 3);
+  const rest = sorted.slice(3).filter((c) => filter === "all" || (filter === "free" ? !c.being_done_by.length : urgency(c) === filter));
 
   if (!d) return <div className="ch"><style>{CSS}</style>{msg ? <p role="alert" style={{ color: "var(--bad)" }}>{msg}</p> : <div style={{ display: "grid", gap: 12 }}><div className="skel" /><div className="skel" /><div className="skel" /></div>}</div>;
   const sp = stats?.[period];
   const myMonth = mine?.find((h) => h.user_id === d.me)?.hours ?? 0, GOAL = 4, pct = Math.min(100, (myMonth / GOAL) * 100);
   const late = d.chores.filter((c) => urgency(c) === "late").length, max = Math.max(1, ...d.hours.map((h) => h.hours));
   const first = d.name?.split(" ")[0] || "friend";
+  const wins = d.chores.filter((c) => c.last_done_at).sort((a, b) => b.last_done_at! - a.last_done_at!).slice(0, 4), top = d.hours[0];
+  const start = (c: Chore) => run(() => rpc("start", { chore_id: c.id }), "Timer's running. Go get 'em! ⚡", false);
+  const logForm = (c: Chore) => log?.id === c.id && (
+    <form onSubmit={submit} className="quick">
+      {[15, 30, 45, 60, 90].map((m) => <button type="button" key={m} aria-pressed={log.minutes === String(m)} onClick={() => setLog({ ...log, minutes: String(m) })}>{m}m</button>)}
+      <input type="number" aria-label="Minutes" min={1} max={960} value={log.minutes} onChange={(e) => setLog({ ...log, minutes: e.target.value })} required style={{ width: 70 }} />
+      <button className="primary" disabled={busy}>Log it 🎉</button>
+    </form>
+  );
+  const card = (a: any, i: number) => (
+    <div key={a.id} className={`ach ${a.earned.length ? "got" : "locked"}`} style={{ animationDelay: `${Math.min(i, 12) * 40}ms` }}>
+      <span className="ico">{a.icon}</span> <strong>{a.title}</strong>
+      <div><span className="tag">{a.goal} {measureText(a.measure)}</span><span className="tag">{a.task ?? "any chore"}</span></div>
+      {a.note && <div className="sub" style={{ margin: "4px 0" }}>{a.note}</div>}
+      <div style={{ margin: "6px 0" }}>{a.earned.length ? a.earned.map((e: any) => <span className="tag" key={e.who + e.at}>🏆 {e.who} · {when(e.at)}</span>) : <span className="sub">🔒 Not earned yet. Could be you!</span>}</div>
+      {a.close.length > 0 && <div className="sub" style={{ margin: 0 }}>Closest: {a.close.map((c: any) => `${c.who} (${c.have})`).join(", ")}</div>}
+    </div>
+  );
+  const toggleLog = (c: Chore) => setLog(log?.id === c.id ? null : { id: c.id, minutes: "30" });
+  const why = (c: Chore) => c.being_done_by.length ? `👷 ${c.being_done_by.join(", ")} on it` : c.last_done_at ? `Last: ${when(c.last_done_at)} by ${c.last_by}` : "Be the first!";
   return (
     <div className="ch">
       <style>{CSS}</style>
@@ -120,6 +152,13 @@ export default function Chores() {
           <span className="pill">⏱️ {hrs(myMonth)} this month</span> {myMonth < GOAL && <span className="pill">🎯 {hrs(GOAL - myMonth)} to your {GOAL}h goal</span>}{myMonth >= GOAL && <span className="pill">🌟 {GOAL}h goal reached!</span>}
         </div>
       </div>
+      {(wins.length > 0 || top) && (
+        <div className="wins" aria-label="Recent wins">
+          <b>🎉 Recent wins</b>
+          {top && top.hours > 0 && <span className="win">🥇 {top.name}{top.user_id === d.me && " (you)"} leads with {hrs(top.hours)}</span>}
+          {wins.map((c) => <span key={c.id} className="win">{iconFor(c.name)} {c.last_by} did {c.name} · {when(c.last_done_at!)}</span>)}
+        </div>
+      )}
       {msg && <p role="alert" style={{ color: "var(--bad)" }}>{msg}</p>}
       <nav className="bar chips">{TABS.map(([k, l]) => <button key={k} aria-pressed={tab === k} className={tab === k ? "primary" : ""} onClick={() => setTab(k)}>{l}</button>)}</nav>
       {tab === "todo" && (
@@ -138,51 +177,60 @@ export default function Chores() {
               </div>
             );
           })}
-          <nav className="chips" aria-label="Filter chores">{FILTERS.map(([k, l]) => <button key={k} aria-pressed={filter === k} className={filter === k ? "primary" : ""} onClick={() => setFilter(k)}>{l}</button>)}</nav>
+          {picks.length > 0 && <h2 className="sec">Start here</h2>}
           <div className="grid">
-            {chores.map((c, i) => {
-              const u = urgency(c), full = c.every_days ? Math.max(0, Math.min(100, 100 - ((-(c.overdue_days ?? 0)) / c.every_days) * 100)) : 0;
+            {picks.map((c, i) => {
+              const u = urgency(c);
               return (
-                <div key={c.id} className={`c ${u}`} style={{ animationDelay: `${Math.min(i, 12) * 40}ms` }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
-                    <span className="ico" aria-hidden>{iconFor(c.name)}</span>
-                    <span className="mood" aria-hidden style={{ fontSize: "1.3rem" }}>{MOOD[u]}</span>
-                  </div>
+                <div key={c.id} className={`c ${u}`} style={{ animationDelay: `${i * 40}ms` }}>
+                  <span className="ico" aria-hidden>{iconFor(c.name)}</span>
                   <h3>{c.name}</h3>
                   <div><span className="tag">{every(c.every_days)}</span> <span className="tag" style={{ color: u === "late" ? "var(--bad)" : undefined, fontWeight: u === "late" || u === "soon" ? 600 : 400 }}>{dueText(c)}</span></div>
-                  {c.every_days !== null && <div className="meter" aria-hidden><i style={{ width: `${full}%` }} /></div>}
-                  {c.notes && <div className="sub" style={{ margin: 0 }}>{c.notes}</div>}
-                  <div className="sub" style={{ margin: 0 }}>{c.last_done_at ? `Last: ${when(c.last_done_at)} by ${c.last_by}` : "Nobody has done this yet. Be the first!"}</div>
-                  {c.being_done_by.length > 0 && <div><span className="pill">👷 {c.being_done_by.join(", ")} {c.being_done_by.length === 1 ? "is" : "are"} on it</span></div>}
+                  <div className="sub" style={{ margin: 0 }}>{c.notes || why(c)}</div>
                   <div className="acts">
-                    <button className="primary" disabled={busy} onClick={() => run(() => rpc("start", { chore_id: c.id }), "Timer's running. Go get 'em! ⚡", false)}>▶ I'm starting this</button>
-                    <button onClick={() => setLog(log?.id === c.id ? null : { id: c.id, minutes: "30" })}>✍️ I did this…</button>
+                    <button className="primary" disabled={busy} onClick={() => start(c)}>▶ I'm starting this</button>
+                    <button onClick={() => toggleLog(c)}>✍️ I did this…</button>
                   </div>
-                  {log?.id === c.id && (
-                    <form onSubmit={submit} className="quick">
-                      {[15, 30, 45, 60, 90].map((m) => <button type="button" key={m} aria-pressed={log.minutes === String(m)} onClick={() => setLog({ ...log, minutes: String(m) })}>{m}m</button>)}
-                      <input type="number" aria-label="Minutes" min={1} max={960} value={log.minutes} onChange={(e) => setLog({ ...log, minutes: e.target.value })} required style={{ width: 70 }} />
-                      <button className="primary" disabled={busy}>Log it 🎉</button>
-                    </form>
-                  )}
+                  {logForm(c)}
                 </div>
               );
             })}
           </div>
-          {!chores.length && <div className="empty"><b>{d.chores.length ? "🎊" : "🫧"}</b>{d.chores.length ? "Nothing here. That's a good sign!" : "No chores yet."}</div>}
+          {sorted.length > 3 && <button className="more" aria-expanded={more} onClick={() => setMore(!more)}>{more ? "Hide other chores" : `Show ${sorted.length - 3} more chores`}</button>}
+          {more && (
+            <>
+              <nav className="chips" aria-label="Filter chores">{FILTERS.map(([k, l]) => <button key={k} aria-pressed={filter === k} className={filter === k ? "primary" : ""} onClick={() => setFilter(k)}>{l}</button>)}</nav>
+              <div className="list">
+                {rest.map((c) => (
+                  <div key={c.id} className={`li ${urgency(c)}`}>
+                    <div className="lr">
+                      <span aria-hidden>{iconFor(c.name)}</span>
+                      <div className="nm"><b>{c.name}</b><span className="sub">{dueText(c)} · {why(c)}</span></div>
+                      <button className="primary" disabled={busy} onClick={() => start(c)}>▶ Start</button>
+                      <button onClick={() => toggleLog(c)} title="Log time for something you already did">✍️ Log</button>
+                    </div>
+                    {logForm(c)}
+                  </div>
+                ))}
+                {!rest.length && <div className="empty"><b>🎊</b>Nothing here. That's a good sign!</div>}
+              </div>
+            </>
+          )}
+          {!d.chores.length && <div className="empty"><b>🫧</b>No chores yet.</div>}
         </>
       )}
       {tab !== "todo" && tab !== "fame" && <nav className="chips" aria-label="Period">{PERIODS.map(([k, l]) => <button key={k} aria-pressed={period === k} className={period === k ? "primary" : ""} onClick={() => { setPeriod(k); load(k); }}>{l}</button>)}</nav>}
       {tab === "hours" && (
         <div className="card">
-          {d.hours.map((h, i) => (
+          {d.hours.filter((h, i) => allH || i < 5 || h.user_id === d.me).map((h) => { const i = d.hours.indexOf(h); return (
             <div key={h.name + i} className={`row${h.user_id === d.me ? " me" : ""}`} style={{ animationDelay: `${Math.min(i, 15) * 40}ms` }}>
               <span className="medal">{MEDALS[i] ?? i + 1}</span>
               <span style={{ minWidth: 110 }}>{h.name}{h.user_id === d.me && " (you)"}</span>
               <span className="bar2"><i style={{ width: `${(h.hours / max) * 100}%` }} /></span>
               <span className="tag">{hrs(h.hours)}</span><span className="tag">{h.times} {h.times === 1 ? "time" : "times"}</span>
             </div>
-          ))}
+          ); })}
+          {d.hours.length > 5 && <button className="more" onClick={() => setAllH(!allH)}>{allH ? "Show top 5" : `Show all ${d.hours.length}`}</button>}
           {!d.hours.length && <div className="empty"><b>🌱</b>Nobody has logged time in this period. Be the first!</div>}
         </div>
       )}
@@ -190,24 +238,17 @@ export default function Chores() {
         <>
           {!ach && <div className="skel" />}
           {ach && !ach.length && <div className="empty"><b>🏆</b>No achievements yet.</div>}
-          <div className="grid">
-            {(ach ?? []).map((a, i) => (
-              <div key={a.id} className={`ach ${a.earned.length ? "got" : "locked"}`} style={{ animationDelay: `${Math.min(i, 12) * 40}ms` }}>
-                <span className="ico">{a.icon}</span> <strong>{a.title}</strong>
-                <div><span className="tag">{a.goal} {measureText(a.measure)}</span><span className="tag">{a.task ?? "any chore"}</span></div>
-                {a.note && <div className="sub" style={{ margin: "4px 0" }}>{a.note}</div>}
-                <div style={{ margin: "6px 0" }}>{a.earned.length ? a.earned.map((e: any) => <span className="tag" key={e.who + e.at}>🏆 {e.who} · {when(e.at)}</span>) : <span className="sub">🔒 Not earned yet. Could be you!</span>}</div>
-                {a.close.length > 0 && <div className="sub" style={{ margin: 0 }}>Closest: {a.close.map((c: any) => `${c.who} (${c.have})`).join(", ")}</div>}
-              </div>
-            ))}
-          </div>
+          {ach && ach.some((a) => a.earned.length) && <h2 className="sec">🎉 Celebrated</h2>}
+          <div className="grid">{(ach ?? []).filter((a) => a.earned.length).map((a, i) => card(a, i))}</div>
+          {ach && ach.some((a) => !a.earned.length) && <button className="more" aria-expanded={locked} onClick={() => setLocked(!locked)}>{locked ? "Hide locked" : `🔒 ${ach.filter((a) => !a.earned.length).length} still up for grabs`}</button>}
+          {locked && <div className="grid">{(ach ?? []).filter((a) => !a.earned.length).map((a, i) => card(a, i))}</div>}
         </>
       )}
       {tab === "stats" && (
         <div className="card">
           {!sp ? <div className="skel" /> : (
             <>
-              <p className="sub">{sp.hours} hours over {sp.sessions} shifts by {sp.volunteers} {sp.volunteers === 1 ? "person" : "people"}{sp.on_time !== null && `, ${sp.on_time}% of scheduled chores on time`}.</p>
+              <div className="tiles">{([[sp.hours, "hours"], [sp.sessions, "shifts"], [sp.volunteers, sp.volunteers === 1 ? "person" : "people"], ...(sp.on_time !== null ? [[`${sp.on_time}%`, "on time"]] : [])] as [string, string][]).map(([n, l]) => <div key={l} className="tile"><b>{n}</b>{l}</div>)}</div>
               {sp.awards.map((a: any, i: number) => { const [t, text] = awardText(a); return <div key={i} className="row" style={{ animationDelay: `${Math.min(i, 15) * 40}ms` }}><span className="tag" style={{ fontWeight: 600 }}>{t}</span> {text}</div>; })}
               {!sp.awards.length && <div className="empty"><b>🎈</b>Nothing to celebrate yet.</div>}
             </>
