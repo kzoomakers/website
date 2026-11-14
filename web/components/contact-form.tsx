@@ -6,7 +6,7 @@ const COPY = {
   board: { title: "Contact the Board", sub: "Feedback, concerns or proposals for the board of directors. Members and neighbors are welcome.", ph: "What would you like the board to know?" },
 };
 const MAX = 3000;
-const CSS = `
+export const CSS = `
 .cf{max-width:620px;margin:0 auto;background:#fff;border-radius:14px;box-shadow:0 6px 28px rgba(0,0,0,.09);padding:32px clamp(20px,5vw,36px);text-align:left;color:#333}
 .cf h3{margin:0 0 6px;font-weight:700;color:#444}.cf .cf-sub{margin:0 0 22px;color:#6c757d}
 .cf .cf-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:560px){.cf .cf-row{grid-template-columns:1fr}}

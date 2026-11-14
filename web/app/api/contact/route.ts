@@ -4,10 +4,10 @@ import { submitContact } from "@/lib/contact";
 import { hashIp } from "@/lib/comments";
 import { convert } from "@/lib/ga-attr";
 
-// POST { kind: "contact" | "board", name, email, subject?, message, website? }
+// POST { kind: "contact" | "board" | "donation", name, email, subject?, message, website? }
 export async function POST(req: Request) {
   const b = await req.json().catch(() => null), s = (v: unknown) => (typeof v === "string" ? v : "");
-  if (!["contact", "board"].includes(b?.kind) || !s(b.name) || !s(b.email) || !s(b.message)) return new NextResponse("Please fill in your name, email and message.", { status: 400 });
+  if (!["contact", "board", "donation"].includes(b?.kind) || !s(b.name) || !s(b.email) || !s(b.message)) return new NextResponse("Please fill in your name, email and message.", { status: 400 });
   // Honeypot: hidden from people, filled by bots. Pretend it worked.
   if (b.website) return NextResponse.json({ ok: true });
   try {
