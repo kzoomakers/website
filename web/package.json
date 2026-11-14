@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1164.0",
+    "@embedpdf/viewer-react": "^3.2.0",
     "@libpdf/core": "^0.5.3",
     "@puckeditor/core": "^0.24.0",
     "@tiptap/core": "^3.33.0",
