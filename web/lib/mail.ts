@@ -6,6 +6,7 @@ import { clickOk, same, sign } from "./signing";
 import { engagement, type Touch } from "./mail-track";
 import { applyOnce, db, withLock, withTx } from "./db";
 import { openText, sealText } from "./vault";
+import { hit } from "./limit";
 import { backoffMinutes, MAX_MAIL_TRIES } from "./rules";
 import { cleanDesign, fill, renderEmail, TEMPLATES, type Design } from "./mail-render";
 
@@ -284,12 +285,10 @@ export async function exportSubscribers(f: SubFilter) {
   return "email,name,status,lists,tags,consent_at,consent_source\n" + all.map((r) => [r.email, r.name, r.status, r.lists.map((i: number) => lists.get(i)).filter(Boolean).join("; "), r.tags.join("; "), r.consent_at ? new Date(r.consent_at).toISOString() : "", r.consent_source].map((v) => `"${cell(String(v))}"`).join(",")).join("\n");
 }
 
-const hits = new Map<string, number[]>();
 /** Public signup through a form. With double opt-in on (and sending set up) nobody can sign up someone else's address. */
 export async function publicSubscribe(formId: number, email: string, name: string, base: string, ip: string) {
-  const t = Date.now(), recent = (hits.get(ip) ?? []).filter((x) => t - x < 600_000);
-  if (recent.length >= 5) throw new Error("Too many attempts, please try again later");
-  hits.set(ip, [...recent, t]);
+  // Per address too: otherwise anyone can make us email a stranger's inbox over and over (confirmation mail).
+  if (!(await hit("sub:ip:" + ip, 5, 600_000)) || !(await hit("sub:em:" + email.toLowerCase(), 3, 3600_000))) throw new Error("Too many attempts, please try again later");
   const form = (await q("SELECT lists, success FROM mail_forms WHERE enabled AND id=$1", [formId]))[0];
   const ok = form ? (await q("SELECT id FROM mail_lists WHERE id = ANY($1)", [form.lists])).map((r) => r.id as number) : [];
   if (!ok.length) throw new Error("This form isn't available");

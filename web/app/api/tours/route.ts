@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { verifyCaptcha } from "@/lib/captcha";
 import { errMsg } from "@/lib/errmsg";
 import { book, getPause, openSlots, requestTour, AREAS, HEARD, CONTACT } from "@/lib/tours";
 import { baseUrl } from "@/lib/mail";
@@ -20,11 +21,12 @@ export async function POST(req: Request) {
   const dev = { ip: clientIp(req).slice(0, 64), ua: (req.headers.get("user-agent") ?? "").slice(0, 300), screen: /^\d{3,5}x\d{3,5}$/.test(s(b?.screen)) ? s(b.screen) : "" };
   if (b?.request) {
     if (b.website) return NextResponse.json({ ok: true });
-    try { await requestTour(b, hashIp(req), dev, await baseUrl(req)); await convert(req, "tour"); return NextResponse.json({ ok: true }); } catch (e: any) { return fail(e); }
+    try { await verifyCaptcha(req, b.captcha); await requestTour(b, hashIp(req), dev, await baseUrl(req)); await convert(req, "tour"); return NextResponse.json({ ok: true }); } catch (e: any) { return fail(e); }
   }
   if (!Number.isInteger(b?.block) || !s(b.start) || !s(b.first) || !s(b.last) || !s(b.email)) return new NextResponse("Please fill in your name, email and phone.", { status: 400 });
   if (b.website) return NextResponse.json({ ok: true }); // honeypot: pretend it worked
   try {
+    await verifyCaptcha(req, b.captcha);
     const done = await book({ block: b.block, start: s(b.start), first: s(b.first), last: s(b.last), email: s(b.email), phone: s(b.phone), zip: s(b.zip), contact: s(b.contact), areas: Array.isArray(b.areas) ? b.areas.map(s) : [], heard: s(b.heard), notes: s(b.notes) }, hashIp(req), dev, await baseUrl(req));
     await convert(req, "tour");
     return NextResponse.json(done);

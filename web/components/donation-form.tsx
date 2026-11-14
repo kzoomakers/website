@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Captcha, { resetCaptcha } from "./captcha";
 import { CSS } from "./contact-form";
 
 const CATS = ["Hand tools", "Power tools (portable)", "Power tools (stationary / shop machines)", "Woodworking", "Metalworking & welding", "Machining (lathes, mills)", "Electronics & soldering", "3D printing & laser / CNC", "Textiles & sewing", "Measuring & inspection", "Safety & PPE", "Clamps, storage & workholding", "Software / CAD", "Materials & consumables", "Other"];
@@ -12,14 +13,14 @@ export function DonationForm() {
   const [busy, setBusy] = useState(false), [err, setErr] = useState(""), [done, setDone] = useState(false);
   const go = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); setErr("");
-    const f = new FormData(e.currentTarget), g = (k: string) => String(f.get(k) ?? "").trim(), cats = f.getAll("cat").map(String);
+    const form = e.currentTarget, f = new FormData(form), g = (k: string) => String(f.get(k) ?? "").trim(), cats = f.getAll("cat").map(String);
     if (!cats.length) return setErr("Please pick at least one category.");
     const message = [`Categories: ${cats.join(", ")}`, `Items: ${g("items")}`, `Quantity: ${g("qty") || "—"}`, `Approximate total value: ${g("value")}`, `Condition: ${g("cond")}`, `Delivery: ${g("how")}`,
       `Tax receipt wanted: ${f.get("receipt") ? "yes" : "no"}`, `Phone: ${g("phone") || "—"}`, g("notes") && `\nNotes: ${g("notes")}`].filter(Boolean).join("\n");
     setBusy(true);
-    const r = await fetch("/api/contact", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ kind: "donation", name: g("name"), email: g("email"), subject: `Donation offer: ${cats.slice(0, 2).join(", ")}${cats.length > 2 ? "…" : ""} (${g("value")})`, message, website: g("website") }) }).catch(() => null);
+    const r = await fetch("/api/contact", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ kind: "donation", name: g("name"), email: g("email"), subject: `Donation offer: ${cats.slice(0, 2).join(", ")}${cats.length > 2 ? "…" : ""} (${g("value")})`, message, website: g("website"), captcha: f.get("g-recaptcha-response") }) }).catch(() => null);
     setBusy(false);
-    if (r?.ok) setDone(true); else setErr(r ? await r.text() : "Couldn't reach the server. Please try again.");
+    if (r?.ok) setDone(true); else { setErr(r ? await r.text() : "Couldn't reach the server. Please try again."); resetCaptcha(form); }
   };
   const sel = (name: string, opts: string[]) => <select name={name} required defaultValue="" style={{ display: "block", width: "100%", marginTop: 6, padding: "11px 13px", border: "1px solid #d5d9de", borderRadius: 8, font: "inherit", background: "#fafbfc" }}><option value="" disabled>Choose…</option>{opts.map((o) => <option key={o}>{o}</option>)}</select>;
   return (
@@ -53,6 +54,7 @@ export function DonationForm() {
             <label>Anything else? <small>(optional)</small><textarea name="notes" maxLength={800} style={{ minHeight: 80 }} /></label>
             <label style={{ display: "flex", gap: 8, alignItems: "center", fontWeight: 400 }}><input type="checkbox" name="receipt" style={{ width: "auto", margin: 0 }} />I'd like a donation receipt for tax purposes</label>
             <div className="cf-hp" aria-hidden><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
+            <Captcha />
             {err && <p className="cf-err" role="alert">{err}</p>}
             <div className="cf-foot"><span /><button className="btn btn-main" disabled={busy}>{busy ? "Sending…" : "Send donation offer"}</button></div>
           </form>
