@@ -46,6 +46,7 @@
   "overrides": {
     "nodemailer": "$nodemailer",
     "postcss": "^8.5.23",
-    "encoding-sniffer": "^1.0.2"
+    "encoding-sniffer": "^1.0.2",
+    "zod": "^4.6.6"
   }
 }

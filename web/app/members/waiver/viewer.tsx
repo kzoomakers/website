@@ -1,6 +1,9 @@
 "use client";
 import { useState } from "react";
-import { PDFViewer } from "@embedpdf/viewer-react";
+import dynamic from "next/dynamic";
+
+// Browser only: server-side rendering would pull in the library's native Node engine, which the build can't bundle.
+const PDFViewer = dynamic(() => import("@embedpdf/viewer-react").then((m) => m.PDFViewer), { ssr: false });
 
 // The viewer is heavy, so it only loads once someone asks to see a PDF.
 export default function Viewer({ src, open = false }: { src: string; open?: boolean }) {
