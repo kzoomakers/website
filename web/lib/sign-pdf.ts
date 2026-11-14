@@ -1,4 +1,7 @@
 import { PDFDocument, StandardFonts, rgb, type PDFFont } from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 // ---- the PDF
 const ascii = (s: string) => s.replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, "-").replace(/…/g, "...").replace(/\t/g, "    ").replace(/[^\x0A\x20-\x7E\xA0-\xFF•]/g, "?");
@@ -54,10 +57,14 @@ export async function buildPdf(d: { title: string; body: string; tags: string[];
 }
 
 /** An uploaded PDF with each recipient's filled fields drawn on it, plus the signing certificate page unless hidden. */
-export type FieldRow = { page: number; x: number; y: number; w: number; h: number; type: string; value: string; signer: number };
+export type FieldRow = { page: number; x: number; y: number; w: number; h: number; type: string; value: string; signer: number; prefs?: { def?: string; align?: "l" | "c" | "r"; size?: number; cells?: number; stamp?: boolean } };
 export async function buildFieldPdf(source: Buffer, fields: FieldRow[], signers: Map<number, { name: string; email: string; signature: string; drawn: string; initials: string; at: Date; ip: string; ua: string }>, d: { title: string; completed: Date; hideAudit: boolean }, hash: string) {
   const pdf = await PDFDocument.load(source, { ignoreEncryption: true }), font = await pdf.embedFont(StandardFonts.Helvetica), bold = await pdf.embedFont(StandardFonts.HelveticaBold), script = await pdf.embedFont(StandardFonts.TimesRomanItalic);
   const pages = pdf.getPages(), ink = rgb(0.05, 0.05, 0.25);
+  // Filled-in text uses a Unicode font (Latin, Greek, Cyrillic); anything it can't draw falls back to plain Helvetica.
+  pdf.registerFontkit(fontkit);
+  const uni = await pdf.embedFont(readFileSync(join(process.cwd(), "data/fonts/LiberationSans-Regular.ttf")), { subset: true }).catch(() => null);
+  const text = (t: string): [PDFFont, string] => { try { if (uni) { uni.encodeText(t); return [uni, t]; } } catch { /* fall through */ } return [font, ascii(t)]; };
   const png = new Map<string, Awaited<ReturnType<typeof pdf.embedPng>> | null>();
   const img = async (u: string) => { if (!png.has(u)) png.set(u, await pdf.embedPng(Buffer.from(u.split(",")[1], "base64")).catch(() => null)); return png.get(u)!; };
   const fit = (f: PDFFont, t: string, w: number, max: number) => { let s = max; while (s > 5 && f.widthOfTextAtSize(t, s) > w - 4) s -= 0.5; return s; };
@@ -69,11 +76,22 @@ export async function buildFieldPdf(source: Buffer, fields: FieldRow[], signers:
       const drawn = f.type === "signature" ? s.drawn : "", im = drawn ? await img(drawn) : null, typed = ascii(f.type === "signature" ? s.signature : s.initials);
       if (im) { const sc = Math.min(w / im.width, h / im.height); pg.drawImage(im, { x, y, width: im.width * sc, height: im.height * sc }); }
       else pg.drawText(typed, { x: x + 2, y: y + h * 0.25, size: fit(script, typed, w, h * 0.7), font: script, color: ink });
+      if (f.type === "signature" && f.prefs?.stamp) pg.drawText(ascii(`Signed by ${s.name} · ${s.at.toLocaleDateString("en-US", { timeZone: "America/Detroit" })} · IP ${s.ip || "?"}`).slice(0, 90), { x, y: y - 7, size: 6, font, color: rgb(0.4, 0.4, 0.4) });
     } else if (f.type === "checkbox") {
       if (f.value === "true") { const m = Math.min(w, h); pg.drawLine({ start: { x: x + m * .2, y: y + m * .2 }, end: { x: x + m * .8, y: y + m * .8 }, thickness: 1.5, color: ink }); pg.drawLine({ start: { x: x + m * .2, y: y + m * .8 }, end: { x: x + m * .8, y: y + m * .2 }, thickness: 1.5, color: ink }); }
+    } else if (f.type === "image") {
+      const im = f.value ? await (f.value.startsWith("data:image/png") ? pdf.embedPng : pdf.embedJpg).call(pdf, Buffer.from(f.value.split(",")[1], "base64")).catch(() => null) : null;
+      if (im) { const sc = Math.min(w / im.width, h / im.height); pg.drawImage(im, { x, y, width: im.width * sc, height: im.height * sc }); }
+    } else if (f.type === "cells") {
+      const n = f.prefs?.cells ?? 10, cw = w / n, size = Math.min(h * 0.65, 12);
+      for (let i = 0; i < n; i++) {
+        pg.drawLine({ start: { x: x + i * cw + 1, y }, end: { x: x + (i + 1) * cw - 1, y }, thickness: 0.5, color: ink });
+        const [cf, ch] = text(f.value[i] ?? ""); if (ch.trim()) pg.drawText(ch, { x: x + i * cw + (cw - cf.widthOfTextAtSize(ch, size)) / 2, y: y + h * 0.25, size, font: cf, color: ink });
+      }
     } else {
-      const t = ascii(f.type === "date" ? s.at.toLocaleDateString("en-US", { timeZone: "America/Detroit" }) : f.type === "name" ? s.name : f.type === "email" ? s.email : f.value);
-      pg.drawText(t, { x: x + 2, y: y + h * 0.28, size: fit(font, t, w, Math.min(11, h * 0.6)), font, color: ink });
+      const [tf, t] = text(f.type === "date" ? s.at.toLocaleDateString("en-US", { timeZone: "America/Detroit" }) : f.type === "name" ? s.name : f.type === "email" ? s.email : f.value);
+      const size = fit(tf, t, w, f.prefs?.size ?? Math.min(11, h * 0.6)), tw = tf.widthOfTextAtSize(t, size), al = f.prefs?.align;
+      pg.drawText(t, { x: al === "c" ? x + (w - tw) / 2 : al === "r" ? x + w - tw - 2 : x + 2, y: y + h * 0.28, size, font: tf, color: ink });
     }
   }
   if (!d.hideAudit) {

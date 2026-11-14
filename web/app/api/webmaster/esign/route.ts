@@ -11,7 +11,7 @@ const READS = new Set(["list", "buckets", "tags", "get", "people", "templates", 
 // The admin page each op belongs to (see lib/access.ts), so a person given just that page can use it. An op not listed here needs a whole-section grant.
 const PAGE: Record<string, string | string[]> = {
   list: "documents", get: ["documents", "new"], buckets: "*", tags: "*", people: ["new", "documents"], templates: ["templates", "new"], template: ["templates", "new"], saveTemplate: "templates", deleteTemplate: "templates",
-  setPublic: "documents", create: "new", send: ["documents", "new"], remind: "documents", void: "documents", due: "documents", addBucket: "buckets", deleteBucket: "buckets",
+  setPublic: "documents", bulk: "new", create: "new", send: ["documents", "new"], remind: "documents", reassign: "documents", void: "documents", due: "documents", addBucket: "buckets", deleteBucket: "buckets",
 };
 
 export async function POST(req: Request) {
@@ -41,6 +41,8 @@ export async function POST(req: Request) {
       case "create": return NextResponse.json(await s.createDoc(a.doc ?? {}, who, base));
       case "send": { const link = await s.sendOne(id, Number(a.signer), who, base, !!a.copy); return NextResponse.json({ link }); }
       case "remind": return NextResponse.json({ sent: await s.remind(id, who, base) });
+      case "reassign": await s.reassign(id, Number(a.signer), String(a.name ?? ""), String(a.email ?? ""), who, base); break;
+      case "bulk": return NextResponse.json(await s.bulkSend(id, Array.isArray(a.people) ? a.people.slice(0, 100).map((p: any) => ({ name: String(p?.name ?? ""), email: String(p?.email ?? "") })) : [], who, base));
       case "void": await s.voidDoc(id, who); break;
       case "due": await s.setDue(id, a.due || null); break;
       case "addBucket": await s.addBucket(String(a.name ?? "")); break;
