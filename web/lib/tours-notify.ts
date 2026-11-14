@@ -1,3 +1,4 @@
+import { memo, forget } from "./memo";
 import { db } from "./db";
 import { addLink, notify, personalTopics, removeLink, subscribersOf, TOUR_EVENTS, type TourEvent } from "./ntfy";
 import { cleanDays, cleanEmail } from "./tours-fmt";
@@ -25,15 +26,16 @@ export const getCfg = async () => readCfg(await pool());
 
 export const PAUSE_MESSAGE = "We are in the middle of moving and can't book tours right now. Leave your details and you'll be added to our queue. We'll reach out as soon as tours resume.";
 /** Signups-paused switch and its public message, in settings. Never throws, so a database hiccup can't take down the homepage. */
-export async function getPause(): Promise<{ paused: boolean; message: string }> {
+export const getPause = (): Promise<{ paused: boolean; message: string }> => memo("pause", 30_000, async () => {
   try {
     const v = (await (await pool()).query("SELECT data FROM settings WHERE key = 'tours:pause'")).rows[0]?.data ?? {};
     return { paused: v.paused === true, message: typeof v.message === "string" && v.message.trim() ? v.message : PAUSE_MESSAGE };
   } catch { return { paused: false, message: PAUSE_MESSAGE }; }
-}
+});
 export async function savePause(paused: unknown, message: unknown) {
   const m = String(message ?? "").trim().slice(0, 600) || PAUSE_MESSAGE;
   await (await pool()).query("INSERT INTO settings (key, data) VALUES ('tours:pause', $1) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data", [JSON.stringify({ paused: paused === true, message: m })]);
+  forget("pause");
   return { paused: paused === true, message: m };
 }
 

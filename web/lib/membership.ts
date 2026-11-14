@@ -1,3 +1,4 @@
+import { forget } from "./memo";
 import { conn, db } from "./db";
 import { logAudit } from "./store";
 
@@ -47,6 +48,7 @@ export async function saveMembershipClasses(input: unknown, who: string): Promis
     out.push({ name, price: Math.round(price * 100) / 100, per, normal: clip(r?.normal, 80), offer: clip(r?.offer, 80), blurb: clip(r?.blurb, 500), note: clip(r?.note, 200), features: clip(r?.features, 2000) });
   }
   await (await conn()).query("INSERT INTO settings (key, data) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data", [KEY, JSON.stringify(out)]);
+  forget("guided:pricing"); // the Pricing page shows these classes
   await logAudit(who, "membership.classes", out.map((o) => `${o.name} $${o.price}/${o.per}`).join("; "));
   return out;
 }
