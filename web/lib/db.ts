@@ -179,6 +179,9 @@ async function migrate(pool: Pool) {
       type text NOT NULL, page int NOT NULL, x real NOT NULL, y real NOT NULL, w real NOT NULL, h real NOT NULL, label text NOT NULL DEFAULT '', options text[] NOT NULL DEFAULT '{}', required boolean NOT NULL DEFAULT true, value text NOT NULL DEFAULT '')`,
     "CREATE INDEX IF NOT EXISTS sign_fields_doc ON sign_fields (doc_id)",
     "ALTER TABLE sign_signers ADD COLUMN IF NOT EXISTS viewed_at timestamptz",
+    "ALTER TABLE sign_fields ADD COLUMN IF NOT EXISTS prefs jsonb NOT NULL DEFAULT '{}'", // { def: prefilled value, ro: signer can't change it, align: l|c|r, size: font pt }
+    "ALTER TABLE sign_signers ADD COLUMN IF NOT EXISTS reminded_at timestamptz",
+    "ALTER TABLE sign_signers ADD COLUMN IF NOT EXISTS reminders int NOT NULL DEFAULT 0",
     "CREATE TABLE IF NOT EXISTS sign_contacts (email text PRIMARY KEY, name text NOT NULL, last_used timestamptz NOT NULL DEFAULT now())", // remembered for 6 months after last use
     // A template is the whole setup of a paper (text or PDF, recipients, fields, options). recipients/fields are JSON; a recipient with a blank email is a slot a public-link visitor fills.
     `CREATE TABLE IF NOT EXISTS sign_templates (id serial PRIMARY KEY, title text NOT NULL, body text NOT NULL DEFAULT '', source bytea, setup jsonb NOT NULL, direct_token text UNIQUE, created_by text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now())`,

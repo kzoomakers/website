@@ -15,12 +15,15 @@ import { fullText, type Version } from "./waiver-diff";
 // Used for board papers (kind 'board') and member waivers (kind 'waiver', signed in-session, no link).
 // Roles: signer and approver must act (and need a signature field on a PDF); viewer just confirms they've read it; cc only gets the finished copy.
 export const ROLES = ["signer", "approver", "viewer", "cc"] as const;
-export const FIELD_TYPES = ["signature", "initials", "date", "name", "email", "text", "checkbox", "dropdown"] as const;
+export const FIELD_TYPES = ["signature", "initials", "date", "name", "email", "text", "number", "cells", "image", "checkbox", "dropdown"] as const;
 export type Role = (typeof ROLES)[number];
 export type Signer = { id: number; name: string; email: string; role: Role; ord: number; has_pw: boolean; verify_email: boolean; sent_at: string | null; viewed_at: string | null; signed_at: string | null; declined_at: string | null; decline_reason: string };
 export type Doc = { id: number; kind: string; title: string; body: string; has_pdf: boolean; message: string; redirect_url: string; hide_audit: boolean; sequential: boolean; bucket_id: number | null; bucket: string | null; tags: string[]; present: string[]; needed: number; status: string; due_at: string | null; created_by: string; created_at: string; completed_at: string | null; signers: Signer[] };
 export type Recipient = { name: string; email: string; role?: Role; ord?: number; password?: string; verify?: boolean };
-export type FieldIn = { r: number; type: string; page: number; x: number; y: number; w: number; h: number; label?: string; options?: string[]; required?: boolean };
+/** key: fields sharing a key are one answer (a box repeated on several pages). cond: show this field only when the field with that key matches. cells: one box per character. stamp: signer / date / IP line under a signature. */
+export type Cond = { key: string; op: "eq" | "neq" | "filled"; val?: string };
+export type Prefs = { def?: string; ro?: boolean; align?: "l" | "c" | "r"; size?: number; key?: string; cond?: Cond; cells?: number; stamp?: boolean };
+export type FieldIn = { prefs?: Prefs; r: number; type: string; page: number; x: number; y: number; w: number; h: number; label?: string; options?: string[]; required?: boolean };
 /** Everything about a paper except its title and PDF; this is also what a template stores (minus passwords). */
 export type Setup = { message?: string; redirect_url?: string; hide_audit?: boolean; sequential?: boolean; needed?: number; tags?: string[]; present?: string[]; signers: Recipient[]; fields?: FieldIn[] };
 export type NewDoc = Setup & { hold?: boolean; title: string; body?: string; pdf?: string | Buffer; bucket_id?: number | null; due_at?: string | null };
@@ -132,6 +135,11 @@ const pdfInfo = async (pdf: string | Buffer) => {
   return { buf, pages: n };
 };
 
+const cleanPrefs = (p?: Prefs): Prefs => ({ ...(p?.def ? { def: clip(p.def, 500) } : {}), ...(p?.ro && p?.def ? { ro: true } : {}), ...(p?.align === "c" || p?.align === "r" ? { align: p.align } : {}), ...(p?.size ? { size: num(p.size, 6, 24) } : {}),
+  ...(p?.key ? { key: clip(p.key, 40) } : {}), ...(p?.cond?.key ? { cond: { key: clip(p.cond.key, 40), op: (["eq", "neq", "filled"] as const).includes(p.cond.op) ? p.cond.op : "filled" as const, val: clip(p.cond.val, 200) } } : {}),
+  ...(p?.cells ? { cells: Math.round(num(p.cells, 2, 40)) } : {}), ...(p?.stamp ? { stamp: true } : {}) });
+/** Is a field shown, given the answers by key? Used on the server for the final say; the signer page runs the same rule. */
+export const shown = (f: { prefs?: Prefs }, kv: Record<string, string>) => { const c = f.prefs?.cond; if (!c) return true; const v = kv[c.key] ?? ""; return c.op === "filled" ? !!v && v !== "false" : c.op === "eq" ? v === (c.val ?? "") : v !== (c.val ?? ""); };
 /** Normalises recipients, fields and options. A template keeps blank emails (slots a public-link visitor fills) and never keeps passwords. */
 export function cleanSetup(n: Setup, pages: number, template: boolean) {
   const signers = (n.signers ?? []).map((s) => ({ name: clip(s.name, 100), email: clip(s.email, 200).toLowerCase(), role: (ROLES as readonly string[]).includes(s.role as string) ? (s.role as Role) : "signer" as Role, ord: Math.round(num(s.ord ?? 1, 1, 50)) || 1, password: template ? "" : clip(s.password, 100), verify: !!s.verify })).filter((s) => s.name || s.email);
@@ -141,7 +149,7 @@ export function cleanSetup(n: Setup, pages: number, template: boolean) {
   if (!signers.some((s) => s.role === "signer" || s.role === "approver")) throw new Error("At least one person has to be a signer or approver.");
   const redirect = clip(n.redirect_url, 500);
   if (redirect && !/^https?:\/\/[^\s]+$/.test(redirect)) throw new Error("The redirect address must start with http:// or https://.");
-  const fields = (pages ? (n.fields ?? []) : []).slice(0, 500).map((f) => ({ r: Math.round(Number(f.r)), type: String(f.type), page: Math.round(Number(f.page)), x: num(f.x, 0, 100), y: num(f.y, 0, 100), w: num(f.w, 1, 100), h: num(f.h, 1, 100), label: clip(f.label, 100), options: list(f.options, 20, 100), required: f.required !== false }));
+  const fields = (pages ? (n.fields ?? []) : []).slice(0, 500).map((f) => ({ r: Math.round(Number(f.r)), type: String(f.type), page: Math.round(Number(f.page)), x: num(f.x, 0, 100), y: num(f.y, 0, 100), w: num(f.w, 1, 100), h: num(f.h, 1, 100), label: clip(f.label, 100), options: list(f.options, 20, 100), required: f.required !== false, prefs: cleanPrefs(f.prefs) }));
   for (const f of fields) {
     if (!(FIELD_TYPES as readonly string[]).includes(f.type) || !(f.r >= 0 && f.r < signers.length) || !(f.page >= 1 && f.page <= pages)) throw new Error("A field is on a page or person that doesn't exist.");
     if (!["signer", "approver"].includes(signers[f.r].role)) throw new Error(`${signers[f.r].name} can only ${signers[f.r].role === "viewer" ? "view" : "receive a copy of"} this, so they can't have fields.`);
@@ -167,7 +175,7 @@ export async function createDoc(n: NewDoc, who: string, base: string, direct = -
   const ids: number[] = [];
   for (const s of k.signers) ids.push((await c.query("INSERT INTO sign_signers (doc_id, name, email, token, role, ord, pw_hash, verify_email) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id",
     [id, s.name, s.email, randomBytes(8).toString("hex"), s.role, k.sequential ? s.ord : 1, s.password ? hashPw(s.password) : "", s.verify])).rows[0].id);
-  for (const f of k.fields) await c.query("INSERT INTO sign_fields (doc_id, signer_id, type, page, x, y, w, h, label, options, required) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)", [id, ids[f.r], f.type, f.page, f.x, f.y, f.w, f.h, f.label, f.options, f.required]);
+  for (const f of k.fields) await c.query("INSERT INTO sign_fields (doc_id, signer_id, type, page, x, y, w, h, label, options, required, prefs) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)", [id, ids[f.r], f.type, f.page, f.x, f.y, f.w, f.h, f.label, f.options, f.required, f.prefs]);
   await logAudit(who, "board.sign.create", `${title} (#${id})`);
   if (who !== "public link") for (const s of k.signers) await c.query("INSERT INTO sign_contacts (email, name) VALUES ($1,$2) ON CONFLICT (email) DO UPDATE SET name = $2, last_used = now()", [s.email, s.name]);
   let token = "";
@@ -183,6 +191,29 @@ export async function remind(id: number, who: string, base: string) {
   await advance(id, base);
   await logAudit(who, "board.sign.remind", `${d.title} (#${id})`);
   return todo.length;
+}
+
+/** Hands a not-yet-signed spot to someone else: new name and email, the old link stops working, and if the old person had been sent a link the new one is emailed right away. */
+export async function reassign(docId: number, signerId: number, name: string, email: string, who: string, base: string) {
+  name = clip(name, 100); email = clip(email, 200).toLowerCase();
+  if (!name || !EMAIL_OK.test(email)) throw new Error("Enter a name and a valid email address.");
+  const c = await conn(), d = (await c.query("SELECT title, message, created_by, status FROM sign_docs WHERE id = $1 AND kind = 'board'", [docId])).rows[0];
+  const old = (await c.query("SELECT id, email, role, sent_at FROM sign_signers WHERE id = $1 AND doc_id = $2 AND signed_at IS NULL AND declined_at IS NULL AND role <> 'cc'", [signerId, docId])).rows[0];
+  if (d?.status !== "open" || !old) throw new Error("That person can't be replaced right now.");
+  if ((await c.query("SELECT 1 FROM sign_signers WHERE doc_id = $1 AND lower(email) = $2 AND id <> $3", [docId, email, signerId])).rowCount) throw new Error("That person is already on this document.");
+  await c.query("UPDATE sign_signers SET name = $2, email = $3, token = $4, sent_at = NULL, viewed_at = NULL, tries = 0, code_hash = '', reminders = 0, reminded_at = NULL WHERE id = $1", [signerId, name, email, randomBytes(8).toString("hex")]);
+  await logAudit(who, "board.sign.reassign", `${d.title} (#${docId}): ${old.email} -> ${email}`);
+  if (old.sent_at) await mailSigner(d, { id: signerId, name, email, role: old.role }, base, false);
+}
+
+/** Every 3 days, nudges people who were sent a link and haven't answered (4 nudges at most). Run by the timer in instrumentation.ts. */
+export async function autoRemind(base: string) {
+  const c = await conn(), rows = (await c.query(`SELECT s.id, s.name, s.email, s.role, d.title, d.message, d.created_by FROM sign_signers s JOIN sign_docs d ON d.id = s.doc_id
+    WHERE d.kind = 'board' AND d.status = 'open' AND s.role <> 'cc' AND s.signed_at IS NULL AND s.declined_at IS NULL AND s.sent_at < now() - interval '3 days' AND s.reminders < 4 AND COALESCE(s.reminded_at, s.sent_at) < now() - interval '3 days'`)).rows;
+  for (const r of rows) {
+    // claim first so a second machine or a failed mail can't cause a flood
+    if ((await c.query("UPDATE sign_signers SET reminders = reminders + 1, reminded_at = now() WHERE id = $1 AND COALESCE(reminded_at, sent_at) < now() - interval '3 days'", [r.id])).rowCount) await mailSigner(r, r, base, true).catch(() => {});
+  }
 }
 
 export async function voidDoc(id: number, who: string) {
@@ -214,8 +245,8 @@ export async function byToken(token: string) {
   if (!s) return null;
   const d = (await c.query("SELECT id, title, body, source IS NOT NULL AS has_pdf, message, redirect_url, tags, present, status, due_at, hide_audit FROM sign_docs WHERE id = $1 AND kind = 'board'", [s.doc_id])).rows[0];
   if (!d) return null;
-  const fields = d.has_pdf ? (await c.query("SELECT id, type, page, x, y, w, h, label, options, required FROM sign_fields WHERE signer_id = $1 ORDER BY id", [s.id])).rows : [];
-  return { signer: s as { id: number; name: string; email: string; role: Role; ord: number; signed_at: string | null; declined_at: string | null; locked: boolean; has_pw: boolean; verify_email: boolean }, doc: d as { id: number; title: string; body: string; has_pdf: boolean; message: string; redirect_url: string; hide_audit: boolean; tags: string[]; present: string[]; status: string; due_at: string | null }, fields: fields as { id: number; type: string; page: number; x: number; y: number; w: number; h: number; label: string; options: string[]; required: boolean }[] };
+  const fields = d.has_pdf ? (await c.query("SELECT id, type, page, x, y, w, h, label, options, required, prefs FROM sign_fields WHERE signer_id = $1 ORDER BY id", [s.id])).rows : [];
+  return { signer: s as { id: number; name: string; email: string; role: Role; ord: number; signed_at: string | null; declined_at: string | null; locked: boolean; has_pw: boolean; verify_email: boolean }, doc: d as { id: number; title: string; body: string; has_pdf: boolean; message: string; redirect_url: string; hide_audit: boolean; tags: string[]; present: string[]; status: string; due_at: string | null }, fields: fields as { id: number; type: string; page: number; x: number; y: number; w: number; h: number; label: string; options: string[]; required: boolean; prefs: Prefs }[] };
 }
 
 export type Proof = { ip: string; ua: string };
@@ -233,13 +264,28 @@ export async function signByToken(token: string, input: SignInput, proof: Proof,
   else {
     if (signature.length < 2) throw new Error("Type your full name to sign.");
     const c = await conn(), vals: [number, string][] = [];
-    for (const fl of f.fields) {
-      const raw = input.values?.[fl.id];
-      if (fl.type === "initials" && fl.required && !initials) throw new Error("Enter your initials.");
-      if (!["text", "checkbox", "dropdown"].includes(fl.type)) continue;
-      const v = fl.type === "checkbox" ? (raw === true || raw === "true" ? "true" : "") : clip(raw, 500);
-      if (fl.type === "dropdown" && v && !fl.options.includes(v)) throw new Error(`Pick one of the choices for "${fl.label || "the dropdown"}".`);
-      if (fl.required && !v) throw new Error(`Please complete "${fl.label || fl.type}".`);
+    const kv: Record<string, string> = {}, got = new Map<number, string>();
+    for (const fl of f.fields) { // pass 1: read each answer; boxes that share a key share the first answer given
+      if (!["text", "number", "cells", "image", "checkbox", "dropdown"].includes(fl.type)) continue;
+      const raw = input.values?.[fl.id], k = fl.prefs?.key;
+      let v = fl.prefs?.ro ? fl.prefs.def ?? "" : fl.type === "checkbox" ? (raw === true || raw === "true" ? "true" : "") : clip(raw, fl.type === "image" ? 300000 : 500);
+      if (k && kv[k] && !v) v = kv[k];
+      if (k && v) kv[k] = v;
+      got.set(fl.id, v);
+    }
+    for (const fl of f.fields) { // pass 2: hidden boxes are blank and never required; the rest are checked
+      if (fl.type === "initials" && fl.required && !initials && shown(fl, kv)) throw new Error("Enter your initials.");
+      if (!got.has(fl.id)) continue;
+      let v = got.get(fl.id)!;
+      if (!shown(fl, kv)) v = "";
+      else {
+        if (fl.prefs?.key && !v) v = kv[fl.prefs.key] ?? "";
+        if (fl.type === "dropdown" && v && !fl.options.includes(v)) throw new Error(`Pick one of the choices for "${fl.label || "the dropdown"}".`);
+        if (fl.type === "number" && v && !/^-?\d+(\.\d+)?$/.test(v.replace(/[\s$,]/g, ""))) throw new Error(`"${fl.label || "The number"}" needs to be a number.`);
+        if (fl.type === "cells" && v.length > (fl.prefs?.cells ?? 40)) throw new Error(`"${fl.label || "A box"}" is too long.`);
+        if (fl.type === "image" && v && !/^data:image\/(png|jpeg);base64,[A-Za-z0-9+/=]+$/.test(v)) throw new Error("Pictures must be PNG or JPEG.");
+        if (fl.required && !v) throw new Error(`Please complete "${fl.label || fl.type}".`);
+      }
       vals.push([fl.id, v]);
     }
     for (const [id, v] of vals) await c.query("UPDATE sign_fields SET value = $2 WHERE id = $1", [id, v]);
@@ -302,7 +348,7 @@ async function finalize(docId: number, base: string, copyTo = "") {
   const ver: Version | undefined = (d.kind === "waiver" || d.kind === "guest") && d.version_id ? (await c.query("SELECT id, revision, title, sections, closing FROM waiver_versions WHERE id = $1", [d.version_id])).rows[0] : undefined;
   let raw: Buffer;
   if (d.source) {
-    const src = open(d.source), fields = (await c.query("SELECT page, x, y, w, h, type, value, signer_id AS signer FROM sign_fields WHERE doc_id = $1 ORDER BY id", [docId])).rows;
+    const src = open(d.source), fields = (await c.query("SELECT page, x, y, w, h, type, value, prefs, signer_id AS signer FROM sign_fields WHERE doc_id = $1 ORDER BY id", [docId])).rows;
     raw = await buildFieldPdf(src, fields, new Map(ss.map((s) => [s.id as number, s])), { title: d.title, completed: new Date(d.completed_at), hideAudit: d.hide_audit }, sha256(src));
   } else raw = ver ? await buildAgreementPdf(ver, ss[0], sha256(d.body), ss[1] ?? null) : await buildPdf({ title: d.title, body: d.body, tags: d.tags, present: d.present, completed: new Date(d.completed_at) }, ss, d.bucket, sha256(d.title + "\n" + d.body), d.hide_audit);
   const pdf = await sealPdf(raw);
@@ -348,6 +394,18 @@ export async function setPublic(id: number, on: boolean) {
 export async function publicTemplate(token: string) {
   const r = (await (await conn()).query("SELECT id, title FROM sign_templates WHERE direct_token = $1", [token.slice(0, 80)])).rows[0];
   return r as { id: number; title: string } | undefined;
+}
+/** One copy of a template per person on a list, each emailed their own link. Fills the template's first blank-email slot; at most 100 people per go. */
+export async function bulkSend(id: number, people: { name: string; email: string }[], who: string, base: string) {
+  const { title, ...rest } = await getTemplate(id), slot = rest.signers.findIndex((s) => !s.email && (s.role ?? "signer") !== "cc");
+  if (slot < 0) throw new Error("Leave one person's email blank in the template: that's the place each person on the list goes.");
+  if (people.length < 1 || people.length > 100) throw new Error("Send to between 1 and 100 people at a time.");
+  const failed: string[] = []; let sent = 0;
+  for (const p of people) {
+    const signers = rest.signers.map((s, i) => (i === slot ? { ...s, name: clip(p.name, 100), email: clip(p.email, 200).toLowerCase() } : s));
+    try { const r = await createDoc({ ...rest, signers, title }, who, base); sent++; failed.push(...r.failed); } catch (e: any) { failed.push(`${p.email} (${e.message})`); }
+  }
+  return { sent, failed };
 }
 /** A visitor on a template's public link starts their own copy; returns their personal signing link token. */
 export async function startPublic(token: string, name: string, email: string, base: string) {

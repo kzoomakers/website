@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 /** Renders every page of a PDF (bytes or a URL) with pdf.js; `overlay(pageNumber)` is drawn on top of each page in percent coordinates (position:absolute; left/top/width/height in %). */
-export default function PdfPages({ src, overlay, onPage }: { src: ArrayBuffer | string; overlay?: (page: number) => ReactNode; onPage?: (page: number, e: React.MouseEvent<HTMLDivElement>) => void }) {
+export default function PdfPages({ src, overlay, onPage, onDropPage }: { src: ArrayBuffer | string; overlay?: (page: number) => ReactNode; onPage?: (page: number, e: React.MouseEvent<HTMLDivElement>) => void; onDropPage?: (page: number, e: React.DragEvent<HTMLDivElement>) => void }) {
   const [pages, setPages] = useState<number[]>([]), [err, setErr] = useState(""), box = useRef<HTMLDivElement>(null);
   useEffect(() => {
     let dead = false;
@@ -30,7 +30,7 @@ export default function PdfPages({ src, overlay, onPage }: { src: ArrayBuffer | 
     <div ref={box} style={{ display: "grid", gap: 14, maxWidth: 900 }}>
       {!pages.length && <p className="sub">Loading the document…</p>}
       {pages.map((n) => (
-        <div key={n} data-page={n} onClick={onPage ? (e) => onPage(n, e) : undefined} style={{ position: "relative", boxShadow: "0 1px 6px #0003", background: "#fff", lineHeight: 0, cursor: onPage ? "crosshair" : undefined }}>
+        <div key={n} data-page={n} onClick={onPage ? (e) => onPage(n, e) : undefined} onDragOver={onDropPage ? (e) => e.preventDefault() : undefined} onDrop={onDropPage ? (e) => { e.preventDefault(); onDropPage(n, e); } : undefined} style={{ position: "relative", boxShadow: "0 1px 6px #0003", background: "#fff", lineHeight: 0, cursor: onPage ? "crosshair" : undefined }}>
           <canvas data-p={n} style={{ width: "100%", height: "auto" }} />
           {overlay?.(n)}
         </div>

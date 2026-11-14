@@ -15,6 +15,20 @@ export default function SignPad({ name, busy, label = "Sign", initials: wantInit
     c.addEventListener("pointerdown", d); c.addEventListener("pointermove", m); c.addEventListener("pointerup", u);
     return () => { c.removeEventListener("pointerdown", d); c.removeEventListener("pointermove", m); c.removeEventListener("pointerup", u); };
   }, []);
+  // An uploaded photo of a signature is turned into black ink on a clear background, so it stays small and looks like a drawn one.
+  const upload = (file?: File) => {
+    if (!file) return;
+    const im = new Image(), c = cv.current!, x = c.getContext("2d")!;
+    im.onload = () => {
+      x.clearRect(0, 0, c.width, c.height);
+      const k = Math.min(c.width / im.width, c.height / im.height), w = im.width * k, h = im.height * k, ox = (c.width - w) / 2, oy = (c.height - h) / 2;
+      x.drawImage(im, ox, oy, w, h);
+      const d = x.getImageData(0, 0, c.width, c.height);
+      for (let i = 0; i < d.data.length; i += 4) { const dark = d.data[i + 3] > 40 && (d.data[i] + d.data[i + 1] + d.data[i + 2]) / 3 < 150; d.data[i] = d.data[i + 1] = d.data[i + 2] = 17; d.data[i + 3] = dark ? 255 : 0; }
+      x.putImageData(d, 0, 0); setInked(true); URL.revokeObjectURL(im.src);
+    };
+    im.src = URL.createObjectURL(file);
+  };
   const clear = () => { const c = cv.current!; c.getContext("2d")!.clearRect(0, 0, c.width, c.height); setInked(false); };
   return (
     <form className="card" style={{ display: "grid", gap: 10, maxWidth: 520 }} onSubmit={(e) => { e.preventDefault(); onSign(typed, inked ? cv.current!.toDataURL("image/png") : "", ini); }}>
@@ -24,6 +38,7 @@ export default function SignPad({ name, busy, label = "Sign", initials: wantInit
         <div className="sub" style={{ margin: "0 0 4px" }}>{drawRequired ? "Draw your signature (required)" : "Optional: draw your signature"}</div>
         <canvas ref={cv} width={520} height={140} aria-label="Signature drawing area" style={{ width: "100%", height: 140, border: "1px solid var(--line, #ccc)", borderRadius: 8, background: "#fff", touchAction: "none" }} />
         <button type="button" onClick={clear}>Clear drawing</button>
+        <label className="sub" style={{ display: "block", marginTop: 4 }}>Or upload a picture of your signature <input type="file" accept="image/png,image/jpeg" onChange={(e) => upload(e.target.files?.[0])} /></label>
       </div>
       <label style={{ display: "flex", gap: 8, alignItems: "flex-start" }}><input type="checkbox" checked={ok} onChange={(e) => setOk(e.target.checked)} />I have read this document and agree that my typed or drawn signature is my legal electronic signature.</label>
       <button className="pri" type="submit" disabled={busy || !ok || typed.trim().length < 2 || (wantInitials && !ini.trim()) || (drawRequired && !inked)}>{busy ? "Signing…" : label}</button>
