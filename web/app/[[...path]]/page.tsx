@@ -8,6 +8,8 @@ import { siteTree } from "@/lib/sitemap";
 import { canonicalOf, jsonLd, ldScript } from "@/lib/aiseo";
 import { SITE } from "@/lib/sitemap";
 import { getPause } from "@/lib/tours-notify";
+import StyledMap from "@/components/styled-map";
+import { mapsKey } from "@/lib/maps-key";
 import LegacyScripts from "@/components/legacy-scripts";
 
 export const dynamic = "force-dynamic"; // POC: always read fresh; Phase 2 moves to ISR + revalidate on publish
@@ -33,7 +35,7 @@ export default async function Page({ params }: P) {
   const rp: any = data.root?.props ?? {};
   const bare = !!rp.bare;
   const [pause, tree, rev] = await Promise.all([!bare && home ? getPause() : null, slug === "sitemap" ? siteTree() : null, withRev(slug, guided0)]);
-  const refresh = rp.refresh;
+  const refresh = rp.refresh, mapKey = slug === "contact" ? await mapsKey() : ""; // the contact page sits on a pale map of our address
   return (
     <>
       {!bare && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldScript(jsonLd(slug, data, contact, SITE)) }} />}
@@ -41,6 +43,7 @@ export default async function Page({ params }: P) {
       {refresh && <meta httpEquiv="refresh" content={refresh} />}
       {/* Inline script runs during parse, so the body class is set before first paint (no flash). */}
       {bodyClass && <script dangerouslySetInnerHTML={{ __html: `document.body.className+=" ${bodyClass}"` }} />}
+      {mapKey && <StyledMap backdrop apiKey={mapKey} address={address} />}
       {!bare && <div id="preloader"><div className="preloader"><span /><span /><span /><span /><span /><span /></div></div>}
       <Render config={config} data={data as any} metadata={{ sitemap: tree?.tree, menu, board, posts: posts?.map((p) => ({ slug: p.slug, title: p.title, excerpt: p.excerpt, image: p.image, date: p.publish_at ?? p.updated_at })), guided: { [slug]: fillAddress(rev, address) } }} />
       <LegacyScripts bare={bare} extra={(rp.scripts ?? []).map((x: any) => x.src)} inline={(rp.inline ?? []).map((x: any) => x.code)} />
