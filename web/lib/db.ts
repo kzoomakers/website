@@ -144,6 +144,14 @@ async function migrate(pool: Pool) {
   await pool.query("DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'site_users' AND column_name = 'welcomed_at') THEN ALTER TABLE site_users ADD COLUMN welcomed_at timestamptz; UPDATE site_users SET welcomed_at = now() WHERE onboarding = 'done' AND approval = 'approved'; END IF; END $$");
   // Photo IDs, AES-256-GCM encrypted before they reach the database (see lib/vault.ts).
   await pool.query("CREATE TABLE IF NOT EXISTS member_ids (user_id int PRIMARY KEY REFERENCES site_users ON DELETE CASCADE, kind text NOT NULL, expires_on date, data bytea NOT NULL, uploaded_at timestamptz NOT NULL DEFAULT now())");
+  // ID renewals: a member's replacement ID waits here for staff to compare with the one on file; approving copies it into member_ids. Thread = id_events (messages both ways, staff notes, state changes).
+  await pool.query("ALTER TABLE member_ids ADD COLUMN IF NOT EXISTS reminded_at timestamptz");
+  await pool.query(`CREATE TABLE IF NOT EXISTS id_renewals (id serial PRIMARY KEY, user_id int NOT NULL REFERENCES site_users ON DELETE CASCADE, kind text NOT NULL, expires_on date, data bytea NOT NULL,
+    state text NOT NULL DEFAULT 'pending' CHECK (state IN ('pending','waiting','approved','rejected')), created_at timestamptz NOT NULL DEFAULT now(), decided_at timestamptz)`);
+  await pool.query("CREATE UNIQUE INDEX IF NOT EXISTS id_renewals_open ON id_renewals (user_id) WHERE state IN ('pending','waiting')");
+  await pool.query(`CREATE TABLE IF NOT EXISTS id_events (id serial PRIMARY KEY, renewal_id int NOT NULL REFERENCES id_renewals ON DELETE CASCADE, actor text NOT NULL, by_member boolean NOT NULL DEFAULT false,
+    kind text NOT NULL CHECK (kind IN ('message','note','state')), body text NOT NULL DEFAULT '', at timestamptz NOT NULL DEFAULT now())`);
+  await pool.query("CREATE INDEX IF NOT EXISTS id_events_renewal ON id_events (renewal_id, id)");
   // Public financial PDFs (one per year; replacing keeps the first upload date).
   await pool.query("CREATE TABLE IF NOT EXISTS financials (year int PRIMARY KEY, filename text NOT NULL, data bytea NOT NULL, uploaded_at timestamptz NOT NULL DEFAULT now(), replaced_at timestamptz)");
   // E-signature documents (member waivers and board papers). `pdf` is the final signed PDF, encrypted. Signer links are emailed; only their hash is stored.

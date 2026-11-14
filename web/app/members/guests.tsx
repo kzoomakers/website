@@ -103,8 +103,9 @@ function GuestModal({ onClose }: { onClose: () => void }) {
             </div>
             {g.ready ? <div><button type="button" className="pri" disabled={busy} onClick={() => checkIn(g)}>Check in</button></div>
               : <div style={{ display: "grid", gap: 6, justifyItems: "start" }}>
+                {g.id_expired && <Notice kind="info">Their ID has expired. Have them upload a current one before checking in (no approval needed).</Notice>}
                 {g.needs_resign && <Notice kind="info">The guest agreement changed. They need to sign the new version before their next check-in.</Notice>}
-                <button type="button" className="pri" onClick={() => setWiz({ id: g.id, resume: true })}>{g.needs_resign ? "Sign the new agreement" : "Resume"}</button></div>}
+                <button type="button" className="pri" onClick={() => setWiz({ id: g.id, resume: true })}>{g.needs_resign ? "Sign the new agreement" : g.id_expired ? "Update their ID" : "Resume"}</button></div>}
             {g.ever_signed && <p style={{ margin: 0 }}><a href={`/api/guests/pdf?g=${g.id}`}>Signed agreement (PDF)</a></p>}
             <section><h3 style={{ margin: "0 0 6px" }}>Previous check-ins</h3>
               {d!.visits.length ? <ul style={{ margin: 0 }}>{d!.visits.map((v) => <li key={v}>{when(v)}</li>)}</ul> : <p className="sub" style={{ margin: 0 }}>No check-ins yet.</p>}</section>

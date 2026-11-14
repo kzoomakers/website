@@ -4,18 +4,20 @@ import { actor, editingAllowed } from "@/lib/guard";
 import { logAudit } from "@/lib/store";
 import * as c from "@/lib/crm";
 import * as ap from "@/lib/approvals";
+import * as idc from "@/lib/id-card";
 import { membershipClasses } from "@/lib/membership";
 import { baseUrl } from "@/lib/mail";
 
 // One CRM admin RPC endpoint: POST { op, ...args }. Reads need CRM view access, everything else CRM edit access.
 export const dynamic = "force-dynamic";
-const READS = new Set(["member", "plans", "skills", "fieldValues", "tools", "classes", "roster", "proposals", "classRules", "applicants", "applicant", "membershipClasses"]);
+const READS = new Set(["member", "plans", "skills", "fieldValues", "tools", "classes", "roster", "proposals", "classRules", "applicants", "applicant", "membershipClasses", "idRenewals", "idRenewal"]);
 // The admin page each op belongs to (see lib/access.ts), so a person given just that page can use it. An op not listed here needs a whole-section grant.
 const PAGE: Record<string, string | string[]> = {
   member: "people", plans: "people", setLevels: "people", grant: "people", revoke: "people", membershipClasses: "*",
   skills: "skills", renameSkill: "skills", deleteSkill: "skills", mergeSkill: "skills", fieldValues: "values", renameValue: "values", deleteValue: "values",
   tools: ["tools", "people"], saveTool: "tools", deleteTool: "tools",
   classes: "classes", saveClass: "classes", deleteClass: "classes", proposals: "classes", classRules: "classes", setMinDays: "classes", decide: "classes", roster: "classes",
+  idRenewals: "id-renewals", idRenewal: "id-renewals", idSay: "id-renewals", idNote: "id-renewals", idDecide: "id-renewals",
   applicants: "approvals", applicant: "approvals", applicantSay: "approvals", applicantNote: "approvals", applicantMove: "approvals",
 };
 
@@ -54,11 +56,16 @@ export async function POST(req: Request) {
       case "applicantSay": return NextResponse.json(await ap.say(Number(a.id), who, String(a.body ?? ""), !!a.wait, await baseUrl(req)));
       case "applicantNote": await ap.note(Number(a.id), who, String(a.body ?? "")); break;
       case "applicantMove": return NextResponse.json(await ap.move(Number(a.id), String(a.from), String(a.to), who, { confirmed: a.confirmed === true, reason: a.reason, edit: a.edit }, await baseUrl(req)));
+      case "idRenewals": return NextResponse.json({ rows: await idc.list(String(a.state ?? "pending")), counts: await idc.counts() });
+      case "idRenewal": return NextResponse.json(await idc.detail(Number(a.id)));
+      case "idSay": await idc.say(Number(a.id), who, String(a.body ?? ""), !!a.wait, await baseUrl(req)); break;
+      case "idNote": await idc.note(Number(a.id), who, String(a.body ?? "")); break;
+      case "idDecide": await idc.decide(Number(a.id), String(a.to), who, String(a.reason ?? ""), await baseUrl(req)); break;
       case "roster": return NextResponse.json(await c.roster(a.id));
       default: return new NextResponse("unknown op", { status: 400 });
     } return NextResponse.json({ ok: true }); })();
     // Every successful change is logged (crm.<op>); the target is whatever names the thing changed.
-    if (res.ok && !READS.has(a.op) && !["setLevels", "grant", "revoke", "setMinDays", "applicantSay", "applicantNote", "applicantMove"].includes(a.op)) await logAudit(who, "crm." + a.op, String(a.name ?? a.form?.name ?? a.campaign?.subject ?? a.subscriber?.email ?? a.tool?.name ?? a.klass?.name ?? a.id ?? a.value ?? ""));
+    if (res.ok && !READS.has(a.op) && !["setLevels", "grant", "revoke", "setMinDays", "applicantSay", "applicantNote", "applicantMove", "idSay", "idNote", "idDecide"].includes(a.op)) await logAudit(who, "crm." + a.op, String(a.name ?? a.form?.name ?? a.campaign?.subject ?? a.subscriber?.email ?? a.tool?.name ?? a.klass?.name ?? a.id ?? a.value ?? ""));
     return res;
   } catch (e: any) {
     return new NextResponse(errMsg(e), { status: 400 });

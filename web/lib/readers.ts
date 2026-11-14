@@ -206,3 +206,36 @@ export async function currentMember(): Promise<Reader | null> {
   const u = await currentApplicant();
   return u?.approval === "approved" && u.onboarding === "done" ? { id: u.id, email: u.email, name: u.name } : null;
 }
+
+// ---- Unlocking the ID card on /members/id: a 10-minute signed cookie, earned with the password or a link emailed to the member.
+export const UNLOCK_COOKIE = "id_unlock";
+export const UNLOCK_SECS = 600;
+export const unlockValue = (userId: number) => { const v = `${userId}.${Date.now() + UNLOCK_SECS * 1000}`; return `${v}.${mac("idu|" + v)}`; };
+export function idUnlocked(userId: number, value?: string) {
+  const [id, exp, sig] = (value ?? "").split(".");
+  if (!sig || Number(id) !== userId || Number(exp) < Date.now()) return false;
+  const want = mac(`idu|${id}.${exp}`);
+  return sig.length === want.length && timingSafeEqual(Buffer.from(sig), Buffer.from(want));
+}
+/** True if the password is right (throttled per member, so it can't be guessed). */
+export async function confirmPassword(userId: number, password: string) {
+  if (!(await hit("idpw:" + userId, 8, 900_000, true))) throw new Error("Too many attempts. Wait a few minutes, or use the emailed link.");
+  const stored = (await (await conn()).query("SELECT password_hash FROM site_users WHERE id = $1", [userId])).rows[0]?.password_hash;
+  return !!stored && (await checkPw(password.slice(0, 200), stored));
+}
+const UNLOCK_NEXT = "/api/members/id/unlock";
+/** Emails the member a one-time link that unlocks their ID (they must open it signed in as themselves). */
+export async function emailUnlock(u: Reader, base: string) {
+  const cfg = await getMailCfg();
+  if (!mailReady(cfg)) throw new Error("Email isn't set up yet. Ask an admin.");
+  if (!(await hit("idmail:" + u.id, 3, 3600_000))) throw new Error("A link was already sent a few times. Check your inbox.");
+  const token = randomBytes(32).toString("hex");
+  await (await conn()).query("INSERT INTO login_tokens (hash, user_id, next, expires_at) VALUES ($1,$2,$3, now() + interval '15 minutes')", [hash(token), u.id, UNLOCK_NEXT]);
+  const link = `${base}${UNLOCK_NEXT}?t=${token}`;
+  await send({ to: u.email, subject: "Show your ID on the Kzoo Makers site",
+    text: `Hi ${u.name},\n\nClick to show your ID (works once, for 15 minutes):\n\n${link}\n\nIf you didn't ask for this, you can ignore this email.`,
+    html: `<p>Hi ${esc(u.name)},</p><p><a href="${link}">Show my ID</a> (works once, for 15 minutes).</p><p>If you didn't ask for this, you can ignore this email.</p>` }, cfg);
+}
+export async function spendUnlock(userId: number, token: string) {
+  return !!(await (await conn()).query("DELETE FROM login_tokens WHERE hash = $1 AND user_id = $2 AND next = $3 AND expires_at > now()", [hash(token), userId, UNLOCK_NEXT])).rowCount;
+}

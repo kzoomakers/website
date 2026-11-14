@@ -1,0 +1,14 @@
+/* Fixed card area: every ID, whatever its shape, is fitted inside the same credit-card-shaped box. */
+.adm .idc { position: relative; width: 100%; max-width: 460px; aspect-ratio: 1.586; border-radius: 14px; overflow: hidden; background: #1d1d1f; border: 1px solid var(--line, #ccc); padding: 0; cursor: pointer; display: block; }
+.adm .idc[data-open="true"] { cursor: default; }
+.adm .idc img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.adm .idc .idc-blur { filter: blur(14px); transform: scale(1.06); }
+/* The blurred layer is wiped away left to right, with a bright edge, uncovering the sharp ID beneath. */
+.adm .idc .idc-veil { position: absolute; inset: 0; clip-path: inset(0 0 0 0); transition: clip-path 1.2s cubic-bezier(.6, 0, .2, 1); }
+.adm .idc[data-open="true"] .idc-veil { clip-path: inset(0 0 0 100%); }
+.adm .idc .idc-edge { position: absolute; top: 0; bottom: 0; width: 36px; left: -36px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); pointer-events: none; opacity: 0; }
+.adm .idc[data-open="true"] .idc-edge { animation: idc-sweep 1.2s cubic-bezier(.6, 0, .2, 1); }
+@keyframes idc-sweep { 0% { left: -36px; opacity: 1; } 90% { opacity: 1; } 100% { left: 100%; opacity: 0; } }
+.adm .idc-hint { position: absolute; inset: auto 0 12px; text-align: center; color: #fff; font-weight: 600; text-shadow: 0 1px 6px #000; pointer-events: none; }
+.adm .idc[data-open="true"] .idc-hint { display: none; }
+@media (prefers-reduced-motion: reduce) { .adm .idc .idc-veil { transition: none; } .adm .idc[data-open="true"] .idc-edge { animation: none; } }

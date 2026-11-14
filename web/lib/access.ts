@@ -21,7 +21,7 @@ export const PAGES: Page[] = [
   ...P("blog", [["posts", "Posts", "/admin/blog"], ["categories", "Categories", "/admin/blog/categories"], ["authors", "Authors", "/admin/blog/authors"], ["media", "Media", "/admin/blog/media"], ["comments", "Comments", "/admin/blog/comments"]]),
   ...P("forms", [["messages", "Messages", "/admin/forms"]]),
   ...P("crm", [["people", "People", "/admin/crm"], ["approvals", "New members", "/admin/crm/approvals"], ["classes", "Classes", "/admin/crm/classes"], ["tools", "Tools & sign-offs", "/admin/crm/tools"], ["skills", "Skills", "/admin/crm/skills"],
-    ["values", "Profile options", "/admin/crm/values"], ["waiver", "Membership agreement", "/admin/crm/waiver"], ["guest-agreement", "Guest agreement", "/admin/crm/guest-agreement"], ["guests", "Guests", "/admin/crm/guests"]]),
+    ["values", "Profile options", "/admin/crm/values"], ["waiver", "Membership agreement", "/admin/crm/waiver"], ["guest-agreement", "Guest agreement", "/admin/crm/guest-agreement"], ["guests", "Guests", "/admin/crm/guests"], ["id-renewals", "ID renewals", "/admin/crm/id-renewals"]]),
   ...P("board", [["documents", "Documents", "/admin/esign"], ["new", "New document", "/admin/esign/new"], ["templates", "Templates", "/admin/esign/templates"], ["buckets", "Folders", "/admin/esign/buckets"]]),
   ...P("tours", [["bookings", "Bookings", "/admin/tours"], ["walkups", "Walk-ups", "/admin/tours/walkups"], ["availability", "Availability", "/admin/tours/availability"], ["stats", "Statistics", "/admin/tours/stats"], ["timeline", "Timeline", "/admin/tours/timeline"],
     ["notifications", "Tour alerts", "/admin/tours/notifications"]]),
