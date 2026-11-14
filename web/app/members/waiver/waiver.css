@@ -29,3 +29,14 @@
 .wv-l.add{background:#e6ffec}.wv-l.add .wv-g{background:#ccffd8;color:#116329}.wv-l.add mark{background:#abf2bc}
 .wv-l.del{background:#ffebe9}.wv-l.del .wv-g{background:#ffd7d5;color:#82071e}.wv-l.del mark{background:#ff818266;text-decoration:line-through}
 .wv mark{color:inherit;border-radius:3px;padding:0 1px}
+.wv-l p,.wv-note{overflow-wrap:anywhere}
+.wv-in iframe,.wv-in>*{max-width:100%}
+@media (max-width:720px){
+.wv-book{--pad:8px;border-radius:10px}
+.wv{padding:12px;gap:14px}
+.wv-hero{padding:16px;gap:10px 24px}.wv-big{font-size:1.2rem}.wv-pill{margin-left:0;width:100%;text-align:center}
+.wv-tl{padding-left:14px;border-left-width:2px}.wv-tl>li::before{left:-21px;width:10px;height:10px}
+.wv-tl summary{padding:12px}.wv-in{padding:0 10px 12px}
+.wv-btn,.wv-dl{justify-self:stretch;text-align:center;padding:12px 16px}
+.wv-diff{font-size:.82rem}.wv-g{width:24px}.wv-l p{padding:6px 8px}.wv-h{flex-wrap:wrap}
+}
