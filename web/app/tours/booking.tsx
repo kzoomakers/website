@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Captcha, { resetCaptcha } from "@/components/captcha";
 
 type Slot = { block: number; date: string; start: string; end: string; left: number };
 const SCREEN = () => `${screen.width}x${screen.height}`;
@@ -9,7 +10,7 @@ const CSS = `.tb label{display:block;margin-bottom:14px;font-weight:600}.tb inpu
 .tb .tb-slots{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 22px}.tb .tb-slots button{padding:8px 14px;border:1px solid #f9b234;border-radius:8px;background:#fff;cursor:pointer;font:inherit}.tb .tb-slots button:hover{background:#fff6e0}
 .tb .tb-areas label{display:inline-block;font-weight:400;margin-right:16px}.tb .tb-hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}.tb .tb-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 14px}.tb .tb-err{color:#b3261e}`;
 
-const fields = (f: FormData) => ({ first: f.get("first"), last: f.get("last"), email: f.get("email"), phone: f.get("phone"), zip: f.get("zip"), contact: f.get("contact"), heard: f.get("heard"), notes: f.get("notes"), website: f.get("website"), screen: SCREEN(), areas: f.getAll("areas") });
+const fields = (f: FormData) => ({ first: f.get("first"), last: f.get("last"), email: f.get("email"), phone: f.get("phone"), zip: f.get("zip"), contact: f.get("contact"), heard: f.get("heard"), notes: f.get("notes"), website: f.get("website"), captcha: f.get("g-recaptcha-response"), screen: SCREEN(), areas: f.getAll("areas") });
 
 // Public tour booking: pick an open time, give your details. Replaces the old Google Form.
 export default function Booking() {
@@ -19,18 +20,18 @@ export default function Booking() {
   const go = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); if (!pick) return;
     setBusy(true); setErr("");
-    const f = new FormData(e.currentTarget);
+    const form = e.currentTarget, f = new FormData(form);
     const r = await fetch("/api/tours", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({
       block: pick.block, start: pick.start, ...fields(f) }) }).catch(() => null);
     setBusy(false);
-    if (r?.ok) setDone(pick); else setErr(r ? await r.text() : "Couldn't reach the server. Please try again.");
+    if (r?.ok) setDone(pick); else { setErr(r ? await r.text() : "Couldn't reach the server. Please try again."); resetCaptcha(form); }
   };
   const sendReq = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); setBusy(true); setErr("");
-    const f = new FormData(e.currentTarget);
+    const form = e.currentTarget, f = new FormData(form);
     const r = await fetch("/api/tours", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ request: true, ...fields(f) }) }).catch(() => null);
     setBusy(false);
-    if (r?.ok) setAsked(true); else setErr(r ? await r.text() : "Couldn't reach the server. Please try again.");
+    if (r?.ok) setAsked(true); else { setErr(r ? await r.text() : "Couldn't reach the server. Please try again."); resetCaptcha(form); }
   };
   if (asked) return <div role="status"><h2>Request received!</h2>{data?.pause ? <p>{data.pause}</p> : <p>Thanks. A volunteer will email you a few dates that work for them, and you pick the one you like. Keep an eye on your inbox (and spam folder).</p>}</div>;
   if (done) return <div role="status"><h2>You're booked!</h2><p>See you on <strong>{day(done.date)} at {time(done.start)}</strong>. We've emailed you a confirmation with a link to cancel if your plans change.</p></div>;
@@ -48,6 +49,7 @@ export default function Booking() {
       <label>How did you hear about us? <small>(optional)</small><select name="heard" defaultValue=""><option value="">Select…</option>{data.heard.map((h) => <option key={h}>{h}</option>)}</select></label>
       <label>Notes or additional info <small>(optional)</small><textarea name="notes" maxLength={1000} rows={3} placeholder="Accessibility needs, projects you have in mind…" /></label>
       <div className="tb-hp" aria-hidden><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
+      <Captcha />
     </>
   );
   return (

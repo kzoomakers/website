@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Captcha, { resetCaptcha } from "./captcha";
 
 const COPY = {
   contact: { title: "Send us a message", sub: "Questions, tours, ideas: we read everything and reply by email.", ph: "How can we help?" },
@@ -25,9 +26,9 @@ export function ContactForm({ kind, heading }: { kind: "contact" | "board"; head
   const c = COPY[kind], [busy, setBusy] = useState(false), [err, setErr] = useState(""), [done, setDone] = useState(false), [len, setLen] = useState(0);
   const go = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); setBusy(true); setErr("");
-    const f = new FormData(e.currentTarget), r = await fetch("/api/contact", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ kind, ...Object.fromEntries(["name", "email", "subject", "message", "website"].map((k) => [k, f.get(k)])) }) }).catch(() => null);
+    const form = e.currentTarget, f = new FormData(form), r = await fetch("/api/contact", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ kind, ...Object.fromEntries(["name", "email", "subject", "message", "website"].map((k) => [k, f.get(k)])), captcha: f.get("g-recaptcha-response") }) }).catch(() => null);
     setBusy(false);
-    if (r?.ok) setDone(true); else setErr(r ? await r.text() : "Couldn't reach the server. Please try again.");
+    if (r?.ok) setDone(true); else { setErr(r ? await r.text() : "Couldn't reach the server. Please try again."); resetCaptcha(form); }
   };
   return (
     <section className="contact-us" style={{ padding: "40px 16px" }}>
@@ -46,6 +47,7 @@ export function ContactForm({ kind, heading }: { kind: "contact" | "board"; head
             <label>Subject <small>(optional)</small><input name="subject" maxLength={150} /></label>
             <label>Message<textarea name="message" required minLength={10} maxLength={MAX} placeholder={c.ph} onChange={(e) => setLen(e.target.value.length)} /></label>
             <div className="cf-hp" aria-hidden><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
+            <Captcha />
             {err && <p className="cf-err" role="alert">{err}</p>}
             <div className="cf-foot">
               <small>{len}/{MAX}</small>

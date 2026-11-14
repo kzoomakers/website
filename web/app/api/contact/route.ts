@@ -3,6 +3,7 @@ import { errMsg } from "@/lib/errmsg";
 import { submitContact } from "@/lib/contact";
 import { hashIp } from "@/lib/comments";
 import { convert } from "@/lib/ga-attr";
+import { verifyCaptcha } from "@/lib/captcha";
 
 // POST { kind: "contact" | "board" | "donation", name, email, subject?, message, website? }
 export async function POST(req: Request) {
@@ -11,6 +12,7 @@ export async function POST(req: Request) {
   // Honeypot: hidden from people, filled by bots. Pretend it worked.
   if (b.website) return NextResponse.json({ ok: true });
   try {
+    await verifyCaptcha(req, b.captcha);
     await submitContact(b.kind, { name: s(b.name), email: s(b.email), subject: s(b.subject), message: s(b.message) }, hashIp(req));
     await convert(req, "contact");
     return NextResponse.json({ ok: true });

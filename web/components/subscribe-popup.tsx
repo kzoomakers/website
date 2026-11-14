@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Captcha, { resetCaptcha } from "./captcha";
 import { usePathname } from "next/navigation";
 
 type F = { id: number; kind: "popup" | "slidein" | "bar" | "inline"; heading: string; body: string; button: string; success: string; delay: number; color: string; ask_name: boolean };
@@ -33,8 +34,9 @@ function Form({ f }: { f: F }) {
   const close = () => { setShow(false); hide(f.id, 30); };
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); setMsg("");
-    const r = await fetch("/api/subscribe", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ form: f.id, email, name, website: new FormData(e.currentTarget).get("website") }) });
-    if (!r.ok) return setMsg(await r.text());
+    const form = e.currentTarget, d = new FormData(form);
+    const r = await fetch("/api/subscribe", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ form: f.id, email, name, website: d.get("website"), captcha: d.get("g-recaptcha-response") }) });
+    if (!r.ok) { resetCaptcha(form); return setMsg(await r.text()); }
     setDone(true); setMsg((await r.json()).result === "confirm" ? "Almost there — check your inbox to confirm." : f.success || "Thank you!");
     hide(f.id, 365);
     if (f.kind !== "inline") setTimeout(() => setShow(false), 5000);
@@ -64,6 +66,7 @@ function Form({ f }: { f: F }) {
             <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden style={{ position: "absolute", left: -9999 }} />
             {f.ask_name && <input aria-label="Your name" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} style={field(160)} />}
             <input type="email" required aria-label="Email address" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} style={field(220)} />
+            <Captcha compact={f.kind === "bar" || f.kind === "slidein"} />
             <button type="submit" style={{ ...input, background: f.color, color: "#fff", border: 0, fontWeight: 700, cursor: "pointer", width: bar ? "auto" : "100%" }}>{f.button}</button>
             {msg && <p role="alert" style={{ color: "#b00020", margin: "8px 0 0" }}>{msg}</p>}
           </form>)}
