@@ -22,8 +22,12 @@ export function buildHours(base: Hours, f: { openDays: string[]; openTime: strin
 
 /** Replaces {address}, {street} (before the first comma) and {addressQ} (URL-encoded) in every string of `v`; used for page text so the address is edited in one place. */
 export function fillAddress<T>(v: T, address: string): T {
+  // Most pages have no token at all: skip the deep copy (checked once, at the top).
+  return v && typeof v === "object" && !/\{(address|street|addressQ)\}/.test(JSON.stringify(v)) ? v : fill(v, address);
+}
+function fill<T>(v: T, address: string): T {
   if (typeof v === "string") return v.replaceAll("{addressQ}", encodeURIComponent(address)).replaceAll("{street}", address.split(",")[0]).replaceAll("{address}", address) as T;
-  if (Array.isArray(v)) return v.map((x) => fillAddress(x, address)) as T;
-  if (v && typeof v === "object") return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, fillAddress(x, address)])) as T;
+  if (Array.isArray(v)) return v.map((x) => fill(x, address)) as T;
+  if (v && typeof v === "object") return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, fill(x, address)])) as T;
   return v;
 }

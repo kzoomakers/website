@@ -1,3 +1,4 @@
+import { forget } from "./memo";
 import { conn, db } from "./db";
 import { logAudit } from "./store";
 
@@ -33,9 +34,11 @@ export async function putFinancial(year: number, filename: string, data: Buffer,
   const r = await (await conn()).query(
     `INSERT INTO financials (year, filename, data) VALUES ($1,$2,$3)
      ON CONFLICT (year) DO UPDATE SET filename = EXCLUDED.filename, data = EXCLUDED.data, replaced_at = now() RETURNING replaced_at`, [year, filename.slice(0, 200), data]);
+  forget("financials?");
   await logAudit(who, r.rows[0].replaced_at ? "financials.replace" : "financials.upload", `${year}: ${filename}`);
 }
 
 export async function deleteFinancial(year: number, who: string) {
+  forget("financials?");
   if ((await (await conn()).query("DELETE FROM financials WHERE year = $1", [year])).rowCount) await logAudit(who, "financials.delete", String(year));
 }

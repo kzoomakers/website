@@ -10,7 +10,7 @@ export { SITE };
 export const urlOf = (slug: string) => `${SITE}${slug === "index" ? "/" : "/" + slug}`;
 
 const EXTERNAL = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i; // http:, mailto:, tel:, //host
-const titleOf = (slug: string, d: any) => d?.root?.props?.title?.replace(/\s*\|.*$/, "") || slug.replace(/[-_\/]+/g, " ");
+const titleOf = (slug: string, props: any) => props?.title?.replace(/\s*\|.*$/, "") || slug.replace(/[-_\/]+/g, " ");
 
 // Slug patterns for pages the menu doesn't mention (from the old hand-written sitemap). First match wins.
 const GROUPS = [
@@ -26,8 +26,8 @@ export async function siteTree() {
   const d = db();
   if (d) {
     await d.ready;
-    const r = await d.pool.query("SELECT slug, data, updated_at, created_at AS created FROM pages");
-    for (const p of r.rows) if (!p.data?.root?.props?.bare) pages.set(p.slug, { title: titleOf(p.slug, p.data), at: p.updated_at, created: p.created, parent: p.data?.root?.props?.parent ?? "" });
+    const r = await d.pool.query("SELECT slug, data#>'{root,props}' AS props, updated_at, created_at AS created FROM pages");
+    for (const p of r.rows) if (!p.props?.bare) pages.set(p.slug, { title: titleOf(p.slug, p.props), at: p.updated_at, created: p.created, parent: p.props?.parent ?? "" });
   }
   const seen = new Set<string>();
   const walk = (items: MenuItem[]): Node[] => items.flatMap((i): Node[] => {

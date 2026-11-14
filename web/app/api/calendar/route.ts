@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 // Public: the calendar page's events (.ics).
 export async function GET() {
   const text = await getFeed();
-  if (text) return new NextResponse(text, { headers: { "content-type": "text/calendar; charset=utf-8" } });
+  if (text) return new NextResponse(text, { headers: { "content-type": "text/calendar; charset=utf-8", "cache-control": "public, max-age=300" } });
   return downAWhile() ? new NextResponse(DOWN_MSG, { status: 503 }) : new NextResponse("calendar unavailable", { status: 502 });
 }
 

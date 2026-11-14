@@ -8,6 +8,10 @@ import robotsSeed from "@/data/robots.json";
 import privacySeed from "@/data/privacy.json";
 import { seedHours, type Hours } from "./hours";
 import navbar from "@/data/globals/navbar.json";
+import { cache } from "react";
+import { memo, forget } from "./memo";
+
+const TTL = 30_000; // public-page settings: staff edits call forget(), other machines catch up within this
 
 // Slugs come from URLs: whitelist chars so odd URLs are just "not found".
 const SLUG_OK = /^[a-z0-9][a-z0-9_\-\/]*$/i;
@@ -17,11 +21,11 @@ export const slugOf = (segs?: string[]) => (segs?.length ? segs.join("/") : "ind
 
 
 /** null = no such page, or the site is not set up yet. */
-export async function getPage(slug: string): Promise<Data | null> {
+export const getPage = cache(async (slug: string): Promise<Data | null> => {
   if (!SLUG_OK.test(slug) || !db()) return null;
   const r = await (await conn()).query("SELECT data FROM pages WHERE slug = $1", [slug]);
   return r.rows[0]?.data ?? null;
-}
+});
 
 // Key-order-independent JSON, so "nothing changed" is detected even though jsonb reorders keys.
 const canon = (v: unknown): string => JSON.stringify(v, (_, x) => (x && typeof x === "object" && !Array.isArray(x) ? Object.fromEntries(Object.entries(x).sort(([p], [q]) => (p < q ? -1 : 1))) : x));
@@ -89,16 +93,16 @@ export type { MenuItem };
 // Seed menu = the migrated navbar.json (legacy entries with `items` are dropdowns, others links).
 const seed = (navbar.menuItems as any[]).map(function f(m): MenuItem { return { label: m.label, ...(m.items ? { items: m.items.map(f) } : { href: m.href }) }; });
 
-export async function getMenu(): Promise<MenuItem[]> {
+export const getMenu = (): Promise<MenuItem[]> => memo("menu", TTL, async () => {
   if (!db()) return seed;
   const r = await (await conn()).query("SELECT data FROM settings WHERE key = 'menu'");
   return r.rows[0]?.data ?? seed;
-}
+});
 
 /** The menu as visitors see it: "Financials" joins the Learn More dropdown only once a PDF is uploaded. */
 export async function getPublicMenu(): Promise<MenuItem[]> {
   const m = await getMenu();
-  if (!db() || !(await (await conn()).query("SELECT 1 FROM financials LIMIT 1")).rowCount) return m;
+  if (!db() || !(await memo("financials?", TTL, async () => (await (await conn()).query("SELECT 1 FROM financials LIMIT 1")).rowCount))) return m;
   return m.map((i) => i.label === "Learn More" && i.items ? { ...i, items: [...i.items, { label: "Financials", href: "/financials" }] } : i);
 }
 
@@ -110,6 +114,7 @@ export async function logAudit(who: string, action: string, target = "", data?: 
 export async function saveMenu(menu: MenuItem[], who: string, action = "menu.save", target = "") {
   await (await conn()).query(
     `INSERT INTO settings (key, data) VALUES ('menu', $1) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data`, [JSON.stringify(menu)]);
+  forget("menu");
   await logAudit(who, action, target, menu);
 }
 
@@ -223,15 +228,16 @@ export async function setCalUrl(url: string, who: string, action = "calendar.url
   await logAudit(who, action, `${target ? target + ": " : ""}changed from ${old} to ${url}`, { url });
 }
 
-export async function getHours(): Promise<Hours> {
+export const getHours = (): Promise<Hours> => memo("hours", TTL, async () => {
   if (!db()) return seedHours;
   const r = await (await conn()).query("SELECT data FROM settings WHERE key = 'hours'");
   return r.rows[0]?.data ?? seedHours;
-}
+});
 
 export async function saveHours(h: Hours, who: string, action = "hours.save", target = "") {
   await (await conn()).query(
     `INSERT INTO settings (key, data) VALUES ('hours', $1) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data`, [JSON.stringify(h)]);
+  forget("hours");
   await logAudit(who, action, target || "edited hours", h);
 }
 
@@ -261,16 +267,17 @@ export async function savePrivacy(text: string, who: string, action = "privacy.s
 
 export type Board = typeof boardSeed;
 
-export async function getBoard(): Promise<Board> {
+export const getBoard = (): Promise<Board> => memo("board", TTL, async () => {
   if (!db()) return boardSeed;
   const r = await (await conn()).query("SELECT data FROM settings WHERE key = 'board'");
   return r.rows[0]?.data ?? boardSeed;
-}
+});
 
 export async function saveBoard(b: Board, who: string, action = "board.save", target = "") {
   const old = await getBoard();
   await (await conn()).query(
     `INSERT INTO settings (key, data) VALUES ('board', $1) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data`, [JSON.stringify(b)]);
+  forget("board");
   const names = (x: Board) => x.members.map((m) => m.name);
   const was = names(old), now = names(b);
   const note = [
@@ -302,7 +309,8 @@ export async function revertSetting(prefix: string, id: number, who: string) {
 }
 
 /** Stored content of a guided page; null for slugs that are not guided. */
-export async function getGuided(slug: string): Promise<any> {
+export const getGuided = (slug: string): Promise<any> => memo("guided:" + slug, TTL, () => readGuided(slug));
+async function readGuided(slug: string): Promise<any> {
   if (!guidedDef(slug) || !db()) return null;
   const r = await (await conn()).query("SELECT data FROM settings WHERE key = $1", ["guided:" + slug]);
   // The Pricing plans are the membership classes (Admin > Setup), so they are read fresh every time.
@@ -322,6 +330,7 @@ export async function saveGuided(slug: string, data: any, who: string, action = 
   const old = (await getGuided(slug)) ?? {};
   await (await conn()).query(
     `INSERT INTO settings (key, data) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data`, ["guided:" + slug, JSON.stringify(data)]);
+  forget("guided:" + slug);
   const changed = def.fields.filter((f) => canon(old[f.key]) !== canon(data[f.key])).map((f) => f.label);
   await logAudit(who, action, target || (changed.length ? "edited " + changed.join(", ") : "no changes"), data);
   if (slug === "handbook") await import("./handbook").then((h) => h.recordChange(old, data, who)).catch((e) => console.error("Handbook change record:", e)); // never blocks the save

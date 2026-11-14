@@ -3,10 +3,12 @@ import { useEffect } from "react";
 
 // Legacy jQuery behaviour (dropdowns, slick, counters, hours). Injected AFTER hydration so slick's
 // DOM changes don't cause React hydration mismatches. async=false keeps execution in order.
-const SRC = [
+// Slick and Filterizr (about 70 KB) are loaded only on pages that have something for them; script.js calls both unconditionally, so they are stubbed when skipped.
+const SLICK = ".hero-slider, .testimonial-slider, .clients-logo-slider, .company-gallery", FILTR = ".filtr-container";
+const sources = () => [
   "plugins/jquery/jquery.min.js", "plugins/bootstrap/bootstrap.min.js", "plugins/parallax/jquery.parallax-1.1.3.js",
-  "plugins/lightbox2/js/lightbox.min.js", "plugins/slick/slick.min.js", "plugins/filterizr/jquery.filterizr.min.js",
-  "plugins/smooth-scroll/smooth-scroll.min.js", "dynamic/js/hours.js", "nav-extras.js", "js/script.js",
+  "plugins/lightbox2/js/lightbox.min.js", ...(document.querySelector(SLICK) ? ["plugins/slick/slick.min.js"] : []), ...(document.querySelector(FILTR) ? ["plugins/filterizr/jquery.filterizr.min.js"] : []),
+  "plugins/smooth-scroll/smooth-scroll.min.js", "dynamic/js/hours.js", "nav-extras.js", "stub-plugins.js", "js/script.js",
 ];
 const abs = (s: string) => (/^(https?:)?\/\//.test(s) ? s : "/" + s.replace(/^\//, ""));
 
@@ -32,7 +34,7 @@ export default function LegacyScripts({ extra = [], inline = [], bare = false }:
         added.push(el);
       });
     };
-    const srcs = [...(bare ? [] : SRC), ...extra];
+    const srcs = [...(bare ? [] : sources()), ...extra];
     const els = srcs.map((s) => {
       const el = document.createElement("script");
       el.src = abs(s); el.async = false;

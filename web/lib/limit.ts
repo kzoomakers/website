@@ -5,18 +5,17 @@ import { db } from "./db";
 // Each key is locked for the length of its check-and-insert, so a burst of parallel requests can't overshoot `max`.
 const seen = new Map<string, number[]>();
 const pg = async () => { const d = db(); if (!d) return null; await d.ready; return d.pool; };
-const WINDOW = "key = $1 AND at > now() - make_interval(secs => $2)";
-/** Runs `fn` in a transaction that holds a lock on `key`, so two requests for the same key take turns. */
-async function exclusive<T>(p: NonNullable<Awaited<ReturnType<typeof pg>>>, key: string, fn: (q: (sql: string, args: unknown[]) => Promise<any>) => Promise<T>): Promise<T> {
+/** Locks `key` and runs `body` in one transaction, sent as ONE multi-statement message: one round trip instead of five, and each statement still gets a fresh snapshot after the lock,
+ *  so two requests for the same key take turns and can't overshoot. `body` gets a quoting helper; every value in it must go through it. Returns the results of body's statements. */
+async function exclusive(p: NonNullable<Awaited<ReturnType<typeof pg>>>, key: string, body: (lit: (v: string | number) => string) => string): Promise<any[]> {
   const c = await p.connect();
   try {
-    await c.query("BEGIN");
-    await c.query("SELECT pg_advisory_xact_lock(hashtext($1))", ["rate:" + key]);
-    const r = await fn((sql, args) => c.query(sql, args));
-    await c.query("COMMIT");
-    return r;
+    const lit = (v: string | number) => c.escapeLiteral(String(v));
+    const r: any[] = (await c.query(`BEGIN; SELECT pg_advisory_xact_lock(hashtext(${lit("rate:" + key)})); ${body(lit)} COMMIT`)) as any;
+    return r.slice(2, -1);
   } catch (e) { await c.query("ROLLBACK").catch(() => {}); throw e; } finally { c.release(); }
 }
+const win = (lit: (v: string | number) => string, key: string, windowMs: number) => `key = ${lit(key)} AND at > now() - make_interval(secs => ${lit(Number(windowMs) / 1000)})`;
 const tidy = (p: NonNullable<Awaited<ReturnType<typeof pg>>>) => { if (Math.random() < 0.01) void p.query("DELETE FROM rate_hits WHERE at < now() - interval '1 day'").catch(() => {}); };
 
 /** Counts one hit on `key`; false once there have been more than `max` in the last `windowMs`. */
@@ -25,11 +24,8 @@ export async function hit(key: string, max: number, windowMs: number, strict = f
     const p = await pg();
     if (p) {
       tidy(p);
-      return await exclusive(p, key, async (q) => {
-        const n = (await q(`SELECT count(*)::int n FROM rate_hits WHERE ${WINDOW}`, [key, windowMs / 1000])).rows[0].n;
-        await q("INSERT INTO rate_hits (key) VALUES ($1)", [key]);
-        return n < max;
-      });
+      const [r] = await exclusive(p, key, (lit) => `SELECT count(*)::int n FROM rate_hits WHERE ${win(lit, key, windowMs)}; INSERT INTO rate_hits (key) VALUES (${lit(key)});`);
+      return r.rows[0].n < max;
     }
   } catch (e) { console.error("rate limit:", e); return !strict; }
   const now = Date.now(), list = (seen.get(key) ?? []).filter((t) => now - t < windowMs);
@@ -50,11 +46,9 @@ export async function spend(key: string, max: number, windowMs: number) {
     const p = await pg();
     if (p) {
       tidy(p);
-      await exclusive(p, key, async (q) => {
-        const r = (await q(`SELECT count(*)::int n, min(at) oldest FROM rate_hits WHERE ${WINDOW}`, [key, windowMs / 1000])).rows[0];
-        n = r.n; first = r.oldest ? +r.oldest : now;
-        if (n < max) await q("INSERT INTO rate_hits (key) VALUES ($1)", [key]);
-      });
+      const [r] = await exclusive(p, key, (lit) => `SELECT count(*)::int n, min(at) oldest FROM rate_hits WHERE ${win(lit, key, windowMs)};
+        INSERT INTO rate_hits (key) SELECT ${lit(key)} WHERE (SELECT count(*) FROM rate_hits WHERE ${win(lit, key, windowMs)}) < ${lit(Number(max))};`);
+      n = r.rows[0].n; first = r.rows[0].oldest ? +r.rows[0].oldest : now;
     } else {
       const list = (seen.get(key) ?? []).filter((t) => now - t < windowMs);
       n = list.length; first = list[0] ?? now;

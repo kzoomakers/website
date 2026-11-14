@@ -138,14 +138,17 @@ export async function query(f: Filter) {
     await c.query("SET statement_timeout = 25000");
     const { sql, ps } = where(f);
     const unit = ["second", "minute", "hour", "day"].includes(f.unit ?? "") ? f.unit : "hour";
-    const top = (col: string) => c.query(`SELECT ${col} v, count(*)::int n FROM ${TABLE} ${sql} GROUP BY 1 ORDER BY 2 DESC LIMIT 15`, ps);
-    const [rows, total, buckets, paths, ips, users, uas, referers, methods, hosts, statuses] = await Promise.all([
-      c.query(`SELECT id, at, ip, "user", method, host, path, query, ua, referer, status FROM ${TABLE} ${sql} ORDER BY at DESC, id DESC LIMIT 100 OFFSET ${Math.max(0, Math.floor(Number(f.offset)) || 0)}`, ps),
-      c.query(`SELECT count(*)::int n, count(DISTINCT ip)::int ips, count(DISTINCT NULLIF("user", ''))::int users FROM ${TABLE} ${sql}`, ps),
-      c.query(`SELECT date_trunc('${unit}', at) t, count(*)::int n, count(*) FILTER (WHERE status BETWEEN 200 AND 299)::int s2, count(*) FILTER (WHERE status BETWEEN 300 AND 399)::int s3, count(*) FILTER (WHERE status BETWEEN 400 AND 499)::int s4, count(*) FILTER (WHERE status >= 500)::int s5 FROM ${TABLE} ${sql} GROUP BY 1 ORDER BY 1`, ps),
-      top("path"), top("ip"), top("nullif(\"user\", '')"), top("ua"), top("nullif(referer, '')"), top("method"), top("host"), top("nullif(status, 0)"),
+    // One pass over the filtered rows for every number and top list (a single connection runs one query at a time, so 11 separate scans took 11 turns).
+    const top = (col: string) => `(SELECT coalesce(jsonb_agg(x), '[]') FROM (SELECT ${col} v, count(*)::int n FROM f GROUP BY 1 ORDER BY 2 DESC LIMIT 15) x)`;
+    const [rows, stats] = await Promise.all([
+      (await pool()).query(`SELECT id, at, ip, "user", method, host, path, query, ua, referer, status FROM ${TABLE} ${sql} ORDER BY at DESC, id DESC LIMIT 100 OFFSET ${Math.max(0, Math.floor(Number(f.offset)) || 0)}`, ps),
+      c.query(`WITH f AS MATERIALIZED (SELECT at, ip, "user" u, method, host, path, ua, referer, status FROM ${TABLE} ${sql})
+        SELECT (SELECT count(*)::int FROM f) n, (SELECT count(DISTINCT ip)::int FROM f) ips, (SELECT count(DISTINCT NULLIF(u, ''))::int FROM f) users,
+          (SELECT coalesce(jsonb_agg(b ORDER BY t), '[]') FROM (SELECT date_trunc('${unit}', at) t, count(*)::int n, count(*) FILTER (WHERE status BETWEEN 200 AND 299)::int s2, count(*) FILTER (WHERE status BETWEEN 300 AND 399)::int s3, count(*) FILTER (WHERE status BETWEEN 400 AND 499)::int s4, count(*) FILTER (WHERE status >= 500)::int s5 FROM f GROUP BY 1) b) buckets,
+          ${top("path")} paths, ${top("ip")} ips_top, ${top("NULLIF(u, '')")} users_top, ${top("ua")} uas, ${top("NULLIF(referer, '')")} referers, ${top("method")} methods, ${top("host")} hosts, ${top("NULLIF(status, 0)")} statuses`, ps),
     ]);
-    return { rows: rows.rows, total: total.rows[0].n, uniq: { ips: total.rows[0].ips, users: total.rows[0].users }, buckets: buckets.rows, top: { path: paths.rows, ip: ips.rows, user: users.rows, ua: uas.rows, referer: referers.rows, method: methods.rows, host: hosts.rows, status: statuses.rows } };
+    const t = stats.rows[0];
+    return { rows: rows.rows, total: t.n, uniq: { ips: t.ips, users: t.users }, buckets: t.buckets, top: { path: t.paths, ip: t.ips_top, user: t.users_top, ua: t.uas, referer: t.referers, method: t.methods, host: t.hosts, status: t.statuses } };
   } finally {
     await c.query("RESET statement_timeout").catch(() => {});
     c.release();
