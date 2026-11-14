@@ -21,6 +21,8 @@ export async function register() {
     const { runAlerts, runDigest } = await import("./lib/ga-notify");
     job(7351915, 3 * 3600_000, runAlerts); // spike/drop notice to the google-analytics-notices topic (once a day at most)
     job(7351916, 3600_000, runDigest); // weekly email summary, Mondays from 8am Eastern, if switched on
+    const { sendReminders } = await import("./lib/id-card");
+    job(7351920, 6 * 3600_000, async () => { const u = (await getMailCfg().catch(() => null))?.siteUrl || process.env.SITE_URL; if (u) await sendReminders(u.replace(/\/+$/, "")); }); // "your ID is expiring" nudges, at most weekly per member
     const { runGuestMail } = await import("./lib/guests");
     job(7351917, 3600_000, runGuestMail); // guest agreement update emails (a slow trickle) and scheduled guest deletions
     const { prune } = await import("./lib/retention");

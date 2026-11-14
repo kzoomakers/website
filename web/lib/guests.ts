@@ -49,6 +49,7 @@ const VIEW = `SELECT g.id, g.host_id, g.first_name, g.last_name, g.email, g.phon
   EXISTS (SELECT 1 FROM guest_contacts c WHERE c.guest_id = g.id) AS d_contacts,
   (g.retention_ack_at IS NOT NULL AND g.minor IS NOT NULL AND s.id IS NOT NULL AND s.version_id >= COALESCE((SELECT max(id) FROM waiver_versions WHERE kind = 'guest' AND mandatory), 0)) AS d_agreement,
   EXISTS (SELECT 1 FROM guest_ids i WHERE i.guest_id = g.id) AS has_photo,
+  EXISTS (SELECT 1 FROM guest_ids i WHERE i.guest_id = g.id AND (i.expires_on IS NULL OR i.expires_on >= (now() AT TIME ZONE 'America/Detroit')::date)) AS id_ok,
   s.id IS NOT NULL AS ever_signed, s.completed_at AS signed_at,
   (SELECT max(at) FROM guest_visits v WHERE v.guest_id = g.id) AS last_visit
   FROM guests g JOIN site_users h ON h.id = g.host_id
@@ -57,11 +58,11 @@ export type Step = "details" | "emergency" | "agreement" | "photo";
 export const STEPS: Step[] = ["details", "emergency", "agreement", "photo"];
 
 function shape(r: any, cfg: GuestCfg) {
-  const done: Record<Step, boolean> = { details: r.d_details, emergency: r.d_contacts, agreement: r.d_agreement, photo: r.has_photo };
+  const done: Record<Step, boolean> = { details: r.d_details, emergency: r.d_contacts, agreement: r.d_agreement, photo: r.id_ok }; // an expired ID counts as missing: the guest updates it at their next check-in (no approval needed)
   const next = STEPS.find((s) => !done[s]) ?? null; // first unfinished step; null = ready
   const { until, deletable } = retention(r.last_visit, r.signed_at, r.ever_signed, cfg.retentionYears);
   return { id: r.id as number, host_id: r.host_id as number, host_name: r.host_name as string, first_name: r.first_name, last_name: r.last_name, email: r.email, phone: r.phone, address: r.address, zip: r.zip, state: r.state,
-    minor: r.minor as boolean | null, guardian_name: r.guardian_name, done, next, ready: next === null, has_photo: r.has_photo as boolean, last_visit: r.last_visit as string | null,
+    minor: r.minor as boolean | null, guardian_name: r.guardian_name, done, next, ready: next === null, has_photo: r.has_photo as boolean, id_expired: r.has_photo && !r.id_ok as boolean, last_visit: r.last_visit as string | null,
     ever_signed: r.ever_signed as boolean, retain_until: until && until.toISOString(), deletable, delete_requested_at: r.delete_requested_at as string | null,
     needs_resign: r.ever_signed && !r.d_agreement && r.retention_ack_at !== null };
 }

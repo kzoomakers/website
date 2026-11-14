@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import Envelope from "./envelope";
 import Collapse from "../admin/collapse";
 
-const MENU = [["/members", "🏠", "Home"], ["/members/waiver", "📝", "Liability Waiver"], ["/members/handbook", "📖", "Handbook"], ["/members/directory", "🔎", "Member directory"], ["/members/classes", "🎓", "Classes"], ["/members/makerfavor", "🧹", "MakerFavor™"], ["/members/profile", "👤", "My profile"], ["/members/inbox", "✉️", "Inbox"], ["/members/notifications", "📱", "Phone alerts"], ["/account", "⚙️", "My account"]] as const;
+const MENU = [["/members", "🏠", "Home"], ["/members/waiver", "📝", "Liability Waiver"], ["/members/handbook", "📖", "Handbook"], ["/members/directory", "🔎", "Member directory"], ["/members/classes", "🎓", "Classes"], ["/members/makerfavor", "🧹", "MakerFavor™"], ["/members/id", "🪪", "ID"], ["/members/profile", "👤", "My profile"], ["/members/inbox", "✉️", "Inbox"], ["/members/notifications", "📱", "Phone alerts"], ["/account", "⚙️", "My account"]] as const;
 
 // Same bar and sidebar as the admin area (styles come from admin's webmaster.css), with the members links.
 export function Bar({ signedIn }: { signedIn: boolean }) {

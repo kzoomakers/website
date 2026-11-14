@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { actor, editingAllowed } from "@/lib/guard";
 import { viewId } from "@/lib/onboarding";
+import { viewSide } from "@/lib/id-card";
 import { signedKind, signedPdf } from "@/lib/sign";
 import { buildAgreementPdf } from "@/lib/sign-pdf";
 import { getVersion } from "@/lib/waiver";
@@ -14,6 +15,11 @@ export async function GET(req: Request) {
     if (!(await editingAllowed("crm", "write", "people"))) return new NextResponse("not found", { status: 404 });
     const img = await viewId(Number(q.get("id")), await actor());
     return img ? new NextResponse(new Uint8Array(img), { headers: { ...hdr, "content-type": img.subarray(8, 12).toString("latin1") === "WEBP" ? "image/webp" : "image/jpeg", "content-disposition": "inline" } }) : new NextResponse("none on file", { status: 404 });
+  }
+  if (q.get("renewal")) { // ?renewal=<id>&side=new|old: the two pictures compared on the ID renewals page
+    if (!(await editingAllowed("crm", "write", "id-renewals"))) return new NextResponse("not found", { status: 404 });
+    const img = await viewSide(Number(q.get("renewal")), q.get("side") ?? "new", await actor());
+    return img ? new NextResponse(new Uint8Array(img), { headers: { ...hdr, "content-type": "image/webp", "content-disposition": "inline" } }) : new NextResponse("none on file", { status: 404 });
   }
   if (q.get("ver")) { // a blank copy of one agreement version, for legal review or printing
     if (!(await editingAllowed("crm", "read", ["waiver", "guest-agreement"]))) return new NextResponse("not found", { status: 404 });
