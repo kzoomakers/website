@@ -9,5 +9,5 @@ export async function GET(req: Request) {
   const u = await currentApplicant().catch(() => null);
   if (!u) return new NextResponse("Sign in first.", { status: 401 });
   const f = await myPdf(u.id, Number(new URL(req.url).searchParams.get("doc")));
-  return f ? new NextResponse(new Uint8Array(f.pdf), { headers: { "content-type": "application/pdf", "content-disposition": `attachment; filename="${f.title.replace(/[^\w.-]+/g, "_").slice(0, 60)}.pdf"`, "cache-control": "no-store" } }) : new NextResponse("not found", { status: 404 });
+  return f ? new NextResponse(new Uint8Array(f.pdf), { headers: { "content-type": "application/pdf", "content-disposition": `${new URL(req.url).searchParams.has("inline") ? "inline" : "attachment"}; filename="${f.title.replace(/[^\w.-]+/g, "_").slice(0, 60)}.pdf"`, "cache-control": "no-store" } }) : new NextResponse("not found", { status: 404 });
 }
