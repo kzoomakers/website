@@ -5,6 +5,10 @@ export async function register() {
     const { withLock } = await import("./lib/db");
     // A second machine skips a job another one is running, so scaling out can't double-send mail or reminders.
     const job = (id: number, ms: number, fn: () => Promise<unknown>) => setInterval(() => withLock(id, fn).catch(() => {}), ms);
+    const { warmSitemap } = await import("./lib/sitemap");
+    const warm = () => warmSitemap().catch(() => {}); // sitemap page + sitemap.xml are served from memory
+    warm();
+    setInterval(warm, 2.5 * 3600_000);
     const { tick } = await import("./lib/mail");
     job(7351911, 60_000, tick);
     const { checkStale, checkReminders, sendRejectedSummary } = await import("./lib/tours");
