@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { deletedPages, deletePage, getPage, listPages, pageExists, pageHistory, pageRevision, restoreMenuFor, savePage } from "@/lib/store";
-import { siteTree } from "@/lib/sitemap";
+import { siteTreeFresh } from "@/lib/sitemap";
 import { actor, editingAllowed, levelOf, me } from "@/lib/guard";
 import { execParts } from "@/lib/page-exec";
 
@@ -17,7 +17,7 @@ export async function GET(req: Request) {
   if (!(await editingAllowed("webmaster", "read", "pages"))) return off();
   const q = new URL(req.url).searchParams;
   if (q.has("deleted")) return NextResponse.json(await deletedPages());
-  if (q.has("tree")) return NextResponse.json((await siteTree()).tree);
+  if (q.has("tree")) return NextResponse.json((await siteTreeFresh()).tree);
   if (q.has("history")) return NextResponse.json(await pageHistory(q.get("history")!));
   if (q.has("rev")) {
     const r = await pageRevision(Number(q.get("rev")));
