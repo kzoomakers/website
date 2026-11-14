@@ -1,5 +1,4 @@
 import { readFileSync } from "fs";
-import { webcrypto } from "crypto";
 import type { Signer } from "@libpdf/core";
 
 // Cryptographic (PAdES / CAdES-detached) signature over the finished PDF (same engine Documenso uses). Adobe and other readers validate it and flag any later edit.
@@ -34,7 +33,7 @@ export const sealConfigured = async () => !!(await sealInfo());
 export async function buildSigner(s: Stored, open: (b: Buffer) => Buffer): Promise<Signer> {
   const { P12Signer, CryptoKeySigner } = await import("@libpdf/core");
   if (s.kind === "p12") return P12Signer.create(open(unb64(s.p12)), open(unb64(s.pass)).toString(), { buildChain: false });
-  const key = await webcrypto.subtle.importKey("pkcs8", open(unb64(s.key)), { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["sign"]);
+  const key = await crypto.subtle.importKey("pkcs8", new Uint8Array(open(unb64(s.key))), { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["sign"]);
   return new CryptoKeySigner(key, unb64(s.cert), "RSA", "RSASSA-PKCS1-v1_5");
 }
 
@@ -73,10 +72,10 @@ export const removeSeal = () => save(null);
 /** A 10-year self-signed RSA certificate (Adobe shows "unknown signer" but still proves the file wasn't altered). */
 export async function newCert(cn: string) {
   const asn1js = await import("asn1js"), pki = await import("pkijs");
-  const { privateKey, publicKey } = await webcrypto.subtle.generateKey({ name: "RSASSA-PKCS1-v1_5", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" }, true, ["sign", "verify"]);
+  const { privateKey, publicKey } = await crypto.subtle.generateKey({ name: "RSASSA-PKCS1-v1_5", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" }, true, ["sign", "verify"]);
   const cert = new pki.Certificate(), now = new Date(), end = new Date(now.getTime() + 10 * 365 * 864e5);
   cert.version = 2;
-  const serial = webcrypto.getRandomValues(new Uint8Array(8));
+  const serial = crypto.getRandomValues(new Uint8Array(8));
   serial[0] = (serial[0] & 0x7f) || 1; // top bit set would make the DER integer negative (RFC 5280 forbids); a zero first byte is a non-minimal encoding strict OpenSSL rejects (1 in 128)
   cert.serialNumber = new asn1js.Integer({ valueHex: serial.buffer as ArrayBuffer });
   for (const t of [cert.issuer, cert.subject]) t.typesAndValues.push(new pki.AttributeTypeAndValue({ type: "2.5.4.3", value: new asn1js.Utf8String({ value: cn }) }));
@@ -84,7 +83,7 @@ export async function newCert(cn: string) {
   cert.extensions = [new pki.Extension({ extnID: "2.5.29.15", critical: true, extnValue: new asn1js.BitString({ valueHex: new Uint8Array([0x80]).buffer, unusedBits: 7 }).toBER() })]; // keyUsage: digitalSignature
   await cert.subjectPublicKeyInfo.importKey(publicKey);
   await cert.sign(privateKey, "SHA-256");
-  return { key: Buffer.from(await webcrypto.subtle.exportKey("pkcs8", privateKey)), cert: Buffer.from(cert.toSchema(true).toBER()), expires: end.toISOString() };
+  return { key: Buffer.from(await crypto.subtle.exportKey("pkcs8", privateKey)), cert: Buffer.from(cert.toSchema(true).toBER()), expires: end.toISOString() };
 }
 
 export const packKey = (c: { key: Buffer; cert: Buffer; expires: string }, name: string, sealIt: (b: Buffer) => Buffer): Stored =>
