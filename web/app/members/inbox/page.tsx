@@ -2,6 +2,7 @@ import MembersShell from "../shell";
 import { listNotes } from "@/lib/notifications";
 import MarkRead from "./mark-read";
 import { conversations } from "@/lib/crm";
+import { Side } from "./side";
 import { ago } from "../../admin/webmaster/ago";
 
 export const dynamic = "force-dynamic";
@@ -18,18 +19,7 @@ export default function Inbox() {
         const unread = notes.filter((n) => !n.read).map((n) => n.id);
         return (<>
           <MarkRead ids={unread} />
-          {convos.length > 0 && <div className="card">
-            {convos.map((c) => (
-              <div className="row" key={c.id} style={{ alignItems: "flex-start" }}>
-                <span aria-hidden style={{ color: c.unread ? "#d97706" : "var(--mut)" }}>{c.unread ? "●" : "✉"}</span>
-                <div className="grow" style={{ whiteSpace: "normal" }}>
-                  <a href={`/members/inbox/${c.id}`}><b>{c.name}</b>{c.unread > 0 && <> ({c.unread} new)</>}</a>
-                  <div className="sub" style={{ margin: "2px 0 0" }}>{c.mine ? "You: " : ""}{c.body.slice(0, 120)}</div>
-                </div>
-                <span className="tag" title={new Date(c.at).toLocaleString()}>{ago(c.at)}</span>
-              </div>
-            ))}
-          </div>}
+          {convos.length > 0 && <div className="ch-wrap" style={{ marginBottom: 16 }}><Side convos={convos} /><div className="ch-main" style={{ display: "grid", placeItems: "center", color: "#8a8f94", padding: 24, minHeight: 120 }}>Choose a conversation to read it and reply.</div></div>}
           {notes.length ? (
           <div className="card">
             {notes.map((n) => (

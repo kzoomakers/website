@@ -6,6 +6,7 @@ import { GuideBrowser } from "./guide-browser";
 import { DonationNeeds } from "./donation-needs";
 import HandbookNotify from "./handbook-notify";
 import { ReviewForm } from "./review-form";
+import { DonationForm } from "./donation-form";
 import { ContactForm } from "./contact-form";
 import { SITE } from "@/lib/site";
 import "./handbook-print.css";
@@ -467,6 +468,7 @@ function Donate({ d }: { d: any }) {
         {d.contactLabel && <p><strong><a href={url(d.contactHref)}>{d.contactLabel}</a></strong></p>}
         <h3>{d.needsTitle}</h3><p>{d.needsText}</p><div className="border" />
       </div></div></div>
+      <DonationForm />
       <DonationNeeds items={d.items} statLabel={d.statLabel} />
     </div></section>
   );

@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import MembersShell from "../../shell";
-import { thread } from "@/lib/crm";
-import Reply from "./reply";
+import { conversations, thread } from "@/lib/crm";
+import Chat from "./reply";
+import { Side } from "../side";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Conversation | Kzoo Makers", robots: { index: false } };
@@ -11,18 +12,16 @@ export default async function Conversation({ params }: { params: Promise<{ id: s
   return (
     <MembersShell title="Conversation" path={"/members/inbox/" + id}>
       {async (u) => {
-        const t = await thread(u.id, id);
+        const [t, convos] = await Promise.all([thread(u.id, id), conversations(u.id)]);
         if (!t) notFound();
+        const items = t.messages.map((m) => ({ id: m.id, mine: m.mine, name: t.name, body: m.body, at: String(m.at) }));
         return (
-          <div style={{ display: "grid", gap: 12, maxWidth: 620 }}>
-            <p style={{ margin: 0 }}><a href="/members/inbox">← Inbox</a> · with <b>{t.name}</b></p>
-            {t.messages.map((m) => (
-              <div key={m.id} style={{ justifySelf: m.mine ? "end" : "start", maxWidth: "85%", background: m.mine ? "#e8f0fe" : "#f1f1f1", color: "#1a1a1a", borderRadius: 10, padding: "8px 12px" }}>
-                <div style={{ whiteSpace: "pre-wrap" }}>{m.body}</div>
-                <small style={{ color: "#666" }}>{m.mine ? "You" : t.name} · {new Date(m.at).toLocaleString()}</small>
-              </div>
-            ))}
-            {t.canReply ? <Reply to={id} /> : <p className="sub">{t.name} isn't in the directory right now, so you can't reply.</p>}
+          <div className="ch-wrap">
+            <Side convos={convos} current={id} hideSmall />
+            <div style={{ minWidth: 0 }}>
+              <p className="sub" style={{ margin: 0, padding: "8px 14px", background: "#fff" }}>{"← "}<a href="/members/inbox">Inbox</a></p>
+              <Chat to={id} name={t.name} items={items} canReply={t.canReply} />
+            </div>
           </div>
         );
       }}
