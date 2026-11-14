@@ -143,6 +143,9 @@
 .adm-links{display:contents}.adm-burger{display:none}
 .adm table{max-width:100%}.adm pre{overflow-x:auto;max-width:100%}.adm img{max-width:100%}
 
+/* Overscroll/rubber-band area shows the html background; match the admin page colors instead of white */
+html:has(.adm-root){background:#f5f6f8}
+@media (prefers-color-scheme:dark){html:has(.adm-root){background:#111316}}
 @property --bb{syntax:"<angle>";inherits:false;initial-value:0deg}
 @keyframes adm-beam{to{--bb:360deg}}
 /* Phones: full-bleed page, no decorative frame/ribbon/bevels, scrolling section tabs, 44px touch targets, 16px inputs (no iOS zoom) */
