@@ -150,7 +150,7 @@
   .adm{min-height:100vh;min-height:100dvh}
   .adm-ribbon,.adm-side::after,.adm-top::after{display:none!important}
   /* The 8px body margin shows white on phones: fill it with a red border beam (desktop keeps the bevel frame) */
-  .adm-frame{border:8px solid transparent!important;background:conic-gradient(from var(--bb),transparent 0 65%,#7a0f0f 80%,#ff3b3b 95%,#ffd0d0) border-box,#1a0808 border-box;-webkit-mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0) border-box;-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0) border-box;mask-composite:exclude;animation:adm-beam 5s linear infinite}
+  .adm-frame{border:8px solid transparent!important;background:conic-gradient(from var(--bb),transparent 0 65%,#7a0f0f 80%,#ff3b3b 95%,#ffd0d0) border-box,#1a0808 border-box;-webkit-mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0) border-box;-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0) border-box;mask-composite:exclude;animation:adm-beam 100s linear infinite}
   .adm-frame svg{display:none}
   .adm-body{grid-template-columns:minmax(0,1fr)!important;margin-top:0;min-height:0}
   .adm-top{top:0;gap:8px;padding:0 8px 0 12px;height:52px;border-bottom:1px solid var(--line)}
