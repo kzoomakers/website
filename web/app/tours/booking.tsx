@@ -9,7 +9,6 @@ const time = (t: string) => new Date(`2000-01-01T${t}`).toLocaleTimeString("en-U
 const CSS = `.tb label{display:block;margin-bottom:14px;font-weight:600}.tb input:not([type=checkbox]),.tb select,.tb textarea{display:block;width:100%;margin-top:6px;padding:10px 12px;border:1px solid #d5d9de;border-radius:8px;font:inherit}
 .tb .tb-slots{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 22px}.tb .tb-slots button{padding:8px 14px;border:1px solid #f9b234;border-radius:8px;background:#fff;cursor:pointer;font:inherit}.tb .tb-slots button:hover{background:#fff6e0}
 .tb .tb-areas label{display:inline-block;font-weight:400;margin-right:16px}.tb .tb-hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}.tb .tb-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 14px}.tb .tb-err{color:#b3261e}
-.tb .tb-pause{margin:0 0 22px;padding:14px 18px;background:#fff6e0;border:1px solid #f9b234;border-left-width:5px;border-radius:10px;line-height:1.5}.tb .tb-pause p{margin:0}
 .tb .tb-fin{display:flex;gap:34px;align-items:center;padding:28px 32px 28px 26px;background:linear-gradient(135deg,#fff6e0,#fdf3d8 60%,#fbe6b4);border:1px solid #f9b234;border-left-width:6px;border-radius:16px}
 .tb .tb-man{flex:0 0 230px;width:230px;height:260px;padding:0;border:0;border-radius:12px;overflow:hidden;cursor:zoom-in;background:none;box-shadow:0 8px 22px rgba(120,80,0,.28);transform:rotate(-2deg);transition:transform .2s,box-shadow .2s}.tb .tb-man:hover,.tb .tb-man:focus-visible{transform:rotate(0) scale(1.03);box-shadow:0 12px 28px rgba(120,80,0,.34)}.tb .tb-man img{display:block;width:100%;height:100%;object-fit:cover;object-position:top}
 .tb .tb-fin h2{margin:6px 0 10px;font-size:2em;line-height:1.15}.tb .tb-chip{display:inline-block;padding:4px 12px;border-radius:99px;background:#f9b234;color:#3b2a00;font-size:.8em;font-weight:700;letter-spacing:.06em;text-transform:uppercase}.tb .tb-fin p{margin:0 0 10px;line-height:1.55;font-size:1.05em}.tb .tb-why{padding:10px 14px;border-left:3px solid #f9b234;background:rgba(255,255,255,.55);border-radius:0 8px 8px 0;font-style:italic}
@@ -84,7 +83,6 @@ export default function Booking() {
       <style>{CSS}</style>
       {!pick && (ask || !days.length) ? (
         <form onSubmit={sendReq}>
-          {data.pause && <div className="tb-pause" role="status"><p><strong>{data.pause}</strong></p></div>}
           <p>{data.pause ? "" : days.length ? "Can't find a time that works? Tell us a bit about yourself and a volunteer will contact you with some different dates." : "Tell us a bit about yourself and a volunteer will email you some dates that work for them. You pick the one you like."}</p>
           {details}
           {err && <p className="tb-err" role="alert">{err}</p>}
