@@ -7,7 +7,6 @@ import { listPosts } from "@/lib/blog";
 import { siteTree } from "@/lib/sitemap";
 import { canonicalOf, jsonLd, ldScript } from "@/lib/aiseo";
 import { SITE } from "@/lib/sitemap";
-import { getPause } from "@/lib/tours-notify";
 import StyledMap from "@/components/styled-map";
 import { mapsKey } from "@/lib/maps-key";
 import LegacyScripts from "@/components/legacy-scripts";
@@ -34,12 +33,11 @@ export default async function Page({ params }: P) {
   const bodyClass = ((data.root?.props as any)?.bodyClass ?? "").replace(/[^\w\- ]/g, "");
   const rp: any = data.root?.props ?? {};
   const bare = !!rp.bare;
-  const [pause, tree, rev] = await Promise.all([!bare && home ? getPause() : null, slug === "sitemap" ? siteTree() : null, withRev(slug, guided0)]);
+  const [tree, rev] = await Promise.all([slug === "sitemap" ? siteTree() : null, withRev(slug, guided0)]);
   const refresh = rp.refresh, mapKey = slug === "contact" ? await mapsKey() : ""; // the contact page sits on a pale map of our address
   return (
     <>
       {!bare && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldScript(jsonLd(slug, data, contact, SITE)) }} />}
-      {pause?.paused && <div role="status" style={{ background: "#fff6e0", borderBottom: "1px solid #f9b234", padding: "10px 16px", textAlign: "center", position: "relative", zIndex: 1000 }}>{pause.message} <a href="/tours">Join the tour queue</a></div>}
       {refresh && <meta httpEquiv="refresh" content={refresh} />}
       {/* Inline script runs during parse, so the body class is set before first paint (no flash). */}
       {bodyClass && <script dangerouslySetInnerHTML={{ __html: `document.body.className+=" ${bodyClass}"` }} />}

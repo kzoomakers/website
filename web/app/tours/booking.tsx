@@ -8,7 +8,8 @@ const day = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("en-US",
 const time = (t: string) => new Date(`2000-01-01T${t}`).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 const CSS = `.tb label{display:block;margin-bottom:14px;font-weight:600}.tb input:not([type=checkbox]),.tb select,.tb textarea{display:block;width:100%;margin-top:6px;padding:10px 12px;border:1px solid #d5d9de;border-radius:8px;font:inherit}
 .tb .tb-slots{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 22px}.tb .tb-slots button{padding:8px 14px;border:1px solid #f9b234;border-radius:8px;background:#fff;cursor:pointer;font:inherit}.tb .tb-slots button:hover{background:#fff6e0}
-.tb .tb-areas label{display:inline-block;font-weight:400;margin-right:16px}.tb .tb-hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}.tb .tb-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 14px}.tb .tb-err{color:#b3261e}`;
+.tb .tb-areas label{display:inline-block;font-weight:400;margin-right:16px}.tb .tb-hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}.tb .tb-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 14px}.tb .tb-err{color:#b3261e}
+.tb .tb-pause{display:flex;gap:12px;align-items:flex-start;margin:0 0 22px;padding:14px 18px;background:#fff6e0;border:1px solid #f9b234;border-left-width:5px;border-radius:10px}.tb .tb-pause span{font-size:1.2em;line-height:1.4}.tb .tb-pause p{margin:0;line-height:1.5}`;
 
 const fields = (f: FormData) => ({ first: f.get("first"), last: f.get("last"), email: f.get("email"), phone: f.get("phone"), zip: f.get("zip"), contact: f.get("contact"), heard: f.get("heard"), notes: f.get("notes"), website: f.get("website"), captcha: f.get("g-recaptcha-response"), screen: SCREEN(), areas: f.getAll("areas") });
 
@@ -57,7 +58,7 @@ export default function Booking() {
       <style>{CSS}</style>
       {!pick && (ask || !days.length) ? (
         <form onSubmit={sendReq}>
-          {data.pause && <p role="status"><strong>{data.pause}</strong></p>}
+          {data.pause && <div className="tb-pause" role="status"><span aria-hidden>⏸</span><p>{data.pause}</p></div>}
           <p>{data.pause ? "" : days.length ? "Can't find a time that works? Tell us a bit about yourself and a volunteer will contact you with some different dates." : "Tell us a bit about yourself and a volunteer will email you some dates that work for them. You pick the one you like."}</p>
           {details}
           {err && <p className="tb-err" role="alert">{err}</p>}
