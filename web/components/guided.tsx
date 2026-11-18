@@ -10,6 +10,7 @@ import { DonationForm } from "./donation-form";
 import { ContactForm } from "./contact-form";
 import { SITE } from "@/lib/site";
 import "./handbook-print.css";
+import "./scroll.css";
 
 const url = (h = "") => (/^(https?:|#|\/|mailto:|tel:)/.test(h) ? h : "/" + h);
 const paras = (t = "") => t.split(/\n\s*\n/).filter(Boolean);
@@ -444,6 +445,17 @@ function Shop({ d }: { d: any }) {
   );
 }
 
+// Same sections as Shop, but the opening text sits on a parchment scroll.
+function Scroll({ d }: { d: any }) {
+  const [first, ...rest] = d.sections;
+  return (
+    <>
+      <section className="scroll-wrap"><div className="scroll">{first.items.map((it: any, i: number) => <Body key={i} text={it.text} />)}</div></section>
+      {rest.map((s: any, i: number) => <Section key={i} s={s} />)}
+    </>
+  );
+}
+
 function HowTo({ d }: { d: any }) {
   return (
     <>
@@ -474,7 +486,7 @@ function Donate({ d }: { d: any }) {
   );
 }
 
-const VIEWS: Record<string, (p: { d: any }) => React.ReactElement> = { team: Team, history: History, pricing: Pricing, handbook: Handbook, about: About, contact: Contact, "other-makerspaces": Others, "laser-shop": Laser, "wood-shop": Shop, "metal-shop": Shop, "3d-printing": Shop, "craft-room-kalamazoo": Shop, "meeting-space": Shop, what_is_a_makerspace: Shop, "why-kzoo-makers": Shop, "how-to": HowTo, "tools-we-are-seeking-donations-kalamazoo": Donate };
+const VIEWS: Record<string, (p: { d: any }) => React.ReactElement> = { team: Team, history: History, pricing: Pricing, handbook: Handbook, about: About, contact: Contact, "other-makerspaces": Others, "laser-shop": Laser, "wood-shop": Shop, "metal-shop": Shop, "3d-printing": Shop, "craft-room-kalamazoo": Shop, "meeting-space": Shop, what_is_a_makerspace: Scroll, "why-kzoo-makers": Shop, "how-to": HowTo, "tools-we-are-seeking-donations-kalamazoo": Donate };
 
 // The homepage is rendered in parts so the page can keep its other sections (banner, tour, hours, news) between them.
 function Home({ d, part }: { d: any; part?: string }) {
