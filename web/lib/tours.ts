@@ -231,8 +231,8 @@ export async function stats(days: number, guide = "") {
       extract(epoch FROM (COALESCE(k.status_at, (b.date || ' ' || k.start_time)::timestamp AT TIME ZONE $2) - k.created_at)) / 86400 AS close_days,
       to_char(COALESCE(k.status_at, (b.date || ' ' || k.start_time)::timestamp AT TIME ZONE $2) AT TIME ZONE $2, 'YYYY-MM-DD') AS won_day, extract(dow FROM b.date::date)::int AS tdow, extract(dow FROM k.created_at AT TIME ZONE $2)::int AS dow, extract(hour FROM k.created_at AT TIME ZONE $2)::int AS hr, to_char(k.created_at AT TIME ZONE $2, 'YYYY-MM-DD') AS day
     FROM tour_bookings k JOIN tour_blocks b ON b.id = k.block_id WHERE $1::int = 0 OR k.created_at > now() - make_interval(days => $1::int) ORDER BY k.created_at`, [d, TZ, localNow()])).rows;
-  const rq = (await c.query("SELECT count(*)::int AS n, count(*) FILTER (WHERE status = 'scheduled')::int AS done FROM tour_requests WHERE $1::int = 0 OR created_at > now() - make_interval(days => $1::int)", [d])).rows[0];
-  return { ...summarize(rows.map((r) => ({ ...r, close_days: r.close_days == null ? null : +r.close_days })), d, today, guide), requests: rq.n, requestsBooked: rq.done };
+  const rq = (await c.query("SELECT count(*)::int AS n, count(*) FILTER (WHERE status = 'scheduled')::int AS done, COALESCE(sum(reschedules), 0)::int AS resched FROM tour_requests WHERE $1::int = 0 OR created_at > now() - make_interval(days => $1::int)", [d])).rows[0];
+  return { ...summarize(rows.map((r) => ({ ...r, close_days: r.close_days == null ? null : +r.close_days })), d, today, guide), requests: rq.n, requestsBooked: rq.done, reschedules: rq.resched };
 }
 
 // ---- timeline (best effort, like email: a log failure never fails the thing being logged)
