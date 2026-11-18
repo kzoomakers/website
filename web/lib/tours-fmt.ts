@@ -5,7 +5,7 @@ export const DATE = /^\d{4}-\d{2}-\d{2}$/, TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 // Our guides are volunteers giving up family time, so a gentle nudge goes with every cancel link and cancel confirmation. Worded to read before or after cancelling.
 const NUDGES = [
   "A quick reminder: our guides are volunteers. They may have stepped away from their kids or from making dinner for their family to meet you, so please only cancel when you really need to.",
-  "Our tour guides give up their own evenings and weekends, often time they'd otherwise spend with family, so we ask that you don't cancel casually.",
+  "Our tour guides give up their own evenings and weekends (not like we get paid!), often time they'd otherwise spend with family, so we ask that you don't cancel casually.",
   "Plans change, we get it. Just remember a volunteer set aside time for your tour, maybe pulling away from their family to do it, so please try not to flake out on us.",
   "Our guides are neighbors donating their time, sometimes rearranging dinner or family time to show you around. We'd love for you to only cancel when you truly must.",
 ];
