@@ -1,7 +1,7 @@
 import { randomBytes } from "crypto";
 import { db } from "./db";
 import { notify, TOURS_TOPIC } from "./ntfy";
-import { csvToRequests, requestsToCsv, blocksToCsv, csvToBlocks, bookingsToCsv, csvToBookings, checkOffers, addMonths, canCheckIn, CHECKIN_ANSWERS, CHECKIN_BATCH, DATE, summarize, fmtOffer, mins, reminderDue, TIME, TZ, type Offer } from "./tours-fmt";
+import { csvToRequests, requestsToCsv, blocksToCsv, csvToBlocks, bookingsToCsv, csvToBookings, checkOffers, addMonths, canCheckIn, CHECKIN_ANSWERS, CHECKIN_BATCH, DATE, summarize, fmtOffer, mins, nudge, reminderDue, TIME, TZ, type Offer } from "./tours-fmt";
 import { announce, getCfg as notifyCfg, getPause, savePause } from "./tours-notify";
 import { getMailCfg, mailReady, sendQueued as send } from "./mail";
 import MI_ZIPS from "./mi-zips.json"; // from the Michigan rows of GeoNames US.txt; refresh if zips are ever added
@@ -231,8 +231,8 @@ export async function stats(days: number, guide = "") {
       extract(epoch FROM (COALESCE(k.status_at, (b.date || ' ' || k.start_time)::timestamp AT TIME ZONE $2) - k.created_at)) / 86400 AS close_days,
       to_char(COALESCE(k.status_at, (b.date || ' ' || k.start_time)::timestamp AT TIME ZONE $2) AT TIME ZONE $2, 'YYYY-MM-DD') AS won_day, extract(dow FROM b.date::date)::int AS tdow, extract(dow FROM k.created_at AT TIME ZONE $2)::int AS dow, extract(hour FROM k.created_at AT TIME ZONE $2)::int AS hr, to_char(k.created_at AT TIME ZONE $2, 'YYYY-MM-DD') AS day
     FROM tour_bookings k JOIN tour_blocks b ON b.id = k.block_id WHERE $1::int = 0 OR k.created_at > now() - make_interval(days => $1::int) ORDER BY k.created_at`, [d, TZ, localNow()])).rows;
-  const rq = (await c.query("SELECT count(*)::int AS n, count(*) FILTER (WHERE status = 'scheduled')::int AS done FROM tour_requests WHERE $1::int = 0 OR created_at > now() - make_interval(days => $1::int)", [d])).rows[0];
-  return { ...summarize(rows.map((r) => ({ ...r, close_days: r.close_days == null ? null : +r.close_days })), d, today, guide), requests: rq.n, requestsBooked: rq.done };
+  const rq = (await c.query("SELECT count(*)::int AS n, count(*) FILTER (WHERE status = 'scheduled')::int AS done, COALESCE(sum(reschedules), 0)::int AS resched FROM tour_requests WHERE $1::int = 0 OR created_at > now() - make_interval(days => $1::int)", [d])).rows[0];
+  return { ...summarize(rows.map((r) => ({ ...r, close_days: r.close_days == null ? null : +r.close_days })), d, today, guide), requests: rq.n, requestsBooked: rq.done, reschedules: rq.resched };
 }
 
 // ---- timeline (best effort, like email: a log failure never fails the thing being logged)
@@ -379,7 +379,7 @@ export async function book(x: Record<string, unknown> & { block: number; start: 
     await client.query("COMMIT");
   } catch (e) { await client.query("ROLLBACK").catch(() => {}); throw e; } finally { client.release(); }
   const w = when(b.date, x.start);
-  await mail(email, "Your Kzoo Makers tour", [`Hi ${name}, you're booked for a tour on ${w}.`, "If your plans change, please cancel so someone else can have the spot."], ["Cancel this tour", `${base}/tours/cancel?token=${token}`], "booked");
+  await mail(email, "Your Kzoo Makers tour", [`Hi ${name}, you're booked for a tour on ${w}.`, "If your plans change, please cancel so someone else can have the spot.", nudge()], ["Cancel this tour", `${base}/tours/cancel?token=${token}`], "booked");
   await mail(b.guide_email, `New tour booking: ${name}`, [`${name} (${email}, ${phone}) booked a tour on ${w}.`, interest && `Interested in: ${interest}`, vnotes && `Notes: ${vnotes}`].filter(Boolean) as string[]);
   await notify(TOURS_TOPIC, { title: `Tour booked: ${name}`, message: `${w}\n${name} · ${email} · ${phone}${interest ? `\nInterested in: ${interest}` : ""}`, tags: "calendar", click: `${base}/admin/tours` });
   await logEvent("booking", `${name} booked a tour for ${w}`, { detail: [interest && `Interested in: ${interest}`, `${email} · ${phone}`].filter(Boolean).join("\n"), guide: b.guide_name || b.guide_email, actor: name });
@@ -707,7 +707,7 @@ export async function respond(token: string, pick: number | null, note: string, 
     return { declined: true as const };
   }
   const w = fmtOffer(o);
-  await mail(r.email, "Your Kzoo Makers tour", [`Hi ${r.first_name}, you're booked for a tour on ${w}.`, "If your plans change, please cancel so we can offer the time to someone else."], ["Cancel this tour", `${base}/tours/cancel?token=${bookingToken}`], "booked");
+  await mail(r.email, "Your Kzoo Makers tour", [`Hi ${r.first_name}, you're booked for a tour on ${w}.`, "If your plans change, please cancel so we can offer the time to someone else.", nudge()], ["Cancel this tour", `${base}/tours/cancel?token=${bookingToken}`], "booked");
   await mail(r.guide_email, `Tour confirmed: ${name}`, [`${name} (${r.email}, ${r.phone}) accepted your tour time: ${w}.`, r.interest && `Interested in: ${r.interest}`, r.notes && `Notes: ${r.notes}`].filter(Boolean) as string[]);
   await logEvent("walkup_confirmed", `${name} picked a time: ${w}`, { guide: r.guide_name, actor: name });
   await notify(TOURS_TOPIC, { title: `Walk-up tour confirmed: ${name}`, message: w, tags: "calendar", click: `${base}/admin/tours` });

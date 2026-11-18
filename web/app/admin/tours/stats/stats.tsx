@@ -129,6 +129,7 @@ export default function Stats({ initial }: { initial: S }) {
         <Kpi icon="⏱️" label="Mean time to close" value={dur(s.days)} sub={s.estimated ? `booking → signed up (${s.estimated} estimated from the tour date)` : "booking → signed up"} />
         <Kpi icon="👻" label="No-show rate" value={pct(s.noShow, s.held)} sub={`${s.noShow} of ${s.held} tours held`} />
         <Kpi icon="🚶" label="Walk-up requests" value={s.requests} sub={`${s.requestsBooked} got a tour (${pct(s.requestsBooked, s.requests)})`} />
+        <Kpi icon="🔁" label="Cancels & reschedules" value={s.cancelled + s.reschedules} sub={`${s.cancelled} cancelled bookings · ${s.reschedules} times a walk-up asked for new times`} />
         <Kpi icon="🏆" label="Top closer" value={top?.name ?? "–"} sub={top ? `${top.won} sign-up${top.won === 1 ? "" : "s"} · ${pct(top.won, top.tours)} of tours held` : "no sign-ups yet"} />
       </div>
 
