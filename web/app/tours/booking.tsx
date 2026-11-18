@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Captcha, { resetCaptcha } from "@/components/captcha";
 
 type Slot = { block: number; date: string; start: string; end: string; left: number };
@@ -9,12 +9,16 @@ const time = (t: string) => new Date(`2000-01-01T${t}`).toLocaleTimeString("en-U
 const CSS = `.tb label{display:block;margin-bottom:14px;font-weight:600}.tb input:not([type=checkbox]),.tb select,.tb textarea{display:block;width:100%;margin-top:6px;padding:10px 12px;border:1px solid #d5d9de;border-radius:8px;font:inherit}
 .tb .tb-slots{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 22px}.tb .tb-slots button{padding:8px 14px;border:1px solid #f9b234;border-radius:8px;background:#fff;cursor:pointer;font:inherit}.tb .tb-slots button:hover{background:#fff6e0}
 .tb .tb-areas label{display:inline-block;font-weight:400;margin-right:16px}.tb .tb-hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}.tb .tb-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 14px}.tb .tb-err{color:#b3261e}
-.tb .tb-pause{display:flex;gap:12px;align-items:flex-start;margin:0 0 22px;padding:14px 18px;background:#fff6e0;border:1px solid #f9b234;border-left-width:5px;border-radius:10px}.tb .tb-pause span{font-size:1.2em;line-height:1.4}.tb .tb-pause p{margin:0;line-height:1.5}`;
+.tb .tb-pause{display:flex;gap:22px;align-items:center;margin:0 0 26px;padding:18px 22px 18px 18px;background:#fff6e0;border:1px solid #f9b234;border-left-width:5px;border-radius:12px}.tb .tb-pause p{margin:0;line-height:1.55;font-size:1.05em}
+.tb .tb-man{flex:0 0 230px;width:230px;height:260px;padding:0;border:0;border-radius:10px;overflow:hidden;cursor:zoom-in;background:none;box-shadow:0 6px 18px rgba(120,80,0,.25);transform:rotate(-1.5deg);transition:transform .2s,box-shadow .2s}.tb .tb-man:hover,.tb .tb-man:focus-visible{transform:rotate(0) scale(1.02);box-shadow:0 10px 24px rgba(120,80,0,.32)}.tb .tb-man img{display:block;width:100%;height:100%;object-fit:cover;object-position:top}
+.tb dialog.tb-lb{border:0;padding:0;background:none;max-width:94vw;max-height:94vh;overflow:visible}.tb dialog.tb-lb::backdrop{background:rgba(20,14,4,.82)}.tb .tb-lb img{display:block;max-width:94vw;max-height:90vh;border-radius:10px;box-shadow:0 12px 50px rgba(0,0,0,.6)}.tb .tb-lb button{position:absolute;top:-14px;right:-14px;width:38px;height:38px;border:0;border-radius:50%;background:#fff;color:#222;font-size:22px;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+@media(max-width:600px){.tb .tb-pause{flex-direction:column;text-align:center;padding:16px}.tb .tb-man{flex-basis:auto;width:min(230px,70%);height:auto;aspect-ratio:230/260}.tb .tb-lb button{top:8px;right:8px}}`;
 
 const fields = (f: FormData) => ({ first: f.get("first"), last: f.get("last"), email: f.get("email"), phone: f.get("phone"), zip: f.get("zip"), contact: f.get("contact"), heard: f.get("heard"), notes: f.get("notes"), website: f.get("website"), captcha: f.get("g-recaptcha-response"), screen: SCREEN(), areas: f.getAll("areas") });
 
 // Public tour booking: pick an open time, give your details. Replaces the old Google Form.
 export default function Booking() {
+  const lb = useRef<HTMLDialogElement>(null);
   const [data, setData] = useState<{ pause: string | null; slots: Slot[]; areas: string[]; heard: string[]; contact: string[] } | null>(null), [pick, setPick] = useState<Slot | null>(null);
   const [busy, setBusy] = useState(false), [err, setErr] = useState(""), [done, setDone] = useState<Slot | null>(null), [ask, setAsk] = useState(false), [asked, setAsked] = useState(false);
   useEffect(() => { fetch("/api/tours").then((r) => (r.ok ? r.json() : Promise.reject())).then(setData, () => setErr("Couldn't load tour times. Please try again later.")); }, []);
@@ -58,7 +62,7 @@ export default function Booking() {
       <style>{CSS}</style>
       {!pick && (ask || !days.length) ? (
         <form onSubmit={sendReq}>
-          {data.pause && <div className="tb-pause" role="status"><span aria-hidden>⏸</span><p>{data.pause}</p></div>}
+          {data.pause && <div className="tb-pause" role="status"><button type="button" className="tb-man" aria-label="Enlarge photo" onClick={() => lb.current?.showModal()}><img src="/images/move-the-mill-man.webp" alt="Move the Mill" /></button><p>{data.pause}</p><dialog ref={lb} className="tb-lb" aria-label="Move the Mill photo" onClick={() => lb.current?.close()}><img src="/images/move-the-mill-man.webp" alt="Move the Mill" /><button type="button" aria-label="Close" onClick={() => lb.current?.close()}>✕</button></dialog></div>}
           <p>{data.pause ? "" : days.length ? "Can't find a time that works? Tell us a bit about yourself and a volunteer will contact you with some different dates." : "Tell us a bit about yourself and a volunteer will email you some dates that work for them. You pick the one you like."}</p>
           {details}
           {err && <p className="tb-err" role="alert">{err}</p>}
