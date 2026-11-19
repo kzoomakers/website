@@ -1,0 +1,6 @@
+import { ReplyPage } from "@/feed/views/comment-form";
+
+export const dynamic = "force-dynamic";
+export const metadata = { robots: { index: false } };
+
+export default async function Page({ params }: { params: Promise<{ id: string }> }) { return <ReplyPage shortId={(await params).id} />; }

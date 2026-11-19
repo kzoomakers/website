@@ -23,6 +23,7 @@
     "asn1js": "4.0.0",
     "cheerio": "^1.2.0",
     "heic-convert": "^2.1.0",
+    "markdown-it": "^15.0.3",
     "next": "^16.4.6",
     "next-auth": "^5.0.0-beta.32",
     "nodemailer": "^10.5.0",

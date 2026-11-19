@@ -3,19 +3,23 @@ import type { Comment, StoryFull } from "../models/story-page";
 import { isGone } from "../models/story-page";
 import { negativityClass } from "../util";
 import { CommentItem, html } from "./comment";
+import { takeCommentFlash } from "../flash";
+import { currentFeedUser } from "../identity";
+import { editable } from "../models/submit";
+import { CommentBox } from "./comment-form";
 import Shell from "./shell";
 import { Caches, Divider, TimeLabel, UserLink, titlePath } from "./story-list";
 
 /** comments/_threads + _thread_to_tree: the flat, depth-first list becomes nested <li class="comments_subtree"><ol class="comments">. */
-function Tree({ comments, story, newUserDays }: { comments: Comment[]; story: StoryFull; newUserDays: number }) {
+function Tree({ comments, story, newUserDays, me }: { comments: Comment[]; story: StoryFull; newUserDays: number; me?: { id: number; csrf: string } | null }) {
   const kids = new Map<number | null, Comment[]>();
   for (const c of comments) kids.set(c.parent_comment_id, [...(kids.get(c.parent_comment_id) ?? []), c]);
   const render = (parent: number | null): React.ReactNode => (kids.get(parent) ?? []).map((c) => (
-    <li className="comments_subtree" key={c.id}><CommentItem c={c} story={story} newUserDays={newUserDays} /><ol className="comments">{render(c.id)}</ol></li>
+    <li className="comments_subtree" key={c.id}><CommentItem c={c} story={story} newUserDays={newUserDays} me={me} /><ol className="comments">{render(c.id)}</ol></li>
   ));
   // a reply whose parent is missing (a deleted-and-purged row) still shows, at the top
   const ids = new Set(comments.map((c) => c.id)), orphans = comments.filter((c) => c.parent_comment_id != null && !ids.has(c.parent_comment_id));
-  return <ol className="comments" id="story_comments">{render(null)}{orphans.map((c) => <li className="comments_subtree" key={c.id}><CommentItem c={c} story={story} newUserDays={newUserDays} /><ol className="comments">{render(c.id)}</ol></li>)}</ol>;
+  return <ol className="comments" id="story_comments">{render(null)}{orphans.map((c) => <li className="comments_subtree" key={c.id}><CommentItem c={c} story={story} newUserDays={newUserDays} me={me} /><ol className="comments">{render(c.id)}</ol></li>)}</ol>;
 }
 
 const Tags = ({ s }: { s: StoryFull }) => (
@@ -56,9 +60,18 @@ function Detail({ all, newUserDays }: { all: StoryFull[]; newUserDays: number })
 /** stories/show.html.erb for a visitor. `all` is the story first, then the stories merged into it. */
 export default async function StoryPage({ all, comments }: { all: StoryFull[]; comments: Comment[] }) {
   const story = all[0], cfg = await getFeedConfig(), merged = story.stories_count > 0, path = titlePath(story);
+  const me = await currentFeedUser().catch(() => null), mine = !!me && editable(story, me.id);
   return (
     <Shell title={story.title} path={path}>
       <ol className="stories"><Detail all={all} newUserDays={cfg.newUserDays} /></ol>
+      {mine && me && (
+        <p className="story_owner_tools">
+          <a href={`/stories/${story.short_id}/edit`}>Edit</a>{" "}
+          <form method="post" action={`/stories/${story.short_id}/${story.is_deleted ? "undelete" : "delete"}`} style={{ display: "inline" }}>
+            <input type="hidden" name="csrf" value={me.csrf} /><button type="submit">{story.is_deleted ? "Undelete" : "Delete"}</button>
+          </form>
+        </p>
+      )}
       <div className="story_content">{story.markeddown_description && !merged && <div className="story_text" id="story_text" dangerouslySetInnerHTML={html(story.markeddown_description)} />}</div>
       {all.filter((ms) => !isGone(ms)).map((ms) => (
         <div key={ms.id}>
@@ -69,11 +82,13 @@ export default async function StoryPage({ all, comments }: { all: StoryFull[]; c
             <div className="story_content">{ms.markeddown_description && <div className="story_text" dangerouslySetInnerHTML={html(ms.markeddown_description)} />}</div>
           </>}
           <ol className="comments comments1"><li className="comments_subtree" id={`comments-${ms.short_id}`}>
-            <Tree comments={comments.filter((c) => c.story_id === ms.id)} story={story} newUserDays={cfg.newUserDays} />
+            <Tree comments={comments.filter((c) => c.story_id === ms.id)} story={story} newUserDays={cfg.newUserDays} me={me} />
           </li></ol>
           <br />
         </div>
       ))}
+      {me?.username && !isGone(story) && (() => { const f = takeCommentFlash(me.id); return <div id="comment_form"><CommentBox action={`/stories/${story.short_id}/comment`} csrf={me.csrf} label="Post comment" text={f?.text} errors={f?.errors} storyShortId={story.short_id} /></div>; })()}
+      {!me && <p><a href={`/login?return=${path}`}>Log in</a> to comment.</p>}
     </Shell>
   );
 }
