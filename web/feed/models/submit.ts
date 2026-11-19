@@ -2,9 +2,9 @@ import { randomBytes } from "node:crypto";
 import type { PoolClient } from "pg";
 import { conn } from "@/lib/db";
 import { cleanUrl, hotness } from "../logic";
-import { mentionedUsers, renderMarkdown } from "../markdown";
 import { MAX_EDIT_MINS, RECENT_DAYS, cleanTitle, isNewUser, storyProblems } from "../story-rules";
 import { updateCachedColumns } from "./cached";
+import { renderPost } from "./render";
 import { findTags } from "./stories";
 
 // Submitting a story (stories_controller#create + story.rb callbacks). Everything runs in one transaction so a failure leaves nothing half-made.
@@ -63,19 +63,16 @@ async function prepare(c: PoolClient, u: { is_moderator: boolean; created_at: Da
       originId = o.id;
     }
   }
-  const users = new Set<string>(), names = mentionedUsers(description);
-  if (names.length) for (const r of (await c.query("SELECT lower(username) n FROM feed.usernames WHERE lower(username) = ANY($1::text[]) AND renamed_away_at IS NULL", [names])).rows) users.add(r.n);
-  // images only for users with a hat in use (can_have_images?), which isn't wired yet
-  return { title, description, html: renderMarkdown(description, { users }), cu, tags, domainId, originId, isAuthor: !cu.url || input.userIsAuthor }; // a text post is always by its submitter
+  return { title, description, html: await renderPost(c, description), cu, tags, domainId, originId, isAuthor: !cu.url || input.userIsAuthor }; // a text post is always by its submitter
 }
 
 const isFail = (p: Prep | SubmitResult): p is SubmitResult => "ok" in p;
-async function tx<T>(f: (c: PoolClient) => Promise<T>): Promise<T> {
+export async function tx<T>(f: (c: PoolClient) => Promise<T>): Promise<T> {
   const c = await (await conn()).connect();
   try { await c.query("BEGIN"); const r = await f(c); await c.query(r && typeof r === "object" && "ok" in r && !(r as { ok: boolean }).ok ? "ROLLBACK" : "COMMIT"); return r; }
   catch (e) { await c.query("ROLLBACK").catch(() => {}); throw e; } finally { c.release(); }
 }
-const live = async (c: PoolClient, id: number) => (await c.query("SELECT id, created_at, is_moderator, banned_at, deleted_at FROM feed.users WHERE id = $1 FOR UPDATE", [id])).rows[0];
+export const live = async (c: PoolClient, id: number) => (await c.query("SELECT id, created_at, is_moderator, banned_at, deleted_at FROM feed.users WHERE id = $1 FOR UPDATE", [id])).rows[0];
 
 export const createStory = (user: { id: number }, input: Submission): Promise<SubmitResult> => tx(async (c) => {
   const u = await live(c, user.id);

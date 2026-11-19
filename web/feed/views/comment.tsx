@@ -1,3 +1,4 @@
+import { MAX_DEPTH, isDeletable, isEditable } from "../comment-rules";
 import { feedHtml } from "../safe-html";
 import type { Comment } from "../models/story-page";
 import { zoned } from "../util";
@@ -19,8 +20,23 @@ function Hat({ c }: { c: Comment }) {
     <span className="crown">{linked ? <a href={c.hat_link!} target="_blank" rel="noopener">{c.hat}</a> : c.hat}</span></span>;
 }
 
+/** Reply, edit, delete: only what this signed-in person may do (the server checks again). */
+function Tools({ c, me }: { c: Comment; me: { id: number; csrf: string } }) {
+  const gone = c.is_deleted || c.is_moderated, mine = c.user_id === me.id;
+  const post = (action: string, label: string) => (
+    <form method="post" action={`/c/${c.short_id}/${action}`} style={{ display: "inline" }}><input type="hidden" name="csrf" value={me.csrf} /><button type="submit">{label}</button></form>
+  );
+  return (
+    <span className="comment_tools">
+      {!gone && c.depth < MAX_DEPTH && <> | <a href={`/c/${c.short_id}/reply`}>reply</a></>}
+      {mine && isEditable(c, me.id) && <> | <a href={`/c/${c.short_id}/edit`}>edit</a></>}
+      {mine && !c.is_moderated && (c.is_deleted ? <> | {post("undelete", "undelete")}</> : isDeletable(c, me.id) ? <> | {post("delete", "delete")}</> : null)}
+    </span>
+  );
+}
+
 /** comments/_comment.html.erb for a logged-out visitor. `showStory` adds "on: story title" (comment lists). */
-export function CommentItem({ c, story, newUserDays, showStory = false }: { c: Comment; story: { id: number; user_id: number; user_is_author: boolean }; newUserDays: number; showStory?: boolean }) {
+export function CommentItem({ c, story, newUserDays, showStory = false, me }: { c: Comment; story: { id: number; user_id: number; user_is_author: boolean }; newUserDays: number; showStory?: boolean; me?: { id: number; csrf: string } | null }) {
   const gone = c.is_deleted || c.is_moderated, score = commentScore(c);
   const wasMerged = story.id !== c.story_id, edited = c.last_edited_at.getTime() - c.created_at.getTime() > 60_000;
   const isNew = c.user_created_at && c.user_created_at.getTime() > Date.now() - newUserDays * 864e5;
@@ -44,6 +60,7 @@ export function CommentItem({ c, story, newUserDays, showStory = false }: { c: C
             <span className="flagger flagger_stub" />
             {showStory && c.story_title && <> | on: <a href={titlePath({ short_id: c.story_short_id!, title: c.story_title })}>{c.story_title}</a></>}
             <span className="reason" />
+            {me && <Tools c={c} me={me} />}
           </div>
           <div role="heading" aria-level={3} className="comment_text" {...(gone ? {} : { dangerouslySetInnerHTML: html(c.markeddown_comment) })}>
             {gone ? <p><span className="na">[{goneText(c)}]</span></p> : null}

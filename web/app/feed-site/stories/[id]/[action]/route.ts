@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { feedOrigin } from "@/feed/config";
 import { csrfOk, originOk } from "@/feed/auth";
 import { viewerFor } from "@/feed/identity";
-import { putFlash } from "@/feed/flash";
+import { putCommentFlash, putFlash } from "@/feed/flash";
+import { createComment } from "@/feed/models/comment-write";
 import { setStoryDeleted, updateStory, type Submission } from "@/feed/models/submit";
 import { readSubmission } from "../../form";
 
@@ -13,7 +14,7 @@ const to = (path: string) => NextResponse.redirect(feedOrigin() + path, { status
 // stories#update, #destroy and #undelete (Lobsters uses PATCH/DELETE; these are POSTs so the same-site and CSRF checks cover every change).
 export async function POST(req: Request, { params }: { params: Promise<{ id: string; action: string }> }) {
   const { id, action } = await params;
-  if (!/^[a-z0-9]{1,10}$/.test(id) || !["update", "delete", "undelete"].includes(action)) return new NextResponse("not found", { status: 404 });
+  if (!/^[a-z0-9]{1,10}$/.test(id) || !["update", "delete", "undelete", "comment"].includes(action)) return new NextResponse("not found", { status: 404 });
   if (!originOk(req.headers)) return new NextResponse("forbidden", { status: 403 });
   const f = await req.formData().catch(() => null);
   if (!f) return new NextResponse("bad request", { status: 400 });
@@ -21,6 +22,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const v = await viewerFor(cookie);
   if (!v || !v.username || !csrfOk(cookie, String(f.get("csrf") ?? "").slice(0, 100))) return new NextResponse("forbidden", { status: 403 });
   try {
+    if (action === "comment") {
+      const text = String(f.get("comment") ?? "").slice(0, 70_000), parent = String(f.get("parent") ?? "").slice(0, 10) || undefined;
+      const r = await createComment(v, { storyShortId: id, parentShortId: parent, comment: text });
+      if (r.ok) return to(`/c/${r.shortId}`);
+      putCommentFlash(v.id, { text, errors: r.errors });
+      return to(parent ? `/c/${parent}/reply` : `/s/${id}#comment_form`);
+    }
     if (action === "update") {
       const input: Submission = readSubmission(f);
       const r = await updateStory(v, id, input);

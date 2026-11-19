@@ -10,3 +10,13 @@ export const putFlash = (userId: number, f: Flash) => {
   parked.set(userId, { ...f, exp: now + 300_000 });
 };
 export const takeFlash = (userId: number): Flash | null => { const f = parked.get(userId); parked.delete(userId); return f && f.exp > Date.now() ? f : null; };
+
+// Same idea for a failed comment form.
+type CFlash = { text: string; errors: string[] };
+const cparked = new Map<number, CFlash & { exp: number }>();
+export const putCommentFlash = (userId: number, f: CFlash) => {
+  const now = Date.now();
+  for (const [k, v] of cparked) if (v.exp < now) cparked.delete(k);
+  cparked.set(userId, { ...f, exp: now + 300_000 });
+};
+export const takeCommentFlash = (userId: number): CFlash | null => { const f = cparked.get(userId); cparked.delete(userId); return f && f.exp > Date.now() ? f : null; };
