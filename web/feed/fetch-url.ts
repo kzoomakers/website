@@ -30,13 +30,13 @@ export async function resolvePublic(host: string, lookup: (h: string) => Promise
 
 type Res = { status: number; headers: http.IncomingHttpHeaders; body: Buffer };
 
-function once(u: URL, ip: string, timeoutMs: number): Promise<Res> {
+export function once(u: URL, ip: string, timeoutMs: number): Promise<Res> {
   return new Promise((resolve, reject) => {
     const lib = u.protocol === "https:" ? https : http;
     // lookup is pinned to the vetted address; servername/Host keep TLS and virtual hosting correct. Certificates are not verified: the fetch only reads a page title
     // (as sponge usage in story.rb), and nothing from it is trusted beyond text that is escaped on output.
     const req = lib.request({ host: u.hostname, port: u.port || undefined, path: u.pathname + u.search, method: "GET", timeout: timeoutMs, rejectUnauthorized: false, servername: u.hostname,
-      lookup: ((_h: string, _o: unknown, cb: (e: null, a: string, f: number) => void) => cb(null, ip, 4)) as never,
+      lookup: ((_h: string, o: { all?: boolean }, cb: (e: null, a: unknown, f?: number) => void) => (o?.all ? cb(null, [{ address: ip, family: 4 }]) : cb(null, ip, 4))) as never, // Node 20+ asks for all addresses (autoSelectFamily)
       headers: { "User-Agent": UA, "Accept-Encoding": "identity", Accept: "text/html,application/xhtml+xml,application/pdf;q=0.8,*/*;q=0.5" } }, (res) => {
       const chunks: Buffer[] = []; let n = 0;
       res.on("data", (c: Buffer) => { n += c.length; if (n > MAX_BYTES) { req.destroy(new FetchError("response too large")); return; } chunks.push(c); });

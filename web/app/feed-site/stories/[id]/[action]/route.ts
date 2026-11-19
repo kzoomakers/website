@@ -5,6 +5,7 @@ import { viewerFor } from "@/feed/identity";
 import { putCommentFlash, putFlash } from "@/feed/flash";
 import { createComment } from "@/feed/models/comment-write";
 import { setStoryDeleted, updateStory, type Submission } from "@/feed/models/submit";
+import { hit } from "@/lib/limit";
 import { readSubmission } from "../../form";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +25,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   try {
     if (action === "comment") {
       const text = String(f.get("comment") ?? "").slice(0, 70_000), parent = String(f.get("parent") ?? "").slice(0, 10) || undefined;
+      if (!(await hit(`feed:comment:${v.id}`, 30, 3_600_000, true))) { putCommentFlash(v.id, { text, errors: ["You're commenting too fast. Please wait a bit."] }); return to(parent ? `/c/${parent}/reply` : `/s/${id}#comment_form`); }
       const r = await createComment(v, { storyShortId: id, parentShortId: parent, comment: text });
       if (r.ok) return to(`/c/${r.shortId}`);
       putCommentFlash(v.id, { text, errors: r.errors });

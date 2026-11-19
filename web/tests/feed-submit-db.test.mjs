@@ -36,6 +36,9 @@ test("submitting a story creates the story, tags, domain, origin, vote and count
   const text = await createStory(old, { title: "A text post only", url: "", description: "just words", tags: ["tg" + n], userIsAuthor: false });
   assert.ok(text.ok, JSON.stringify(text));
   assert.ok((await c.query("SELECT user_is_author FROM feed.stories WHERE short_id = $1", [text.shortId])).rows[0].user_is_author);
+  await c.query("UPDATE feed.tags SET active = false WHERE id = $1", [tag.id]);
+  assert.ok(!(await createStory(old, { ...base, title: "Retired tag post", url: "" })).ok, "inactive tags are refused");
+  await c.query("UPDATE feed.tags SET active = true WHERE id = $1", [tag.id]);
   assert.ok(!(await createStory(old, { ...base, title: "Unknown tag post", url: "", tags: ["nope"] })).ok);
   assert.equal((await c.query("SELECT value FROM feed.keystores WHERE key = $1", [`user:${old.id}:stories_submitted`])).rows[0].value, "2");
 

@@ -46,13 +46,18 @@ export const createComment = (user: { id: number }, o: { storyShortId: string; p
   if (errors.length) return fail(errors);
   if (parent && !u.is_moderator) { const w = await speedWait(c, user.id, parent); if (w) return fail([`Thread speed limit reached, next comment allowed in about ${w} minute${w === 1 ? "" : "s"}.`]); }
 
-  let sid = "";
-  for (let i = 0; ; i++) { sid = newShort(); if (!(await c.query("SELECT 1 FROM feed.comments WHERE short_id = $1", [sid])).rowCount) break; if (i === 9) throw new Error("too many short id collisions"); }
   const thread = parent?.thread_id ?? (await c.query("INSERT INTO feed.keystores (key, value) VALUES ('thread_id', 1) ON CONFLICT (key) DO UPDATE SET value = COALESCE(feed.keystores.value, 0) + 1 RETURNING value", [])).rows[0].value;
-  const r = (await c.query(
-    `INSERT INTO feed.comments (short_id, story_id, user_id, parent_comment_id, thread_id, comment, markeddown_comment, depth, last_edited_at, token)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8, now(), $9) RETURNING id`,
-    [sid, s.id, user.id, parent?.id ?? null, thread, text, await renderPost(c, text), parent ? parent.depth + 1 : 0, `comment_${randomBytes(16).toString("hex")}`])).rows[0];
+  const html = await renderPost(c, text);
+  // The unique index on short_id settles races: a taken id inserts nothing and we draw another.
+  let sid = "", r: { id: number } | undefined;
+  for (let i = 0; !r; i++) {
+    if (i === 10) throw new Error("too many short id collisions");
+    sid = newShort();
+    r = (await c.query(
+      `INSERT INTO feed.comments (short_id, story_id, user_id, parent_comment_id, thread_id, comment, markeddown_comment, depth, last_edited_at, token)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8, now(), $9) ON CONFLICT (short_id) DO NOTHING RETURNING id`,
+      [sid, s.id, user.id, parent?.id ?? null, thread, text, html, parent ? parent.depth + 1 : 0, `comment_${randomBytes(16).toString("hex")}`])).rows[0];
+  }
   await c.query("INSERT INTO feed.votes (user_id, story_id, comment_id, vote) VALUES ($1, $2, $3, 1)", [user.id, s.id, r.id]); // own upvote: no karma
   if (parent) await c.query("UPDATE feed.comments SET reply_count = reply_count + 1, last_reply_at = now(), updated_at = now() WHERE id = $1", [parent.id]);
   await c.query("UPDATE feed.stories SET last_comment_at = now(), updated_at = now() WHERE id = $1", [s.id]);

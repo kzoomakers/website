@@ -47,8 +47,8 @@ export const byUser = (id: number): Query => ({ where: `${VISIBLE} AND s.user_id
 /** `unit` must come from interval.ts (a fixed word), never from the request. */
 export const top = (n: number, unit: string): Query => ({ where: `${UNMERGED} AND s.created_at >= now() - ($3::int * ('1 ' || $4)::interval)`, order: "s.score DESC, s.id DESC", params: [n, unit] });
 
-export type TagRow = { id: number; tag: string; description: string | null; hotness_mod: number | null; quorum: number | null; privileged: boolean; permit_by_new_users: boolean; is_media: boolean };
-const TAG = "SELECT id, tag, description, hotness_mod, quorum, privileged, permit_by_new_users, is_media FROM feed.tags";
+export type TagRow = { id: number; tag: string; description: string | null; hotness_mod: number | null; quorum: number | null; privileged: boolean; permit_by_new_users: boolean; is_media: boolean; active: boolean };
+const TAG = "SELECT id, tag, description, hotness_mod, quorum, privileged, permit_by_new_users, is_media, active FROM feed.tags";
 /** Tags by name (case-insensitive); null if any is unknown (a 404, as Lobsters does). Ordered by name: Lobsters lists them in index order, not the order in the URL. */
 export async function findTags(names: string[]): Promise<TagRow[] | null> {
   if (!names.length || names.length > 20) return null;

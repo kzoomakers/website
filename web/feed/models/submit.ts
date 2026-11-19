@@ -22,6 +22,7 @@ const bump = (c: PoolClient, key: string) => c.query("INSERT INTO feed.keystores
 function originIdentifier(d: { selector: string | null; replacement: string | null; domain: string }, url: string) {
   if (!d.selector || !d.replacement) return null;
   try {
+    // shortcut: Lobsters stopped a slow selector after 0.1 s; JS can't interrupt a regex. Selectors are set by admins and the URL is at most 250 characters, so this stays; add a worker timeout if non-admins ever edit selectors.
     const re = new RegExp(d.selector, "i");
     return (re.test(url) ? url.replace(re, d.replacement.replace(/\\(\d)/g, "$$$1")) : d.domain).toLowerCase();
   } catch { return d.domain.toLowerCase(); } // a bad selector in the database must not stop submissions
@@ -34,7 +35,7 @@ const fail = (errors: string[], similar?: { short_id: string; title: string }[])
 async function prepare(c: PoolClient, u: { is_moderator: boolean; created_at: Date | null }, input: Submission, storyId?: number): Promise<Prep | SubmitResult> {
   const isNew = isNewUser(u.created_at), title = cleanTitle(input.title.trim()), description = input.description.replace(/\s+$/, "");
   const tags = await findTags(input.tags);
-  if (!tags) return fail(["Unknown tag."]);
+  if (!tags || tags.some((t) => !t.active)) return fail(["Unknown tag."]); // inactive tags are retired: the form doesn't list them, and a hand-made POST can't use them either
   const cu = input.url.trim() ? cleanUrl(input.url) : { url: "" as const, normalized: "" as const, domain: null };
   const errors = storyProblems({ title, url: cu.url, description, tags, isNew, isModerator: u.is_moderator });
   if (errors.length) return fail(errors);
@@ -80,12 +81,16 @@ export const createStory = (user: { id: number }, input: Submission): Promise<Su
   const p = await prepare(c, u, input);
   if (isFail(p)) return p;
   const now = new Date();
-  let sid = "";
-  for (let i = 0; ; i++) { sid = shortId(); if (!(await c.query("SELECT 1 FROM feed.stories WHERE short_id = $1", [sid])).rowCount) break; if (i === 9) throw new Error("too many short id collisions"); }
-  const s = (await c.query(
-    `INSERT INTO feed.stories (user_id, url, normalized_url, title, description, markeddown_description, short_id, user_is_author, domain_id, origin_id, created_at, last_edited_at, token)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$11,$12) RETURNING id`,
-    [user.id, p.cu.url, p.cu.normalized || null, p.title, p.description, p.html, sid, p.isAuthor, p.domainId, p.originId, now, token("story")])).rows[0];
+  // The unique index on short_id settles races: a taken id inserts nothing and we draw another.
+  let sid = "", s: { id: number } | undefined;
+  for (let i = 0; !s; i++) {
+    if (i === 10) throw new Error("too many short id collisions");
+    sid = shortId();
+    s = (await c.query(
+      `INSERT INTO feed.stories (user_id, url, normalized_url, title, description, markeddown_description, short_id, user_is_author, domain_id, origin_id, created_at, last_edited_at, token)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$11,$12) ON CONFLICT (short_id) DO NOTHING RETURNING id`,
+      [user.id, p.cu.url, p.cu.normalized || null, p.title, p.description, p.html, sid, p.isAuthor, p.domainId, p.originId, now, token("story")])).rows[0];
+  }
   for (const t of p.tags) await c.query("INSERT INTO feed.taggings (story_id, tag_id) VALUES ($1, $2)", [s.id, t.id]);
   await c.query("INSERT INTO feed.votes (user_id, story_id, vote) VALUES ($1, $2, 1)", [user.id, s.id]); // the submitter's own upvote: score already starts at 1 and own votes earn no karma
   if (p.domainId) await c.query("UPDATE feed.domains SET stories_count = stories_count + 1 WHERE id = $1", [p.domainId]);
@@ -137,3 +142,9 @@ export const setStoryDeleted = (user: { id: number }, shortId: string, deleted: 
   }
   return { ok: true, shortId } as SubmitResult;
 });
+
+/** The most recent live story with this normalized URL inside the "recently posted" window, for sending a submitter to the existing discussion. */
+export async function recentSimilar(normalized: string): Promise<{ short_id: string; title: string } | null> {
+  if (!normalized) return null;
+  return (await (await conn()).query("SELECT short_id, title FROM feed.stories WHERE normalized_url = $1 AND (NOT is_deleted OR is_moderated) AND merged_story_id IS NULL AND created_at >= now() - ($2::int * interval '1 day') ORDER BY id DESC LIMIT 1", [normalized, RECENT_DAYS])).rows[0] ?? null;
+}
