@@ -24,3 +24,11 @@ test("truncate and negativity class", () => {
   assert.equal(truncate("abcdef", 6), "abcdef"); assert.equal(truncate("abcdefg", 6), "abc...");
   assert.deepEqual([[1, 0], [0, 1], [0, 3], [0, 5]].map(([s, f]) => negativityClass(s, f)), ["", "negative_1", "negative_3", "negative_5"]);
 });
+
+test("time intervals for /top/:length accept only digits plus h d w m y", async () => {
+  const { timeInterval } = await import("../feed/interval.ts");
+  assert.deepEqual(timeInterval("3d"), { param: "3d", n: 3, unit: "day", human: "3 Days", placeholder: false });
+  assert.deepEqual(timeInterval("2w"), { param: "2w", n: 14, unit: "day", human: "2 Weeks", placeholder: false });
+  assert.equal(timeInterval("1y").human, "Year");
+  for (const bad of [undefined, "", "0d", "d", "5x", "1d; drop table", "-1d", "1.5d", "999999d"]) assert.equal(timeInterval(bad).placeholder, true, String(bad));
+});
