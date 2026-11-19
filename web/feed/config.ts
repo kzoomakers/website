@@ -69,3 +69,7 @@ export async function saveFeedConfig(x: unknown, who: string) {
 export const FEED_HOST = (process.env.FEED_HOST ?? "talk.kzoomakers.org").toLowerCase();
 export const isFeedHost = (host: string | null) =>
   (host ?? "").split(":")[0].toLowerCase() === FEED_HOST || (process.env.FEED_DEV === "1" && process.env.NODE_ENV !== "production");
+/** Where the feed lives, for links in emails and the login handoff. Local dev sets FEED_ORIGIN (e.g. http://localhost:3000). */
+export const feedOrigin = () => (process.env.FEED_ORIGIN ?? `https://${FEED_HOST}`).replace(/\/+$/, "");
+/** The main site, where members and admins prove who they are. Fixed by configuration, never taken from a request. */
+export const mainOrigin = () => (process.env.MAIN_ORIGIN ?? process.env.AUTH_URL ?? "https://kzoomakers.org").replace(/\/+$/, "");

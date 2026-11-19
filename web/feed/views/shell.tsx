@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Account } from "./auth";
 
 export const SITE_NAME = "Kzoo Makers Talk";
 
@@ -26,7 +27,7 @@ export default function Shell({ title, path, subnav, children }: { title?: strin
               <li><Nav href="/recent" path={path}>Recent</Nav></li>
               <li><Nav href="/comments" path={path}>Comments</Nav></li>
               <li><Nav href="/search" path={path}>Search</Nav></li>
-              <li className="push-right"><Nav href="/login" path={path}>Login</Nav></li>
+              <Account />
             </ul>
           </nav>
         </div>

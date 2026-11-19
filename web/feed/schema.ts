@@ -579,7 +579,23 @@ const BASELINE = [
   `ALTER TABLE feed.votes ADD FOREIGN KEY (user_id) REFERENCES feed.users (id)`
 ];
 
+// Phase 2 (identity). handoff_used makes a login token single-use; auth_tokens holds email-verification and password-reset links (only the sha256 of the token is stored).
+// password_digest was sized for a 60-character hash; ours is longer. The old password_reset_token column stays unused.
+const IDENTITY = [
+  `CREATE TABLE feed.handoff_used (jti text PRIMARY KEY, expires_at timestamptz NOT NULL)`,
+  `CREATE INDEX ON feed.handoff_used (expires_at)`,
+  `CREATE TABLE feed.auth_tokens (
+  hash text PRIMARY KEY,
+  user_id bigint NOT NULL REFERENCES feed.users (id) ON DELETE CASCADE,
+  purpose text NOT NULL CHECK (purpose IN ('verify','reset')),
+  expires_at timestamptz NOT NULL
+)`,
+  `CREATE INDEX ON feed.auth_tokens (user_id, purpose)`,
+  `ALTER TABLE feed.users ALTER COLUMN password_digest TYPE text`,
+];
+
 /** Idempotent: run at startup from lib/db.ts ensureSchema, under the same advisory lock as every other migration. */
 export async function ensureFeedSchema(pool: Pool) {
   await applyOnce(pool, "feed-001-baseline", BASELINE);
+  await applyOnce(pool, "feed-002-identity", IDENTITY);
 }
