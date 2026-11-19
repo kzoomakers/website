@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Notice from "@/components/notice";
 import { IdStep, WZ_CSS } from "../wizard";
@@ -19,6 +19,14 @@ export default function IdCard({ card, unlocked, password, kinds, mb }: { card: 
   const stamp = useState(() => Date.now())[0];
   // Once unlocked (on arrival from the emailed link, or after the password), the wipe plays on the next frame so the transition runs.
   useEffect(() => { if (!unlocked) return setOpen(false); const t = requestAnimationFrame(() => requestAnimationFrame(() => setOpen(true))); return () => cancelAnimationFrame(t); }, [unlocked]);
+  // Navigating away (or closing the tab) locks the ID again. The microtask skips React strict mode's fake unmount.
+  const lock = () => { fetch("/api/members/id/unlock", { method: "DELETE", keepalive: true }).catch(() => {}); };
+  const mounted = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    if (unlocked) addEventListener("pagehide", lock);
+    return () => { mounted.current = false; removeEventListener("pagehide", lock); if (unlocked) queueMicrotask(() => { if (!mounted.current) lock(); }); };
+  }, [unlocked]);
   const run = async (fn: () => Promise<unknown>, done?: string) => { setBusy(true); setErr(""); setInfo(""); try { await fn(); if (done) setInfo(done); } catch (e: any) { setErr(e.message); } finally { setBusy(false); } };
   const r = card?.renewal, openRenewal = r && (r.state === "pending" || r.state === "waiting");
   const days = card?.days;
@@ -34,6 +42,8 @@ export default function IdCard({ card, unlocked, password, kinds, mb }: { card: 
         </span>
         {!unlocked && <span className="idc-hint">🔒 Tap to show your ID</span>}
       </button>
+
+      {unlocked && <div className="bar"><button type="button" disabled={busy} onClick={() => run(() => fetch("/api/members/id/unlock", { method: "DELETE" }).then(() => router.refresh()))}>Hide image again</button></div>}
 
       {ask && !unlocked && (
         <form className="card" style={{ display: "grid", gap: 10 }} onSubmit={(e) => { e.preventDefault(); run(() => post("/api/members/id/unlock", { password: pw }).then(() => router.refresh())); }}>
