@@ -9,10 +9,11 @@ export const dynamic = "force-dynamic";
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
   if (!a?.op) return new NextResponse("bad request", { status: 400 });
-  if (!(await editingAllowed("crm", a.op === "list" || a.op === "visits" ? "read" : "write", "guests"))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("crm", ["search", "get", "visits"].includes(a.op) ? "read" : "write", "guests"))) return new NextResponse("not found", { status: 404 });
   try {
     switch (a.op) {
-      case "list": return NextResponse.json(await G.adminList(String(a.q ?? "")));
+      case "search": return NextResponse.json(await G.adminSearch({ q: String(a.q ?? ""), flag: String(a.flag ?? ""), sort: String(a.sort ?? ""), dir: String(a.dir ?? ""), offset: Number(a.offset) || 0 }));
+      case "get": { const r = await G.adminGuest(Number(a.id)); if (!r) throw new Error("That guest no longer exists."); return NextResponse.json(r); }
       case "visits": return NextResponse.json(await G.adminVisits(String(a.q ?? ""), String(a.from ?? ""), String(a.to ?? "")));
       case "saveCfg": return NextResponse.json(await G.saveCfg(a.cfg, await actor()));
       case "delete": { // an admin may delete before the retention period ended (`override`), and the screen warns first

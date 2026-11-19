@@ -24,7 +24,7 @@ Let a member bring guests to the space, with each guest's identity, emergency co
 5. Guest check-in and a check-in log visible to the member.
 6. Versioned guest agreement with drafts, preview, publish, and guest notification on a new revision.
 7. Drafts for the existing **member** agreement (same mechanism).
-8. Guest photo ID, shown beside the guest's name at check-in.
+8. Guest photo ID, collected and stored encrypted; never shown to the host.
 9. Guest deletion with a 2-year retention rule, and guest consent to that retention.
 
 **Out of scope (for now)**: guest accounts or logins, payment, guest check-out, limits on guest visits **[?]**.
@@ -43,8 +43,8 @@ Let a member bring guests to the space, with each guest's identity, emergency co
 - **G-7** Each guest row shows name and status: **Ready** (all steps done) or **INCOMPLETE** (label shown next to the name).
 - **G-8** Clicking a **Ready** guest offers **Check in** (4.5). Clicking an **INCOMPLETE** guest **resumes the wizard** at the first unfinished step.
 - **G-9** A guest **cannot be checked in** unless every wizard step is complete.
-- **G-10** Selecting a guest shows a right-hand pane (on mobile, a full-screen detail view with a Back button) containing: the guest's **photo ID picture beside their name** (neat, consistent size, so the member can see it is the right person), a **Check in** button, and the guest's **previous check-ins** (date/time, newest first). An INCOMPLETE guest shows the resume action instead of Check in.
-- **G-10a** Each guest row also shows the small photo once one exists.
+- **G-10** Selecting a guest shows a right-hand pane (on mobile, a full-screen detail view with a Back button) containing: the guest's **initials beside their name** (a host never sees a guest's government ID, only whether one is on file), a **Check in** button, and the guest's **previous check-ins** (date/time, newest first). An INCOMPLETE guest shows the resume action instead of Check in.
+- **G-10a** Each guest row shows the guest's initials.
 - **G-10b** A **Delete** action on the guest detail follows the rules in 4.6.
 
 ### 4.3 New Guest wizard
@@ -69,7 +69,7 @@ Guest (read in person, on the member's device) reads the current published guest
 This step also contains a required **retention acknowledgment** the guest must tick before they can sign: *"I understand and agree that my information, including my signed agreement, emergency contacts and photo ID, will be kept for at least 2 years after my last visit."* The acceptance (with date/time and agreement revision) is stored with the signature **[?]** or could be a clause in the agreement itself; checkbox recommended so it works across revisions.
 
 **Step 4 (last): Photo ID**
-Works like the member photo ID step (same upload/camera capture, validation, and encrypted storage as `members/photo` and onboarding ID). Phone: opens the camera directly. The image is **attached to the guest record** and is what appears next to the guest's name at check-in (G-10). Guest is **Ready** only after this step is complete.
+Works like the member photo ID step (same upload/camera capture, validation, and encrypted storage as `members/photo` and onboarding ID). Phone: opens the camera directly. The image is **attached to the guest record** and is never shown to the host (G-10). Guest is **Ready** only after this step is complete.
 
 **Cancel / bail out (differs from the member wizard)**
 - **G-11** Every step has **Cancel**. Cancelling closes the wizard and **saves progress**; the guest is stored as **INCOMPLETE** with whatever was entered.

@@ -21,6 +21,7 @@ const CSS = `dialog.wz.gm{width:min(980px,calc(100% - 24px));height:min(640px,ca
 @media(max-width:700px){dialog.wz.gm{width:100%;max-width:100%;height:100dvh;max-height:100dvh;border-radius:0}.gm-grid{grid-template-columns:1fr}.gm-list{border-right:0}.gm-grid[data-view=detail] .gm-list,.gm-grid[data-view=list] .gm-pane{display:none}.gm button{min-height:46px}}
 @media(min-width:701px){.gm-back{display:none}}`;
 const when = (s: string) => new Date(s).toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+const initials = (g: { first_name: string; last_name: string }) => ((g.first_name[0] ?? "") + (g.last_name[0] ?? "")).toUpperCase() || "👤";
 const nameOf = (g: { first_name: string; last_name: string }) => `${g.first_name} ${g.last_name}`.trim() || "New guest";
 
 /** The home-page card (styled like its neighbours in the card row) and the modal it opens. */
@@ -35,7 +36,7 @@ export default function GuestCard() {
 function GuestModal({ onClose }: { onClose: () => void }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const [rows, setRows] = useState<Row[] | null>(null), [sel, setSel] = useState<number | null>(null), [d, setD] = useState<Detail | null>(null), [err, setErr] = useState("");
-  const [wiz, setWiz] = useState<{ id: number; resume: boolean } | null>(null), [busy, setBusy] = useState(false), [stamp, setStamp] = useState(0);
+  const [wiz, setWiz] = useState<{ id: number; resume: boolean } | null>(null), [busy, setBusy] = useState(false);
   useEffect(() => { if (!wiz) dlg.current?.showModal(); }, [wiz]);
   const refresh = useCallback(async () => {
     const r = await fetch("/api/guests", { cache: "no-store" }).catch(() => null);
@@ -44,7 +45,7 @@ function GuestModal({ onClose }: { onClose: () => void }) {
   useEffect(() => { refresh(); }, [refresh]);
   const loadDetail = useCallback(async (id: number) => {
     const r = await fetch("/api/guests?g=" + id, { cache: "no-store" }).catch(() => null);
-    if (r?.ok) { setD(await r.json()); setStamp(Date.now()); } else setErr(r ? await r.text() : "Couldn't reach the server.");
+    if (r?.ok) { setD(await r.json()); } else setErr(r ? await r.text() : "Couldn't reach the server.");
   }, []);
   useEffect(() => { setD(null); if (sel) loadDetail(sel); }, [sel, loadDetail]);
 
@@ -87,17 +88,17 @@ function GuestModal({ onClose }: { onClose: () => void }) {
           <button type="button" className="pri" disabled={busy} onClick={start}>+ New Guest</button>
           {rows === null ? <p role="status">Loading…</p> : !rows.length ? <p className="sub">You have nobody.</p>
             : rows.map((r) => <button key={r.id} type="button" className="gm-row" aria-current={sel === r.id} onClick={() => setSel(r.id)}>
-              {r.has_photo ? <img className="gm-ph" alt="" src={`/api/guests/photo?g=${r.id}`} /> : <span className="gm-ph" aria-hidden>👤</span>}
+              <span className="gm-ph" aria-hidden>{initials(r)}</span>
               <span style={{ flex: 1, minWidth: 0, overflowWrap: "anywhere" }}><b>{nameOf(r)}</b>{!r.ready && <span className="gm-tag">INCOMPLETE</span>}</span>
             </button>)}
           <Notice kind="error">{err}</Notice>
         </div>
         <div className="gm-pane">
-          {!sel ? <p className="sub">Pick a guest to see their photo and check them in, or add a new one.</p>
+          {!sel ? <p className="sub">Pick a guest to check them in, or add a new one.</p>
             : !g ? <p role="status">Loading…</p> : <>
             <div><button type="button" className="gm-back" onClick={() => setSel(null)}>← Back</button></div>
             <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
-              {g.has_photo ? <img className="gm-big" alt={`Photo ID of ${nameOf(g)}`} src={`/api/guests/photo?g=${g.id}&v=${stamp}`} /> : <span className="gm-big" aria-hidden style={{ display: "grid", placeItems: "center", fontSize: 48 }}>👤</span>}
+              <span className="gm-big" aria-hidden style={{ display: "grid", placeItems: "center", fontSize: 48 }}>{initials(g)}</span>
               <div><h2 style={{ margin: 0 }}>{nameOf(g)}</h2>{g.ready ? <p className="sub" style={{ margin: "4px 0 0" }}>Ready</p> : <p style={{ margin: "4px 0 0" }}><span className="gm-tag" style={{ marginLeft: 0 }}>INCOMPLETE</span></p>}
                 {g.last_visit && <p className="sub" style={{ margin: "4px 0 0" }}>Last visit {when(g.last_visit)}</p>}</div>
             </div>

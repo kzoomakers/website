@@ -50,7 +50,8 @@ const VIEW = `SELECT g.id, g.host_id, g.first_name, g.last_name, g.email, g.phon
   (g.retention_ack_at IS NOT NULL AND g.minor IS NOT NULL AND s.id IS NOT NULL AND s.version_id >= COALESCE((SELECT max(id) FROM waiver_versions WHERE kind = 'guest' AND mandatory), 0)) AS d_agreement,
   EXISTS (SELECT 1 FROM guest_ids i WHERE i.guest_id = g.id) AS has_photo,
   EXISTS (SELECT 1 FROM guest_ids i WHERE i.guest_id = g.id AND (i.expires_on IS NULL OR i.expires_on >= (now() AT TIME ZONE 'America/Detroit')::date)) AS id_ok,
-  s.id IS NOT NULL AS ever_signed, s.completed_at AS signed_at,
+  s.id IS NOT NULL AS ever_signed, s.completed_at AS signed_at, s.id AS signed_doc,
+  (SELECT count(*)::int FROM guest_visits v WHERE v.guest_id = g.id) AS visits,
   (SELECT max(at) FROM guest_visits v WHERE v.guest_id = g.id) AS last_visit
   FROM guests g JOIN site_users h ON h.id = g.host_id
   LEFT JOIN LATERAL (SELECT id, version_id, completed_at FROM sign_docs WHERE guest_id = g.id AND kind = 'guest' AND status = 'complete' ORDER BY id DESC LIMIT 1) s ON true`;
@@ -63,7 +64,7 @@ function shape(r: any, cfg: GuestCfg) {
   const { until, deletable } = retention(r.last_visit, r.signed_at, r.ever_signed, cfg.retentionYears);
   return { id: r.id as number, host_id: r.host_id as number, host_name: r.host_name as string, first_name: r.first_name, last_name: r.last_name, email: r.email, phone: r.phone, address: r.address, zip: r.zip, state: r.state,
     minor: r.minor as boolean | null, guardian_name: r.guardian_name, done, next, ready: next === null, has_photo: r.has_photo as boolean, id_expired: r.has_photo && !r.id_ok as boolean, last_visit: r.last_visit as string | null,
-    ever_signed: r.ever_signed as boolean, retain_until: until && until.toISOString(), deletable, delete_requested_at: r.delete_requested_at as string | null,
+    ever_signed: r.ever_signed as boolean, signed_doc: r.signed_doc as number | null, visits: r.visits as number, created_at: r.created_at as string, retain_until: until && until.toISOString(), deletable, delete_requested_at: r.delete_requested_at as string | null,
     needs_resign: r.ever_signed && !r.d_agreement && r.retention_ack_at !== null };
 }
 export type Guest = ReturnType<typeof shape>;
@@ -133,10 +134,6 @@ export async function storePhoto(id: number, kind: string, expires: string, file
   await (await conn()).query("INSERT INTO guest_ids (guest_id, kind, expires_on, data) VALUES ($1,$2,$3,$4) ON CONFLICT (guest_id) DO UPDATE SET kind = EXCLUDED.kind, expires_on = EXCLUDED.expires_on, data = EXCLUDED.data, uploaded_at = now()", [id, kind, expires || null, seal(img)]);
   await (await conn()).query("UPDATE guests SET updated_at = now() WHERE id = $1", [id]);
 }
-export async function photoOf(id: number) {
-  const r = (await (await conn()).query("SELECT data FROM guest_ids WHERE guest_id = $1", [id])).rows[0];
-  return r ? open(r.data) : null;
-}
 
 // ---- check-in
 export type CheckIn = { already: boolean; at: string; week: number; nag: boolean };
@@ -178,10 +175,28 @@ export async function requestDelete(id: number) {
   return { deleted: false as const, on: g.retain_until!, host: g.host_name.split(" ")[0], text: deleteText(g.retain_until!, g.host_name.split(" ")[0], (await getCfg()).retentionYears) };
 }
 // ---- admin
-export async function adminList(q: string) {
-  const like = "%" + clip(q, 80).replace(/[\\%_]/g, "\\$&") + "%", cfg = await getCfg();
-  return (await (await conn()).query(`${VIEW} WHERE g.first_name ILIKE $1 OR g.last_name ILIKE $1 OR g.email ILIKE $1 OR h.name ILIKE $1 ORDER BY g.id DESC LIMIT 300`, [like])).rows
-    .map((r) => { const g = shape(r, cfg); return { id: g.id, name: `${g.first_name} ${g.last_name}`.trim() || "(not started)", email: g.email, host: g.host_name, ready: g.ready, next: g.next, last_visit: g.last_visit, retain_until: g.retain_until, deletable: g.deletable, delete_requested_at: g.delete_requested_at }; });
+export const GUEST_FLAGS = ["incomplete", "id_expired", "needs_resign", "never_signed", "never_visited", "deletable", "delete_requested"] as const;
+const FLAG: Record<string, (g: Guest) => boolean> = { incomplete: (g) => !g.ready, id_expired: (g) => g.id_expired, needs_resign: (g) => g.needs_resign, never_signed: (g) => !g.ever_signed, never_visited: (g) => !g.visits, deletable: (g) => g.deletable, delete_requested: (g) => !!g.delete_requested_at };
+const SORT: Record<string, (g: Guest) => string | number> = { name: (g) => `${g.last_name} ${g.first_name}`.toLowerCase(), host: (g) => g.host_name.toLowerCase(), visits: (g) => g.visits, last_visit: (g) => g.last_visit ?? "", added: (g) => g.created_at, status: (g) => (g.ready ? 1 : 0) };
+/** The CRM guest list: search (name, email, host), one filter, one sort, a page at a time. No phone, address or ID: those come only through the logged "Retrieve info". */
+// shortcut: filters, sorting and paging run in memory over the matched rows (small rows, no images), move them into SQL if guests reach tens of thousands.
+export async function adminSearch(o: { q?: string; flag?: string; sort?: string; dir?: string; offset?: number }) {
+  const like = "%" + clip(o.q, 80).replace(/[\\%_]/g, "\\$&") + "%", cfg = await getCfg();
+  let gs = (await (await conn()).query(`${VIEW} WHERE g.first_name || ' ' || g.last_name ILIKE $1 OR g.email ILIKE $1 OR h.name ILIKE $1`, [like])).rows.map((r) => shape(r, cfg));
+  if (o.flag && FLAG[o.flag]) gs = gs.filter(FLAG[o.flag]);
+  const key = SORT[o.sort ?? ""] ?? SORT.added, sign = o.dir === "asc" ? 1 : -1;
+  gs.sort((a, b) => (key(a) < key(b) ? -sign : key(a) > key(b) ? sign : a.id - b.id));
+  const off = Math.max(0, Math.floor(o.offset ?? 0));
+  return { total: gs.length, rows: gs.slice(off, off + 100).map((g) => ({ id: g.id, name: `${g.first_name} ${g.last_name}`.trim() || "(not started)", email: g.email, host: g.host_name, host_id: g.host_id, ready: g.ready, next: g.next, has_id: g.has_photo, id_expired: g.id_expired,
+    ever_signed: g.ever_signed, needs_resign: g.needs_resign, visits: g.visits, last_visit: g.last_visit, added: g.created_at, retain_until: g.retain_until, deletable: g.deletable, delete_requested_at: g.delete_requested_at })) };
+}
+/** One guest for the CRM page, without phone, address, guardian or ID (those are retrieved, logged), plus every check-in. */
+export async function adminGuest(id: number) {
+  const g = await getGuest(id);
+  if (!g) return null;
+  const { phone, address, zip, state, guardian_name, ...safe } = g; void phone; void address; void zip; void state; void guardian_name;
+  const visits = (await (await conn()).query("SELECT at FROM guest_visits WHERE guest_id = $1 ORDER BY at DESC LIMIT 500", [id])).rows.map((r) => r.at as string);
+  return { guest: safe, visits };
 }
 /** Every guest check-in, newest first; filter by guest or host name and by date (YYYY-MM-DD, Detroit time). */
 export async function adminVisits(q = "", from = "", to = "") {

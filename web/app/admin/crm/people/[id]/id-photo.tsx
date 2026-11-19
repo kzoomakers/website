@@ -4,7 +4,7 @@ import { PiiModal } from "@/components/pii-retrieve";
 import "../../../../members/id/id.css";
 
 // The member's Gov ID: a blurred sample until an admin asks for it (reason modal, logged), then the real image wipes in. Hide puts it away again.
-export default function IdPhoto({ id }: { id: number }) {
+export default function IdPhoto({ id, type = "member" }: { id: number; type?: "member" | "guest" }) {
   const [ask, setAsk] = useState(false), [d, setD] = useState<{ image: string; kind: string; expires_on: string | null } | null>(null), [open, setOpen] = useState(false);
   useEffect(() => { if (!d) return setOpen(false); const t = requestAnimationFrame(() => requestAnimationFrame(() => setOpen(true))); return () => cancelAnimationFrame(t); }, [d]);
   return (
@@ -15,7 +15,7 @@ export default function IdPhoto({ id }: { id: number }) {
         {!d && <span className="idc-hint">🔒 Click to show the Gov ID</span>}
       </button>
       {d && <div className="bar"><span className="sub">{d.kind}{d.expires_on ? ` · expires ${d.expires_on}` : ""}</span><button type="button" onClick={() => setD(null)}>Hide</button></div>}
-      {ask && <PiiModal kind="id" subject={{ type: "member", id }} onData={setD} onClose={() => setAsk(false)} />}
+      {ask && <PiiModal kind="id" subject={{ type, id }} onData={setD} onClose={() => setAsk(false)} />}
     </div>
   );
 }
