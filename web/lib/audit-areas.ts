@@ -8,7 +8,7 @@ export const AUDIT_SECTIONS: Record<string, { label: string; color: string; like
   board: { label: "Signed Docs", color: "#0f766e", like: ["board.sign.%"] },
   tours: { label: "Tours", color: "#e11d48", like: ["tour.%"] },
   chores: { label: "MakerFavor™", color: "#65a30d", like: ["chore.%"] },
-  admin: { label: "Users & access", color: "#d85b6a", like: ["privacy.%", "ntfy.%", "apikey.%", "debug.%", "user.edit", "user.delete", "user.enable", "user.disable", "user.access", "user.reset_email", "user.set_password", "user.special", "pii.%"] },
+  admin: { label: "Users & access", color: "#d85b6a", like: ["privacy.%", "ntfy.%", "apikey.%", "debug.%", "user.edit", "user.roster_photo%", "user.delete", "user.enable", "user.disable", "user.access", "user.reset_email", "user.set_password", "user.special", "pii.%"] },
 };
 const rx = (p: string) => new RegExp("^" + p.replace(/[.]/g, "\\.").replace(/%/g, ".*") + "$");
 const tests = Object.entries(AUDIT_SECTIONS).map(([k, s]) => [k, s.like.map(rx)] as const);

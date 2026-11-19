@@ -62,8 +62,10 @@ async function migrate(pool: Pool) {
   await pool.query(`CREATE TABLE IF NOT EXISTS site_users (id serial PRIMARY KEY, email text UNIQUE NOT NULL, name text NOT NULL, verified_at timestamptz, created_at timestamptz NOT NULL DEFAULT now())`);
   await pool.query("ALTER TABLE site_users ADD COLUMN IF NOT EXISTS password_hash text"); // optional: scrypt "salt:hash"; accounts without one sign in by emailed link only
   // Member details. `name` stays the display name (first + last); the rest is kept by the member and by admins (card number, QuickBooks id, notes are admin-only).
-  for (const col of ["first_name", "last_name", "phone", "address1", "address2", "city", "state", "zip", "access_card_number", "qb_id", "notes"])
+  for (const col of ["first_name", "last_name", "phone", "address1", "address2", "city", "state", "zip", "access_card_number", "qb_id", "notes", "gender", "pronouns"])
     await pool.query(`ALTER TABLE site_users ADD COLUMN IF NOT EXISTS ${col} text NOT NULL DEFAULT ''`);
+  // Roster photo: staff-taken, for the internal member roster only. Never shown to members or the public.
+  await pool.query("CREATE TABLE IF NOT EXISTS roster_photos (user_id int PRIMARY KEY REFERENCES site_users ON DELETE CASCADE, data bytea NOT NULL, updated_at timestamptz NOT NULL DEFAULT now(), updated_by text NOT NULL DEFAULT '')");
   await applyOnce(pool, "2026-11-08-split-names", [`UPDATE site_users SET first_name = split_part(name, ' ', 1), last_name = btrim(substr(name, length(split_part(name, ' ', 1)) + 1)) WHERE first_name = '' AND last_name = ''`]);
   await pool.query("ALTER TABLE site_users ADD COLUMN IF NOT EXISTS disabled_at timestamptz, ADD COLUMN IF NOT EXISTS disabled_reason text NOT NULL DEFAULT ''"); // disabled = cannot sign in; the reason is what they are told
   // Members area: membership levels (names of the plans on the Pricing page), the skills directory, tool authorizations and classes.

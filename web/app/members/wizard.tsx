@@ -3,6 +3,8 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import Notice from "@/components/notice";
+import GenderSelect from "@/components/gender-select";
+import PronounSelect from "@/components/pronoun-select";
 import SignPad from "@/components/sign-pad";
 import { Agreement } from "@/components/agreement";
 import { sendUpload } from "@/lib/upload-client";
@@ -180,7 +182,7 @@ export function IdStep({ kinds, mb, next, url = "/api/onboarding/id", guest = fa
   </form>;
 }
 
-const FIELDS = ["first_name", "last_name", "phone", "address1", "address2", "city", "state", "zip"] as const;
+const FIELDS = ["first_name", "last_name", "gender", "pronouns", "phone", "address1", "address2", "city", "state", "zip"] as const;
 function ContactStep({ next }: { next: () => void }) {
   const s = useSend(), [f, setF] = useState<Record<string, string> | null>(null);
   useEffect(() => { fetch("/api/account").then((r) => r.json()).then((j) => setF(Object.fromEntries(FIELDS.map((k) => [k, j.profile?.[k] ?? ""])))).catch(() => setF(Object.fromEntries(FIELDS.map((k) => [k, ""])))); }, []);
@@ -190,6 +192,8 @@ function ContactStep({ next }: { next: () => void }) {
     <h2 id="wz-h">Your contact information</h2>
     <Notice kind="error">{s.err}</Notice>
     <div style={two}>{i("first_name", "First name", { required: true, autoComplete: "given-name" })}{i("last_name", "Last name", { required: true, autoComplete: "family-name" })}</div>
+    <GenderSelect value={f.gender} onChange={(v) => setF({ ...f, gender: v })} label="Gender (optional)" />
+    <PronounSelect value={f.pronouns} onChange={(v) => setF({ ...f, pronouns: v })} label="Pronouns (optional)" />
     {i("phone", "Phone", { required: true, type: "tel", autoComplete: "tel", maxLength: 30 })}
     {i("address1", "Address", { required: true, autoComplete: "address-line1" })}
     {i("address2", "Apartment, suite, etc. (optional)", { autoComplete: "address-line2" })}
