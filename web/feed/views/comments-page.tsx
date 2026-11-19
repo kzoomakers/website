@@ -12,6 +12,7 @@ export default async function CommentsPage({ page }: { page: number }) {
   const path = page > 1 ? `/comments/page/${page}` : "/comments";
   return (
     <Shell title="Newest Comments" path={path}>
+      <h1 className="">Newest Comments</h1>
       <ol className="comments comments1">
         {comments.map((c) => (
           <li key={c.id}>
@@ -22,8 +23,8 @@ export default async function CommentsPage({ page }: { page: number }) {
       </ol>
       <nav className="morelink">
         {comments.length > 0 && <>
-          {page > 1 && <a href={`/comments/page/${page - 1}`} rel="prev">Page {page - 1}</a>}
-          {more && <>{page > 1 && <Divider />}<a href={`/comments/page/${page + 1}`} rel="next">Page {page + 1}</a></>}
+          {page > 1 && <a href={`/comments/page/${page - 1}?last_read_timestamp=0`} rel="prev">{`Page ${page - 1}`}</a>}
+          {more && <>{page > 1 && <Divider />}<a href={`/comments/page/${page + 1}?last_read_timestamp=0`} rel="next">{`Page ${page + 1}`}</a></>}
         </>}
       </nav>
     </Shell>

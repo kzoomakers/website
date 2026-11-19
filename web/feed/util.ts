@@ -35,3 +35,11 @@ export const truncate = (s: string, n: number) => (s.length > n ? s.slice(0, n -
 
 /** Class for the dimmed look of unpopular stories (story.rb negativity_class). */
 export const negativityClass = (score: number, flags: number) => { const n = score - flags; return n <= -5 ? "negative_5" : n <= -3 ? "negative_3" : n <= -1 ? "negative_1" : ""; };
+
+/** Server-rendered dates use the makerspace's clock (Lobsters uses Central). The browser script replaces visible times with relative ones anyway. */
+export const SITE_ZONE = "America/Detroit";
+const PARTS = new Intl.DateTimeFormat("en-CA", { timeZone: SITE_ZONE, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" });
+export function zoned(d: Date) {
+  const p = Object.fromEntries(PARTS.formatToParts(d).map((x) => [x.type, x.value]));
+  return { date: `${p.year}-${p.month}-${p.day}`, time: `${p.hour}:${p.minute}:${p.second}` };
+}

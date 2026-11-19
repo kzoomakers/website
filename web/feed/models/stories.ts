@@ -49,13 +49,13 @@ export const top = (n: number, unit: string): Query => ({ where: `${UNMERGED} AN
 
 export type TagRow = { id: number; tag: string; description: string | null; hotness_mod: number | null; quorum: number | null; privileged: boolean; permit_by_new_users: boolean; is_media: boolean };
 const TAG = "SELECT id, tag, description, hotness_mod, quorum, privileged, permit_by_new_users, is_media FROM feed.tags";
-/** Tags by name (case-insensitive), in the order asked; null if any is unknown (a 404, as Lobsters does). */
+/** Tags by name (case-insensitive); null if any is unknown (a 404, as Lobsters does). Ordered by name: Lobsters lists them in index order, not the order in the URL. */
 export async function findTags(names: string[]): Promise<TagRow[] | null> {
   if (!names.length || names.length > 20) return null;
   const rows: TagRow[] = (await (await conn()).query(`${TAG} WHERE lower(tag) = ANY($1::text[])`, [names.map((n) => n.toLowerCase())])).rows;
   const by = new Map(rows.map((r) => [r.tag.toLowerCase(), r]));
   const out = names.map((n) => by.get(n.toLowerCase()));
-  return out.every(Boolean) ? (out as TagRow[]) : null;
+  return out.every(Boolean) ? [...new Set(out as TagRow[])].sort((a, b) => a.tag.toLowerCase().localeCompare(b.tag.toLowerCase())) : null;
 }
 /** Tag.related: the tags most often shared with this one (the Lobsters-specific "programming" exclusion is dropped). */
 export async function relatedTags(tagId: number): Promise<TagRow[]> {
@@ -64,7 +64,7 @@ export async function relatedTags(tagId: number): Promise<TagRow[]> {
      WHERE t.active AND NOT t.is_media AND t.id <> $1 AND tg.story_id IN (SELECT story_id FROM feed.taggings WHERE tag_id = $1) GROUP BY t.id ORDER BY count(*) DESC, t.id LIMIT 8`, [tagId])).rows;
 }
 export async function findCategories(names: string[]): Promise<{ id: number; category: string }[] | null> {
-  const rows = (await (await conn()).query("SELECT id, category FROM feed.categories WHERE lower(category) = ANY($1::text[])", [names.map((n) => n.toLowerCase())])).rows;
+  const rows = (await (await conn()).query("SELECT id, category FROM feed.categories WHERE lower(category) = ANY($1::text[]) ORDER BY lower(category)", [names.map((n) => n.toLowerCase())])).rows;
   return rows.length === new Set(names.map((n) => n.toLowerCase())).size ? rows : null;
 }
 export type Banned = { banned_at: Date | null; banned_reason: string | null; banned_by: string | null };

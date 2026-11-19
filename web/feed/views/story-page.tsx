@@ -4,7 +4,7 @@ import { isGone } from "../models/story-page";
 import { negativityClass } from "../util";
 import { CommentItem, html } from "./comment";
 import Shell from "./shell";
-import { Divider, TimeLabel, UserLink, titlePath } from "./story-list";
+import { Caches, Divider, TimeLabel, UserLink, titlePath } from "./story-list";
 
 /** comments/_threads + _thread_to_tree: the flat, depth-first list becomes nested <li class="comments_subtree"><ol class="comments">. */
 function Tree({ comments, story, newUserDays }: { comments: Comment[]; story: StoryFull; newUserDays: number }) {
@@ -20,11 +20,6 @@ function Tree({ comments, story, newUserDays }: { comments: Comment[]; story: St
 
 const Tags = ({ s }: { s: StoryFull }) => (
   <ul className="tags" aria-label="Tags">{s.tags.map((t) => <li key={t.tag}><a aria-label={`Tag ${t.tag}`} className={`tag tag_${t.tag}${t.is_media ? " tag_is_media" : ""}`} title={t.description ?? undefined} href={`/t/${t.tag}`}>{t.tag}</a></li>)}</ul>
-);
-const Caches = ({ url }: { url: string }) => (
-  <details className="caches" {...{ name: "caches" }}><summary>caches</summary><ul>
-    <li><a href={`https://web.archive.org/web/3/${encodeURIComponent(url)}`}>Archive.org</a></li><li><a href={`https://ghostarchive.org/search?term=${encodeURIComponent(url)}`}>Ghostarchive</a></li>
-  </ul></details>
 );
 const label = (n: number) => (n === 0 ? "no comment" : `${n} comment${n === 1 ? "" : "s"}`);
 

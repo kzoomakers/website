@@ -1,0 +1,11 @@
+# Paths compared by compare.mjs. Add one per line.
+/
+/page/2
+/newest
+/newest/page/2
+/active
+/recent
+/top
+/top/1w
+/top/3d
+/comments
