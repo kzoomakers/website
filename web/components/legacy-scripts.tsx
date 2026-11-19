@@ -8,7 +8,7 @@ const SLICK = ".hero-slider, .testimonial-slider, .clients-logo-slider, .company
 const sources = () => [
   "plugins/jquery/jquery.min.js", "plugins/bootstrap/bootstrap.min.js", "plugins/parallax/jquery.parallax-1.1.3.js",
   "plugins/lightbox2/js/lightbox.min.js", ...(document.querySelector(SLICK) ? ["plugins/slick/slick.min.js"] : []), ...(document.querySelector(FILTR) ? ["plugins/filterizr/jquery.filterizr.min.js"] : []),
-  "plugins/smooth-scroll/smooth-scroll.min.js", "dynamic/js/hours.js", "nav-extras.js", "stub-plugins.js", "js/script.js",
+  "plugins/smooth-scroll/smooth-scroll.min.js", "dynamic/js/hours.js", "stub-plugins.js", "js/script.js",
 ];
 const abs = (s: string) => (/^(https?:)?\/\//.test(s) ? s : "/" + s.replace(/^\//, ""));
 
@@ -25,8 +25,6 @@ export default function LegacyScripts({ extra = [], inline = [], bare = false }:
     } as typeof document.addEventListener;
 
     const runInline = () => {
-      // script.js waits for window "load", which already fired. Hide, never remove: React owns this node and crashes ("insertBefore/removeChild ... not a child") if it vanishes.
-      document.getElementById("preloader")?.style.setProperty("display", "none");
       inline.forEach((code) => {
         const el = document.createElement("script");
         if (/^\s*import[\s{]/.test(code)) el.type = "module";
