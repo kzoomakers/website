@@ -40,7 +40,7 @@ export async function POST(req: Request) {
       case "deleteAchievement": await c.deleteAchievement(id); break;
       default: return new NextResponse("unknown op", { status: 400 });
     }
-    await logAudit(who, "chore." + a.op, String([a.chore?.area, a.chore?.task].filter(Boolean).join(" · ") || a.to ?? a.achievement?.title ?? a.id ?? a.chore_id ?? ""));
+    await logAudit(who, "chore." + a.op, String([a.chore?.area, a.chore?.task].filter(Boolean).join(" · ") || (a.to ?? a.achievement?.title ?? a.id ?? a.chore_id ?? "")));
     return NextResponse.json({ ok: true, id: a.id });
   } catch (e: any) { return new NextResponse(errMsg(e), { status: 400 }); }
 }
