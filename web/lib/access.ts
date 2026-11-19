@@ -29,6 +29,7 @@ export const PAGES: Page[] = [
   ...P("admin", [["setup", "Setup", "/admin/services"], ["audit", "Audit log", "/admin/services/audit"], ["ntfy", "Alert delivery", "/admin/services/ntfy"], ["api-keys", "API keys", "/admin/services/api-keys"], ["ai", "AI", "/admin/services/ai"],
     ["google-analytics", "Analytics & cookies", "/admin/services/google-analytics"], ["privacy", "Privacy statement", "/admin/services/privacy"], ["links", "External links", "/admin/services/links"], ["debug", "Debug", "/admin/services/debug"],
     ["httplog", "HTTP log", "/admin/services/httplog"], ["pgstats", "Database stats", "/admin/services/pgstats"], ["security", "Security headers", "/admin/services/security"]]),
+  { section: "admin", key: "pii", label: "Audit PII", path: "/admin/services/pii", full: true },
   { section: "admin", key: "users", label: "Access", path: "/admin/users", full: true },
   { section: "admin", key: "special", label: "Special permissions", path: "/admin/users/special", full: true },
 ];

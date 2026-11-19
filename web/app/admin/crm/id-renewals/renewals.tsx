@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Notice, { msgKind } from "@/components/notice";
 import { promptDialog } from "@/components/dialog";
+import PiiButton from "@/components/pii-retrieve";
 import { crm } from "../rpc";
 import type { Detail, RenewState, Row } from "@/lib/id-card";
 
@@ -57,7 +58,7 @@ export default function Renewals({ initial, canEdit, open }: { initial: { rows: 
                 <figure key={side} style={{ margin: 0, flex: "1 1 200px" }}>
                   {side === "old" && !d.current ? <p className="sub">No ID on file.</p> : side === "new" && !live
                     ? <p className="sub">The new upload is no longer kept once decided.</p>
-                    : <a href={`/api/webmaster/member-file?renewal=${d.id}&side=${side}`} target="_blank" rel="noreferrer"><img alt={`${label} ID of ${d.name}`} src={`/api/webmaster/member-file?renewal=${d.id}&side=${side}`} style={{ width: "100%", aspectRatio: "1.586", objectFit: "contain", background: "#1d1d1f", borderRadius: 8 }} /></a>}
+                    : <PiiButton key={`${d.id}${side}`} kind="id_renewal" subject={{ type: "member", id: d.user_id, renewal: d.id, side }} label={`Retrieve ${label.toLowerCase()} ID`}>{(x) => <a href={x.image} target="_blank" rel="noreferrer"><img alt={`${label} ID of ${d.name}`} src={x.image} style={{ width: "100%", aspectRatio: "1.586", objectFit: "contain", background: "#1d1d1f", borderRadius: 8 }} /></a>}</PiiButton>}
                   <figcaption className="sub" style={{ margin: 0 }}><b>{label}</b> · expires {day(exp)}</figcaption>
                 </figure>
               ))}

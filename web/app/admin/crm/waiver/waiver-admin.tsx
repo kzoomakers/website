@@ -1,4 +1,5 @@
 "use client";
+import { PiiDownload } from "@/components/pii-retrieve";
 import { useDirtyGuard } from "@/components/dirty-guard";
 import Notice, { msgKind } from "@/components/notice";
 import { useState } from "react";
@@ -138,7 +139,7 @@ export default function WaiverAdmin({ initial, canEdit, canPublish, ai, kind = "
             {mem?.map((m) => (
               <div key={m.id} className="bar" style={{ justifyContent: "space-between", borderTop: "1px solid var(--line)", padding: "8px 0" }}>
                 <span><strong>{m.name}</strong> <small>{m.email}</small></span>
-                <span>{m.revision ? <>Revision {m.revision} · {when(m.signed_at!)} {m.doc_id && <a href={`/api/webmaster/member-file?pdf=${m.doc_id}`}>PDF</a>}</> : <em>never signed</em>}{m.must_resign && <span className="tag"> must re-sign</span>}</span>
+                <span>{m.revision ? <>Revision {m.revision} · {when(m.signed_at!)} {m.doc_id && <PiiDownload subject={{ type: "member", id: m.id, doc: m.doc_id }} label="PDF" />}</> : <em>never signed</em>}{m.must_resign && <span className="tag"> must re-sign</span>}</span>
               </div>
             ))}
             {mem && !mem.length && <p className="sub">No members match.</p>}{!mem && <p className="sub">Loading…</p>}

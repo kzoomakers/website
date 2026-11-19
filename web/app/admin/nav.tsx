@@ -35,7 +35,7 @@ const CRM: Item[] = [{ href: "/admin/crm", icon: "👥", label: "People", exact:
 const SIGNED: Item[] = [{ href: "/admin/esign", icon: "📄", label: "Documents", exact: true }, { href: "/admin/esign/new", icon: "➕", label: "New document" }, { href: "/admin/esign/templates", icon: "📑", label: "Templates" }, { href: "/admin/esign/buckets", icon: "🗂️", label: "Folders" }];
 const TOURS: Item[] = [{ href: "/admin/tours", icon: "🗓️", label: "Bookings", exact: true }, { href: "/admin/tours/walkups", icon: "🚶", label: "Walk-ups" }, { href: "/admin/tours/availability", icon: "🕙", label: "Availability" }, { href: "/admin/tours/stats", icon: "📈", label: "Statistics" }, { href: "/admin/tours/timeline", icon: "🧵", label: "Timeline" }, { href: "/admin/tours/notifications", icon: "🔔", label: "Tour alerts" }];
 const CHORES: Item[] = [{ href: "/admin/makerfavor", icon: "🧹", label: "To do", exact: true }, { href: "/admin/makerfavor/log", icon: "⏱️", label: "Hours" }, { href: "/admin/makerfavor/stats", icon: "📊", label: "Stats" }, { href: "/admin/makerfavor/achievements", icon: "🏅", label: "Achievements" }];
-const SYSTEM: Item[] = [{ href: "/admin/users", icon: "🔑", label: "Access", exact: true }, { href: "/admin/users/special", icon: "⭐", label: "Special permissions" }, { href: "/admin/services", icon: "⚙️", label: "Setup", exact: true }, { href: "/admin/services/audit", icon: "📋", label: "Audit log" }, { href: "/admin/services/ntfy", icon: "📱", label: "Alert delivery" }, { href: "/admin/services/api-keys", icon: "🗝️", label: "API keys" }, { href: "/admin/services/ai", icon: "✨", label: "AI" }, { href: "/admin/services/google-analytics", icon: "📊", label: "Analytics & cookies" },
+const SYSTEM: Item[] = [{ href: "/admin/users", icon: "🔑", label: "Access", exact: true }, { href: "/admin/users/special", icon: "⭐", label: "Special permissions" }, { href: "/admin/services", icon: "⚙️", label: "Setup", exact: true }, { href: "/admin/services/audit", icon: "📋", label: "Audit log" }, { href: "/admin/services/pii", icon: "🔍", label: "Audit PII" }, { href: "/admin/services/ntfy", icon: "📱", label: "Alert delivery" }, { href: "/admin/services/api-keys", icon: "🗝️", label: "API keys" }, { href: "/admin/services/ai", icon: "✨", label: "AI" }, { href: "/admin/services/google-analytics", icon: "📊", label: "Analytics & cookies" },
   { icon: "🩺", label: "Diagnostics", items: [{ href: "/admin/services/debug", icon: "🐞", label: "Debug" }, { href: "/admin/services/httplog", icon: "🌐", label: "HTTP log" }, { href: "/admin/services/pgstats", icon: "📈", label: "Database stats" }, { href: "/admin/services/security", icon: "🛡️", label: "Security headers" }] }];
 const MENUS: [string, Item[]][] = [["/admin/webmaster", WEBMASTER], ["/admin/blog", BLOG], ["/admin/mailer", MAIL], ["/admin/forms", FORMS], ["/admin/crm", CRM], ["/admin/esign", SIGNED], ["/admin/tours", TOURS], ["/admin/makerfavor", CHORES], ["/admin/users", SYSTEM]];
 
@@ -70,10 +70,10 @@ function Node({ item, here, all, n }: { item: Item; here: string; all: string[];
 }
 
 /** The left menu for whichever admin section you are in, plus the account menu at the bottom (same on every page). */
-export default function Nav({ admin, perms, user }: { admin: boolean; perms: Perms; user: ReactNode }) {
+export default function Nav({ admin, audit = false, perms, user }: { admin: boolean; audit?: boolean; perms: Perms; user: ReactNode }) {
   const here = usePathname(), n = useAlerts(here);
   // Only the pages this person may open (a page-only grant must not show the rest of the section).
-  const may = (i: Item): boolean => { if ("items" in i) return i.items.some(may); const pg = pageOf(i.href); return !pg || !!levelFor(perms, pg.section, pg.key); };
+  const may = (i: Item): boolean => { if ("items" in i) return i.items.some(may); const pg = pageOf(i.href); if (audit && pg?.key === "pii") return true; /* on the Audit PII special list */ return !pg || !!levelFor(perms, pg.section, pg.key); };
   const prune = (i: Item): Item => ("items" in i ? { ...i, items: i.items.filter(may) } : i);
   const tab = tabOf(here), links = (MENUS.find(([p]) => p === tab)?.[1] ?? []).filter((l) => (admin || !("href" in l && l.href.endsWith("/services"))) && may(l)).map(prune);
   const all = links.flatMap(hrefs);

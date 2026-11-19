@@ -93,15 +93,15 @@ export async function deleteUser(id: number, who: string) {
   return true;
 }
 
-export type Person = { id: number; name: string; email: string; phone: string; verified: boolean; contacts: number; card: string; disabled: boolean };
+export type Person = { id: number; name: string; email: string; verified: boolean; contacts: number; card: string; disabled: boolean };
 
-/** Site accounts matching a name/email/phone/card/QuickBooks search, newest first. Capped at 50; search to find the rest. */
+/** Site accounts matching a name/email/card/QuickBooks search (phone numbers are PII: neither shown nor searchable here), newest first. Capped at 50; search to find the rest. */
 export async function listPeople(q: string): Promise<Person[]> {
   const like = "%" + q.trim().replace(/[\\%_]/g, "\\$&") + "%";
   return (await (await conn()).query(
-    `SELECT u.id, u.name, u.email, u.phone, u.verified_at IS NOT NULL AS verified, u.access_card_number AS card, u.disabled_at IS NOT NULL AS disabled,
+    `SELECT u.id, u.name, u.email, u.verified_at IS NOT NULL AS verified, u.access_card_number AS card, u.disabled_at IS NOT NULL AS disabled,
             (SELECT count(*)::int FROM emergency_contacts e WHERE e.user_id = u.id) AS contacts
-     FROM site_users u WHERE $1 = '' OR u.name ILIKE $2 OR u.email ILIKE $2 OR u.phone ILIKE $2 OR u.access_card_number ILIKE $2 OR u.qb_id ILIKE $2
+     FROM site_users u WHERE $1 = '' OR u.name ILIKE $2 OR u.email ILIKE $2 OR u.access_card_number ILIKE $2 OR u.qb_id ILIKE $2
      ORDER BY u.id DESC LIMIT 50`, [q.trim(), like])).rows;
 }
 

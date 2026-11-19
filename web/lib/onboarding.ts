@@ -57,10 +57,3 @@ export async function storeId(userId: number, kind: string, expires: string, fil
   await joinMembersIfDone(userId);
 }
 
-/** Staff viewing someone's ID: decrypts, and is always recorded in the audit log. */
-export async function viewId(userId: number, who: string) {
-  const r = (await (await conn()).query("SELECT i.data, u.email FROM member_ids i JOIN site_users u ON u.id = i.user_id WHERE i.user_id = $1", [userId])).rows[0];
-  if (!r) return null;
-  await logAudit(who, "crm.id.view", r.email);
-  return open(r.data);
-}

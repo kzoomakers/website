@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { access, isRes } from "@/lib/guest-access";
 import { signedPdfOf } from "@/lib/guests";
+import { logGuestSelf } from "@/lib/pii";
 
 export const dynamic = "force-dynamic";
 
@@ -9,5 +10,6 @@ export async function GET(req: Request) {
   const a = await access(req);
   if (isRes(a)) return a;
   const f = await signedPdfOf(a.g.id);
+  if (f) await logGuestSelf(req, a, "signed_doc", ["signed_pdf"]);
   return f ? new NextResponse(new Uint8Array(f.pdf), { headers: { "content-type": "application/pdf", "content-disposition": `attachment; filename="${f.title.replace(/[^\w.-]+/g, "_").slice(0, 60)}.pdf"`, "cache-control": "private, no-store", "x-content-type-options": "nosniff" } }) : new NextResponse("not signed yet", { status: 404 });
 }

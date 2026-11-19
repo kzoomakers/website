@@ -56,13 +56,13 @@ async function mailTo(u: { id: number; email: string; name: string }, subject: s
   } catch { return false; }
 }
 
-export type Row = { id: number; name: string; email: string; phone: string; applied_at: string; last_at: string; last_by_applicant: boolean };
+export type Row = { id: number; name: string; email: string; applied_at: string; last_at: string; last_by_applicant: boolean };
 
 /** Applicants in one state. Open states list longest-waiting first; closed ones newest first. */
 export async function listApplicants(state: string): Promise<Row[]> {
   const s = (STATES as readonly string[]).includes(state) ? state : "pending", open = s === "pending" || s === "waiting";
   return (await (await conn()).query(
-    `SELECT u.id, u.name, u.email, u.phone, f.applied_at, l.at AS last_at, l.by_applicant AS last_by_applicant
+    `SELECT u.id, u.name, u.email, f.applied_at, l.at AS last_at, l.by_applicant AS last_by_applicant
      FROM site_users u
      JOIN LATERAL (SELECT COALESCE(min(at), u.created_at) AS applied_at, count(*) AS n FROM approval_events WHERE user_id = u.id) f ON ($1 <> 'approved' OR f.n > 0)
      LEFT JOIN LATERAL (SELECT at, by_applicant FROM approval_events WHERE user_id = u.id AND kind <> 'note' ORDER BY id DESC LIMIT 1) l ON true
@@ -75,14 +75,13 @@ export async function counts(): Promise<Record<State, number>> {
   return out;
 }
 
-export type Detail = { id: number; name: string; first_name: string; last_name: string; email: string; phone: string; address: string; approval: State; events: ApprovalEvent[]; waiver_id: number | null; has_id: boolean; onboarding: string };
+export type Detail = { id: number; name: string; first_name: string; last_name: string; email: string; approval: State; events: ApprovalEvent[]; waiver_id: number | null; has_id: boolean; onboarding: string };
 
 /** One applicant with their thread. The applicant's own view (forApplicant) leaves out staff notes. */
 export async function detail(id: number, forApplicant = false): Promise<Detail | null> {
   const c = await conn();
-  const u = (await c.query(`SELECT id, name, first_name, last_name, email, phone, approval,
-    onboarding, (SELECT id FROM sign_docs WHERE user_id = site_users.id AND kind = 'waiver' AND status = 'complete' ORDER BY id DESC LIMIT 1) AS waiver_id, EXISTS (SELECT 1 FROM member_ids WHERE user_id = site_users.id) AS has_id,
-    btrim(concat_ws(', ', NULLIF(address1, ''), NULLIF(address2, ''), NULLIF(city, ''), NULLIF(concat_ws(' ', NULLIF(state, ''), NULLIF(zip, '')), ''))) AS address
+  const u = (await c.query(`SELECT id, name, first_name, last_name, email, approval,
+    onboarding, (SELECT id FROM sign_docs WHERE user_id = site_users.id AND kind = 'waiver' AND status = 'complete' ORDER BY id DESC LIMIT 1) AS waiver_id, EXISTS (SELECT 1 FROM member_ids WHERE user_id = site_users.id) AS has_id
     FROM site_users WHERE id = $1 AND verified_at IS NOT NULL`, [id])).rows[0];
   if (!u) return null;
   u.events = (await c.query(`SELECT id, actor, by_applicant, kind, to_state, body, at FROM approval_events WHERE user_id = $1 ${forApplicant ? "AND kind <> 'note'" : ""} ORDER BY id`, [id])).rows;

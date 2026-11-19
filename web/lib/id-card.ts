@@ -115,13 +115,6 @@ export async function detail(id: number): Promise<Detail> {
   return { ...row, current: cur.rows[0] ?? null, events: events.rows };
 }
 
-/** One picture for staff: `new` (the upload under review) or `old` (the ID on file). Always recorded in the audit log. */
-export async function viewSide(id: number, side: string, who: string) {
-  const c = await conn(), r = (await c.query(side === "old" ? "SELECT i.data, u.email FROM id_renewals r JOIN member_ids i ON i.user_id = r.user_id JOIN site_users u ON u.id = r.user_id WHERE r.id = $1" : "SELECT r.data, u.email FROM id_renewals r JOIN site_users u ON u.id = r.user_id WHERE r.id = $1 AND length(r.data) > 0", [id])).rows[0];
-  if (!r) return null;
-  await logAudit(who, "crm.id.view", r.email);
-  return open(r.data);
-}
 
 const stale = () => new Error("Someone else just changed this. Reload to see the latest.");
 
