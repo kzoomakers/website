@@ -1,9 +1,13 @@
 // Keep legacy URLs alive: /about.html -> /about, /index.html -> /
 const nextConfig = {
   async rewrites() {
-    return [
-      // The eBay listing template (HTML to paste into a listing) is served at /ebay/template.
-      { source: "/ebay/template", destination: "/images/ebay/template.html" }];
+    return {
+      afterFiles: [
+        // The eBay listing template (HTML to paste into a listing) is served at /ebay/template.
+        { source: "/ebay/template", destination: "/images/ebay/template.html" }],
+      // Files in public/ win; /images and /download are not in the Docker image, so they land here and come from the bucket (app/static-files).
+      fallback: [{ source: "/images/:path*", destination: "/static-files/images/:path*" }, { source: "/download/:path*", destination: "/static-files/download/:path*" }],
+    };
   },
   devIndicators: { position: "bottom-right" },
   async redirects() {
