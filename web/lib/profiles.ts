@@ -93,16 +93,37 @@ export async function deleteUser(id: number, who: string) {
   return true;
 }
 
-export type Person = { id: number; name: string; email: string; verified: boolean; contacts: number; card: string; disabled: boolean };
+export type Person = { id: number; name: string; email: string; verified: boolean; contacts: number; card: string; disabled: boolean; approval: string; joined: string; levels: string[]; roster: boolean; waiver: boolean };
+export type PeopleQuery = { q?: string; sort?: string; dir?: string; status?: string; approval?: string; level?: string; flag?: string; offset?: number; limit?: number };
+const SORTS: Record<string, string> = { name: "lower(u.name)", email: "lower(u.email)", joined: "u.created_at", card: "u.access_card_number", contacts: "contacts", approval: "u.approval", status: "u.disabled_at IS NOT NULL" };
+const FLAGS: Record<string, string> = {
+  no_contacts: "NOT EXISTS (SELECT 1 FROM emergency_contacts e WHERE e.user_id = u.id)", unverified: "u.verified_at IS NULL",
+  no_roster: "NOT EXISTS (SELECT 1 FROM roster_photos r WHERE r.user_id = u.id)", no_waiver: "NOT EXISTS (SELECT 1 FROM sign_docs d WHERE d.user_id = u.id AND d.kind = 'waiver' AND d.status = 'complete')",
+  no_membership: "NOT EXISTS (SELECT 1 FROM memberships m WHERE m.user_id = u.id)", no_card: "u.access_card_number = ''" };
 
-/** Site accounts matching a name/email/card/QuickBooks search (phone numbers are PII: neither shown nor searchable here), newest first. Capped at 50; search to find the rest. */
-export async function listPeople(q: string): Promise<Person[]> {
-  const like = "%" + q.trim().replace(/[\\%_]/g, "\\$&") + "%";
-  return (await (await conn()).query(
-    `SELECT u.id, u.name, u.email, u.verified_at IS NOT NULL AS verified, u.access_card_number AS card, u.disabled_at IS NOT NULL AS disabled,
-            (SELECT count(*)::int FROM emergency_contacts e WHERE e.user_id = u.id) AS contacts
-     FROM site_users u WHERE $1 = '' OR u.name ILIKE $2 OR u.email ILIKE $2 OR u.access_card_number ILIKE $2 OR u.qb_id ILIKE $2
-     ORDER BY u.id DESC LIMIT 50`, [q.trim(), like])).rows;
+/** Site accounts, filtered, sorted and paged (phone numbers are PII: neither shown nor searchable here). Every word typed must match the name, email, card number or QuickBooks id. */
+export async function listPeople(o: PeopleQuery = {}): Promise<{ rows: Person[]; total: number }> {
+  const ps: unknown[] = [], w: string[] = [], add = (v: unknown) => `$${ps.push(v)}`;
+  for (const t of (o.q ?? "").trim().split(/\s+/).filter(Boolean).slice(0, 6)) {
+    const p = add("%" + t.replace(/[\\%_]/g, "\\$&") + "%");
+    w.push(`(u.name ILIKE ${p} OR u.email ILIKE ${p} OR u.access_card_number ILIKE ${p} OR u.qb_id ILIKE ${p})`);
+  }
+  if (o.status === "active") w.push("u.disabled_at IS NULL"); else if (o.status === "disabled") w.push("u.disabled_at IS NOT NULL");
+  if (["pending", "waiting", "rejected", "approved"].includes(o.approval ?? "")) w.push(`u.approval = ${add(o.approval)}`);
+  if (o.level === "__none") w.push(FLAGS.no_membership); else if (o.level) w.push(`EXISTS (SELECT 1 FROM memberships m WHERE m.user_id = u.id AND m.level = ${add(o.level)})`);
+  if (o.flag && FLAGS[o.flag]) w.push(FLAGS[o.flag]);
+  const W = w.length ? "WHERE " + w.join(" AND ") : "", c = await conn();
+  const order = `${SORTS[o.sort ?? ""] ?? "u.created_at"} ${o.dir === "asc" ? "ASC" : "DESC"}, u.id DESC`;
+  const lim = add(Math.min(Math.max(o.limit ?? 50, 1), 10000)), off = add(Math.max(o.offset ?? 0, 0));
+  const [rows, total] = await Promise.all([
+    c.query(`SELECT u.id, u.name, u.email, u.verified_at IS NOT NULL AS verified, u.access_card_number AS card, u.disabled_at IS NOT NULL AS disabled, u.approval, u.created_at AS joined,
+        (SELECT count(*)::int FROM emergency_contacts e WHERE e.user_id = u.id) AS contacts,
+        COALESCE((SELECT array_agg(m.level ORDER BY m.level) FROM memberships m WHERE m.user_id = u.id), '{}') AS levels,
+        EXISTS (SELECT 1 FROM roster_photos r WHERE r.user_id = u.id) AS roster,
+        EXISTS (SELECT 1 FROM sign_docs d WHERE d.user_id = u.id AND d.kind = 'waiver' AND d.status = 'complete') AS waiver
+      FROM site_users u ${W} ORDER BY ${order} LIMIT ${lim} OFFSET ${off}`, ps),
+    c.query(`SELECT count(*)::int AS n FROM site_users u ${W}`, ps.slice(0, ps.length - 2))]);
+  return { rows: rows.rows, total: total.rows[0].n };
 }
 
 /** Changing a person's email, password or account can take over that account, so people who hold admin access (any section) can only be touched by a full administrator. */
