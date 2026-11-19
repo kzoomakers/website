@@ -1,13 +1,14 @@
 // Keep legacy URLs alive: /about.html -> /about, /index.html -> /
-const ASSETS = process.env.ASSETS_URL || "https://kzoomakers-public-assets.fly.storage.tigris.dev";
+const ASSETS = "https://kzoomakers-public-assets.fly.storage.tigris.dev";
 const nextConfig = {
   async rewrites() {
     return {
       afterFiles: [
         // The eBay listing template (HTML to paste into a listing) is served at /ebay/template.
-        { source: "/ebay/template", destination: "/images/ebay/template.html" }],
-      // Files in public/ win; /images and /download are not in the Docker image (CI syncs them to this public Tigris bucket), so they land here and are fetched from it.
-      fallback: [{ source: "/images/:path*", destination: `${ASSETS}/images/:path*` }, { source: "/download/:path*", destination: `${ASSETS}/download/:path*` }],
+        { source: "/ebay/template", destination: `${ASSETS}/images/ebay/template.html` }, // direct: rewrites don't chain, and the file is not in the image
+        // /images and /download are not in the Docker image (CI syncs them to this public Tigris bucket). afterFiles, not fallback: files in public/ still win, but the
+        // catch-all page app/[[...path]] matches every URL, so a fallback rewrite would never run.
+        { source: "/images/:path*", destination: `${ASSETS}/images/:path*` }, { source: "/download/:path*", destination: `${ASSETS}/download/:path*` }],
     };
   },
   devIndicators: { position: "bottom-right" },

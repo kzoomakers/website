@@ -40,14 +40,6 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci --ignore-scripts
-      - name: npm audit
-        run: |
-          set +e
-          npm audit --audit-level=low | tee audit.txt
-          code=${PIPESTATUS[0]}
-          { echo '### npm audit'; echo '```'; cat audit.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
-          exit $code
-      - run: npm audit signatures
       - name: Validate JSON files
         working-directory: .
         run: git ls-files '*.json' | xargs -n1 node -e 'JSON.parse(require("fs").readFileSync(process.argv[1]))'
@@ -86,6 +78,15 @@ jobs:
             web/junit.xml
             web/spec.txt
           retention-days: 30
+      # Last, so a new advisory can't stop the tests from running and reporting.
+      - name: npm audit
+        run: |
+          set +e
+          npm audit --audit-level=low | tee audit.txt
+          code=${PIPESTATUS[0]}
+          { echo '### npm audit'; echo '```'; cat audit.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          exit $code
+      - run: npm audit signatures
 
   audit: # required check name kept; the real audit runs inside `test`
     needs: test
@@ -145,7 +146,7 @@ jobs:
       - name: Sync images and downloads to the bucket
         run: |
           for d in images download; do
-            aws s3 sync "web/public/$d" "s3://$BUCKET/$d" --endpoint-url "$ENDPOINT" --delete --only-show-errors --cache-control "public, max-age=86400"
+            aws s3 sync "web/public/$d" "s3://$BUCKET/$d" --endpoint-url "$ENDPOINT" --delete --size-only --only-show-errors --cache-control "public, max-age=86400"
           done
 
   deploy:
