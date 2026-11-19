@@ -140,7 +140,7 @@
 .adm select,.adm .adm-main select{font:inherit;color:inherit;background:var(--card);border:1px solid var(--btn-bd);border-radius:8px;padding:8px 10px}
 
 /* Sidebar links: inline on desktop, behind a Menu button on phones */
-.adm-links{display:contents}.adm-burger{display:none}
+.adm-ease{width:100%;height:auto;border-radius:8px;margin-bottom:8px}.adm-links{display:contents}.adm-burger{display:none}
 .adm table{max-width:100%}.adm pre{overflow-x:auto;max-width:100%}.adm img{max-width:100%}
 
 /* Overscroll/rubber-band area shows the html background; match the admin page colors instead of white */
@@ -160,7 +160,7 @@ html:has(.adm-root){background:#f5f6f8}
   .adm-brand{font-size:0;gap:0;flex:none}.adm-brand img{width:28px;height:28px}
   .adm-top nav{flex:1;min-width:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}.adm-top nav::-webkit-scrollbar{display:none}
   .adm-top nav a{white-space:nowrap;padding:10px 12px}
-  .adm-sp{display:none}
+  .adm-sp,.adm-ease{display:none}
   .adm-side{position:static;height:auto;padding:6px 8px;border-bottom:1px solid var(--line);gap:2px}
   .adm-burger{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;font-weight:600}
   .adm-links{display:none;flex-direction:column;gap:2px;padding-top:4px}.adm-links[data-open]{display:flex}
