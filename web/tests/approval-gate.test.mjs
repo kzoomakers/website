@@ -7,7 +7,7 @@ import { join } from "node:path";
 
 const walk = (d) => readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirectory() ? walk(join(d, f)) : [join(d, f)]));
 const MEMBERS_ONLY = [...walk("app/api/members"), ...walk("app/api/notifications"), ...walk("app/api/reviews"), ...walk("app/members/directory"), ...walk("app/members/classes"), ...walk("app/members/profile"),
-  ...walk("app/members/inbox"), ...walk("app/members/skills"), ...walk("app/members/notifications"), "app/members/shell.tsx", "lib/guard.ts"].filter((f) => /\.tsx?$/.test(f));
+  ...walk("app/members/inbox"), ...walk("app/members/skills"), "app/members/shell.tsx", "lib/guard.ts"].filter((f) => /\.tsx?$/.test(f));
 
 test("members-only code never accepts an unapproved sign-in", () => {
   for (const f of MEMBERS_ONLY) assert.doesNotMatch(readFileSync(f, "utf8"), /currentVerified|currentApplicant/, f);

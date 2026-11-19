@@ -4,7 +4,6 @@ import { promisify } from "util";
 import { cookies } from "next/headers";
 import { conn, db } from "./db";
 import { STEP_SQL, joinMembersIfDone } from "./waiver";
-import { notify, setUserTopicsLocked, userTopicName } from "./ntfy";
 import { addRegistered, getMailCfg, mailReady, sendQueued as send } from "./mail";
 
 // Site accounts (readers): passwordless. Registering and signing in are the same step: we email a one-time link,
@@ -43,12 +42,10 @@ export function cookieUserId(value?: string): number | null {
   return sig.length === want.length && timingSafeEqual(Buffer.from(sig), Buffer.from(want)) && Number.isInteger(Number(id)) ? Number(id) : null;
 }
 
-/** A disabled member asked for a link: tell them (email + their ntfy topic), then lock their topics until they are enabled again. Only the first request does anything, so it can't be used to spam them. */
+/** A disabled member asked for a link: tell them by email. Only the first request in a while is answered, so it can't be used to spam them. */
 async function tellDisabled(email: string, u: { name: string; disabled_reason: string }, cfg: Awaited<ReturnType<typeof getMailCfg>>) {
-  if (!(await setUserTopicsLocked(email, true))) return; // already told and locked
+  if (!(await hit(`disabled-notice:${email}`, 1, 86_400_000))) return; // already told today
   const why = disabledMsg(u.disabled_reason), msg = `Your Kzoo Makers account is disabled, so we can't send a sign-in link. Reason: ${why}. Please contact the club if you think this is a mistake.`;
-  // The topic was locked first so two requests at once can't both send; the system can still publish into it, and you'll see this when the account is enabled again (or on an app that is already connected).
-  await notify(userTopicName(email), { title: "Account disabled", message: msg, tags: "no_entry", priority: 4 });
   await send({ to: email, subject: "Your Kzoo Makers account is disabled", text: `Hi ${u.name},\n\n${msg}`, html: `<p>Hi ${esc(u.name)},</p><p>${esc(msg)}</p>` }, cfg).catch((e) => console.error("disabled notice failed:", e));
 }
 
@@ -63,7 +60,7 @@ export async function requestLink(emailIn: string, nameIn: string, next: string,
   // At most 60 links an hour for the whole site, so the form can't be used to mail-bomb other people.
   if ((await c.query("SELECT count(*)::int AS n FROM login_tokens WHERE created_at > now() - interval '1 hour' AND next NOT LIKE '/members/inbox/%' AND next <> '/members/classes'")).rows[0].n >= 60) throw new Error("Too many sign-in requests right now. Please try again later.");
   let u = (await c.query("SELECT id, name, disabled_at, disabled_reason FROM site_users WHERE email = $1", [email])).rows[0];
-  if (u?.disabled_at) { await tellDisabled(email, u, cfg); return; } // the page answers the same as for an unknown address; the person is told by email and push
+  if (u?.disabled_at) { await tellDisabled(email, u, cfg); return; } // the page answers the same as for an unknown address; the person is told by email
   if (!u) {
     if (!name) return; // same answer as a sent link, so the form can't be used to find out who has an account
     // No password is taken here: anyone could register someone else's address with a password they know. Members set one on the Account page after signing in.

@@ -1,11 +1,11 @@
 import { memo, forget } from "./memo";
 import { db } from "./db";
-import { addLink, notify, personalTopics, removeLink, subscribersOf, TOUR_EVENTS, type TourEvent } from "./ntfy";
+import { notify, TOUR_EVENTS, type TourEvent } from "./pushover";
 import { cleanDays, cleanEmail } from "./tours-fmt";
 import { getMailCfg, mailReady, sendQueued as send } from "./mail";
 
-// Who hears about tour events. Email: a list of addresses per event, kept in settings. Push: the event's special ntfy topic, with people's own topics
-// attached to it by a link, so one publish reaches everyone. Both are edited in Admin > Tours > Notifications.
+// Who hears about tour events. Email: a list of addresses per event, kept in settings. Push: the event's Pushover delivery group (Admin > Setup > Alert delivery).
+// Email lists are edited in Admin > Tours > Notifications.
 export type Cfg = { emails: Record<TourEvent, string[]>; staleDays: number };
 const EVENTS = Object.keys(TOUR_EVENTS) as TourEvent[];
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
@@ -60,23 +60,14 @@ export const addEmail = (event: unknown, email: unknown) => {
 export const removeEmail = (event: unknown, email: unknown) => { const e = checked(event), m = String(email ?? "").trim().toLowerCase(); return edit((c) => { c.emails[e] = c.emails[e].filter((x) => x !== m); }); };
 export const setStaleDays = (days: unknown) => { const n = cleanDays(days); return edit((c) => { c.staleDays = n; }); };
 
-/** Everything the Notifications page shows: settings, who is attached to each event topic, and the topics that can be attached. */
+/** Everything the Notifications page shows: settings and the event names. */
 export async function overview() {
-  const [cfg, people] = await Promise.all([getCfg(), personalTopics()]);
-  const subs = Object.fromEntries(await Promise.all(EVENTS.map(async (e) => [e, await subscribersOf(TOUR_EVENTS[e][0])])));
-  return { cfg, pause: await getPause(), subs, people, events: Object.fromEntries(EVENTS.map((e) => [e, TOUR_EVENTS[e][1]])) };
+  return { cfg: await getCfg(), pause: await getPause(), events: { ...TOUR_EVENTS } };
 }
 
-export const subscribe = async (event: unknown, topic: unknown) => {
-  const name = String(topic), p = (await personalTopics()).find((t: any) => t.name === name);
-  if (!p) throw new Error("Pick one of the people's topics.");
-  await addLink(TOUR_EVENTS[checked(event)][0], name);
-};
-export const unsubscribe = (event: unknown, topic: unknown) => removeLink(TOUR_EVENTS[checked(event)][0], String(topic));
-
-/** Tells everyone signed up for `event`: a push to its topic and an email to its list. Never throws, so a failed notice can't fail a booking. */
+/** Tells everyone signed up for `event`: a push to its group and an email to its list. Never throws, so a failed notice can't fail a booking. */
 export async function announce(event: TourEvent, m: { subject: string; lines: string[]; tags?: string; click?: string; priority?: number }) {
-  await notify(TOUR_EVENTS[event][0], { title: m.subject, message: m.lines.join("\n"), tags: m.tags, click: m.click, priority: m.priority });
+  await notify(event, { title: m.subject, message: m.lines.join("\n"), tags: m.tags, click: m.click, priority: m.priority });
   try {
     const [cfg, mc] = [await getCfg(), await getMailCfg()];
     if (!mailReady(mc)) return;

@@ -3,7 +3,6 @@ import { logAudit } from "./store";
 import { MIN_ADMINS } from "./users";
 import { disabledMsg } from "./readers";
 import { joinMembersIfDone } from "./waiver";
-import { setUserTopicsLocked } from "./ntfy";
 
 
 // What a member can edit about themselves, and the extra fields only admins can edit.
@@ -133,7 +132,7 @@ export async function mayTakeOver(callerIsAdmin: boolean, targetId: number) {
 
 /** Disables an account (reason = what they are told when they try to sign in; blank gives "Account is disabled") or, with null, enables it again. Existing sessions and unused links stop working at once. */
 export async function setDisabled(id: number, reason: string | null, who: string) {
-  // The account change is one transaction (so a crash can't leave it half-disabled); the ntfy topic lock below is idempotent and runs after it.
+  // The account change is one transaction (so a crash can't leave it half-disabled).
   const u = await adminFloor(async (c) => {
   const u = (await c.query("SELECT email, disabled_at FROM site_users WHERE id = $1", [id])).rows[0];
   if (!u) return null;
@@ -152,7 +151,6 @@ export async function setDisabled(id: number, reason: string | null, who: string
   return u;
   });
   if (!u) return false;
-  if (reason === null) await setUserTopicsLocked(u.email, false); // if this throws, enabling again retries it
   await logAudit(who, reason === null ? "user.enable" : "user.disable", u.email + (reason ? `: ${clip(reason, 300)}` : ""));
   return true;
 }

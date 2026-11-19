@@ -1,6 +1,6 @@
 import { randomBytes } from "crypto";
 import { db } from "./db";
-import { notify, TOURS_TOPIC } from "./ntfy";
+import { notify } from "./pushover";
 import { csvToRequests, requestsToCsv, blocksToCsv, csvToBlocks, bookingsToCsv, csvToBookings, checkOffers, addMonths, canCheckIn, CHECKIN_ANSWERS, CHECKIN_BATCH, DATE, summarize, fmtOffer, mins, nudge, reminderDue, TIME, TZ, type Offer } from "./tours-fmt";
 import { announce, getCfg as notifyCfg, getPause, savePause } from "./tours-notify";
 import { getMailCfg, mailReady, sendQueued as send } from "./mail";
@@ -155,7 +155,7 @@ export async function deleteBlocks(ids: unknown, base: string) {
       ? mailVisitor(p.email, "Your Kzoo Makers tour needs a new time", [sorry, "We've put your request back in line, and a volunteer will email you new dates soon."])
       : mailVisitor(p.email, "Your Kzoo Makers tour was cancelled", [sorry, "Please pick another time. If none are open, you'll be able to request a tour and a volunteer will offer you dates."], ["Rebook your tour", `${base}/tours`]));
   }
-  if (people.length) await notify(TOURS_TOPIC, { title: `${people.length} tour(s) cancelled`, message: `${blocks} availability block(s) were deleted. ${people.map((p) => p.name).join(", ")} were emailed to rebook.`, tags: "warning", priority: 4 });
+  if (people.length) await notify("tours", { title: `${people.length} tour(s) cancelled`, message: `${blocks} availability block(s) were deleted. ${people.map((p) => p.name).join(", ")} were emailed to rebook.`, tags: "warning", priority: 4 });
   return { blocks, people: people.length };
 }
 
@@ -381,7 +381,7 @@ export async function book(x: Record<string, unknown> & { block: number; start: 
   const w = when(b.date, x.start);
   await mail(email, "Your Kzoo Makers tour", [`Hi ${name}, you're booked for a tour on ${w}.`, "If your plans change, please cancel so someone else can have the spot.", nudge()], ["Cancel this tour", `${base}/tours/cancel?token=${token}`], "booked");
   await mail(b.guide_email, `New tour booking: ${name}`, [`${name} (${email}, ${phone}) booked a tour on ${w}.`, interest && `Interested in: ${interest}`, vnotes && `Notes: ${vnotes}`].filter(Boolean) as string[]);
-  await notify(TOURS_TOPIC, { title: `Tour booked: ${name}`, message: `${w}\n${name} · ${email} · ${phone}${interest ? `\nInterested in: ${interest}` : ""}`, tags: "calendar", click: `${base}/admin/tours` });
+  await notify("tours", { title: `Tour booked: ${name}`, message: `${w}\n${name} · ${email} · ${phone}${interest ? `\nInterested in: ${interest}` : ""}`, tags: "calendar", click: `${base}/admin/tours` });
   await logEvent("booking", `${name} booked a tour for ${w}`, { detail: [interest && `Interested in: ${interest}`, `${email} · ${phone}`].filter(Boolean).join("\n"), guide: b.guide_name || b.guide_email, actor: name });
   await announce("booked", { subject: `Tour booked: ${name}`, lines: [`${name} (${email}, ${phone}) booked a tour on ${w}.`, interest && `Interested in: ${interest}`].filter(Boolean) as string[], tags: "calendar", click: `${base}/admin/tours` });
   return { date: b.date, start: x.start };
@@ -396,7 +396,7 @@ export async function cancelByToken(token: string, confirm: boolean) {
     await c.query("UPDATE tour_requests SET status = 'closed' WHERE booking_id = $1", [r.id]); // a walk-up that cancels is no longer waiting for a tour
     await logEvent("cancel", `${r.name} cancelled their tour on ${when(r.date, r.start_time)}`, { guide: r.guide_email, actor: r.name });
     await mail(r.guide_email, `Tour cancelled: ${r.name}`, [`${r.name} cancelled their tour on ${when(r.date, r.start_time)}.`]);
-    await notify(TOURS_TOPIC, { title: `Tour cancelled: ${r.name}`, message: when(r.date, r.start_time), tags: "x", priority: 2 });
+    await notify("tours", { title: `Tour cancelled: ${r.name}`, message: when(r.date, r.start_time), tags: "x", priority: 2 });
   }
   return { when: when(r.date, r.start_time), cancelled: confirm || r.cancelled };
 }
@@ -422,7 +422,7 @@ export async function requestTour(x: Record<string, unknown>, ipHash: string, de
   await saveRequest(c, r, ipHash, dev);
   // Dismissed on arrival: no staff alert; it shows up in the monthly summary (sendRejectedSummary).
   if (r.outOfArea) throw new Error(OUT_OF_AREA);
-  await notify(TOURS_TOPIC, { title: `Tour request: ${r.first} ${r.last}`, message: `${r.email} · ${r.phone} (prefers ${contact})${interest ? `\nInterested in: ${interest}` : ""}`, tags: "raising_hand", click: `${base}/admin/tours/walkups` });
+  await notify("tours", { title: `Tour request: ${r.first} ${r.last}`, message: `${r.email} · ${r.phone} (prefers ${contact})${interest ? `\nInterested in: ${interest}` : ""}`, tags: "raising_hand", click: `${base}/admin/tours/walkups` });
   await logEvent("walkup_new", `${r.first} ${r.last} asked for a walk-up tour`, { detail: [`${r.email} · ${r.phone} (prefers ${contact})`, interest && `Interested in: ${interest}`].filter(Boolean).join("\n"), actor: `${r.first} ${r.last}` });
   await announce("walkup_new", { subject: `Walk-up tour request: ${r.first} ${r.last}`, lines: [`${r.first} ${r.last} (${r.email}, ${r.phone}, prefers ${contact}) asked for a tour.`, interest && `Interested in: ${interest}`, r.notes && `Notes: ${r.notes}`].filter(Boolean) as string[], tags: "raising_hand", click: `${base}/admin/tours/walkups` });
 }
@@ -611,7 +611,7 @@ export async function respondCheckin(token: string, answer: unknown, months: unk
   await c.query("UPDATE tour_requests SET interest_state = $2::text, snooze_until = $3, status = CASE WHEN $2::text <> 'active' AND status = 'offered' THEN 'open' ELSE status END, offers = CASE WHEN $2::text <> 'active' AND status = 'offered' THEN '[]' ELSE offers END WHERE id = ANY($1)", [ids, state, until]);
   const name = `${r.first_name} ${r.last_name}`;
   await logEvent("walkup_checkin_answer", `${name} ${SAID[a]}${until ? ` (check back ${until})` : ""}`, { detail: text, actor: name });
-  await notify(TOURS_TOPIC, { title: `Check-in answer: ${name}`, message: `${name} ${SAID[a]}${until ? `. Check back ${until}.` : ""}${text ? `\n"${text}"` : ""}`, tags: a === "interested" ? "white_check_mark" : "wave", click: `${base}/admin/tours/walkups` });
+  await notify("tours", { title: `Check-in answer: ${name}`, message: `${name} ${SAID[a]}${until ? `. Check back ${until}.` : ""}${text ? `\n"${text}"` : ""}`, tags: a === "interested" ? "white_check_mark" : "wave", click: `${base}/admin/tours/walkups` });
   return { answer: a, until };
 }
 
@@ -703,14 +703,14 @@ export async function respond(token: string, pick: number | null, note: string, 
   const name = `${r.first_name} ${r.last_name}`;
   if (!o) {
     await logEvent("walkup_declined", `${name} asked for different times`, { detail: note.trim().slice(0, 300), guide: r.guide_name, actor: name });
-    await notify(TOURS_TOPIC, { title: `Tour request needs new times: ${name}`, message: `They have asked for new times ${r.reschedules + 1} time(s).${note ? `\n"${note}"` : ""}`, tags: "arrows_counterclockwise", click: `${base}/admin/tours/walkups` });
+    await notify("tours", { title: `Tour request needs new times: ${name}`, message: `They have asked for new times ${r.reschedules + 1} time(s).${note ? `\n"${note}"` : ""}`, tags: "arrows_counterclockwise", click: `${base}/admin/tours/walkups` });
     return { declined: true as const };
   }
   const w = fmtOffer(o);
   await mail(r.email, "Your Kzoo Makers tour", [`Hi ${r.first_name}, you're booked for a tour on ${w}.`, "If your plans change, please cancel so we can offer the time to someone else.", nudge()], ["Cancel this tour", `${base}/tours/cancel?token=${bookingToken}`], "booked");
   await mail(r.guide_email, `Tour confirmed: ${name}`, [`${name} (${r.email}, ${r.phone}) accepted your tour time: ${w}.`, r.interest && `Interested in: ${r.interest}`, r.notes && `Notes: ${r.notes}`].filter(Boolean) as string[]);
   await logEvent("walkup_confirmed", `${name} picked a time: ${w}`, { guide: r.guide_name, actor: name });
-  await notify(TOURS_TOPIC, { title: `Walk-up tour confirmed: ${name}`, message: w, tags: "calendar", click: `${base}/admin/tours` });
+  await notify("tours", { title: `Walk-up tour confirmed: ${name}`, message: w, tags: "calendar", click: `${base}/admin/tours` });
   return { declined: false as const, when: w };
 }
 
@@ -770,7 +770,7 @@ export async function postVisitor(token: string, body: string, base: string) {
   const p = await party(t.kind, t.id), page = `${base}/admin/tours${t.kind === "request" ? "/walkups" : ""}`;
   await logEvent("message_visitor", `${t.name} replied about their tour`, { detail: body.slice(0, 300), actor: t.name, guide: p.guide_email });
   await mail(p.guide_email, `${t.name} replied about their tour`, [`${t.name} wrote:`, body], ["Open the conversation", page]);
-  await notify(TOURS_TOPIC, { title: `Reply from ${t.name}`, message: body.slice(0, 300), tags: "speech_balloon", click: page });
+  await notify("tours", { title: `Reply from ${t.name}`, message: body.slice(0, 300), tags: "speech_balloon", click: page });
 }
 
 /** On the 1st (Eastern time), emails contact@ the tour requests dismissed last month for being outside Michigan. Run hourly; the settings row makes it once per month across machines. */

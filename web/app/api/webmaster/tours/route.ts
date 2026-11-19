@@ -18,7 +18,7 @@ const PAGE: Record<string, string | string[]> = {
   bookings: "bookings", tabs: "bookings", waiting: "bookings", addTab: "bookings", deleteTab: "bookings", renameTab: "bookings", moveToTab: "bookings", remind: "bookings", cancel: "bookings", setStatus: "bookings", exportBookings: "bookings", importBookings: "bookings",
   requests: "walkups", checkinPreview: "walkups", checkinSend: "walkups", offer: "walkups", reopen: "walkups", close: "walkups", exportRequests: "walkups", import: "walkups", thread: ["bookings", "walkups"], post: ["bookings", "walkups"],
   stats: "stats", mailStats: "stats", timeline: "timeline", mailTrail: ["bookings", "walkups"],
-  notifyGet: "notifications", emailAdd: "notifications", emailRemove: "notifications", staleSave: "notifications", pauseSave: "notifications", subAdd: "notifications", subRemove: "notifications",
+  notifyGet: "notifications", emailAdd: "notifications", emailRemove: "notifications", staleSave: "notifications", pauseSave: "notifications",
   activate: ["bookings", "walkups"], undoActivation: ["bookings", "walkups"],
 };
 
@@ -47,8 +47,6 @@ export async function POST(req: Request) {
       case "checkinSend": { const m = await me(), r = await t.sendCheckins(a.ids, m?.name || who, await baseUrl(req), a.note); await logAudit(who, "tour.checkinSend", `${r.sent} sent, ${r.failed} failed`); return NextResponse.json(r); }
       case "pauseSave": await t.setPaused(a.paused, a.message, who); break;
       case "staleSave": await n.setStaleDays(a.days); break;
-      case "subAdd": await n.subscribe(a.event, a.topic); break;
-      case "subRemove": await n.unsubscribe(a.event, a.topic); break;
       case "exportRequests": return NextResponse.json({ csv: await t.exportRequests(!!a.all) });
       case "import": return NextResponse.json(await t.importRequests(a.csv));
       case "exportBlocks": return NextResponse.json({ csv: await t.exportBlocks(!!a.past) });

@@ -50,7 +50,7 @@ export default async function Members() {
               <h2>Guest visits</h2>
               {visits.length ? <ul>{visits.map((v) => <li key={v.at}><strong>{v.first_name} {v.last_name}</strong> <small>{when(v.at)}</small></li>)}</ul> : <p>None yet. Use “I brought a Guest” above.</p>}
             </section>
-            <p><Link href="/members/directory">Find a member with a skill</Link> · <Link href="/members/profile">Edit your profile and skills</Link> · <Link href="/members/notifications">Phone alerts</Link></p>
+            <p><Link href="/members/directory">Find a member with a skill</Link> · <Link href="/members/profile">Edit your profile and skills</Link></p>
           </div>
         );
       }}

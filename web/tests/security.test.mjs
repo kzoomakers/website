@@ -4,7 +4,6 @@ import { test } from "node:test";
 import assert from "node:assert";
 import { judge } from "../lib/spam.ts";
 import { clickOk, same, sign } from "../lib/signing.ts";
-import { tokenAllows } from "../lib/ntfy-token.ts";
 import { cleanHtml } from "../lib/sanitize.ts";
 
 const base = { mode: "none", blocked: ["viagra"], priorApproved: 0, duplicate: false };
@@ -23,14 +22,6 @@ test("email click links: only our own signature is accepted", () => {
   assert.ok(!clickOk("other", "tok", "https://kzoomakers.org/x", sig));
   assert.ok(!clickOk("secret", "tok", "javascript:alert(1)", sign("secret", "tok", "javascript:alert(1)")));
   assert.ok(same("abc", "abc") && !same("abc", "abd") && !same("abc", "ab"));
-});
-
-test("ntfy tokens", () => {
-  const t = { scopes: ["read"], topics: ["a"] };
-  assert.ok(tokenAllows(t, ["a"], false));
-  assert.ok(!tokenAllows(t, ["a"], true)); // read-only token can't publish
-  assert.ok(!tokenAllows(t, ["a", "b"], false)); // every topic must be covered
-  assert.ok(tokenAllows({ scopes: ["publish"], topics: [] }, ["x", "y"], true)); // no topic list = all topics
 });
 
 test("blog HTML loses scripts but keeps formatting", () => {
