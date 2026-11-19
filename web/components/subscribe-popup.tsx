@@ -43,14 +43,14 @@ function Form({ f }: { f: F }) {
   };
   const bar = f.kind === "bar";
   const wrap: React.CSSProperties =
-    f.kind === "popup" ? { position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,.5)", display: "grid", placeItems: "center", padding: 16 }
+    f.kind === "popup" ? { position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,.5)", display: "grid", gridTemplateColumns: "minmax(0, 1fr)", placeItems: "center", padding: 16, overflowY: "auto" }
     : f.kind === "slidein" ? { position: "fixed", right: 16, bottom: 16, zIndex: 9999, width: "min(360px, calc(100vw - 32px))" }
     : bar ? { position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 9999 }
     : { maxWidth: 520, margin: "32px auto", padding: "0 16px" };
   const card: React.CSSProperties = {
     background: "#fff", color: "#1c2024", font: "15px/1.4 system-ui,sans-serif", boxSizing: "border-box", position: "relative",
     ...(bar ? { padding: "12px 48px 12px 16px", boxShadow: "0 -4px 20px rgba(0,0,0,.2)", borderTop: `4px solid ${f.color}` }
-      : { borderRadius: 12, padding: 22, boxShadow: "0 8px 32px rgba(0,0,0,.3)", width: f.kind === "popup" ? "min(420px, 100%)" : undefined }),
+      : { borderRadius: 12, padding: 22, boxShadow: "0 8px 32px rgba(0,0,0,.3)", width: f.kind === "popup" ? "min(420px, 100%)" : undefined, maxWidth: "100%", minWidth: 0 }),
   };
   const input: React.CSSProperties = { padding: 10, boxSizing: "border-box", border: "1px solid #bbb", borderRadius: 6, font: "inherit" };
   const field = (w: number): React.CSSProperties => ({ ...input, width: bar ? w : "100%", marginBottom: bar ? 0 : 8 });
@@ -66,7 +66,7 @@ function Form({ f }: { f: F }) {
             <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden style={{ position: "absolute", left: -9999 }} />
             {f.ask_name && <input aria-label="Your name" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} style={field(160)} />}
             <input type="email" required aria-label="Email address" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} style={field(220)} />
-            <Captcha compact={f.kind === "bar" || f.kind === "slidein"} />
+            <Captcha compact={f.kind === "bar" || f.kind === "slidein" || window.innerWidth < 420} />
             <button type="submit" style={{ ...input, background: f.color, color: "#fff", border: 0, fontWeight: 700, cursor: "pointer", width: bar ? "auto" : "100%" }}>{f.button}</button>
             {msg && <p role="alert" style={{ color: "#b00020", margin: "8px 0 0" }}>{msg}</p>}
           </form>)}
