@@ -10,6 +10,7 @@ import { SITE } from "@/lib/sitemap";
 import StyledMap from "@/components/styled-map";
 import { mapsKey } from "@/lib/maps-key";
 import LegacyScripts from "@/components/legacy-scripts";
+import Preloader from "@/components/preloader";
 import TodayFlash from "@/components/today-flash";
 
 export const dynamic = "force-dynamic"; // POC: always read fresh; Phase 2 moves to ISR + revalidate on publish
@@ -44,7 +45,7 @@ export default async function Page({ params }: P) {
       {bodyClass && <script dangerouslySetInnerHTML={{ __html: `document.body.className+=" ${bodyClass}"` }} />}
       {mapKey && <StyledMap backdrop apiKey={mapKey} address={address} />}
       {home && !bare && <TodayFlash />}
-      {!bare && <div id="preloader"><div className="preloader"><span /><span /><span /><span /><span /><span /></div></div>}
+      {!bare && <Preloader />}
       <Render config={config} data={data as any} metadata={{ sitemap: tree?.tree, menu, board, posts: posts?.map((p) => ({ slug: p.slug, title: p.title, excerpt: p.excerpt, image: p.image, date: p.publish_at ?? p.updated_at })), guided: { [slug]: fillAddress(rev, address) } }} />
       <LegacyScripts bare={bare} extra={(rp.scripts ?? []).map((x: any) => x.src)} inline={(rp.inline ?? []).map((x: any) => x.code)} />
     </>
