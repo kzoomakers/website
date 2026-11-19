@@ -5,17 +5,21 @@ import { useRouter } from "next/navigation";
 import { confirmDialog } from "@/components/dialog";
 import Extras from "./extras";
 import DisableButton from "../../../disable-button";
-import type { Contact, Profile } from "@/lib/profiles";
+import PiiButton from "@/components/pii-retrieve";
+import type { Profile } from "@/lib/profiles";
 
 const call = (id: number, method: string, body?: unknown) =>
   fetch(`/api/webmaster/users/${id}`, { method, headers: { "content-type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
 
 const FIELDS: [keyof Profile, string][] = [["first_name", "First name"], ["last_name", "Last name"], ["email", "Email"], ["phone", "Phone"], ["address1", "Address"], ["address2", "Address line 2"], ["city", "City"], ["state", "State"], ["zip", "ZIP"], ["access_card_number", "Access card number"], ["qb_id", "QuickBooks ID"]];
 
-// One member: every detail an admin can fix, their emergency contacts (always visible here), and account actions.
-export default function Member({ profile, contacts, canEdit }: { profile: Profile; contacts: Contact[]; canEdit: boolean }) {
+// Hidden fields are left out of a save, so saving can't blank them.
+const PRIVATE = ["phone", "address1", "address2", "city", "state", "zip"]; // hidden until "Retrieve info" (logged)
+
+// One member: every detail an admin can fix, their emergency contacts (hidden until retrieved), and account actions.
+export default function Member({ profile, canEdit }: { profile: Profile; canEdit: boolean }) {
   const router = useRouter();
-  const [p, setP] = useState(profile), [pw, setPw] = useState(""), [msg, setMsg] = useState(""), [bad, setBad] = useState(false), [busy, setBusy] = useState(false);
+  const [p, setP] = useState(profile), [shown, setShown] = useState(false), [pw, setPw] = useState(""), [msg, setMsg] = useState(""), [bad, setBad] = useState(false), [busy, setBusy] = useState(false);
   const run = async (fn: () => Promise<Response>, ok: string, then?: () => void) => {
     setBusy(true); setMsg("");
     const r = await fn().catch(() => null);
@@ -32,11 +36,14 @@ export default function Member({ profile, contacts, canEdit }: { profile: Profil
       {msg && <p role={bad ? "alert" : "status"} style={{ color: bad ? "var(--bad)" : "var(--ok)" }}>{msg}</p>}
 
       <fieldset disabled={!canEdit} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
-        <form className="card" style={{ display: "grid", gap: 10, padding: 16 }} onSubmit={(e) => { e.preventDefault(); run(() => call(p.id, "PUT", p), "Saved.", () => router.refresh()); }}>
+        <form className="card" style={{ display: "grid", gap: 10, padding: 16 }} onSubmit={(e) => { e.preventDefault(); run(() => call(p.id, "PUT", shown ? p : Object.fromEntries(Object.entries(p).filter(([k]) => !PRIVATE.includes(k)))), "Saved.", () => router.refresh()); }}>
           <h2 style={{ margin: 0 }}>Details</h2>
           <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))" }}>
-            {FIELDS.map(([k, label]) => <label key={k}>{label}<input type={k === "email" ? "email" : "text"} required={k === "first_name" || k === "email"} value={String(p[k] ?? "")} onChange={(e) => setP({ ...p, [k]: e.target.value })} style={{ width: "100%" }} /></label>)}
+            {FIELDS.map(([k, label]) => PRIVATE.includes(k) && !shown
+              ? <label key={k}>{label}<input value="••••••••" readOnly disabled aria-label={`${label} (hidden)`} style={{ width: "100%" }} /></label>
+              : <label key={k}>{label}<input type={k === "email" ? "email" : "text"} required={k === "first_name" || k === "email"} value={String(p[k] ?? "")} onChange={(e) => setP({ ...p, [k]: e.target.value })} style={{ width: "100%" }} /></label>)}
           </div>
+          <div className="bar"><span className="sub">Phone and address are hidden.</span><PiiButton kind="personal" subject={{ type: "member", id: p.id }} label="Retrieve info" onChange={(d) => { setShown(!!d); setP((x) => ({ ...x, ...Object.fromEntries(PRIVATE.map((k) => [k, d?.[k] ?? ""])) })); }}>{() => <span className="sub">Showing phone and address.</span>}</PiiButton></div>
           <label>Notes (admins only)<textarea rows={3} maxLength={2000} value={p.notes} onChange={(e) => setP({ ...p, notes: e.target.value })} style={{ width: "100%" }} /></label>
           <div><button className="pri" type="submit" disabled={busy}>Save changes</button></div>
         </form>
@@ -45,15 +52,17 @@ export default function Member({ profile, contacts, canEdit }: { profile: Profil
       <Extras id={p.id} canEdit={canEdit} />
 
       <h2>Emergency contacts</h2>
-      <div className="card">
-        {contacts.map((k) => (
-          <div className="row" key={k.id} style={{ display: "block" }}>
-            <strong>{k.first_name} {k.last_name}</strong> <span className="tag">{k.relationship}</span><br />
-            <a href={`tel:${k.phone}`}>{k.phone}</a>{k.business_phone && <> · work <a href={`tel:${k.business_phone}`}>{k.business_phone}</a></>}
-            {k.address && <div className="sub" style={{ margin: 0 }}>{k.address}</div>}
-          </div>
-        ))}
-        {!contacts.length && <p className="sub">None on file. {profile.name} is asked to add one the next time they sign in.</p>}
+      <div className="card" style={{ display: "grid", gap: 8 }}>
+        <PiiButton kind="emergency" subject={{ type: "member", id: p.id }} label="Retrieve emergency contacts">{(d) => <>
+          {d.contacts.map((k: any) => (
+            <div className="row" key={k.id} style={{ display: "block" }}>
+              <strong>{k.first_name} {k.last_name}</strong> <span className="tag">{k.relationship}</span><br />
+              <a href={`tel:${k.phone}`}>{k.phone}</a>{k.business_phone && <> · work <a href={`tel:${k.business_phone}`}>{k.business_phone}</a></>}
+              {k.address && <div className="sub" style={{ margin: 0 }}>{k.address}</div>}
+            </div>
+          ))}
+          {!d.contacts.length && <p className="sub">None on file. {profile.name} is asked to add one the next time they sign in.</p>}
+        </>}</PiiButton>
       </div>
 
       {canEdit && (

@@ -13,16 +13,17 @@ export default function Special({ perms, initial, admins, canEdit }: { perms: { 
   return <>
     <h1>Special permissions</h1>
     <p className="sub">Some actions are limited to the people listed here, on top of normal admin access. If a list is empty, any full administrator can do it, so nobody is locked out while you set it up. Once someone is listed, only the people listed can.</p>
+    <p className="sub"><b>Personal information</b> (the “View …” and “Audit PII” permissions below) works the other way round: full administrators are always allowed, and everyone else must be listed. Everyone, administrators included, still gives a reason and is logged. Listed people also need access to the People section.</p>
     <Notice kind={msgKind(msg)}>{msg}</Notice>
     {perms.map(({ k, label }) => {
       const who = list[k] ?? [], free = admins.filter((a) => !who.includes(a.email.toLowerCase()));
       return <section key={k} className="card" style={{ display: "grid", gap: 8, maxWidth: 640, marginBottom: 14 }}>
         <h2 style={{ margin: 0 }}>{label}</h2>
         {who.length ? <ul style={{ margin: 0 }}>{who.map((e) => <li key={e}>{e} {canEdit && <button type="button" onClick={() => set(k, e, false)} aria-label={`Remove ${e}`}>Remove</button>}</li>)}</ul>
-          : <p className="sub" style={{ margin: 0 }}>Nobody listed: any full administrator may.</p>}
+          : <p className="sub" style={{ margin: 0 }}>{k.startsWith("pii.") ? "Nobody listed: only full administrators." : "Nobody listed: any full administrator may."}</p>}
         {canEdit && <div className="bar">
           <select aria-label="Choose an administrator" value="" onChange={(e) => e.target.value && set(k, e.target.value, true)}><option value="">Add an administrator…</option>{free.map((a) => <option key={a.email} value={a.email}>{a.name} ({a.email})</option>)}</select>
-          <input type="email" placeholder="or type an email" value={pick[k] ?? ""} onChange={(e) => setPick({ ...pick, [k]: e.target.value })} />
+          <input type="email" placeholder="or type an email" aria-label="Email to add" value={pick[k] ?? ""} onChange={(e) => setPick({ ...pick, [k]: e.target.value })} />
           <button type="button" disabled={!pick[k]} onClick={() => { set(k, pick[k], true); setPick({ ...pick, [k]: "" }); }}>Add</button>
         </div>}
       </section>;

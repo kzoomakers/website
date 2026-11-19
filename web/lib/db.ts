@@ -212,6 +212,19 @@ async function migrate(pool: Pool) {
   await pool.query("CREATE TABLE IF NOT EXISTS agreement_drafts (kind text PRIMARY KEY, data jsonb NOT NULL, updated_by text NOT NULL DEFAULT '', updated_at timestamptz NOT NULL DEFAULT now())");
   // Who may publish an agreement ("special permissions", Admin > Access). Keyed by email so Google-login admins can be listed too.
   await pool.query("CREATE TABLE IF NOT EXISTS special_perms (perm text NOT NULL, email text NOT NULL, PRIMARY KEY (perm, email))");
+  // PII access log: append-only (the trigger refuses UPDATE and DELETE, even for the app's own role) with a hash chain over every row. See docs/pii-audit-access-system.md.
+  await pool.query(`CREATE TABLE IF NOT EXISTS pii_access (id serial PRIMARY KEY, at timestamptz NOT NULL, viewer_id int, viewer_email text NOT NULL, viewer_is_admin boolean NOT NULL,
+    subject_type text NOT NULL, subject_id int NOT NULL, subject_name text NOT NULL DEFAULT '', kind text NOT NULL, fields jsonb NOT NULL DEFAULT '[]', reason text NOT NULL DEFAULT '', note text NOT NULL DEFAULT '',
+    via text NOT NULL, ip text NOT NULL DEFAULT '', ua text NOT NULL DEFAULT '', request_path text NOT NULL DEFAULT '', prev_hash text NOT NULL, hash text NOT NULL)`);
+  await pool.query("CREATE INDEX IF NOT EXISTS pii_access_at ON pii_access (at DESC)");
+  await pool.query("CREATE INDEX IF NOT EXISTS pii_access_subject ON pii_access (subject_type, subject_id)");
+  await pool.query("CREATE INDEX IF NOT EXISTS pii_access_viewer ON pii_access (viewer_email, at DESC)");
+  await pool.query(`CREATE OR REPLACE FUNCTION pii_access_frozen() RETURNS trigger AS $$ BEGIN RAISE EXCEPTION 'pii_access is append-only'; END $$ LANGUAGE plpgsql`);
+  await pool.query("DROP TRIGGER IF EXISTS pii_access_frozen ON pii_access");
+  await pool.query("CREATE TRIGGER pii_access_frozen BEFORE UPDATE OR DELETE ON pii_access FOR EACH ROW EXECUTE FUNCTION pii_access_frozen()");
+  await pool.query("CREATE TABLE IF NOT EXISTS pii_report_runs (month text PRIMARY KEY, sent_at timestamptz, chain_ok boolean NOT NULL, row_count int NOT NULL, skipped boolean NOT NULL DEFAULT false)");
+  await pool.query("CREATE TABLE IF NOT EXISTS pii_access_http (src_id bigint PRIMARY KEY, at timestamptz NOT NULL, method text NOT NULL, path text NOT NULL, ip text NOT NULL DEFAULT '', ua text NOT NULL DEFAULT '', referer text NOT NULL DEFAULT '', \"user\" text NOT NULL DEFAULT '', status smallint NOT NULL DEFAULT 0)");
+  await pool.query("CREATE INDEX IF NOT EXISTS pii_access_http_at ON pii_access_http (at DESC)");
   // Guests of members. Everything here is deleted with the guest (see lib/guests.ts); the signed agreement lives in sign_docs (kind 'guest', guest_id).
   await pool.query(`CREATE TABLE IF NOT EXISTS guests (id serial PRIMARY KEY, host_id int NOT NULL REFERENCES site_users ON DELETE CASCADE, first_name text NOT NULL DEFAULT '', last_name text NOT NULL DEFAULT '',
     email text NOT NULL DEFAULT '', phone text NOT NULL DEFAULT '', address text NOT NULL DEFAULT '', zip text NOT NULL DEFAULT '', state text NOT NULL DEFAULT '', minor boolean, guardian_name text NOT NULL DEFAULT '',

@@ -38,8 +38,8 @@ test("a URL belongs to the longest page path above it", () => {
   assert.equal(k("/admin/nowhere"), undefined);
 });
 
-test("the pages that change who has access are never grantable one by one", () => {
-  assert.deepEqual(PAGES.filter((p) => p.full).map((p) => p.key).sort(), ["special", "users"]);
+test("the pages that change who has access (or show who looked at personal data) are never grantable one by one", () => {
+  assert.deepEqual(PAGES.filter((p) => p.full).map((p) => p.key).sort(), ["pii", "special", "users"]); // Audit PII is opened by full admins or the "Audit PII" special permission instead
 });
 
 // ---- the code agrees with the registry

@@ -25,6 +25,9 @@ export async function register() {
     job(7351920, 6 * 3600_000, async () => { const u = (await getMailCfg().catch(() => null))?.siteUrl || process.env.SITE_URL; if (u) await sendReminders(u.replace(/\/+$/, "")); }); // "your ID is expiring" nudges, at most weekly per member
     const { runGuestMail } = await import("./lib/guests");
     job(7351917, 3600_000, runGuestMail); // guest agreement update emails (a slow trickle) and scheduled guest deletions
+    const { reportJob, copyHttpHits } = await import("./lib/pii");
+    job(7351931, 3600_000, reportJob); // monthly personal-information report to the board (last evening of the month; retries daily if it fails)
+    job(7351932, 3600_000, copyHttpHits); // copies hits on PII routes out of the HTTP log so the evidence outlives its pruning
     const { prune } = await import("./lib/retention");
     setTimeout(() => withLock(7351914, prune).catch(() => {}), 120_000); // not at the very start
     job(7351914, 6 * 3600_000, prune); // data past the 5-year limit (lib/retention.ts)

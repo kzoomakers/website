@@ -103,7 +103,7 @@ export default function Classes({ canEdit }: { canEdit: boolean }) {
               </>}
             </div>
             {roster?.id === c.id && <div style={{ padding: "0 0 10px 16px" }}>
-              {roster.rows.map((p) => <div key={p.id}>{p.pos}. <a href={`/admin/crm/people/${p.id}`}>{p.name}</a> <small>{p.email}{p.phone && ` · ${p.phone}`}</small>{c.capacity > 0 && p.pos > c.capacity && <em> (waitlist)</em>}</div>)}
+              {roster.rows.map((p) => <div key={p.id}>{p.pos}. <a href={`/admin/crm/people/${p.id}`}>{p.name}</a> <small>{p.email}</small>{c.capacity > 0 && p.pos > c.capacity && <em> (waitlist)</em>}</div>)}
               {!roster.rows.length && <small>No one yet.</small>}
             </div>}
           </div>

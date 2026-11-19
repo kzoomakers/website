@@ -288,7 +288,7 @@ export async function saveClass(b: any): Promise<number | void> {
 }
 export const deleteClass = async (id: number) => void (await (await conn()).query("DELETE FROM classes WHERE id = $1", [id]));
 export const roster = async (classId: number) =>
-  (await (await conn()).query(`SELECT u.id, u.name, u.email, u.phone, s.created_at, row_number() OVER (ORDER BY s.created_at, s.user_id)::int AS pos
+  (await (await conn()).query(`SELECT u.id, u.name, u.email, s.created_at, row_number() OVER (ORDER BY s.created_at, s.user_id)::int AS pos
     FROM class_signups s JOIN site_users u ON u.id = s.user_id WHERE s.class_id = $1 ORDER BY s.created_at, s.user_id`, [classId])).rows;
 export const memberClasses = async (userId: number) =>
   (await (await conn()).query(`SELECT c.id, c.title, c.starts_at FROM class_signups s JOIN classes c ON c.id = s.class_id WHERE s.user_id = $1 ORDER BY c.starts_at DESC LIMIT 20`, [userId])).rows;

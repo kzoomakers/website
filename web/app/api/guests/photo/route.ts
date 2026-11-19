@@ -3,6 +3,7 @@ import { clientIp } from "@/lib/comments";
 import { access, isRes } from "@/lib/guest-access";
 import { imageFail, uploadGate } from "@/lib/image";
 import { photoOf, storePhoto } from "@/lib/guests";
+import { logGuestSelf } from "@/lib/pii";
 
 export const dynamic = "force-dynamic";
 
@@ -24,5 +25,6 @@ export async function GET(req: Request) {
   const a = await access(req);
   if (isRes(a) || !a.host) return isRes(a) ? a : new NextResponse("not found", { status: 404 });
   const img = await photoOf(a.g.id);
+  if (img) await logGuestSelf(req, a, "id", ["id_image"]);
   return img ? new NextResponse(new Uint8Array(img), { headers: { "content-type": "image/webp", "cache-control": "private, no-store", "x-content-type-options": "nosniff" } }) : new NextResponse("none", { status: 404 });
 }
