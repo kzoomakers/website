@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { getFeedConfig } from "../config";
 import { INTERVALS, timeInterval } from "../interval";
 import { byCategories, byDomain, byOrigin, byTags, byUser, findCategories, findDomain, findOrigin, findTags, findUser, listBy, relatedTags, top, type Banned, type Query, type TagRow } from "../models/stories";
@@ -25,7 +25,7 @@ async function Render({ title, base, page, query, above, below, subnav, h1 }: { 
   const path = base + (page > 1 ? `/page/${page}` : "");
   return (
     <Shell title={title} path={path} subnav={subnav ? <StoriesSubnav path={path} /> : undefined}>
-      {h1 && <h1>{title}</h1>}
+      {h1 && <h1 className="">{title}</h1>}
       <StoryList stories={stories} page={page} more={more} base={base} above={above} below={below} newUserDays={cfg.newUserDays} />
     </Shell>
   );
@@ -50,7 +50,7 @@ export async function TagPage({ tag, page }: { tag: string; page: number }) {
     );
     return <Render title={[t.tag, t.description].filter(Boolean).join(" - ")} base={`/t/${t.tag}`} page={page} query={query} above={above} below={<p className="hint">Tip: read stories across multiple tags with <code>/t/tag1,tag2</code></p>} />;
   }
-  const above = <div className="box">Stories <a href="/tags">tagged</a> as<br />{tags.map((t) => <span key={t.id}><TagLink t={t} /> {t.description}<br /></span>)}</div>;
+  const above = <div className="box">Stories <a href="/tags">tagged</a> as<br />{tags.map((t) => <Fragment key={t.id}><TagLink t={t} /> {t.description}<br /></Fragment>)}</div>;
   return <Render title={tags.map((t) => [t.tag, t.description].filter(Boolean).join(" - ")).join(" ")} base={`/t/${tags.map((t) => t.tag).join(",")}`} page={page} query={query} above={above} />;
 }
 
@@ -58,7 +58,7 @@ export async function CategoryPage({ category, page }: { category: string; page:
   const names = segs(category).split(",");
   const cats = await findCategories(names);
   if (!cats) notFound();
-  const above = <div className="box">Stories with <a href="/tags">tags</a> in the {cats.map((c) => <span key={c.id}><a href={`/categories/${c.category}`}>{c.category}</a> </span>)}{cats.length === 1 ? "category" : "categories"}
+  const above = <div className="box">Stories with <a href="/tags">tags</a> in the {cats.map((c) => <Fragment key={c.id}><a href={`/categories/${c.category}`}>{c.category}</a>{" "}</Fragment>)}categories
     {cats.length === 1 && <p className="hint">Tip: read stories across multiple categories with <code>/categories/foo,bar</code></p>}</div>;
   return <Render title={cats.map((c) => c.category).join(" ")} base={`/categories/${cats.map((c) => c.category).join(",")}`} page={page} query={byCategories(cats.map((c) => c.id))} above={above} />;
 }
@@ -88,6 +88,6 @@ export async function UserStoriesPage({ username, page }: { username: string; pa
 export async function TopPage({ length, page }: { length?: string; page: number }) {
   const iv = timeInterval(length);
   if (iv.placeholder && length !== "1w") return null; // caller redirects
-  const hint = <p className="hint">You can edit the URL to change the time period like <code>/5d</code> or <code>/2y</code>; known units are: <span dangerouslySetInnerHTML={{ __html: INTERVALS }} />.</p>;
+  const hint = <p className="hint" dangerouslySetInnerHTML={{ __html: `You can edit the URL to change the time period like <tt>/5d</tt> or <tt>/2y</tt>; known units are: ${INTERVALS}.` }} />;
   return <Render title={`Top Stories of the Past ${iv.human}`} h1 base={`/top/${iv.param}`} page={page} query={top(iv.n, iv.unit)} subnav below={hint} />;
 }

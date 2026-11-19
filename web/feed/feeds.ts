@@ -77,7 +77,7 @@ export async function handleFeed(fmt: Fmt, segs: string[], origin: string, self:
       if (!u) return NOT_FOUND;
       const active = !u.deleted_at && !u.banned_at, esc = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
       return json({ username: u.username, created_at: u.created_at?.toISOString(), is_admin: u.is_admin, is_moderator: u.is_moderator, ...(u.is_admin ? {} : { karma: u.karma }),
-        ...(active ? { about: (u.about ?? "").split(/\n{2,}/).filter(Boolean).map((p) => `<p>${esc(p)}</p>`).join("\n") } : {}), invited_by_user: u.invited_by });
+        ...(active ? { about: (u.about ?? "").split(/\n{2,}/).filter(Boolean).map((p) => `<p>${esc(p)}</p>\n`).join("") } : {}), invited_by_user: u.invited_by });
     }
   }
 

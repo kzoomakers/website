@@ -1,18 +1,28 @@
 import type { Story } from "../models/stories";
-import { howLongAgo, negativityClass, titleAsSlug, truncate } from "../util";
+import { howLongAgo, negativityClass, titleAsSlug, truncate, zoned } from "../util";
 
 export const titlePath = (s: Pick<Story, "short_id" | "title">) => `/s/${s.short_id}/${titleAsSlug(s.title)}`;
-const pad = (n: number) => String(n).padStart(2, "0");
-const at = (d: Date) => `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
+const at = (d: Date) => { const z = zoned(d); return `${z.date} ${z.time}`; };
 
 export const TimeLabel = ({ time, loggedIn = false }: { time: Date; loggedIn?: boolean }) => (
   <time title={at(time)} dateTime={at(time)} data-at-unix={Math.floor(time.getTime() / 1000)}>{loggedIn ? howLongAgo(time) : at(time)}</time>
 );
+export const Caches = ({ url }: { url: string }) => (
+  <details className="caches" {...{ name: "caches" }}><summary>caches</summary><ul>
+    <li><a href={`https://web.archive.org/web/3/${encodeURIComponent(url)}`}>Archive.org</a></li><li><a href={`https://ghostarchive.org/search?term=${encodeURIComponent(url)}`}>Ghostarchive</a></li>
+  </ul></details>
+);
 export const Divider = () => <span aria-hidden="true"> | </span>;
 
+/** users_helper styled_user_link: later rules overwrite earlier ones, so new user beats inactive beats author. `submitter`/`author` come from the story or comment context. */
+export function newAria(u: { username: string; user_created_at: Date | null; user_deleted_at: Date | null; user_banned_at: Date | null }, newUserDays: number, role?: "Author" | "Submitter") {
+  if (u.user_created_at && u.user_created_at.getTime() > Date.now() - newUserDays * 864e5) return `${u.username} - New user`;
+  if (u.user_deleted_at || u.user_banned_at) return `${u.username} - Inactive user`;
+  return role ? `${u.username} - ${role}` : undefined;
+}
 export function UserLink({ s, newUserDays }: { s: Pick<Story, "username" | "user_created_at" | "user_deleted_at" | "user_banned_at" | "user_is_author">; newUserDays: number }) {
-  const cls = [s.user_is_author && "user_is_author", (s.user_deleted_at || s.user_banned_at) && "inactive_user", s.user_created_at && s.user_created_at.getTime() > Date.now() - newUserDays * 864e5 && "new_user"].filter(Boolean).join(" ");
-  return <a className={cls || undefined} href={`/~${s.username}`}>{s.username}</a>;
+  const cls = ["u-author h-card", s.user_is_author && "user_is_author", (s.user_deleted_at || s.user_banned_at) && "inactive_user", s.user_created_at && s.user_created_at.getTime() > Date.now() - newUserDays * 864e5 && "new_user"].filter(Boolean).join(" ");
+  return <a className={cls || undefined} aria-label={newAria(s, newUserDays)} href={`/~${s.username}`}>{s.username}</a>;
 }
 
 /** stories/_listdetail.html.erb (logged-out). Hide/save/flag/edit controls come with accounts (phase 2/3). */
@@ -35,6 +45,7 @@ export function StoryItem({ story: s, newUserDays }: { story: Story; newUserDays
           <div className="byline">
             <span> {s.user_is_author ? "authored by" : "via"} </span>
             <UserLink s={s} newUserDays={newUserDays} /> <TimeLabel time={s.created_at} />
+            {s.url && <><Divider /><Caches url={s.url} /></>}
             <span className="comments_label"><Divider /><a href={titlePath(s)}>{s.comments_count === 0 ? "no comments" : `${s.comments_count} comment${s.comments_count === 1 ? "" : "s"}`}</a></span>
           </div>
         </div>
@@ -46,15 +57,15 @@ export function StoryItem({ story: s, newUserDays }: { story: Story; newUserDays
 
 /** home/index.html.erb: the list plus "Page N" links. `base` is "" for the home page (links are /page/2) or e.g. "/newest". */
 export function StoryList({ stories, page, more, base, above, below, newUserDays }: { stories: Story[]; page: number; more: boolean; base: string; above?: React.ReactNode; below?: React.ReactNode; newUserDays: number }) {
-  const link = (p: number) => `${base}/page/${p}`;
+  const link = (p: number) => `${base}/page/${p}${base === "/newest" ? "?last_read_timestamp=0" : ""}`; // newest keeps the "Last Read" marker position in the URL; a visitor has none
   return (
     <>
       {above}
       <ol className="stories list">{stories.map((s) => <StoryItem key={s.id} story={s} newUserDays={newUserDays} />)}</ol>
       {below}
       <nav className="morelink">
-        {page > 1 && <a href={link(page - 1)} rel="prev">Page {page - 1}</a>}
-        {more && <>{page > 1 && <Divider />}<a href={link(page + 1)} rel="next">Page {page + 1}</a></>}
+        {page > 1 && <a href={link(page - 1)} rel="prev">{`Page ${page - 1}`}</a>}
+        {more && <>{page > 1 && <Divider />}<a href={link(page + 1)} rel="next">{`Page ${page + 1}`}</a></>}
       </nav>
     </>
   );

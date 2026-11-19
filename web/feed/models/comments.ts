@@ -18,9 +18,10 @@ export async function newestComments(page = 1): Promise<{ comments: ListedCommen
   return { comments: r.rows.slice(0, COMMENTS_PER_PAGE), more: r.rows.length > COMMENTS_PER_PAGE };
 }
 
-/** ~user/comments.rss: everything the user wrote on stories that are not deleted (gone comments show their removal text), newest first. */
-export async function commentsByUser(userId: number, limit = 100): Promise<ListedComment[]> {
-  return (await (await conn()).query(`${SELECT} WHERE c.user_id = $1 AND NOT s.is_deleted ORDER BY c.id DESC LIMIT $2`, [userId, limit])).rows;
+/** ~user/comments.rss: what the user wrote on stories that are not deleted (gone comments show their removal text), oldest first as Lobsters lists it.
+ *  shortcut: Lobsters has no limit; this takes the newest 500 so one prolific user cannot make a huge response. Raise it if feeds look cut short. */
+export async function commentsByUser(userId: number, limit = 500): Promise<ListedComment[]> {
+  return (await (await conn()).query(`SELECT * FROM (${SELECT} WHERE c.user_id = $1 AND NOT s.is_deleted ORDER BY c.id DESC LIMIT $2) x ORDER BY x.id`, [userId, limit])).rows;
 }
 
 /** Comment by short id for /c/:id.json (any comment, as Lobsters does). */

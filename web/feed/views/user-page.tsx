@@ -1,6 +1,7 @@
 import { getFeedConfig } from "../config";
 import type { Profile } from "../models/users";
 import Shell from "./shell";
+import { zoned } from "../util";
 import { TimeLabel } from "./story-list";
 
 /** users/show.html.erb for a visitor. Avatars come later (no third-party Gravatar); markdown for "about" arrives with the write path, so it is shown as plain text for now. */
@@ -11,6 +12,7 @@ export default async function UserPage({ u }: { u: Profile }) {
   const shown = u.stories_submitted - u.stories_deleted;
   return (
     <Shell title={u.username} path={`/~${u.username}`}>
+      <h1 className={!active ? "inactive_user" : isNew ? "new_user" : ""}>{u.username}</h1>
       <section className="profile">
         <dl className="labelled_grid">
           <dt>Status</dt>
@@ -25,7 +27,7 @@ export default async function UserPage({ u }: { u: Profile }) {
           <dt>Comments Posted</dt>
           <dd><a href={`/~${u.username}/threads`}>{u.comments_posted}</a></dd>
           {u.hats.length > 0 && <><dt>Hats</dt><dd><ul className="hats">{u.hats.map((h, i) => (
-            <li key={i}><span className={`hat hat_${h.hat.replace(/[^A-Za-z0-9]/g, "_").toLowerCase()}`}><span className="crown">{h.link && /^https?:\/\//.test(h.link) ? <a href={h.link} target="_blank" rel="noopener">{h.hat}</a> : h.hat}</span></span>{h.doffed_at && <> doffed <TimeLabel time={h.doffed_at} /></>}</li>
+            <li key={i}><span className={`hat hat_${h.hat.replace(/[^A-Za-z0-9]/g, "_").toLowerCase()}`} title={`Granted ${zoned(h.created_at).date}${h.link && !/^https?:\/\//.test(h.link) ? ` - ${h.link}` : ""}`}><span className="crown">{h.link && /^https?:\/\//.test(h.link) ? <a href={h.link} target="_blank" rel="noopener">{h.hat}</a> : h.hat}</span></span>{h.doffed_at && <> doffed <TimeLabel time={h.doffed_at} /></>}</li>
           ))}</ul></dd></>}
           {active && <><dt>About</dt><dd className="shorten_first_p">{u.about ? u.about.split(/\n{2,}/).map((p, i) => <p key={i}>{p}</p>) : <span className="na">A mystery...</span>}</dd></>}
         </dl>

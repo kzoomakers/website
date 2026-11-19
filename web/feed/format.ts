@@ -6,7 +6,8 @@ const clean = (h: string | null) => (h == null ? null : cleanHtml(h)); // stored
 // RSS 2.0 and JSON shapes, matching Lobsters' stories.rss.builder, comments/*.rss.builder and the models' as_json: scripts and feed readers depend on the exact names. No database access.
 export const SITE_NAME = "Kzoo Makers Talk";
 
-const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); // as Ruby's Builder: quotes stay
+const attr = (s: string) => esc(s).replace(/"/g, "&quot;");
 const rfc822 = (d: Date) => d.toUTCString().replace("GMT", "+0000");
 
 export type StoryRow = { short_id: string; title: string; url: string | null; created_at: Date; score: number; flags: number; comments_count: number; description: string | null; markeddown_description: string | null; username: string; user_is_author: boolean; domain: string | null; tags: { tag: string }[] };
@@ -43,7 +44,7 @@ const head = (o: string, title: string, self: string, pub: Date | null) => `<?xm
   <channel>
     <title>${esc(SITE_NAME + (title ? `: ${title}` : ""))}</title>
     <link>${esc(o + "/")}</link>
-    <atom:link href="${esc(self)}" rel="self"/>
+    <atom:link href="${attr(self)}" rel="self"/>
     <description>${esc(title)}</description>
 ${pub ? `    <pubDate>${rfc822(pub)}</pubDate>\n` : ""}    <ttl>120</ttl>
 `;

@@ -4,8 +4,8 @@ export const SITE_NAME = "Kzoo Makers Talk";
 
 // layouts/application.html.erb for a logged-out visitor. Same element ids and classes, since application.css and the JS depend on them.
 const Nav = ({ href, children, path }: { href: string; children: ReactNode; path: string }) => {
-  const strip = (p: string) => p.replace(/\/page\/\d+$/, "");
-  return <a href={href} aria-current={strip(path) === strip(href) ? "page" : undefined}>{children}</a>;
+  const strip = (p: string) => p.replace(/\/page\/\d+$/, ""), period = /\/\d+[dwmy]$/, cur = strip(path), target = strip(href);
+  return <a href={href} aria-current={(period.test(target) ? cur : cur.replace(period, "")) === target ? "page" : undefined}>{children}</a>; // link_to_different_page: /top/3d is still "Top"
 };
 
 export default function Shell({ title, path, subnav, children }: { title?: string; path: string; subnav?: ReactNode; children: ReactNode }) {
