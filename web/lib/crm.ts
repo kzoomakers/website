@@ -160,7 +160,7 @@ export async function messageMember(fromId: number, toId: number, bodyIn: string
     html: `<p>Hi ${esc(b.first_name)},</p><p>${esc(a.name)} wrote to you through the Kzoo Makers member directory:</p><blockquote style="white-space:pre-wrap">${esc(body)}</blockquote><p><a href="${link}"><b>Reply here</b></a>: it signs you in and takes you straight to the conversation (the link works once, for 7 days; after that, sign in and open Members &rsaquo; Inbox).</p><p>Your email address stays private. You can hide yourself from the directory any time under Members &rsaquo; My Profile.</p>` }, cfg)).catch(() => {});
 }
 
-export type Conversation = { id: number; name: string; body: string; at: string; mine: boolean; unread: number };
+export type Conversation = { id: number; name: string; avatar: string; body: string; at: string; mine: boolean; unread: number };
 export type ThreadMessage = { id: number; mine: boolean; body: string; at: string };
 
 /** One row per person you've exchanged messages with, newest first. */
@@ -168,7 +168,7 @@ export async function conversations(userId: number): Promise<Conversation[]> {
   return (await (await conn()).query(
     `WITH m AS (SELECT id, CASE WHEN from_id = $1 THEN to_id ELSE from_id END AS other, from_id, body, at, (to_id = $1 AND read_at IS NULL) AS unread
                 FROM member_messages WHERE (from_id = $1 OR to_id = $1) AND body <> '')
-     SELECT l.other AS id, ${NAME_SQL} AS name, l.body, l.at, l.from_id = $1 AS mine, (SELECT count(*)::int FROM m WHERE m.other = l.other AND m.unread) AS unread
+     SELECT l.other AS id, ${NAME_SQL} AS name, u.avatar, l.body, l.at, l.from_id = $1 AS mine, (SELECT count(*)::int FROM m WHERE m.other = l.other AND m.unread) AS unread
      FROM (SELECT DISTINCT ON (other) * FROM m ORDER BY other, id DESC) l JOIN site_users u ON u.id = l.other ORDER BY l.at DESC LIMIT 50`, [userId])).rows;
 }
 
@@ -180,8 +180,8 @@ export async function thread(userId: number, otherId: number) {
   await Promise.all([
     c.query("UPDATE member_messages SET read_at = now() WHERE to_id = $1 AND from_id = $2 AND read_at IS NULL", [userId, otherId]),
     c.query("UPDATE notifications SET read_at = now() WHERE user_id = $1 AND url = $2 AND read_at IS NULL", [userId, `/members/inbox/${otherId}`])]);
-  const u = (await c.query(`SELECT ${NAME_SQL} AS name, (directory_optin AND disabled_at IS NULL) AS open FROM site_users u WHERE id = $1`, [otherId])).rows[0];
-  return { name: u?.name ?? "Former member", canReply: !!u?.open, messages: rows.reverse() };
+  const u = (await c.query(`SELECT ${NAME_SQL} AS name, u.avatar, (SELECT avatar FROM site_users WHERE id = $2) AS mine_avatar, (directory_optin AND disabled_at IS NULL) AS open FROM site_users u WHERE id = $1`, [otherId, userId])).rows[0];
+  return { name: u?.name ?? "Former member", avatar: u?.avatar ?? "", myAvatar: u?.mine_avatar ?? "", canReply: !!u?.open, messages: rows.reverse() };
 }
 
 /** Values already used by listed members, most common first, so the profile can suggest them (keeps "Kalamazoo" from becoming "kzoo"). */
@@ -294,10 +294,10 @@ export const memberClasses = async (userId: number) =>
   (await (await conn()).query(`SELECT c.id, c.title, c.starts_at FROM class_signups s JOIN classes c ON c.id = s.class_id WHERE s.user_id = $1 ORDER BY c.starts_at DESC LIMIT 20`, [userId])).rows;
 
 /** Sets (or with null removes) the member's directory photo; the previous file is deleted. */
-export async function setMyPhoto(userId: number, file: File | null) {
+export async function setMyPhoto(userId: number, file: File | null, col: "photo" | "avatar" = "photo") {
   const c = await conn(), url = file ? await storePhoto(file) : "";
-  const old = (await c.query("SELECT photo FROM site_users WHERE id = $1", [userId])).rows[0]?.photo;
-  await c.query("UPDATE site_users SET photo = $2 WHERE id = $1", [userId, url]);
+  const old = (await c.query(`SELECT ${col} AS v FROM site_users WHERE id = $1`, [userId])).rows[0]?.v;
+  await c.query(`UPDATE site_users SET ${col} = $2 WHERE id = $1`, [userId, url]);
   if (old) await dropPhoto(old);
   return url;
 }

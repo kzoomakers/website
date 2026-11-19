@@ -13,7 +13,7 @@ export function Side({ convos, current, hideSmall }: { convos: Conversation[]; c
       {!convos.length && <p style={{ color: "#9aa4ae", padding: 16, margin: 0 }}>No conversations yet.</p>}
       {convos.map((c) => (
         <a key={c.id} href={`/members/inbox/${c.id}`} className={`ch-th${c.id === current ? " on" : ""}`}>
-          <span className="ch-av" aria-hidden>{ini(c.name)}</span>
+          <span className="ch-av" aria-hidden>{c.avatar ? <img src={c.avatar} alt="" /> : ini(c.name)}</span>
           <b>{c.name}</b>{c.unread > 0 ? <i>{c.unread} new</i> : <i style={{ background: "none", color: "#9aa4ae" }}>{ago(c.at)}</i>}
           <small>{c.mine ? "You: " : ""}{c.body.slice(0, 80)}</small>
         </a>

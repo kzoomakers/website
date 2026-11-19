@@ -113,7 +113,7 @@ export default function Profile({ init, suggestions, values }: { values: Fields;
           <div style={{ display: "grid", gap: 6 }}>
             <label className="btn btn-sm" style={{ cursor: "pointer", width: "fit-content" }}>{photo ? "Change photo" : "Upload a photo of yourself"}<input type="file" accept="image/*,.heic,.heif" hidden onChange={(e) => { upload(e.target.files?.[0]); e.target.value = ""; }} /></label>
             {photo && <button type="button" className="btn btn-sm" style={{ width: "fit-content" }} onClick={drop}>Remove photo</button>}
-            <small className="mp-h">A friendly face helps people recognize you at the space.</small>
+            <small className="mp-h">A friendly face helps people recognize you at the space. This is not your chat avatar; change that under <a href="/account">My account</a>.</small>
             {pm === "Uploading…" ? <small role="status">{pm}</small> : <Flash msg={pm} />}
           </div>
         </div>
