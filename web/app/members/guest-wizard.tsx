@@ -16,6 +16,18 @@ const HOST_STEPS = [["start", "Start"], ["details", "Details"], ["emergency", "E
 const GUEST_STEPS = HOST_STEPS.slice(1);
 const GCSS = `dialog.wz.gz{width:min(820px,calc(100% - 24px))}
 @media(max-width:700px){dialog.wz.gz{width:100%;max-width:100%;height:100dvh;max-height:100dvh;border-radius:0}.gz .wz-row button{min-height:46px;flex:1 1 140px}.gz input,.gz select{min-height:44px;font-size:16px}}
+.gz .gz-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:560px){.gz .gz-opts{grid-template-columns:1fr}}
+.gz .gz-opt{position:relative;display:flex!important;align-items:center;gap:14px;padding:14px 16px;border:2px solid var(--line);border-radius:16px;background:var(--card);cursor:pointer;transition:background-color .2s,border-color .2s,box-shadow .2s}
+.gz .gz-opt:hover{border-color:color-mix(in srgb,var(--acc) 55%,var(--line))}
+.gz .gz-opt input{position:absolute;opacity:0;width:1px;min-height:0;height:1px}
+.gz .gz-opt::before{content:"";flex:none;box-sizing:border-box;width:28px;height:28px;border-radius:50%;background:var(--card);box-shadow:inset 0 0 0 2px var(--mut);transition:box-shadow .2s}
+.gz .gz-opt:has(input:checked){border-color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,var(--card))}
+.gz .gz-opt:has(input:checked)::before{box-shadow:inset 0 0 0 8px var(--acc)}
+.gz .gz-opt:has(input:focus-visible){outline:3px solid color-mix(in srgb,var(--acc) 45%,transparent);outline-offset:2px}
+.gz .gz-opt b{display:block;font-size:1.05em}.gz .gz-opt small{display:block;color:var(--mut);font-size:.85em;line-height:1.35;margin-top:2px}
+.gz .gz-ack{display:flex!important;gap:12px;align-items:flex-start;padding:14px;cursor:pointer}
+.gz .gz-ack input{flex:none;width:20px;height:20px;min-height:0;margin:2px 0 0;accent-color:var(--acc)}
 .gz-qr{display:grid;justify-items:center;gap:8px}.gz-qr img{width:min(260px,70vw);height:auto;image-rendering:pixelated;background:#fff;padding:10px;border-radius:10px}`;
 
 export default function GuestWizard({ id, token, resume, onClose }: { id?: number; token?: string; resume?: boolean; onClose: () => void }) {
@@ -137,13 +149,15 @@ function AgreementStep({ q, g, version, years, next, cancel }: { q: string; g: G
     <Notice kind="error">{s.err}</Notice>
     <fieldset style={{ border: 0, padding: 0, margin: 0, display: "grid", gap: 6 }}>
       <legend><b>Is the guest under 18?</b></legend>
-      <label className="wz-chk"><input type="radio" name="minor" checked={minor === false} onChange={() => { setMinor(false); setFirst(null); }} />No</label>
-      <label className="wz-chk"><input type="radio" name="minor" checked={minor === true} onChange={() => { setMinor(true); setFirst(null); }} />Yes, a minor</label>
+      <div className="gz-opts">
+        <label className="gz-opt"><input type="radio" name="minor" checked={minor === false} onChange={() => { setMinor(false); setFirst(null); }} /><span><b>No</b><small>The guest is 18 or older and signs for themselves.</small></span></label>
+        <label className="gz-opt"><input type="radio" name="minor" checked={minor === true} onChange={() => { setMinor(true); setFirst(null); }} /><span><b>Yes, a minor</b><small>A parent or legal guardian must be present and sign as well.</small></span></label>
+      </div>
       {minor && <Notice kind="info">A parent or legal guardian must be present to sign this agreement as well.</Notice>}
     </fieldset>
     <article className="wz-doc" tabIndex={0}><Agreement sections={version.sections} closing={version.closing} /></article>
-    <label className="card wz-chk" style={{ padding: 12, alignItems: "flex-start" }}>
-      <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} style={{ width: 22, height: 22, flex: "none" }} />
+    <label className="card gz-ack">
+      <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} />
       <span>I understand and agree that my information, including my signed agreement, emergency contacts and photo ID, will be kept for at least {years} years after my last visit.</span>
     </label>
     {minor === null ? <p className="sub">Answer the question above to continue.</p>
