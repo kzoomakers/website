@@ -2,7 +2,7 @@
 // Lobsters community policy and are not ported (shortcut: add them here if this community wants them).
 import { URL_RE } from "./logic";
 
-export const TITLE_MIN = 3, TITLE_MAX = 150, URL_MAX = 250, DESCRIPTION_MAX = 65_535, RECENT_DAYS = 30, NEW_USER_DAYS = 70;
+export const TITLE_MIN = 3, TITLE_MAX = 150, URL_MAX = 250, DESCRIPTION_MAX = 65_535, RECENT_DAYS = 30, NEW_USER_DAYS = 70, MAX_EDIT_MINS = 360;
 const GRAPHICS_RE = /[\u0000-\u001F←→-➿]|[\u{1F000}-\u{1F9FF}]/u;
 
 /** story.rb fix_bogus_chars: non-breaking spaces become spaces. */

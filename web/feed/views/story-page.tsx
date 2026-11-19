@@ -3,6 +3,8 @@ import type { Comment, StoryFull } from "../models/story-page";
 import { isGone } from "../models/story-page";
 import { negativityClass } from "../util";
 import { CommentItem, html } from "./comment";
+import { currentFeedUser } from "../identity";
+import { editable } from "../models/submit";
 import Shell from "./shell";
 import { Caches, Divider, TimeLabel, UserLink, titlePath } from "./story-list";
 
@@ -56,9 +58,18 @@ function Detail({ all, newUserDays }: { all: StoryFull[]; newUserDays: number })
 /** stories/show.html.erb for a visitor. `all` is the story first, then the stories merged into it. */
 export default async function StoryPage({ all, comments }: { all: StoryFull[]; comments: Comment[] }) {
   const story = all[0], cfg = await getFeedConfig(), merged = story.stories_count > 0, path = titlePath(story);
+  const me = await currentFeedUser().catch(() => null), mine = !!me && editable(story, me.id);
   return (
     <Shell title={story.title} path={path}>
       <ol className="stories"><Detail all={all} newUserDays={cfg.newUserDays} /></ol>
+      {mine && me && (
+        <p className="story_owner_tools">
+          <a href={`/stories/${story.short_id}/edit`}>Edit</a>{" "}
+          <form method="post" action={`/stories/${story.short_id}/${story.is_deleted ? "undelete" : "delete"}`} style={{ display: "inline" }}>
+            <input type="hidden" name="csrf" value={me.csrf} /><button type="submit">{story.is_deleted ? "Undelete" : "Delete"}</button>
+          </form>
+        </p>
+      )}
       <div className="story_content">{story.markeddown_description && !merged && <div className="story_text" id="story_text" dangerouslySetInnerHTML={html(story.markeddown_description)} />}</div>
       {all.filter((ms) => !isGone(ms)).map((ms) => (
         <div key={ms.id}>

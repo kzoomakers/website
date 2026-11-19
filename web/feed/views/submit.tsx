@@ -1,24 +1,25 @@
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { conn } from "@/lib/db";
 import { currentFeedUser } from "../identity";
 import { takeFlash } from "../flash";
 import { TITLE_MAX, URL_MAX } from "../story-rules";
+import { editable, type Submission } from "../models/submit";
 import Shell from "./shell";
 
-/** stories/new.html.erb + _form.html.erb, trimmed to the fields the port supports. */
-export async function NewStoryPage() {
+/** stories/new.html.erb + edit.html.erb + _form.html.erb, trimmed to the fields the port supports. `edit` carries the story being edited. */
+async function StoryFormPage({ path, edit }: { path: string; edit?: { shortId: string; input: Submission } }) {
   const v = await currentFeedUser().catch(() => null);
-  if (!v) redirect("/login?return=/stories/new");
-  if (!v.username) redirect("/login/username?return=/stories/new");
-  const flash = takeFlash(v.id), f = flash?.input;
+  if (!v) redirect(`/login?return=${path}`);
+  if (!v.username) redirect(`/login/username?return=${path}`);
+  const flash = takeFlash(v.id), f = flash?.input ?? edit?.input;
   const tags: { tag: string; description: string | null; privileged: boolean; is_media: boolean }[] = (await (await conn()).query(
     "SELECT t.tag, t.description, t.privileged, t.is_media FROM feed.tags t JOIN feed.categories c ON c.id = t.category_id WHERE t.active ORDER BY lower(c.category), lower(t.tag)")).rows.filter((t) => !t.privileged || v.isModerator);
   return (
-    <Shell title="Submit Story" path="/stories/new">
+    <Shell title={edit ? "Edit Story" : "Submit Story"} path={path}>
       <div className="box wide">
         {flash?.errors.length ? <div className="flash-error" role="alert"><ul>{flash.errors.map((e) => <li key={e}>{e}</li>)}</ul></div> : null}
         {flash?.similar?.length ? <div className="flash-notice"><p>Similar stories:</p><ul>{flash.similar.map((s) => <li key={s.short_id}><a href={`/s/${s.short_id}`}>{s.title}</a></li>)}</ul></div> : null}
-        <form method="post" action="/stories">
+        <form method="post" action={edit ? `/stories/${edit.shortId}/update` : "/stories"}>
           <input type="hidden" name="csrf" value={v.csrf} />
           <div className="labelled_grid">
             <label htmlFor="url">URL</label>
@@ -35,9 +36,21 @@ export async function NewStoryPage() {
             </select>
           </div>
           <p>Leave the URL blank to post text only. Hold Ctrl or Cmd to choose several tags; at least one must not be a media tag.</p>
-          <input type="submit" value="Submit" />
+          <input type="submit" value={edit ? "Save" : "Submit"} />
         </form>
       </div>
     </Shell>
   );
+}
+
+export const NewStoryPage = () => <StoryFormPage path="/stories/new" />;
+
+export async function EditStoryPage({ shortId }: { shortId: string }) {
+  const v = await currentFeedUser().catch(() => null);
+  if (!v) redirect(`/login?return=/stories/${shortId}/edit`);
+  const s = (await (await conn()).query(
+    `SELECT s.user_id, s.is_moderated, s.created_at, s.title, s.url, s.description, s.user_is_author, COALESCE((SELECT array_agg(t.tag) FROM feed.taggings tg JOIN feed.tags t ON t.id = tg.tag_id WHERE tg.story_id = s.id), '{}') tags
+     FROM feed.stories s WHERE s.short_id = $1`, [shortId])).rows[0];
+  if (!s || !editable(s, v.id)) notFound();
+  return <StoryFormPage path={`/stories/${shortId}/edit`} edit={{ shortId, input: { title: s.title, url: s.url ?? "", description: s.description ?? "", tags: s.tags, userIsAuthor: s.user_is_author } }} />;
 }
