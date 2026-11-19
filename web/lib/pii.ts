@@ -3,7 +3,7 @@ import { db, conn, withTx } from "./db";
 import { me } from "./guard";
 import { hit } from "./limit";
 import { open } from "./vault";
-import { notify, PII_TOPIC } from "./ntfy";
+import { notify } from "./pushover";
 import { getMailCfg, mailReady, sendQueued } from "./mail";
 import { TZ } from "./guest-rules";
 import { GENESIS, chainHash, checkRows, type Row } from "./pii-chain";
@@ -164,12 +164,12 @@ async function email(to: string[], subject: string, text: string) {
 async function alerts(v: Viewer, kind: PiiKind, name: string) {
   const base = (await getMailCfg().catch(() => null))?.siteUrl?.replace(/\/+$/, "") ?? "";
   if (!v.isAdmin && (kind === "id" || kind === "id_renewal")) // a Gov ID opened by someone who isn't a full admin
-    await notify(PII_TOPIC, { title: `${v.name || v.email} opened a Gov ID`, message: `${v.email} viewed the ID of ${name}.`, priority: 4, tags: "warning", click: base + "/admin/services/pii" });
+    await notify("pii", { title: `${v.name || v.email} opened a Gov ID`, message: `${v.email} viewed the ID of ${name}.`, priority: 4, tags: "warning", click: base + "/admin/services/pii" });
   const { bulk } = await getCfg();
   const n = (await (await conn()).query("SELECT count(*)::int n FROM pii_access WHERE viewer_email = $1 AND via <> 'self' AND at > now() - interval '1 hour'", [v.email])).rows[0].n;
   if (n > bulk && (await hit(`pii-bulk:${v.email}`, 1, 3600_000))) {
     const msg = `${v.email} has viewed personal information ${n} times in the last hour (the alert level is ${bulk}).`;
-    await notify(PII_TOPIC, { title: "Bulk viewing of personal information", message: msg, priority: 5, tags: "rotating_light", click: base + "/admin/services/pii" });
+    await notify("pii", { title: "Bulk viewing of personal information", message: msg, priority: 5, tags: "rotating_light", click: base + "/admin/services/pii" });
     await email(await adminEmails(), "Bulk viewing of personal information", msg + (base ? `\n\nSee ${base}/admin/services/pii` : ""));
   }
 }
@@ -281,7 +281,7 @@ export async function reportJob() {
     try { await sendReport(month); }
     catch (e: any) {
       console.error("pii report:", e);
-      if (await hit(`pii-report-fail:${month}`, 1, 86_400_000)) await notify(PII_TOPIC, { title: "The PII report didn't send", message: `The ${month} report to the board failed: ${String(e?.message ?? e).slice(0, 200)}. It will try again tomorrow.`, priority: 4, tags: "warning" });
+      if (await hit(`pii-report-fail:${month}`, 1, 86_400_000)) await notify("pii", { title: "The PII report didn't send", message: `The ${month} report to the board failed: ${String(e?.message ?? e).slice(0, 200)}. It will try again tomorrow.`, priority: 4, tags: "warning" });
     }
   }
 }

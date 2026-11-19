@@ -1,8 +1,7 @@
 // Keep legacy URLs alive: /about.html -> /about, /index.html -> /
 const nextConfig = {
-  // /notify is an alias of /ntfy (the ntfy-compatible API).
   async rewrites() {
-    return [{ source: "/notify/:path*", destination: "/ntfy/:path*" }, { source: "/notify", destination: "/ntfy" },
+    return [
       // The eBay listing template (HTML to paste into a listing) is served at /ebay/template.
       { source: "/ebay/template", destination: "/images/ebay/template.html" }];
   },

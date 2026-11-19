@@ -1,4 +1,4 @@
-import { addLink, GA_TOPIC, notify, personalTopics, removeLink, subscribersOf } from "./ntfy";
+import { notify } from "./pushover";
 import { getMailCfg, mailReady, sendQueued } from "./mail";
 import { read, report, write } from "./ga";
 import { searchQueries } from "./gsc";
@@ -6,7 +6,7 @@ import { cleanEmail } from "./tours-fmt";
 import { clockIn, delta, detect, digestDue, digestLines, n, withYesterday } from "./ga-digest";
 
 // Two ways the site tells staff what Google Analytics sees:
-//  1. Alerts: a push to the special topic "google-analytics-notices" when yesterday was far above or below normal. People subscribe by attaching their own topic to it.
+//  1. Alerts: a Pushover alert (the "ga" group in Admin > Setup > Alert delivery) when yesterday was far above or below normal.
 //  2. A weekly email summary (Mondays, Eastern time) to a list of addresses, with an on/off switch. Both are set up in Admin > Setup > Analytics & cookies.
 export type Digest = { on: boolean; emails: string[]; last: string };
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
@@ -21,7 +21,7 @@ export async function runAlerts(now = Date.now()) {
   if (!hit || (await read("ga:alerted")) === hit.day) return;
   await write("ga:alerted", hit.day);
   const i = s.report.daily.length - 1, top = s.report.daily[i]?.d === hit.day ? [...s.report.trend].sort((a, b) => b.vals[i] - a.vals[i])[0] : undefined; // no source breakdown for a day Google has no rows for
-  await notify(GA_TOPIC, hit.kind === "spike"
+  await notify("ga", hit.kind === "spike"
     ? { title: `Traffic spike on ${hit.day}`, message: `${n(hit.users)} visitors, about ${(hit.users / hit.avg).toFixed(1)}x the usual ${n(hit.avg)}.${top?.vals[i] ? ` Biggest source: ${top.source}.` : ""}`, tags: "chart_with_upwards_trend", priority: 3 }
     : { title: `Traffic dropped on ${hit.day}`, message: `${n(hit.users)} visitors against a usual ${n(hit.avg)}. If this looks wrong, check that the tracking tag still loads.`, tags: "chart_with_downwards_trend", priority: 4 });
 }
@@ -56,14 +56,5 @@ export async function runDigest(now = new Date()) {
   await write("ga:digest", { ...(await getDigest()), last: today });
 }
 
-// ---- who is subscribed to the alerts topic
-export async function overview() {
-  const [digest, people, subs] = await Promise.all([getDigest(), personalTopics(), subscribersOf(GA_TOPIC)]);
-  return { digest, people, subs };
-}
-export async function subscribe(topic: unknown) {
-  const name = String(topic);
-  if (!(await personalTopics()).some((t: any) => t.name === name)) throw new Error("Pick one of the people's topics.");
-  await addLink(GA_TOPIC, name);
-}
-export const unsubscribe = (topic: unknown) => removeLink(GA_TOPIC, String(topic));
+// ---- settings page data
+export async function overview() { return { digest: await getDigest() }; }
