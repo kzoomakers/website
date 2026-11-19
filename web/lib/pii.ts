@@ -212,7 +212,7 @@ export async function copyHttpHits() {
   if (!(await c.query("SELECT to_regclass('http_log') AS t")).rows[0].t) return;
   const since = (await c.query("SELECT COALESCE(max(at), now() - interval '2 days') AS at FROM pii_access_http")).rows[0].at;
   const ors = PII_ROUTES.map((_, i) => `path LIKE $${i + 2} ESCAPE '\\'`).join(" OR ");
-  await c.query(`INSERT INTO pii_access_http (src_id, at, method, path, ip, ua, referer, "user", status) SELECT id, at, method, path, ip, ua, referer, "user", status FROM http_log WHERE at >= $1 - interval '1 minute' AND (${ors}) ON CONFLICT DO NOTHING`,
+  await c.query(`INSERT INTO pii_access_http (src_id, at, method, path, ip, ua, referer, "user", status) SELECT id, at, method, path, ip, ua, referer, "user", status FROM http_log WHERE at >= $1::timestamptz - interval '1 minute' AND (${ors}) ON CONFLICT DO NOTHING`,
     [since, ...PII_ROUTES.map((r) => r.replace(/[\\%_]/g, "\\$&") + (r.endsWith("/") ? "%" : ""))]);
 }
 /** Successful hits on PII routes, each marked with whether a pii_access row (same path, within two minutes, same person when the log knows who) explains it. */
