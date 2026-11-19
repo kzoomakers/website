@@ -27,7 +27,7 @@ export const PAGES: Page[] = [
     ["notifications", "Tour alerts", "/admin/tours/notifications"]]),
   ...P("chores", [["todo", "To do", "/admin/makerfavor"], ["log", "Hours", "/admin/makerfavor/log"], ["stats", "Stats", "/admin/makerfavor/stats"], ["achievements", "Achievements", "/admin/makerfavor/achievements"]]),
   ...P("admin", [["setup", "Setup", "/admin/services"], ["audit", "Audit log", "/admin/services/audit"], ["ntfy", "Alert delivery", "/admin/services/ntfy"], ["api-keys", "API keys", "/admin/services/api-keys"], ["ai", "AI", "/admin/services/ai"],
-    ["google-analytics", "Analytics & cookies", "/admin/services/google-analytics"], ["privacy", "Privacy statement", "/admin/services/privacy"], ["links", "External links", "/admin/services/links"], ["debug", "Debug", "/admin/services/debug"],
+    ["google-analytics", "Analytics & cookies", "/admin/services/google-analytics"], ["privacy", "Privacy statement", "/admin/services/privacy"], ["links", "External links", "/admin/services/links"], ["feed", "Feed", "/admin/services/feed"], ["debug", "Debug", "/admin/services/debug"],
     ["httplog", "HTTP log", "/admin/services/httplog"], ["pgstats", "Database stats", "/admin/services/pgstats"], ["security", "Security headers", "/admin/services/security"]]),
   { section: "admin", key: "pii", label: "Audit PII", path: "/admin/services/pii", full: true },
   { section: "admin", key: "users", label: "Access", path: "/admin/users", full: true },
