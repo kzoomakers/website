@@ -86,7 +86,8 @@ jobs:
           code=${PIPESTATUS[0]}
           { echo '### npm audit'; echo '```'; cat audit.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
           exit $code
-      - run: npm audit signatures
+      # One retry: the registry's signing-key fetch fails now and then (EMISSINGSIGNATUREKEY on a package that verifies fine a minute later). A real bad signature fails both tries.
+      - run: npm audit signatures || { sleep 20; npm audit signatures; }
 
   audit: # required check name kept; the real audit runs inside `test`
     needs: test
