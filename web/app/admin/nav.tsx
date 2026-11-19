@@ -81,6 +81,7 @@ export default function Nav({ admin, audit = false, perms, user }: { admin: bool
     <Collapse>
       {links.map((l) => <Node key={l.label} item={l} here={here} all={all} n={n} />)}
       <span className="adm-sp" />
+      {!links.length && <img className="adm-ease" src="/images/atease.webp" alt="" />}
       <a className="adm-link" href="/" target="_blank">↗ View site</a>
       {user}
     </Collapse>

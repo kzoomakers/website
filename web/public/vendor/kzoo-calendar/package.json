@@ -1,0 +1,11 @@
+{
+  "name": "kzoo-calendar",
+  "version": "1.0.0",
+  "description": "Tiny dependency-free .ics parser with recurrence expansion and an 'events on this day' helper. Browser and Node.",
+  "type": "module",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "exports": { ".": { "types": "./index.d.ts", "default": "./index.js" } },
+  "sideEffects": false,
+  "license": "UNLICENSED"
+}
