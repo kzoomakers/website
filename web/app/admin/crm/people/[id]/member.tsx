@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { confirmDialog } from "@/components/dialog";
 import Extras from "./extras";
+import IdPhoto from "./id-photo";
 import DisableButton from "../../../disable-button";
 import PiiButton from "@/components/pii-retrieve";
 import type { Profile } from "@/lib/profiles";
@@ -48,6 +49,9 @@ export default function Member({ profile, canEdit }: { profile: Profile; canEdit
           <div><button className="pri" type="submit" disabled={busy}>Save changes</button></div>
         </form>
       </fieldset>
+
+      <h2>Gov ID</h2>
+      <IdPhoto id={p.id} />
 
       <Extras id={p.id} canEdit={canEdit} />
 

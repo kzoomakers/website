@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { MODAL_TEXT, REASONS, type PiiKind, type Subject } from "@/lib/pii-shared";
 
 // "Retrieve info": a button that asks for a reason (after the confidentiality warning) and fetches the data from /api/pii/retrieve.
@@ -24,9 +25,10 @@ export function PiiModal({ kind, subject, onData, onClose }: { kind: PiiKind; su
     onData(await r.json());
     onClose();
   };
-  return <dialog ref={ref} className="pii" aria-labelledby="pii-t" onCancel={(e) => { e.preventDefault(); onClose(); }}>
+  // Portaled to <body>: inside a form it would submit that form too (React bubbles submit through portals, hence stopPropagation) and inside a disabled fieldset its controls would be dead.
+  return createPortal(<dialog ref={ref} className="pii" aria-labelledby="pii-t" onCancel={(e) => { e.preventDefault(); onClose(); }}>
     <style>{CSS}</style>
-    <form onSubmit={(e) => { e.preventDefault(); if (ok && !busy) go(); }}>
+    <form onSubmit={(e) => { e.preventDefault(); e.stopPropagation(); if (ok && !busy) go(); }}>
       <h2 id="pii-t" style={{ margin: 0, fontSize: 18 }}>{MODAL_TEXT[0]}</h2>
       <p>{MODAL_TEXT[1]}</p><p>{MODAL_TEXT[2]}</p>
       <label>Reason<select autoFocus required value={reason} onChange={(e) => setReason(e.target.value)}><option value="">Choose a reason…</option>{Object.entries(REASONS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></label>
@@ -34,7 +36,7 @@ export function PiiModal({ kind, subject, onData, onClose }: { kind: PiiKind; su
       {err && <p role="alert" className="err">{err}</p>}
       <div className="bar"><button type="button" onClick={onClose}>Cancel</button><button className="go" disabled={!ok || busy}>I understand, show it</button></div>
     </form>
-  </dialog>;
+  </dialog>, document.body);
 }
 
 /** A "Retrieve info" button. While `data` is set it shows `children(data)` and a Hide button instead. */
