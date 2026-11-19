@@ -202,6 +202,7 @@ GUIDED.push({ slug: "how-to", label: "How-to guides", icon: "📚", blurb: "Cate
 ] });
 
 GUIDED.push({ slug: "tools-we-are-seeking-donations-kalamazoo", label: "Donate: tools we need", icon: "🧰", blurb: "The donation page text and the list of items we are looking for, sorted into categories.", fields: [
+  g("Show this page", { key: "enabled", label: "Page is", kind: "select", options: ["yes|On: visible and in the menu", "no|Off: 404, and removed from the menu"] }),
   g("Top of the page", t("heading", "Heading")), t("lead", "Intro", "area"),
   g("Why donate", t("whyTitle", "Heading")), t("whyIntro", "Intro", "area"), t("benefits", "Reasons", "lines", "One per line. Start with **bold words**, then the explanation"),
   g("How to donate", t("howTitle", "Heading")), t("howText", "Text", "area", "Blank line = new paragraph"), t("contactLabel", "Contact link text"), t("contactHref", "Contact link", "text", "e.g. /contact"),

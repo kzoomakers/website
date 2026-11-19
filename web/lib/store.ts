@@ -100,8 +100,12 @@ export const getMenu = (): Promise<MenuItem[]> => memo("menu", TTL, async () => 
 });
 
 /** The menu as visitors see it: "Financials" joins the Learn More dropdown only once a PDF is uploaded. */
+const DONATE = "tools-we-are-seeking-donations-kalamazoo";
+const unlink = (m: MenuItem[]): MenuItem[] => m.filter((i) => !i.href?.includes(DONATE)).map((i) => i.items ? { ...i, items: unlink(i.items) } : i);
+
 export async function getPublicMenu(): Promise<MenuItem[]> {
-  const m = await getMenu();
+  let m = await getMenu();
+  if ((await getGuided(DONATE))?.enabled === "no") m = unlink(m);
   if (!db() || !(await memo("financials?", TTL, async () => (await (await conn()).query("SELECT 1 FROM financials LIMIT 1")).rowCount))) return m;
   return m.map((i) => i.label === "Learn More" && i.items ? { ...i, items: [...i.items, { label: "Financials", href: "/financials" }] } : i);
 }
