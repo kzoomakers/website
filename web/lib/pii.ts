@@ -7,7 +7,7 @@ import { notify, PII_TOPIC } from "./ntfy";
 import { getMailCfg, mailReady, sendQueued } from "./mail";
 import { TZ } from "./guest-rules";
 import { GENESIS, chainHash, checkRows, type Row } from "./pii-chain";
-import { SITE_DAY as siteDay, lastFullMonth } from "./pii-months";
+import { lastFullMonth } from "./pii-months";
 import { BULK_DEFAULT, PII_AUDIT_PERM, PII_KINDS, PII_PERM, PII_ROUTES, checkReason, type PiiKind, type Subject } from "./pii-shared";
 
 // Who may see a person's personal data, and the tamper-evident record of who did. Design: docs/pii-audit-access-system.md.
@@ -142,7 +142,7 @@ export async function logSelf(req: Request, who: { id: number | null; email: str
   try {
     // A page showing 20 guest photos would write 20 permanent rows: one per viewer, person and kind every 10 minutes is enough.
     if ((await (await conn()).query("SELECT 1 FROM pii_access WHERE via = 'self' AND viewer_email = $1 AND subject_type = $2 AND subject_id = $3 AND kind = $4 AND at > now() - interval '10 minutes' LIMIT 1", [who.email, s.type, s.id, kind])).rowCount) return;
-    await withTx((c) => record(c, toRow(null, who.email, s as Subject, kind, { name, fields, data: null }, "self", { reason: "self", note: "" }, req)));
+    await withTx((c) => record(c, toRow({ id: who.id, email: who.email, name: "", isAdmin: false }, who.email, s as Subject, kind, { name, fields, data: null }, "self", { reason: "self", note: "" }, req)));
   } catch (e) { console.error("pii self log:", e); }
 }
 
@@ -213,19 +213,19 @@ export async function copyHttpHits() {
   const c = await conn();
   if (!(await c.query("SELECT to_regclass('http_log') AS t")).rows[0].t) return;
   const since = (await c.query("SELECT COALESCE(max(at), now() - interval '2 days') AS at FROM pii_access_http")).rows[0].at;
-  const ors = PII_ROUTES.map((_, i) => `path LIKE $${i + 2} ESCAPE '\\'`).join(" OR ");
+  const ors = PII_ROUTES.map((_, i) => `(method = $${i * 2 + 2} AND path = $${i * 2 + 3})`).join(" OR ");
   await c.query(`INSERT INTO pii_access_http (src_id, at, method, path, ip, ua, referer, "user", status) SELECT id, at, method, path, ip, ua, referer, "user", status FROM http_log WHERE at >= $1::timestamptz - interval '1 minute' AND (${ors}) ON CONFLICT DO NOTHING`,
-    [since, ...PII_ROUTES.map((r) => r.replace(/[\\%_]/g, "\\$&") + (r.endsWith("/") ? "%" : ""))]);
+    [since, ...PII_ROUTES.flat()]);
 }
-/** Successful reads of PII routes (and retrievals), each marked with whether a pii_access row (same path, within two minutes, same person when the log knows who) explains it. */
-export async function httpHits(unmatchedOnly = false, days = 30) {
+/** Successful reads of PII routes (and retrievals), each marked with whether a pii_access row (same path, within two minutes, same person when the log knows who: the log stores "site:email" or "google:email") explains it. `month` (YYYY-MM, site time) replaces the day window. */
+export async function httpHits(unmatchedOnly = false, days = 30, month?: string) {
   return (await (await conn()).query(`SELECT h.at, h.method, h.path, h.ip, h.ua, h.referer, h."user", h.status, m.id AS access_id FROM pii_access_http h
-    LEFT JOIN LATERAL (SELECT id FROM pii_access a WHERE a.request_path = split_part(h.path, '?', 1) AND a.at BETWEEN h.at - interval '2 minutes' AND h.at + interval '2 minutes' AND (h."user" = '' OR lower(h."user") = lower(a.viewer_email)) ORDER BY abs(extract(epoch FROM a.at - h.at)) LIMIT 1) m ON true
-    WHERE h.at > now() - make_interval(days => $1) AND h.status BETWEEN 200 AND 299 AND (h.method = 'GET' OR h.path = '/api/pii/retrieve') AND ($2 = false OR m.id IS NULL) ORDER BY h.at DESC LIMIT 500`, [days, unmatchedOnly])).rows;
+    LEFT JOIN LATERAL (SELECT id FROM pii_access a WHERE a.request_path = split_part(h.path, '?', 1) AND a.at BETWEEN h.at - interval '2 minutes' AND h.at + interval '2 minutes'
+      AND (h."user" = '' OR lower(regexp_replace(h."user", '^(site|google):', '')) = lower(a.viewer_email)) ORDER BY abs(extract(epoch FROM a.at - h.at)) LIMIT 1) m ON true
+    WHERE ${month ? `to_char(h.at AT TIME ZONE '${TZ}', 'YYYY-MM') = $1` : "h.at > now() - make_interval(days => $1::int)"} AND h.status BETWEEN 200 AND 299 AND ($2 = false OR m.id IS NULL) ORDER BY h.at DESC LIMIT 500`, [month ?? days, unmatchedOnly])).rows;
 }
 
 // ---- the monthly report
-const SITE_DAY = (d: Date) => siteDay(d, TZ);
 const esc = (s: unknown) => String(s ?? "").replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]!);
 export const REPORT_TO = "board@kzoomakers.org";
 
@@ -243,9 +243,9 @@ export async function buildReport(month: string, base: string) {
     q(`SELECT at, actor, target FROM audit WHERE action = 'user.special' AND target LIKE '%: pii.%' AND to_char(at AT TIME ZONE '${TZ}', 'YYYY-MM') = $1 ORDER BY at`),
     verifyChain(),
   ]);
-  const f = await flags(40).catch(() => null);
-  const bulkFlags = f ? f.bulk.filter((b: any) => new Date(b.hour).toISOString().slice(0, 7) === month).length : 0;
-  const unmatched = (await httpHits(true, 40).catch(() => [])).filter((h: any) => SITE_DAY(new Date(h.at)).slice(0, 7) === month).length;
+  const { bulk } = await getCfg();
+  const bulkFlags = (await c.query(`SELECT count(*)::int n FROM (SELECT 1 FROM pii_access a WHERE ${range} GROUP BY viewer_email, date_trunc('hour', a.at) HAVING count(*) > $2) x`, [month, bulk])).rows[0].n as number;
+  const unmatched = (await httpHits(true, 0, month).catch(() => [])).length;
   const n = tot[0].n as number;
   const table = (heads: string[], rows: unknown[][]) => `<table cellpadding="6" style="border-collapse:collapse"><tr>${heads.map((h) => `<th align="left" style="border-bottom:1px solid #ccc">${esc(h)}</th>`).join("")}</tr>${rows.map((r) => `<tr>${r.map((x) => `<td style="border-bottom:1px solid #eee">${esc(x)}</td>`).join("")}</tr>`).join("")}</table>`;
   const adminN = share.find((x: any) => x.viewer_is_admin)?.n ?? 0;

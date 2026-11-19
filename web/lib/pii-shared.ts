@@ -7,7 +7,8 @@ export const PII_AUDIT_PERM = "pii.audit";
 export const PII_PERMS = { "pii.personal": "View personal information (phone, address, signed documents)", "pii.emergency": "View emergency contacts", "pii.ids": "View IDs (Gov ID, ID renewals, guest photos)", "pii.audit": "Audit PII (open the Audit PII page)" } as const;
 export const REASONS = { tour: "Tour", emergency: "Emergency", id_renewal: "ID renewal", safety: "Safety / incident", legal: "Legal", other: "Other (explain below)" } as const;
 export type Reason = keyof typeof REASONS;
-export const PII_ROUTES = ["/api/pii/retrieve", "/api/members/id/image", "/api/guests/photo", "/api/guests/pdf", "/api/guests/contacts", "/api/webmaster/member-file", "/api/webmaster/users/"];
+// The requests that return personal data, as [method, path]. The HTTP log copy and the "no access record" check look at exactly these (editing a member or uploading a photo is not a read).
+export const PII_ROUTES: [string, string][] = [["POST", "/api/pii/retrieve"], ["GET", "/api/members/id/image"], ["GET", "/api/guests/photo"], ["GET", "/api/guests/pdf"], ["GET", "/api/guests/contacts"]];
 export const BULK_DEFAULT = 10;
 export const MODAL_TEXT = ["This is someone's PII (Personally Identifiable Information).", "It must be kept in strict confidentiality and requested only because you need it.", "If you view this, your request will be logged, and the board is sent monthly updates on this."];
 export type Subject = { type: "member" | "guest"; id: number; renewal?: number; side?: string; doc?: number };
