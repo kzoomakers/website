@@ -6,6 +6,7 @@ export type Comment = {
   id: number; short_id: string; story_id: number; parent_comment_id: number | null; depth: number; comment: string; markeddown_comment: string | null; score: number; flags: number;
   created_at: Date; last_edited_at: Date; is_deleted: boolean; is_moderated: boolean; is_from_email: boolean; username: string; user_id: number; user_created_at: Date | null; user_deleted_at: Date | null; user_banned_at: Date | null;
   hat: string | null; hat_link: string | null; hat_created_at: Date | null; moderator: string | null; mod_reason: string | null;
+  story_title?: string; story_short_id?: string; story_user_id?: number; story_user_is_author?: boolean; // only on comment lists
 };
 
 const STORY = `SELECT s.id, s.short_id, s.title, s.url, s.created_at, s.score, s.flags, s.comments_count, s.stories_count, s.merged_story_id, s.description, s.markeddown_description, s.user_is_author, s.is_moderated, s.is_deleted, s.token, s.user_id,

@@ -34,6 +34,7 @@ export async function listBy(q: Query, page = 1): Promise<{ stories: Story[]; mo
   return { stories: r.rows.slice(0, STORIES_PER_PAGE), more: r.rows.length > STORIES_PER_PAGE };
 }
 export const listStories = (kind: Kind, page = 1) => listBy(WHERE[kind], page);
+export const kindQuery = (kind: Kind): Query => WHERE[kind];
 
 const UNMERGED = `${VISIBLE} AND s.merged_story_id IS NULL`;
 const tagged = (col: string) => `EXISTS (SELECT 1 FROM feed.taggings tg WHERE tg.story_id = s.id AND ${col})`;
