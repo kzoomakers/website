@@ -7,7 +7,7 @@ import { setUserTopicsLocked } from "./ntfy";
 
 
 // What a member can edit about themselves, and the extra fields only admins can edit.
-export const SELF_FIELDS = ["first_name", "last_name", "phone", "address1", "address2", "city", "state", "zip"] as const;
+export const SELF_FIELDS = ["first_name", "last_name", "phone", "address1", "address2", "city", "state", "zip", "gender"] as const;
 export const ADMIN_FIELDS = [...SELF_FIELDS, "email", "access_card_number", "qb_id", "notes"] as const;
 export const RELATIONSHIPS = ["Parent", "Sibling", "Friend", "Spouse", "Significant other", "Guardian", "Adult child", "Other"] as const;
 
@@ -20,7 +20,7 @@ export type Contact = { id: number; first_name: string; last_name: string; phone
 
 export async function getProfile(id: number): Promise<Profile | null> {
   return (await (await conn()).query(
-    `SELECT id, name, email, first_name, last_name, phone, address1, address2, city, state, zip, access_card_number, qb_id, notes,
+    `SELECT id, name, email, first_name, last_name, gender, phone, address1, address2, city, state, zip, access_card_number, qb_id, notes,
             verified_at IS NOT NULL AS verified, password_hash IS NOT NULL AS has_password, created_at, disabled_at IS NOT NULL AS disabled, disabled_reason FROM site_users WHERE id = $1`, [id])).rows[0] ?? null;
 }
 
@@ -134,4 +134,15 @@ export async function setDisabled(id: number, reason: string | null, who: string
   if (reason === null) await setUserTopicsLocked(u.email, false); // if this throws, enabling again retries it
   await logAudit(who, reason === null ? "user.enable" : "user.disable", u.email + (reason ? `: ${clip(reason, 300)}` : ""));
   return true;
+}
+
+// ---- Roster photo (internal use only) ----
+export const hasRoster = async (id: number) => !!(await (await conn()).query("SELECT 1 FROM roster_photos WHERE user_id = $1", [id])).rowCount;
+export const getRoster = async (id: number): Promise<Buffer | null> => (await (await conn()).query("SELECT data FROM roster_photos WHERE user_id = $1", [id])).rows[0]?.data ?? null;
+/** Stores (data) or removes (null) the roster photo. */
+export async function setRoster(id: number, data: Buffer | null, who: string) {
+  const c = await conn();
+  if (data) await c.query("INSERT INTO roster_photos (user_id, data, updated_by) VALUES ($1, $2, $3) ON CONFLICT (user_id) DO UPDATE SET data = $2, updated_at = now(), updated_by = $3", [id, data, who]);
+  else await c.query("DELETE FROM roster_photos WHERE user_id = $1", [id]);
+  await logAudit(who, data ? "user.roster_photo" : "user.roster_photo_removed", String((await c.query("SELECT email FROM site_users WHERE id = $1", [id])).rows[0]?.email ?? id));
 }

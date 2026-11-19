@@ -42,3 +42,17 @@
 .adm .pp-danger>h2{color:var(--bad)}
 .adm .pp-ec{padding:10px 0;border-top:1px solid var(--line)}.adm .pp-ec:first-child{border-top:0}
 .adm .pp-side .card,.adm .pp-main .card{border-radius:14px}
+/* Roster portrait: a 3:4 card that hangs off the banner like the avatar, with an "internal use only" ribbon. */
+.adm .pp-roster{position:relative;margin:0;width:132px;flex:none;order:3;border-radius:14px;overflow:hidden;background:var(--card);border:1px solid var(--line);box-shadow:0 6px 20px rgba(0,0,0,.16);align-self:flex-start;margin-top:-56px}
+.adm .pp-roster img,.adm .pp-roster-empty{display:grid;place-items:center;align-content:center;gap:4px;width:100%;aspect-ratio:3/4;object-fit:cover;background:var(--bg);color:var(--mut);font-size:12px;text-align:center}
+.adm .pp-roster-empty span{font-size:28px}
+.adm .pp-roster-flag{position:absolute;top:8px;left:-30px;transform:rotate(-38deg);width:120px;text-align:center;background:var(--bad);color:#fff;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 0;pointer-events:none}
+.adm .pp-roster figcaption{display:flex;gap:4px;padding:6px}
+.adm .pp-roster figcaption button{flex:1;padding:5px 8px;font-size:12px;border-radius:8px}
+.adm .pp-roster figcaption button[aria-label]{flex:none}
+.adm .pp-gender{grid-column:1/-1;max-width:420px}
+.adm .pp-gender label,.adm .pp-gender select,.adm .pp-gender input{font:inherit}
+.adm .pp-gender label{display:grid;gap:4px;font-size:12px;font-weight:600;color:var(--mut)}
+.adm .pp-gender select,.adm .pp-gender input{font-weight:400;color:var(--ink);padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--bg);box-sizing:border-box}
+.adm .pp-gender>div{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+@media (max-width:640px){.adm .pp-roster{order:0;margin-top:-56px}}
