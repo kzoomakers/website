@@ -21,11 +21,12 @@ export default function Approvals({ initial, canEdit, open, compact }: { initial
   const [tab, setTab] = useState<State>("pending"), [rows, setRows] = useState(initial.rows), [counts, setCounts] = useState(initial.counts);
   const [sel, setSel] = useState<number | null>(open ?? null), [d, setD] = useState<Detail | null>(null);
   const [text, setText] = useState(""), [err, setErr] = useState(""), [msg, setMsg] = useState(""), [busy, setBusy] = useState(false);
+  const [phone, setPhone] = useState<string | null>(null); // the applicant's phone, only once someone has retrieved it (logged)
   const [review, setReview] = useState<{ first_name: string; last_name: string; ok: boolean; level: string } | null>(null);
   const [classes, setClasses] = useState<MembershipClass[]>([]);
 
   const refresh = async (t = tab) => { const r = await crm<{ rows: Row[]; counts: Counts }>("applicants", { state: t }); setRows(r.rows); setCounts(r.counts); };
-  const load = (id: number) => crm<Detail>("applicant", { id }).then((x) => { setD(x); setReview(null); }, (e) => setErr(e.message));
+  const load = (id: number) => crm<Detail>("applicant", { id }).then((x) => { setD(x); setReview(null); setPhone(null); }, (e) => setErr(e.message));
   useEffect(() => { if (sel !== null) load(sel); else setD(null); }, [sel]);
   useEffect(() => { refresh().catch((e) => setErr(e.message)); }, [tab]);
   useEffect(() => { crm<MembershipClass[]>("membershipClasses").then(setClasses, () => {}); }, []);
@@ -73,8 +74,8 @@ export default function Approvals({ initial, canEdit, open, compact }: { initial
           <div className="card" style={{ flex: "2 1 360px", minWidth: 0 }}>
             <h3 style={{ marginTop: 0 }}>{d.name} <span className="tag">{LABEL[d.approval]}</span></h3>
             <p className="sub" style={{ marginTop: 0 }}>{d.email}</p>
-            <div className="bar"><PiiButton kind="personal" subject={{ type: "member", id: d.id }} label="Retrieve phone and address">{(x) => <span className="sub">{x.phone || "no phone yet"}{[x.address1, x.address2, x.city, [x.state, x.zip].filter(Boolean).join(" ")].filter(Boolean).length ? " · " + [x.address1, x.address2, x.city, [x.state, x.zip].filter(Boolean).join(" ")].filter(Boolean).join(", ") : ""}</span>}</PiiButton></div>
-            {d.approval === "approved" && <p className="sub" style={{ marginTop: 0 }}>Onboarding: {d.onboarding === "done" ? "complete" : `waiting on ${d.onboarding}`} · {d.waiver_id ? <PiiDownload subject={{ type: "member", id: d.id, doc: d.waiver_id }} label="Signed waiver (PDF)" /> : "no waiver yet"} · {d.has_id ? <PiiButton kind="id" subject={{ type: "member", id: d.id }} label="View photo ID">{(x) => <a href={x.image} target="_blank" rel="noreferrer"><img alt={`ID of ${d.name}`} src={x.image} style={{ maxWidth: 320, borderRadius: 8 }} /></a>}</PiiButton> : "no ID yet"}</p>}
+            <div className="bar"><PiiButton key={d.id} kind="personal" subject={{ type: "member", id: d.id }} label="Retrieve phone and address" onChange={(x) => setPhone(x ? x.phone ?? "" : null)}>{(x) => <span className="sub">{x.phone || "no phone yet"}{[x.address1, x.address2, x.city, [x.state, x.zip].filter(Boolean).join(" ")].filter(Boolean).length ? " · " + [x.address1, x.address2, x.city, [x.state, x.zip].filter(Boolean).join(" ")].filter(Boolean).join(", ") : ""}</span>}</PiiButton></div>
+            {d.approval === "approved" && <p className="sub" style={{ marginTop: 0 }}>Onboarding: {d.onboarding === "done" ? "complete" : `waiting on ${d.onboarding}`} · {d.waiver_id ? <PiiDownload subject={{ type: "member", id: d.id, doc: d.waiver_id }} label="Signed waiver (PDF)" /> : "no waiver yet"} · {d.has_id ? <PiiButton key={d.id} kind="id" subject={{ type: "member", id: d.id }} label="View photo ID">{(x) => <a href={x.image} target="_blank" rel="noreferrer"><img alt={`ID of ${d.name}`} src={x.image} style={{ maxWidth: 320, borderRadius: 8 }} /></a>}</PiiButton> : "no ID yet"}</p>}
             <ol aria-label="Thread" style={{ listStyle: "none", margin: "0 0 12px", padding: 0, display: "grid", gap: 8, maxHeight: 360, overflowY: "auto" }}>
               {d.events.map((e) => e.kind === "state"
                 ? <li key={e.id} className="sub" style={{ margin: 0, textAlign: "center" }}>{e.by_applicant && e.to_state === "pending" && e.body === "Applied for membership" ? "Applied" : e.by_applicant ? "They replied: back to Pending" : `${e.actor} moved to ${LABEL[e.to_state ?? ""]}`} · {when(e.at)}{e.body && !e.by_applicant ? <em> · {e.body}</em> : null}</li>
@@ -101,11 +102,12 @@ export default function Approvals({ initial, canEdit, open, compact }: { initial
               </div>
             )}
             {review && (
-              <form className="card" style={{ display: "grid", gap: 8 }} onSubmit={async (e) => { e.preventDefault(); if (await run("applicantMove", { from: d.approval, to: "approved", confirmed: true, level: review.level, edit: { first_name: review.first_name, last_name: review.last_name } }, "Approved. They've been emailed.")) setReview(null); }}>
+              <form className="card" style={{ display: "grid", gap: 8 }} onSubmit={async (e) => { e.preventDefault(); if (await run("applicantMove", { from: d.approval, to: "approved", confirmed: true, level: review.level, edit: { first_name: review.first_name, last_name: review.last_name, ...(phone !== null && { phone }) } }, "Approved. They've been emailed.")) setReview(null); }}>
                 <strong>Check before approving</strong>
                 <div className="sub" style={{ margin: 0 }}>Fix anything that looks wrong. Email ({d.email}) was verified by their sign-in link. On first sign-in they'll be asked for address, phone and an emergency contact.</div>
                 <label>First name<input required autoFocus value={review.first_name} onChange={(e) => setReview({ ...review, first_name: e.target.value })} /></label>
                 <label>Last name<input value={review.last_name} onChange={(e) => setReview({ ...review, last_name: e.target.value })} /></label>
+                {phone !== null && <label>Phone<input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} /></label>}
                 {classes.length > 0 && <label>Membership class<select required aria-label="Membership class" value={review.level} onChange={(e) => setReview({ ...review, level: e.target.value })}><option value="">Choose a class…</option>{classes.map((c) => <option key={c.name} value={c.name}>{c.name} (${c.price} per {c.per})</option>)}</select></label>}
                 <label style={{ display: "flex", gap: 8 }}><input type="checkbox" checked={review.ok} onChange={(e) => setReview({ ...review, ok: e.target.checked })} /> I've checked their name is right</label>
                 <div className="bar"><button className="pri" type="submit" disabled={busy || !review.ok || (classes.length > 0 && !review.level)}>Approve {review.first_name}</button><button type="button" onClick={() => setReview(null)}>Cancel</button></div>

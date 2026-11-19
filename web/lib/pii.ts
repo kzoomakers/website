@@ -6,7 +6,8 @@ import { open } from "./vault";
 import { notify, PII_TOPIC } from "./ntfy";
 import { getMailCfg, mailReady, sendQueued } from "./mail";
 import { TZ } from "./guest-rules";
-import { GENESIS, chainHash, canon, checkRows, type Row } from "./pii-chain";
+import { GENESIS, chainHash, checkRows, type Row } from "./pii-chain";
+import { SITE_DAY as siteDay, lastFullMonth } from "./pii-months";
 import { BULK_DEFAULT, PII_AUDIT_PERM, PII_KINDS, PII_PERM, PII_ROUTES, checkReason, type PiiKind, type Subject } from "./pii-shared";
 
 // Who may see a person's personal data, and the tamper-evident record of who did. Design: docs/pii-audit-access-system.md.
@@ -18,8 +19,6 @@ export type Cfg = { locked: boolean; bulk: number };
 export class PiiError extends Error { status: number; constructor(msg: string, status = 400) { super(msg); this.status = status; } }
 
 // ---- the hash chain (the pure part is in pii-chain.ts)
-export { canon, chainHash, type Row };
-
 /** Appends one row. Rows are chained one at a time (the lock), so two simultaneous views can't both claim the same predecessor. */
 export async function record(c: PoolClient, r: Row) {
   await c.query("SELECT pg_advisory_xact_lock(7351930)");
@@ -117,7 +116,7 @@ const toRow = (v: Viewer | null, email: string, s: Subject, kind: PiiKind, o: Ou
 });
 
 /** The one way staff read someone's PII. Checks permission and the lock switch, requires a reason, writes the log row and reads the data in one transaction, then raises any alerts. */
-export async function retrieve(req: Request, kindIn: unknown, subjectIn: any, reasonIn: unknown, noteIn: unknown, via: "ui" | "api" = "ui") {
+export async function retrieve(req: Request, kindIn: unknown, subjectIn: any, reasonIn: unknown, noteIn: unknown) {
   const kind = String(kindIn) as PiiKind;
   if (!(kind in PII_KINDS)) throw new PiiError("Unknown kind of information.");
   const s: Subject = { type: subjectIn?.type === "guest" ? "guest" : "member", id: Number(subjectIn?.id), renewal: Number(subjectIn?.renewal) || undefined, side: subjectIn?.side === "old" ? "old" : "new", doc: Number(subjectIn?.doc) || undefined };
@@ -131,7 +130,7 @@ export async function retrieve(req: Request, kindIn: unknown, subjectIn: any, re
   if (!(await hit(`pii:${v.email}`, 60, 3600_000, true))) throw new PiiError("You've viewed a lot of records this hour. Try again later.", 429);
   const out = await withTx(async (c) => {
     const o = await LOAD[kind](c, s);
-    await record(c, toRow(v, v.email, s, kind, o, via, why, req)); // if this throws the transaction rolls back and nothing is returned
+    await record(c, toRow(v, v.email, s, kind, o, "ui", why, req)); // if this throws the transaction rolls back and nothing is returned
     return o;
   });
   void alerts(v, kind, out.name).catch((e) => console.error("pii alerts:", e));
@@ -140,8 +139,11 @@ export async function retrieve(req: Request, kindIn: unknown, subjectIn: any, re
 
 /** A member (or a host, for the guests they brought) looking at data that is theirs to see: recorded as `self`, never blocks, left out of the board report. */
 export async function logSelf(req: Request, who: { id: number | null; email: string }, s: Pick<Subject, "type" | "id">, kind: PiiKind, name: string, fields: string[]) {
-  try { await withTx((c) => record(c, toRow(null, who.email, s as Subject, kind, { name, fields, data: null }, "self", { reason: "self", note: "" }, req))); }
-  catch (e) { console.error("pii self log:", e); }
+  try {
+    // A page showing 20 guest photos would write 20 permanent rows: one per viewer, person and kind every 10 minutes is enough.
+    if ((await (await conn()).query("SELECT 1 FROM pii_access WHERE via = 'self' AND viewer_email = $1 AND subject_type = $2 AND subject_id = $3 AND kind = $4 AND at > now() - interval '10 minutes' LIMIT 1", [who.email, s.type, s.id, kind])).rowCount) return;
+    await withTx((c) => record(c, toRow(null, who.email, s as Subject, kind, { name, fields, data: null }, "self", { reason: "self", note: "" }, req)));
+  } catch (e) { console.error("pii self log:", e); }
 }
 
 /** The same, for a guest's data read through their own link or by the member who brought them. */
@@ -215,15 +217,15 @@ export async function copyHttpHits() {
   await c.query(`INSERT INTO pii_access_http (src_id, at, method, path, ip, ua, referer, "user", status) SELECT id, at, method, path, ip, ua, referer, "user", status FROM http_log WHERE at >= $1::timestamptz - interval '1 minute' AND (${ors}) ON CONFLICT DO NOTHING`,
     [since, ...PII_ROUTES.map((r) => r.replace(/[\\%_]/g, "\\$&") + (r.endsWith("/") ? "%" : ""))]);
 }
-/** Successful hits on PII routes, each marked with whether a pii_access row (same path, within two minutes, same person when the log knows who) explains it. */
+/** Successful reads of PII routes (and retrievals), each marked with whether a pii_access row (same path, within two minutes, same person when the log knows who) explains it. */
 export async function httpHits(unmatchedOnly = false, days = 30) {
   return (await (await conn()).query(`SELECT h.at, h.method, h.path, h.ip, h.ua, h.referer, h."user", h.status, m.id AS access_id FROM pii_access_http h
     LEFT JOIN LATERAL (SELECT id FROM pii_access a WHERE a.request_path = split_part(h.path, '?', 1) AND a.at BETWEEN h.at - interval '2 minutes' AND h.at + interval '2 minutes' AND (h."user" = '' OR lower(h."user") = lower(a.viewer_email)) ORDER BY abs(extract(epoch FROM a.at - h.at)) LIMIT 1) m ON true
-    WHERE h.at > now() - make_interval(days => $1) AND h.status BETWEEN 200 AND 299 AND ($2 = false OR m.id IS NULL) ORDER BY h.at DESC LIMIT 500`, [days, unmatchedOnly])).rows;
+    WHERE h.at > now() - make_interval(days => $1) AND h.status BETWEEN 200 AND 299 AND (h.method = 'GET' OR h.path = '/api/pii/retrieve') AND ($2 = false OR m.id IS NULL) ORDER BY h.at DESC LIMIT 500`, [days, unmatchedOnly])).rows;
 }
 
 // ---- the monthly report
-const SITE_DAY = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d); // YYYY-MM-DD in site time
+const SITE_DAY = (d: Date) => siteDay(d, TZ);
 const esc = (s: unknown) => String(s ?? "").replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]!);
 export const REPORT_TO = "board@kzoomakers.org";
 
@@ -258,7 +260,6 @@ ${base ? `<p><a href="${esc(base)}/admin/services/pii">Open the Audit PII page</
   return { month, count: n, chainOk: chain.ok, subject: `Personal information access report: ${month}`, html };
 }
 
-const lastDay = (d: Date) => { const t = new Date(d.getTime() + 864e5); return SITE_DAY(t).slice(0, 7) !== SITE_DAY(d).slice(0, 7); }; // is tomorrow in another month (site time)?
 /** Sends one month's report (nothing if there was no access, unless `force`) and records the run, so a month goes out once. */
 export async function sendReport(month: string, force = false) {
   const cfg = await getMailCfg();
@@ -272,12 +273,10 @@ export async function sendReport(month: string, force = false) {
 }
 export const reportRuns = async () => (await (await conn()).query("SELECT month, sent_at, chain_ok, row_count, skipped FROM pii_report_runs ORDER BY month DESC LIMIT 36")).rows;
 
-/** Hourly job. Sends the month's report on its last evening (after 8pm site time); if that failed, tries again each day until it goes, and tells the admins. */
+/** Hourly job. Once a month has ended (site time) it sends that month's report, so the last evening is included; if that fails it tries again every hour, and tells the admins once a day. */
 export async function reportJob() {
   if (!db()) return;
-  const now = new Date(), day = SITE_DAY(now), hour = Number(new Intl.DateTimeFormat("en-US", { timeZone: TZ, hour: "numeric", hour12: false }).format(now)) % 24;
-  const [y, m] = day.slice(0, 7).split("-").map(Number), prev = m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, "0")}`;
-  for (const month of lastDay(now) && hour >= 20 ? [prev, day.slice(0, 7)] : [prev]) {
+  for (const month of [lastFullMonth(new Date(), TZ)]) {
     if ((await (await conn()).query("SELECT 1 FROM pii_report_runs WHERE month = $1", [month])).rowCount) continue;
     try { await sendReport(month); }
     catch (e: any) {

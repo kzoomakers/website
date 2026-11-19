@@ -49,3 +49,13 @@ test("staff screens never import the raw PII readers", () => {
   const bad = walk("app").filter((f) => /\.tsx?$/.test(f) && f.includes(`${path.sep}admin${path.sep}`)).filter((f) => RAW.test(fs.readFileSync(f, "utf8")));
   assert.deepEqual(bad, []);
 });
+
+test("the report is for the month that just ended, in site time", async () => {
+  const { lastFullMonth } = await import("../lib/pii-months.ts");
+  const tz = "America/Detroit", at = (iso) => lastFullMonth(new Date(iso), tz);
+  assert.equal(at("2026-11-18T12:00:00Z"), "2026-10");
+  assert.equal(at("2026-01-15T12:00:00Z"), "2025-12", "January reports December");
+  assert.equal(at("2026-02-01T03:00:00Z"), "2025-12", "still Jan 31 evening in Detroit: January isn't over yet");
+  assert.equal(at("2026-02-01T06:00:00Z"), "2026-01", "midnight on the 1st in Detroit");
+  assert.equal(at("2026-03-01T06:00:00Z"), "2026-02", "February (28 days)");
+});

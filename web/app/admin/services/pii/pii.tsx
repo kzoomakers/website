@@ -109,7 +109,7 @@ function Integrity({ fail, full }: { fail: (e: Error) => void; full: boolean }) 
       <label>Alert when one person views more than <input type="number" min={1} max={1000} defaultValue={d.cfg.bulk} onBlur={(e) => Number(e.target.value) !== d.cfg.bulk && save({ bulk: Number(e.target.value) })} style={{ width: 70 }} /> records in an hour</label>
     </section>}
     <h2>Monthly report to the board</h2>
-    <p className="sub">Sent on the last evening of the month to board@kzoomakers.org, only if something was viewed. It contains counts and names, never the information itself.</p>
+    <p className="sub">Sent in the first hour after each month ends to board@kzoomakers.org, only if something was viewed. It contains counts and names, never the information itself.</p>
     <div className="bar"><input type="month" aria-label="Month" value={month} onChange={(e) => setMonth(e.target.value)} /><button onClick={() => call<any>({ op: "preview", month }).then((r) => setPrev(r.html), fail)}>Preview</button>
       {full && <button onClick={() => call<any>({ op: "send", month }).then((r) => { setMsg(r.sent ? "Sent." : "Nothing to send."); load(); }, fail)}>Send now / resend</button>}</div>
     {prev && <div className="card" dangerouslySetInnerHTML={{ __html: prev }} />}

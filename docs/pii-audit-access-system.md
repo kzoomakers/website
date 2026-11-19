@@ -19,7 +19,7 @@ Nobody sees a member's or guest's personal data without (a) being allowed to, (b
 | Audit page | **Audit PII** under Audit Log. Full admins + the Audit PII special perm. |
 | Tamper evidence | Append-only table with a hash chain. No edit or delete in the UI. |
 | Retention | Keep forever. Exempt from `lib/retention.ts` pruning. |
-| Monthly report | Last day of the month, to `board@kzoomakers.org`, **only if** something was accessed. Counts by viewer and subject, plus reasons. No PII values. |
+| Monthly report | Right after the month ends (so its last evening is included), to `board@kzoomakers.org`, **only if** something was accessed. Counts by viewer and subject, plus reasons. No PII values. |
 | Real-time alerts | Bulk-access alert and an admin alert when a non-admin retrieves a Gov ID. |
 
 ## Modal wording
@@ -76,7 +76,7 @@ Note: `http_log` is partitioned by day and pruned by `KEEP_ROWS`. Correlation on
 
 ## Monthly report
 
-- Runs on the last day of the month, late evening site time. Skips if no non-self access happened.
+- Runs hourly and sends once a month has ended in site time. Skips if no non-self access happened.
 - Contents: period, total retrievals, a table of viewer × kind counts, subjects viewed (names), reasons breakdown, admin vs granted share, bulk-access flags raised, unmatched HTTP hits, hash-chain status, and a link to Audit PII.
 - Contains **no** PII values (no phone, address, ID content).
 - Record the send in `pii_report_runs`. If the send fails, retry daily and alert admins via ntfy.
