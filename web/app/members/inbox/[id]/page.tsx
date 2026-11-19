@@ -14,7 +14,7 @@ export default async function Conversation({ params }: { params: Promise<{ id: s
       {async (u) => {
         const [t, convos] = await Promise.all([thread(u.id, id), conversations(u.id)]);
         if (!t) notFound();
-        const items = t.messages.map((m) => ({ id: m.id, mine: m.mine, name: t.name, body: m.body, at: String(m.at) }));
+        const items = t.messages.map((m) => ({ id: m.id, mine: m.mine, name: t.name, avatar: m.mine ? t.myAvatar : t.avatar, body: m.body, at: String(m.at) }));
         return (
           <div className="ch-wrap">
             <Side convos={convos} current={id} hideSmall />

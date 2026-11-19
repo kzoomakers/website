@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 
-export type Bub = { id: number | string; mine: boolean; note?: boolean; name: string; body: string; at: string };
+export type Bub = { id: number | string; mine: boolean; note?: boolean; name: string; body: string; at: string; avatar?: string };
 
 // One chat look for every conversation on the site (tours, contact replies, member messages). Dark side list is only used in the members inbox.
 export const CHAT_CSS = `
@@ -10,11 +10,11 @@ export const CHAT_CSS = `
 .ch-split{display:flex;align-items:center;justify-content:center;color:#8a8f94;font-size:12px;margin:10px 0}
 .ch-split:before,.ch-split:after{content:"";height:1px;width:60px;background:#c4c3c3;margin:0 14px}
 .ch-m{display:flex;margin:10px 16px;position:relative;gap:10px;align-items:flex-start}
-.ch-av{flex:none;width:38px;height:38px;border-radius:50%;background:#363e47;color:#fff;display:grid;place-items:center;font-size:14px;font-weight:700}
+.ch-av{flex:none;width:38px;height:38px;border-radius:50%;overflow:hidden;background:#363e47;color:#fff;display:grid;place-items:center;font-size:14px;font-weight:700}
 .ch-c{max-width:min(72%,560px);background:#fff;padding:11px 14px;border-radius:0 10px 10px 10px;position:relative;color:#3c444c}
 .ch-c:before{content:"";position:absolute;top:0;left:-8px;border-style:solid;border-width:0 9px 9px 0;border-color:transparent #fff transparent transparent}
 .ch-t{white-space:pre-wrap;overflow-wrap:anywhere}.ch-w{font-size:11.5px;color:#8a8f94;margin-top:4px}
-.ch-m.me{flex-direction:row-reverse}.ch-m.me .ch-av{background:#01e777;color:#04331c}
+.ch-av img{width:100%;height:100%;object-fit:cover;display:block}.ch-m.me{flex-direction:row-reverse}.ch-m.me .ch-av{background:#01e777;color:#04331c}
 .ch-m.me .ch-c{background:#01e777;color:#04331c;border-radius:10px 0 10px 10px}.ch-m.me .ch-c:before{left:auto;right:-8px;border-width:9px 9px 0 0;border-color:#01e777 transparent transparent transparent}
 .ch-m.me .ch-w{color:#0a5c35}
 .ch-m.note .ch-c{background:#fff8dc;border:1px dashed #d9b84a;color:#3c3320;max-width:90%}.ch-m.note .ch-c:before{display:none}
@@ -51,7 +51,7 @@ export function Msgs({ items, empty }: { items: Bub[] | null; empty?: string }) 
         <div key={m.id}>
           {(i === 0 || day(items[i - 1].at) !== day(m.at)) && <div className="ch-split">{day(m.at)}</div>}
           <div className={`ch-m${m.mine ? " me" : ""}${m.note ? " note" : ""}`}>
-            <div className="ch-av" aria-hidden>{m.note ? "🔒" : initials(m.name)}</div>
+            <div className="ch-av" aria-hidden>{m.note ? "🔒" : m.avatar ? <img src={m.avatar} alt="" /> : initials(m.name)}</div>
             <div className="ch-c"><div className="ch-t">{m.body}</div><div className="ch-w">{m.note ? "Internal note · " : ""}{m.mine ? "You" : m.name} · {time(m.at)}</div></div>
           </div>
         </div>
