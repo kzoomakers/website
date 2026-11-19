@@ -1,6 +1,6 @@
 # Plan: talk.kzoomakers.org, an embedded port of Lobsters
 
-Status: phases 0–2 merged (#185–#189). Phase 3 in progress: pure logic (hotness, confidence, URL normalize) done in `web/feed/logic.ts`; markdown (`markdown.ts`) and the SSRF-safe fetch (`fetch-url.ts`) done; submit story (`story-rules.ts`, `models/submit.ts`, `/stories/new` + POST `/stories`) written but its DB path is untested (no local Postgres); edit/delete, comments, votes, karma, speed limits still to do. Source inventoried: `lobsters/` (untracked clone, Rails 8 / Ruby 4.0.10 / SQLite). Target: `web/` (Next.js 16, React 19, Postgres, Fly.io).
+Status: phases 0–2 merged (#185–#189). Phase 3 in progress: pure logic (hotness, confidence, URL normalize) done in `web/feed/logic.ts`; markdown (`markdown.ts`) and the SSRF-safe fetch (`fetch-url.ts`) done; submit story (`story-rules.ts`, `models/submit.ts`, `/stories/new` + POST `/stories`) DB-tested (tests/feed-submit-db.test.mjs); edit/delete, comments, votes, karma, speed limits still to do. Source inventoried: `lobsters/` (untracked clone, Rails 8 / Ruby 4.0.10 / SQLite). Target: `web/` (Next.js 16, React 19, Postgres, Fly.io).
 
 ## 0. Decisions this plan assumes
 

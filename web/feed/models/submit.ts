@@ -7,7 +7,7 @@ import { RECENT_DAYS, cleanTitle, isNewUser, storyProblems } from "../story-rule
 import { findTags } from "./stories";
 
 // Submitting a story (stories_controller#create + story.rb callbacks). Everything runs in one transaction so a failure leaves nothing half-made.
-// NOT YET RUN against a database (none in the dev environment); the pure parts are tested, this needs a TEST_DATABASE_URL test before launch.
+// Tested against a scratch Postgres in tests/feed-submit-db.test.mjs (run with TEST_DATABASE_URL).
 
 export type Submission = { title: string; url: string; description: string; tags: string[]; userIsAuthor: boolean };
 export type SubmitResult = { ok: true; shortId: string } | { ok: false; errors: string[]; similar?: { short_id: string; title: string }[] };
