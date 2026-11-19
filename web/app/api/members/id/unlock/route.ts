@@ -20,6 +20,13 @@ export async function POST(req: Request) {
   } catch (e: any) { return new NextResponse(errMsg(e), { status: 400 }); }
 }
 
+// DELETE locks the ID again (clears the cookie).
+export async function DELETE() {
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set(UNLOCK_COOKIE, "", { path: "/", maxAge: 0 });
+  return res;
+}
+
 // GET ?t=<token>: the emailed link. Must be opened signed in as the same member.
 export async function GET(req: Request) {
   const base = await baseUrl(req), t = new URL(req.url).searchParams.get("t") ?? "";
