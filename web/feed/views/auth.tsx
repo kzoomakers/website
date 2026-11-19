@@ -149,7 +149,8 @@ export async function Account() {
   );
   return (
     <>
-      <li className="push-right">{v.username ? <a href={`/~${v.username}`}>{v.username}</a> : <a href="/login/username">Choose a username</a>}</li>
+      {v.username && <li className="push-right"><a href="/stories/new">Submit</a></li>}
+      <li className={v.username ? undefined : "push-right"}>{v.username ? <a href={`/~${v.username}`}>{v.username}</a> : <a href="/login/username">Choose a username</a>}</li>
       {v.kind === "external" && !v.verified && <li>{post("resend", "Confirm your email")}</li>}
       <li>{post("logout", "Logout")}</li>
     </>
