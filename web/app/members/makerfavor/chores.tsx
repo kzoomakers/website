@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { awardText, dueText, every, hrs, measureText, when } from "../../admin/makerfavor/format";
 
-type Chore = { id: number; name: string; every_days: number | null; notes: string; due_at: number | null; overdue_days: number | null; last_done_at: number | null; last_by: string | null; being_done_by: string[] };
+type Chore = { id: number; name: string; area: string; station: string; task: string; every_days: number | null; notes: string; due_at: number | null; overdue_days: number | null; last_done_at: number | null; last_by: string | null; being_done_by: string[] };
 type Shift = { id: number; chore: string; started_at: number };
 type Hour = { name: string; user_id: number | null; hours: number; times: number };
 type Data = { me: number; name: string; chores: Chore[]; mine: Shift[]; hours: Hour[] };
@@ -13,7 +13,9 @@ const rpc = async (op: string, args: Record<string, unknown> = {}) => {
 };
 const PERIODS = [["this_week", "This week"], ["this_month", "This month"], ["this_year", "This year"], ["all_time", "All time"]];
 const TABS = [["todo", "🧹 To do"], ["hours", "⏱️ Hours"], ["fame", "🏆 Achievements"], ["stats", "📊 Stats"]];
-const FILTERS = [["all", "All"], ["late", "Overdue"], ["soon", "Due soon"], ["free", "Nobody's on it"]];
+const ROOM = "Room";
+const worst = (cs: Chore[]) => cs.some((c) => urgency(c) === "late") ? "late" : cs.some((c) => urgency(c) === "soon") ? "soon" : "ok";
+const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
 const CHEERS = ["Nice work! 🎉", "You're a legend! 🌟", "The space thanks you! 💛", "Look at you go! 🚀", "Spotless! ✨", "High five! 🙌", "Makers gonna make! 🛠️"];
 const MEDALS = ["🥇", "🥈", "🥉"];
 const ICONS: [RegExp, string][] = [[/trash|garbage|bin|recycl/i, "🗑️"], [/vacuum|sweep|floor|mop/i, "🧹"], [/bath|restroom|toilet/i, "🚽"], [/dish|kitchen|fridge|coffee/i, "🍽️"], [/dust|wipe|clean|wash|window/i, "🧽"], [/laser|3d|print|cnc|tool|shop|wood|metal|weld/i, "🔧"], [/plant|garden|lawn|snow|yard|outside/i, "🌿"], [/stock|supply|inventor|order|sort|organi[sz]e/i, "📦"], [/light|bulb|electric/i, "💡"], [/mail|email|social/i, "📬"]];
@@ -70,6 +72,12 @@ const CSS = `
 .ch .li{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:10px;padding:8px 12px}
 .ch .li.late{border-left-color:var(--bad)}.ch .li.soon{border-left-color:#e6a100}.ch .li.ok{border-left-color:var(--ok)}.ch .li.free{border-left-color:var(--acc)}
 .ch .lr{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.ch .lr .nm{flex:1;min-width:160px;display:flex;flex-direction:column}.ch .lr .nm .sub{margin:0}
+.ch .crumbs{display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin:0 0 4px}.ch .crumbs button{border:0;background:none;color:var(--acc);font:inherit;padding:8px 10px;min-height:44px;border-radius:99px;cursor:pointer}.ch .crumbs button.on{background:var(--acc-bg);font-weight:600}
+.ch .tiles2{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.ch .tl{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-bottom:4px solid var(--ok);border-radius:18px;padding:14px;min-height:104px;cursor:pointer;transition:transform .15s,box-shadow .15s;animation:chUp .35s both}
+.ch .tl:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,.12)}.ch .tl:active{transform:scale(.97)}
+.ch .tl .ico{font-size:1.8rem}.ch .tl b{font-size:1.05rem}.ch .tl.late{border-bottom-color:var(--bad)}.ch .tl.soon{border-bottom-color:#e6a100}
+@media (max-width:520px){.ch .lr button{flex:1;min-height:48px}.ch .acts button{flex:1;min-height:48px}}
 .ch .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:12px}.ch .tile{text-align:center;padding:12px;border-radius:var(--r);background:var(--acc-bg)}.ch .tile b{display:block;font-size:1.8rem}
 @keyframes chUp{from{opacity:0;transform:translateY(10px)}}
 @keyframes chWig{50%{transform:rotate(14deg) scale(1.2)}}
@@ -87,7 +95,7 @@ function Confetti({ n }: { n: number }) {
 
 // Members see the chores, everyone's hours and achievements, and log their own time.
 export default function Chores() {
-  const [tab, setTab] = useState("todo"), [period, setPeriod] = useState("this_month"), [msg, setMsg] = useState(""), [filter, setFilter] = useState("all"), [more, setMore] = useState(false), [allH, setAllH] = useState(false), [locked, setLocked] = useState(false);
+  const [tab, setTab] = useState("todo"), [period, setPeriod] = useState("this_month"), [msg, setMsg] = useState(""), [path, setPath] = useState<string[]>([]), [allH, setAllH] = useState(false), [locked, setLocked] = useState(false);
   const [d, setD] = useState<Data | null>(null), [ach, setAch] = useState<any[] | null>(null), [stats, setStats] = useState<any>(null), [mine, setMine] = useState<Hour[] | null>(null);
   const [fin, setFin] = useState<{ id: number; minutes: string } | null>(null), [log, setLog] = useState<{ id: number; minutes: string } | null>(null);
   const [toast, setToast] = useState(""), [boom, setBoom] = useState(0), [now, setNow] = useState(() => Math.floor(Date.now() / 1000)), [busy, setBusy] = useState(false);
@@ -110,9 +118,9 @@ export default function Chores() {
     const rank = { late: 0, soon: 1, free: 2, ok: 3 } as const;
     return [...(d?.chores ?? [])].sort((a, b) => rank[urgency(a)] - rank[urgency(b)] || (b.overdue_days ?? -999) - (a.overdue_days ?? -999));
   }, [d]);
-  // Top 3 are the "start here" picks; the rest hide behind a toggle with filters.
   const picks = sorted.slice(0, 3);
-  const rest = sorted.slice(3).filter((c) => filter === "all" || (filter === "free" ? !c.being_done_by.length : urgency(c) === filter));
+  // Find a chore: area, then station, then the tasks. An area with one station skips straight to its tasks.
+  const byArea = useMemo(() => { const m = new Map<string, Chore[]>(); for (const c of sorted) (m.get(c.area || "Other") ?? m.set(c.area || "Other", []).get(c.area || "Other")!).push(c); return [...m].sort((a, b) => a[0].localeCompare(b[0])); }, [sorted]);
 
   if (!d) return <div className="ch"><style>{CSS}</style>{msg ? <p role="alert" style={{ color: "var(--bad)" }}>{msg}</p> : <div style={{ display: "grid", gap: 12 }}><div className="skel" /><div className="skel" /><div className="skel" /></div>}</div>;
   const sp = stats?.[period];
@@ -136,6 +144,37 @@ export default function Chores() {
       <div style={{ margin: "6px 0" }}>{a.earned.length ? a.earned.map((e: any) => <span className="tag" key={e.who + e.at}>🏆 {e.who} · {when(e.at)}</span>) : <span className="sub">🔒 Not earned yet. Could be you!</span>}</div>
       {a.close.length > 0 && <div className="sub" style={{ margin: 0 }}>Closest: {a.close.map((c: any) => `${c.who} (${c.have})`).join(", ")}</div>}
     </div>
+  );
+  const [area, station] = path, inArea = byArea.find(([a]) => a === area)?.[1] ?? [];
+  const stations = [...new Set(inArea.map((c) => c.station || ROOM))].sort((a, b) => (a === ROOM ? -1 : b === ROOM ? 1 : a.localeCompare(b)));
+  const stn = station ?? (area && stations.length === 1 ? stations[0] : undefined);
+  const tile = (key: string, ico: string, label: string, cs: Chore[], onClick: () => void) => (
+    <button key={key} className={`tl ${worst(cs)}`} onClick={onClick}><span className="ico" aria-hidden>{ico}</span><b>{label}</b><span className="sub">{plural(cs.length, "task")}{cs.filter((c) => urgency(c) === "late").length > 0 && ` · ${cs.filter((c) => urgency(c) === "late").length} late`}</span></button>
+  );
+  const finder = () => (
+    <section aria-label="Find a chore">
+      <h2 className="sec">Find a chore</h2>
+      <nav className="crumbs" aria-label="Where you are">
+        <button className={!area ? "on" : ""} onClick={() => setPath([])}>Areas</button>
+        {area && <><span aria-hidden>›</span><button className={!stn ? "on" : ""} onClick={() => setPath([area])}>{area}</button></>}
+        {area && stn && stations.length > 1 && <><span aria-hidden>›</span><button className="on">{stn === ROOM ? "Whole room" : stn}</button></>}
+      </nav>
+      {!area && <><p className="sub">Where are you in the space?</p><div className="tiles2">{byArea.map(([a, cs]) => tile(a, iconFor(a), a, cs, () => setPath([a])))}</div></>}
+      {area && !stn && <><p className="sub">What are you working on in {area}?</p><div className="tiles2">{stations.map((s) => tile(s, s === ROOM ? "🏠" : iconFor(s), s === ROOM ? "Whole room" : s, inArea.filter((c) => (c.station || ROOM) === s), () => setPath([area, s])))}</div></>}
+      {area && stn && (
+        <><p className="sub">Tap what you're doing. “Start” runs a timer; “Log” is for something you already did.</p>
+        <div className="list">{inArea.filter((c) => (c.station || ROOM) === stn).map((c) => (
+          <div key={c.id} className={`li ${urgency(c)}`}>
+            <div className="lr">
+              <div className="nm"><b>{c.task || c.name}</b><span className="sub">{dueText(c)} · {why(c)}</span>{c.notes && <span className="sub">{c.notes}</span>}</div>
+              <button className="primary" disabled={busy} onClick={() => start(c)}>▶ Start</button>
+              <button onClick={() => toggleLog(c)}>✍️ Log</button>
+            </div>
+            {logForm(c)}
+          </div>
+        ))}</div></>
+      )}
+    </section>
   );
   const toggleLog = (c: Chore) => setLog(log?.id === c.id ? null : { id: c.id, minutes: "30" });
   const why = (c: Chore) => c.being_done_by.length ? `👷 ${c.being_done_by.join(", ")} on it` : c.last_done_at ? `Last: ${when(c.last_done_at)} by ${c.last_by}` : "Be the first!";
@@ -184,7 +223,8 @@ export default function Chores() {
               return (
                 <div key={c.id} className={`c ${u}`} style={{ animationDelay: `${i * 40}ms` }}>
                   <span className="ico" aria-hidden>{iconFor(c.name)}</span>
-                  <h3>{c.name}</h3>
+                  <div className="sub" style={{ margin: 0 }}>{[c.area, c.station && c.station !== ROOM ? c.station : ""].filter(Boolean).join(" › ")}</div>
+                  <h3>{c.task || c.name}</h3>
                   <div><span className="tag">{every(c.every_days)}</span> <span className="tag" style={{ color: u === "late" ? "var(--bad)" : undefined, fontWeight: u === "late" || u === "soon" ? 600 : 400 }}>{dueText(c)}</span></div>
                   <div className="sub" style={{ margin: 0 }}>{c.notes || why(c)}</div>
                   <div className="acts">
@@ -196,26 +236,7 @@ export default function Chores() {
               );
             })}
           </div>
-          {sorted.length > 3 && <button className="more" aria-expanded={more} onClick={() => setMore(!more)}>{more ? "Hide other chores" : `Show ${sorted.length - 3} more chores`}</button>}
-          {more && (
-            <>
-              <nav className="chips" aria-label="Filter chores">{FILTERS.map(([k, l]) => <button key={k} aria-pressed={filter === k} className={filter === k ? "primary" : ""} onClick={() => setFilter(k)}>{l}</button>)}</nav>
-              <div className="list">
-                {rest.map((c) => (
-                  <div key={c.id} className={`li ${urgency(c)}`}>
-                    <div className="lr">
-                      <span aria-hidden>{iconFor(c.name)}</span>
-                      <div className="nm"><b>{c.name}</b><span className="sub">{dueText(c)} · {why(c)}</span></div>
-                      <button className="primary" disabled={busy} onClick={() => start(c)}>▶ Start</button>
-                      <button onClick={() => toggleLog(c)} title="Log time for something you already did">✍️ Log</button>
-                    </div>
-                    {logForm(c)}
-                  </div>
-                ))}
-                {!rest.length && <div className="empty"><b>🎊</b>Nothing here. That's a good sign!</div>}
-              </div>
-            </>
-          )}
+          {sorted.length > 3 && finder()}
           {!d.chores.length && <div className="empty"><b>🫧</b>No chores yet.</div>}
         </>
       )}

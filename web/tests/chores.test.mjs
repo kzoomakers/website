@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert";
 
-const { dueAt, stats, achievements, matchMember, daysBetween, dayStart, dayNum, periodStart } = await import("../lib/chores-calc.ts");
+const { choreName, dueAt, stats, achievements, matchMember, daysBetween, dayStart, dayNum, periodStart } = await import("../lib/chores-calc.ts");
 
 const DAY = 86400;
 const now = Date.UTC(2026, 10, 18, 17) / 1000; // Wed 2026-11-18 noon in Detroit
@@ -55,4 +55,10 @@ test("spoken names: full name, then a first name only one member has, then near 
   assert.equal(near.status, "maybe");
   assert.equal(near.candidates[0].id, 1);
   assert.equal(matchMember("Zebediah Quux", m).status, "none");
+});
+
+test("a chore's name is area, station, task; Room and blanks are left out", () => {
+  assert.equal(choreName("Wood Shop", "Table Saw", "Lube Adjustment Gears"), "Wood Shop · Table Saw · Lube Adjustment Gears");
+  assert.equal(choreName("Wood Shop", "Room", "Sweep Floor"), "Wood Shop · Sweep Floor");
+  assert.equal(choreName(" Grounds ", "", "Mow"), "Grounds · Mow");
 });
