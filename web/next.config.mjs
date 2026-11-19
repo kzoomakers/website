@@ -1,5 +1,5 @@
 // Keep legacy URLs alive: /about.html -> /about, /index.html -> /
-const ASSETS = "https://kzoomakers-public-assets.fly.storage.tigris.dev";
+const ASSETS = "https://kzoomakers-public-assets.t3.tigrisblob.io";
 const nextConfig = {
   async rewrites() {
     return {
