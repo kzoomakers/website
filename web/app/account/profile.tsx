@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Notice from "@/components/notice";
 import GenderSelect from "@/components/gender-select";
+import PronounSelect from "@/components/pronoun-select";
 import type { Contact, Profile as P } from "@/lib/profiles";
 
 const send = (method: string, body?: unknown, q = "") => fetch("/api/account" + q, { method, headers: { "content-type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
@@ -69,6 +70,7 @@ export default function Profile({ profile, contacts: c0, relationships, next, se
           <label>Last name<input maxLength={80} {...f("last_name")} /></label>
         </div>
         <GenderSelect value={String(p.gender ?? "")} onChange={(v) => setP({ ...p, gender: v })} label="Gender (optional)" />
+        <PronounSelect value={String(p.pronouns ?? "")} onChange={(v) => setP({ ...p, pronouns: v })} label="Pronouns (optional)" />
         <label>Phone{setup ? " *" : ""}<input type="tel" required={setup} maxLength={30} autoComplete="tel" {...f("phone")} /></label>
         <label>Address{setup ? " *" : ""}<input required={setup} maxLength={120} autoComplete="address-line1" {...f("address1")} /></label>
         <label>Address line 2<input maxLength={120} autoComplete="address-line2" {...f("address2")} /></label>

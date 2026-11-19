@@ -7,7 +7,7 @@ import { setUserTopicsLocked } from "./ntfy";
 
 
 // What a member can edit about themselves, and the extra fields only admins can edit.
-export const SELF_FIELDS = ["first_name", "last_name", "phone", "address1", "address2", "city", "state", "zip", "gender"] as const;
+export const SELF_FIELDS = ["first_name", "last_name", "phone", "address1", "address2", "city", "state", "zip", "gender", "pronouns"] as const;
 export const ADMIN_FIELDS = [...SELF_FIELDS, "email", "access_card_number", "qb_id", "notes"] as const;
 export const RELATIONSHIPS = ["Parent", "Sibling", "Friend", "Spouse", "Significant other", "Guardian", "Adult child", "Other"] as const;
 
@@ -20,7 +20,7 @@ export type Contact = { id: number; first_name: string; last_name: string; phone
 
 export async function getProfile(id: number): Promise<Profile | null> {
   return (await (await conn()).query(
-    `SELECT id, name, email, first_name, last_name, gender, phone, address1, address2, city, state, zip, access_card_number, qb_id, notes,
+    `SELECT id, name, email, first_name, last_name, gender, pronouns, phone, address1, address2, city, state, zip, access_card_number, qb_id, notes,
             verified_at IS NOT NULL AS verified, password_hash IS NOT NULL AS has_password, created_at, disabled_at IS NOT NULL AS disabled, disabled_reason FROM site_users WHERE id = $1`, [id])).rows[0] ?? null;
 }
 

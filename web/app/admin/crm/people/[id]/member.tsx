@@ -7,6 +7,7 @@ import Extras from "./extras";
 import IdPhoto from "./id-photo";
 import RosterPhoto from "./roster-photo";
 import GenderSelect from "@/components/gender-select";
+import PronounSelect from "@/components/pronoun-select";
 import DisableButton from "../../../disable-button";
 import PiiButton from "@/components/pii-retrieve";
 import type { Profile } from "@/lib/profiles";
@@ -37,7 +38,7 @@ export default function Member({ profile, canEdit, roster }: { profile: Profile;
   const field = ([k, label]: F) => PRIVATE.includes(k) && !shown
     ? <label key={k}>{label}<input value="••••••••" readOnly disabled aria-label={`${label} (hidden)`} /></label>
     : <label key={k}>{label}<input type={k === "email" ? "email" : "text"} required={k === "first_name" || k === "email"} value={String(p[k] ?? "")} onChange={(e) => setP({ ...p, [k]: e.target.value })} /></label>;
-  const dirty = [...WHO, ["gender"] as any, ...IDS, ...(shown ? PRIV : []), ["notes"] as any].some(([k]: [keyof Profile]) => p[k] !== base[k]);
+  const dirty = [...WHO, ["gender"] as any, ["pronouns"] as any, ...IDS, ...(shown ? PRIV : []), ["notes"] as any].some(([k]: [keyof Profile]) => p[k] !== base[k]);
   const initials = ((p.first_name?.[0] ?? "") + (p.last_name?.[0] ?? "") || p.name?.[0] || "?").toUpperCase();
   return (
     <>
@@ -46,7 +47,7 @@ export default function Member({ profile, canEdit, roster }: { profile: Profile;
         <div className="pp-hero-in">
           <div className="pp-av" aria-hidden>{initials}</div>
           <div className="pp-id">
-            <h1>{p.name}</h1>
+            <h1>{p.name}{p.pronouns && p.pronouns !== "Other" && <small className="pp-pron">{p.pronouns}</small>}</h1>
             <p>{p.email} · joined {new Date(profile.created_at).toLocaleDateString([], { dateStyle: "medium" })}</p>
             <div className="pp-chips">
               {p.disabled ? <span className="chip bad">● Disabled</span> : <span className="chip ok">● Active</span>}
@@ -66,7 +67,7 @@ export default function Member({ profile, canEdit, roster }: { profile: Profile;
           <fieldset disabled={!canEdit} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
             <form className="pp-sec" onSubmit={(e) => { e.preventDefault(); run(() => call(p.id, "PUT", shown ? p : Object.fromEntries(Object.entries(p).filter(([k]) => !PRIVATE.includes(k)))), "Saved.", () => { setBase(p); router.refresh(); }); }}>
               <h2>Contact</h2>
-              <div className="pp-grid">{WHO.map(field)}<div className="pp-gender"><GenderSelect value={p.gender ?? ""} onChange={(v) => setP({ ...p, gender: v })} /></div></div>
+              <div className="pp-grid">{WHO.map(field)}<div className="pp-gender"><GenderSelect value={p.gender ?? ""} onChange={(v) => setP({ ...p, gender: v })} /></div><div className="pp-gender"><PronounSelect value={p.pronouns ?? ""} onChange={(v) => setP({ ...p, pronouns: v })} /></div></div>
               <div className="pp-priv">
                 <div className="pp-priv-h"><b>🔒 Phone &amp; address</b><PiiButton kind="personal" subject={{ type: "member", id: p.id }} label="Retrieve info" onChange={(d) => { setShown(!!d); const v = Object.fromEntries(PRIVATE.map((k) => [k, d?.[k] ?? ""])); setP((x) => ({ ...x, ...v })); setBase((x) => ({ ...x, ...v })); }}>{() => <span className="chip ok">Showing</span>}</PiiButton></div>
                 {!shown && <p className="sub" style={{ margin: "0 0 12px" }}>Hidden. Retrieving asks for a reason and is logged.</p>}
