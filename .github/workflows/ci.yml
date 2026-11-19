@@ -127,7 +127,7 @@ jobs:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
   # web/public/images and web/public/download are kept in git but left out of the Docker image (.dockerignore); the app serves them from the
-  # bucket's static/ prefix (next.config.mjs fallback rewrite -> app/static-files). Deploy waits for this, so the new image never runs before its files are there.
+  # public Tigris bucket kzoomakers-public-assets (next.config.mjs fallback rewrite keeps the URLs). Deploy waits for this, so the new image never runs before its files are there.
   assets:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
@@ -145,7 +145,7 @@ jobs:
       - name: Sync images and downloads to the bucket
         run: |
           for d in images download; do
-            aws s3 sync "web/public/$d" "s3://$BUCKET/static/$d" --endpoint-url "$ENDPOINT" --delete --only-show-errors
+            aws s3 sync "web/public/$d" "s3://$BUCKET/$d" --endpoint-url "$ENDPOINT" --delete --only-show-errors --cache-control "public, max-age=86400"
           done
 
   deploy:

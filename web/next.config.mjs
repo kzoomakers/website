@@ -1,12 +1,13 @@
 // Keep legacy URLs alive: /about.html -> /about, /index.html -> /
+const ASSETS = process.env.ASSETS_URL || "https://kzoomakers-public-assets.fly.storage.tigris.dev";
 const nextConfig = {
   async rewrites() {
     return {
       afterFiles: [
         // The eBay listing template (HTML to paste into a listing) is served at /ebay/template.
         { source: "/ebay/template", destination: "/images/ebay/template.html" }],
-      // Files in public/ win; /images and /download are not in the Docker image, so they land here and come from the bucket (app/static-files).
-      fallback: [{ source: "/images/:path*", destination: "/static-files/images/:path*" }, { source: "/download/:path*", destination: "/static-files/download/:path*" }],
+      // Files in public/ win; /images and /download are not in the Docker image (CI syncs them to this public Tigris bucket), so they land here and are fetched from it.
+      fallback: [{ source: "/images/:path*", destination: `${ASSETS}/images/:path*` }, { source: "/download/:path*", destination: `${ASSETS}/download/:path*` }],
     };
   },
   devIndicators: { position: "bottom-right" },

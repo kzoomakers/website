@@ -13,7 +13,7 @@ docs
 web/data/config.json
 web/data/import.json
 web/tsconfig.tsbuildinfo
-# Served from the bucket instead (see .github/workflows/ci.yml "assets" and web/app/static-files); source maps are never requested
+# Served from the bucket instead (see .github/workflows/ci.yml "assets" and next.config.mjs); source maps are never requested
 web/public/images
 web/public/download
 **/*.map
