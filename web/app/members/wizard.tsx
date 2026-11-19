@@ -2,6 +2,7 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
+import Agree from "@/components/agree";
 import Notice from "@/components/notice";
 import GenderSelect from "@/components/gender-select";
 import PronounSelect from "@/components/pronoun-select";
@@ -85,7 +86,7 @@ export default function Wizard() {
   const step = (to: Screen) => async (r: Response) => { setBusy(false); if (r.ok) go(to); else setErr(await r.text()); };
   const post = (body: object, to: Screen) => { setBusy(true); setErr(""); return json("POST", "/api/onboarding", body).then(step(to), () => { setBusy(false); setErr("Couldn't reach the server. Check your connection and try again."); }); };
 
-  const read = useRead(frame, screen === "handbook");
+  const read = useRead(frame, screen === "handbook"), [hbOk, setHbOk] = useState(false);
   if (!screen || !info) return null;
   const at = ORDER.findIndex(([s]) => s === screen);
   // All done: close, and have the server re-render the layout so the menu shows everything a member can open. `started` stays true so the poll never reopens us.
@@ -106,7 +107,7 @@ export default function Wizard() {
           <h2 id="wz-h">Member handbook</h2>
           <p>Please read the handbook slowly and entirely. It is also available in the members area and our website to check at any time.</p>
           <iframe ref={frame} src="/handbook" title="Membership handbook" style={{ width: "100%", height: "max(320px, calc(100dvh - 380px))", border: "1px solid var(--line)", borderRadius: 8, background: "#fff" }} />
-          {read ? <div className="wz-row"><button className="pri" disabled={busy} onClick={() => post({ step: "handbook", read: true }, "id")}>I have read the handbook and agree to follow it</button></div>
+          {read ? <><Agree checked={hbOk} onChange={setHbOk}>I have read the handbook and agree to follow it.</Agree><div className="wz-row"><button className="pri" disabled={busy || !hbOk} onClick={() => post({ step: "handbook", read: true }, "id")}>Continue</button></div></>
             : <p className="sub" role="status">Scroll to the end of the handbook to continue.</p>}
         </>}
         {screen === "id" && <IdStep mb={info.upload_mb} kinds={info.kinds} next={() => go("contact")} />}

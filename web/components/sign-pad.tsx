@@ -1,4 +1,5 @@
 "use client";
+import Agree from "./agree";
 import { useEffect, useRef, useState } from "react";
 
 /** Typed name (required) plus an optional drawn signature, and the consent tick. Calls onSign(typed, drawnPngDataUrl). */
@@ -40,7 +41,7 @@ export default function SignPad({ name, busy, label = "Sign", initials: wantInit
         <button type="button" onClick={clear}>Clear drawing</button>
         <label className="sub" style={{ display: "block", marginTop: 4 }}>Or upload a picture of your signature <input type="file" accept="image/png,image/jpeg" onChange={(e) => upload(e.target.files?.[0])} /></label>
       </div>
-      <label style={{ display: "flex", gap: 8, alignItems: "flex-start" }}><input type="checkbox" checked={ok} onChange={(e) => setOk(e.target.checked)} />I have read this document and agree that my typed or drawn signature is my legal electronic signature.</label>
+      <Agree checked={ok} onChange={setOk}>I have read this document and agree that my typed or drawn signature is my legal electronic signature.</Agree>
       <button className="pri" type="submit" disabled={busy || !ok || typed.trim().length < 2 || (wantInitials && !ini.trim()) || (drawRequired && !inked)}>{busy ? "Signing…" : label}</button>
     </form>
   );
