@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { achievements, dayNum, dueAt, MEASURES, periodStart, PERIODS, stats, type Achievement, type Chore, type Done, daysBetween, matchMember } from "./chores-calc";
+import { achievements, choreName, renamed, ROOM, dayNum, dueAt, MEASURES, periodStart, PERIODS, stats, type Achievement, type Chore, type Done, daysBetween, matchMember } from "./chores-calc";
 
 // Volunteer chores, ported from YAMNet (shop/volunteer.py): the chores that keep the space running, how often each wants doing, and the time members give to them.
 export const MAX_SHIFT_H = 12, MAX_LOG_H = 16; // an open shift longer than this needs its minutes said; the longest a logged stretch may claim
@@ -16,6 +16,11 @@ async function conn() {
     // owner_name is the name as it was, so the log still reads right if the member is deleted.
     await p.query(`CREATE TABLE IF NOT EXISTS chore_log (id serial PRIMARY KEY, chore_id int NOT NULL REFERENCES chores, user_id int REFERENCES site_users ON DELETE SET NULL, owner_name text NOT NULL DEFAULT '',
       started_at timestamptz NOT NULL, ended_at timestamptz, minutes real, how text NOT NULL DEFAULT 'web', said text NOT NULL DEFAULT '', source text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now())`);
+    // Chores are filed as area > station > task. Existing rows are filed once, by their old name; the old name stays as an alias so spoken requests still match.
+    for (const c of ["area", "station", "task"]) await p.query(`ALTER TABLE chores ADD COLUMN IF NOT EXISTS ${c} text NOT NULL DEFAULT ''`);
+    for (const [old, area, station, task] of FILED) {
+      await p.query("UPDATE chores SET area=$2, station=$3, task=$4, name=$5, aliases = array_append(aliases, name) WHERE name=$1 AND area=''", [old, area, station, task, choreName(area, station, task)]);
+    }
     await p.query("CREATE INDEX IF NOT EXISTS chore_log_chore ON chore_log (chore_id, ended_at)");
     await p.query("CREATE INDEX IF NOT EXISTS chore_log_user ON chore_log (user_id, started_at)");
     await p.query(`CREATE TABLE IF NOT EXISTS chore_achievements (id serial PRIMARY KEY, chore_id int REFERENCES chores, measure text NOT NULL, goal real NOT NULL, title text NOT NULL,
@@ -24,12 +29,19 @@ async function conn() {
   await ready;
   return d.pool;
 }
+// shortcut: the old Kzoo Makers chore names, filed by name; once those rows are filed this does nothing. Delete after the first deploy.
+const FILED: [string, string, string, string][] = [
+  ["Sweep - Wood shop", "Wood Shop", ROOM, "Sweep Floor"], ["Empty Wood Collection", "Wood Shop", "Dust Collection", "Empty"], ["Lube - Table Sawstop", "Wood Shop", "Table Saw", "Lube Adjustment Gears"],
+  ["Sweep - Combustables Room", "Combustables Room", ROOM, "Sweep Floor"], ["Sweep - Front rooms", "Front Rooms", ROOM, "Sweep Floor"], ["Sweep - Meeting Area", "Meeting Area", ROOM, "Sweep Floor"],
+  ["Meeting Area - Sanitize Tables", "Meeting Area", "Tables", "Sanitize"], ["Clean Bathrooms", "Bathrooms", ROOM, "Clean"], ["Check furnace filters", "Building", "Furnace", "Check Filters"],
+  ["Mow Lawn", "Grounds", "Lawn", "Mow"], ["Water plants OUTSIDE", "Grounds", "Plants", "Water"], ["Tech - Website Maint", "Tech", "Website", "Maintain"],
+];
 const q = async (sql: string, args: unknown[] = []) => (await (await conn()).query(sql, args)).rows;
 const E = (c: string) => `extract(epoch from ${c})::float8`;
 const nowS = () => Date.now() / 1000;
 
 export async function allChores(): Promise<Chore[]> {
-  return (await q(`SELECT id, name, aliases, every_days, notes, ${E("snoozed_until")} AS snoozed_until, active, ${E("created_at")} AS created_at FROM chores ORDER BY name`));
+  return (await q(`SELECT id, name, area, station, task, aliases, every_days, notes, ${E("snoozed_until")} AS snoozed_until, active, ${E("created_at")} AS created_at FROM chores ORDER BY name`));
 }
 async function finished(): Promise<Done[]> {
   return q(`SELECT id, chore_id, user_id, owner_name, ${E("started_at")} AS started_at, ${E("ended_at")} AS ended_at, minutes FROM chore_log WHERE ended_at IS NOT NULL ORDER BY ended_at`);
@@ -45,7 +57,7 @@ export async function listing(which: "all" | "due" = "all") {
   for (const r of rows) lastBy.set(r.chore_id, r.owner_name);
   const out = cs.filter((c) => c.active).map((c) => {
     const d = dueAt(c, ends.get(c.id) ?? null), last = ends.get(c.id) ?? null;
-    return { id: c.id, name: c.name, aliases: c.aliases, every_days: c.every_days, notes: c.notes, due_at: d, overdue_days: d === null ? null : daysBetween(d, now),
+    return { id: c.id, name: c.name, area: c.area, station: c.station, task: c.task, aliases: c.aliases, every_days: c.every_days, notes: c.notes, due_at: d, overdue_days: d === null ? null : daysBetween(d, now),
       last_done_at: last, last_by: last ? first(lastBy.get(c.id) ?? "") : null, being_done_by: open.filter((o) => o.chore_id === c.id).map((o) => first(o.owner_name)) };
   });
   const list = which === "due" ? out.filter((c) => c.due_at !== null && dayNum(c.due_at) <= dayNum(now)) : out;
@@ -53,16 +65,32 @@ export async function listing(which: "all" | "due" = "all") {
 }
 
 export async function saveChore(x: any, who: string) {
-  const name = String(x.name ?? "").trim().slice(0, 120), every = x.every_days === "" || x.every_days == null ? null : Number(x.every_days);
-  if (!name) throw new Error("A chore needs a name, like clean the bathroom.");
+  const [area, station, task] = (["area", "station", "task"] as const).map((k) => String(x[k] ?? "").trim().replace(/\s+/g, " ").slice(0, 60));
+  const name = choreName(area, station, task), every = x.every_days === "" || x.every_days == null ? null : Number(x.every_days);
+  if (!area || !task) throw new Error("Pick an area and say what the task is, like Wood Shop and Sweep Floor.");
   if (every !== null && !(every > 0 && every <= 366)) throw new Error("Every so many days, between 1 and 366; leave it empty for as needed.");
   const aliases = (Array.isArray(x.aliases) ? x.aliases : String(x.aliases ?? "").split(",")).map((a: unknown) => String(a).trim()).filter(Boolean).slice(0, 12);
   const notes = String(x.notes ?? "").trim().slice(0, 1000);
+  if ((await q("SELECT 1 FROM chores WHERE active AND lower(name) = lower($1) AND id IS DISTINCT FROM $2", [name, x.id ?? null])).length) throw new Error(`"${name}" is already on the list.`);
   if (x.id) {
-    if (!(await q("UPDATE chores SET name=$2, every_days=$3, aliases=$4, notes=$5, updated_at=now() WHERE id=$1 RETURNING id", [x.id, name, every, aliases, notes])).length) throw new Error("No such chore.");
+    if (!(await q("UPDATE chores SET name=$2, every_days=$3, aliases=$4, notes=$5, area=$6, station=$7, task=$8, updated_at=now() WHERE id=$1 RETURNING id", [x.id, name, every, aliases, notes, area, station || ROOM, task])).length) throw new Error("No such chore.");
     return x.id as number;
   }
-  return (await q("INSERT INTO chores (name, every_days, aliases, notes, created_by) VALUES ($1,$2,$3,$4,$5) RETURNING id", [name, every, aliases, notes, who]))[0].id as number;
+  return (await q("INSERT INTO chores (name, every_days, aliases, notes, created_by, area, station, task) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id", [name, every, aliases, notes, who, area, station || ROOM, task]))[0].id as number;
+}
+/** Rename an area (every chore in it) or one station within an area, so a typo is fixed once. */
+export async function renameGroup(area: string, station: string | null, to: string) {
+  to = to.trim().replace(/\s+/g, " ").slice(0, 60);
+  if (!to) throw new Error("Type the new name.");
+  const rows = await q(`SELECT id, area, station, task FROM chores WHERE area = $1 AND ($2::text IS NULL OR station = $2)`, [area, station]);
+  if (!rows.length) throw new Error("Nothing is filed there.");
+  const c = await (await conn()).connect(); // one transaction: a dropped connection can't leave an area half renamed
+  try {
+    await c.query("BEGIN");
+    for (const r of renamed(rows, station, to)) await c.query("UPDATE chores SET area=$2, station=$3, name=$4, updated_at=now() WHERE id=$1", [r.id, r.area, r.station, r.name]);
+    await c.query("COMMIT");
+  } catch (e) { await c.query("ROLLBACK").catch(() => {}); throw e; } finally { c.release(); }
+  return rows.length;
 }
 export const snoozeChore = (id: number, days: number) => q("UPDATE chores SET snoozed_until = (date_trunc('day', now() AT TIME ZONE 'America/Detroit') + make_interval(days => $2::int + 1)) AT TIME ZONE 'America/Detroit' WHERE id = $1", [id, Math.min(Math.max(Math.round(days) || 7, 1), 366)]);
 export const deleteChore = (id: number) => q("UPDATE chores SET active = false, updated_at = now() WHERE id = $1", [id]); // the hours people gave stay counted

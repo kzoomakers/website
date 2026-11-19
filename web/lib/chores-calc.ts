@@ -2,7 +2,7 @@
 // Every time is epoch seconds; "days" are calendar days in the space's timezone.
 export const TZ = "America/Detroit"; // shortcut: fixed timezone, make it a setting if the space ever moves
 
-export type Chore = { id: number; name: string; aliases: string[]; every_days: number | null; notes: string; snoozed_until: number | null; active: boolean; created_at: number };
+export type Chore = { id: number; name: string; area: string; station: string; task: string; aliases: string[]; every_days: number | null; notes: string; snoozed_until: number | null; active: boolean; created_at: number };
 export type Shift = { id: number; chore_id: number; user_id: number | null; owner_name: string; started_at: number; ended_at: number | null; minutes: number | null };
 export type Done = Shift & { ended_at: number };
 export type Award = { kind: string; [k: string]: unknown };
@@ -28,6 +28,15 @@ export function dayStart(n: number) {
 }
 const monthStart = (y: number, m: number) => dayStart(Date.UTC(y, m - 1, 1) / 86400000);
 const weekOf = (ts: number) => Math.floor((dayNum(ts) - lp(ts).wd) / 7); // consecutive weeks are consecutive numbers
+
+// ---- where a chore lives: area > station > task
+export const ROOM = "Room"; // the station for "the whole area", so nothing needs a blank station
+/** The one-line name of a chore, "Wood Shop · Table Saw · Lube". Room is left out: "Wood Shop · Sweep Floor". */
+export const choreName = (area: string, station: string, task: string) => [area, station === ROOM ? "" : station, task].map((x) => x.trim()).filter(Boolean).join(" · ");
+
+/** The new area and station of each chore when an area (station = null) or one of its stations is renamed. */
+export const renamed = (rows: { id: number; area: string; station: string; task: string }[], station: string | null, to: string) =>
+  rows.map((r) => { const area = station === null ? to : r.area, st = station === null ? r.station : to; return { id: r.id, area, station: st, name: choreName(area, st, r.task) }; });
 
 // ---- when a chore is due
 export const dueAt = (c: Chore, lastEnd: number | null) =>

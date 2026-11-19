@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 const READS = new Set(["list", "chores", "log", "open", "members", "hours", "stats", "achievements"]);
 // The admin page each op belongs to (see lib/access.ts), so a person given just that page can use it. An op not listed here needs a whole-section grant.
 const PAGE: Record<string, string | string[]> = {
-  list: "todo", chores: "todo", open: "todo", save: "todo", snooze: "todo", delete: "todo", start: "todo", finish: "todo", members: ["todo", "log"],
+  list: "todo", chores: "todo", open: "todo", save: "todo", renameGroup: "todo", snooze: "todo", delete: "todo", start: "todo", finish: "todo", members: ["todo", "log"],
   log: "log", hours: "log", logTime: "log", deleteLog: "log", stats: "stats", achievements: "achievements", saveAchievement: "achievements", deleteAchievement: "achievements",
 };
 
@@ -29,6 +29,7 @@ export async function POST(req: Request) {
       case "stats": return NextResponse.json(await c.statsAll());
       case "achievements": return NextResponse.json(await c.achievementsAll());
       case "save": a.id = await c.saveChore(a.chore ?? {}, who); break;
+      case "renameGroup": await c.renameGroup(String(a.area ?? ""), a.station == null ? null : String(a.station), String(a.to ?? "")); break;
       case "snooze": await c.snoozeChore(id, Number(a.days)); break;
       case "delete": await c.deleteChore(id); break;
       case "start": await c.startShift(id, Number(a.user_id), "web", who); break;
@@ -39,7 +40,7 @@ export async function POST(req: Request) {
       case "deleteAchievement": await c.deleteAchievement(id); break;
       default: return new NextResponse("unknown op", { status: 400 });
     }
-    await logAudit(who, "chore." + a.op, String(a.chore?.name ?? a.achievement?.title ?? a.id ?? a.chore_id ?? ""));
+    await logAudit(who, "chore." + a.op, String([a.chore?.area, a.chore?.task].filter(Boolean).join(" · ") || a.to ?? a.achievement?.title ?? a.id ?? a.chore_id ?? ""));
     return NextResponse.json({ ok: true, id: a.id });
   } catch (e: any) { return new NextResponse(errMsg(e), { status: 400 }); }
 }
