@@ -5,6 +5,7 @@ import { uploadLimits } from "@/lib/upload-cfg";
 import { publicTooLarge } from "@/lib/upload-limit";
 import { getFeedConfig, isFeedHost } from "@/feed/config";
 import { feedRewrite } from "@/feed/rewrite";
+import { FEED_CSP } from "@/feed/csp";
 
 // Node runtime (Postgres needs it): adds the security headers (Admin > Security headers) and refuses oversized requests. The HTTP log is written by lib/httplog-hook.ts, which sees the response code.
 // The upload routes are left out on purpose: they check who you are first and then apply the (larger) signed-in limit themselves (lib/image.ts uploadGate). Everything else is behind this file,
@@ -34,5 +35,6 @@ export async function middleware(req: NextRequest) {
     const https = (req.headers.get("x-forwarded-proto") ?? req.nextUrl.protocol.replace(":", "")) === "https";
     for (const [k, v] of Object.entries(headersFor(await getSecHeaders(), req.nextUrl.pathname, https))) res.headers.set(k, v);
   } catch { /* headers are best effort: never take a page down */ }
+  if (isFeedHost(req.headers.get("host"))) { res.headers.delete("content-security-policy-report-only"); res.headers.set("content-security-policy", FEED_CSP); } // not best effort: always on
   return res;
 }

@@ -1,7 +1,7 @@
-import { cleanHtml } from "@/lib/sanitize";
+import { feedHtml } from "./safe-html";
 import { titleAsSlug } from "./util";
 
-const clean = (h: string | null) => (h == null ? null : cleanHtml(h)); // stored HTML is ours, but it is cleaned again on the way out
+const clean = (h: string | null) => (h == null ? null : feedHtml(h)); // stored HTML is ours, but it is cleaned again on the way out
 
 // RSS 2.0 and JSON shapes, matching Lobsters' stories.rss.builder, comments/*.rss.builder and the models' as_json: scripts and feed readers depend on the exact names. No database access.
 export const SITE_NAME = "Kzoo Makers Talk";
