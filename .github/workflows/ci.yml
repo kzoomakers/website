@@ -1,5 +1,5 @@
-# One pipeline: three gates run in parallel (tests, deps audit, image scan); deploy runs only if all three pass.
-# Required status checks (branch ruleset): test, audit, image.
+# One pipeline: tests (+ deps audit), the image build, and the asset sync run in parallel; deploy runs only if all pass.
+# Required status checks (branch ruleset): test, audit, image. `audit` is a stub that mirrors `test` (the audit steps live in `test` to share one npm ci).
 name: CI
 
 on:
@@ -7,7 +7,7 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: "0 12 * * 1" # weekly: new CVEs land without any push
+    - cron: "0 12 * * 5" # weekly (Fridays): new CVEs land without any push; this is also when the Trivy image scan runs
   workflow_dispatch: # Actions > CI > Run workflow > pick a branch: same gates, then deploys that branch 
 
 # New push to a PR cancels its stale run. Never cancel on main: a half-finished deploy is worse than a queued one.
@@ -40,6 +40,14 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci --ignore-scripts
+      - name: npm audit
+        run: |
+          set +e
+          npm audit --audit-level=low | tee audit.txt
+          code=${PIPESTATUS[0]}
+          { echo '### npm audit'; echo '```'; cat audit.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          exit $code
+      - run: npm audit signatures
       - name: Validate JSON files
         working-directory: .
         run: git ls-files '*.json' | xargs -n1 node -e 'JSON.parse(require("fs").readFileSync(process.argv[1]))'
@@ -79,28 +87,12 @@ jobs:
             web/spec.txt
           retention-days: 30
 
-  audit:
+  audit: # required check name kept; the real audit runs inside `test`
+    needs: test
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: web
+    timeout-minutes: 1
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-      - run: npm ci --ignore-scripts
-      - name: npm audit
-        run: |
-          set +e
-          npm audit --audit-level=low | tee audit.txt
-          code=${PIPESTATUS[0]}
-          { echo '### npm audit'; echo '```'; cat audit.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
-          exit $code
-      - run: npm audit signatures
+      - run: echo "npm audit ran in the test job"
 
   image:
     runs-on: ubuntu-latest
@@ -115,8 +107,9 @@ jobs:
           load: true
           tags: ${{ env.IMAGE }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max
-      - name: Trivy scan (HIGH/CRITICAL with a fix available fails the job)
+          cache-to: type=gha,mode=min # min: exporting every intermediate layer took ~3.5 min and the app layers change on every commit anyway
+      - name: Trivy scan (HIGH/CRITICAL with a fix available fails the job; Fridays and manual runs only)
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.IMAGE }}
@@ -125,7 +118,7 @@ jobs:
           exit-code: "1"
           format: table
           trivyignores: .trivyignore.yaml
-      # Push the exact image that was just scanned; deploy ships this, so what we scan is what runs.
+      # Push the image that was just built (and scanned, on Fridays/manual runs); deploy ships exactly this.
       - if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         uses: superfly/flyctl-actions/setup-flyctl@master
       - if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
@@ -133,9 +126,31 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
+  # web/public/images and web/public/download are kept in git but left out of the Docker image (.dockerignore); the app serves them from the
+  # public Tigris bucket kzoomakers-public-assets (next.config.mjs fallback rewrite keeps the URLs). Deploy waits for this, so the new image never runs before its files are there.
+  assets:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.ASSETS_S3_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.ASSETS_S3_SECRET_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.ASSETS_S3_REGION || 'auto' }}
+      ENDPOINT: ${{ secrets.ASSETS_S3_ENDPOINT }}
+      BUCKET: ${{ secrets.ASSETS_S3_BUCKET }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check secrets
+        run: '[ -n "$ENDPOINT" ] && [ -n "$BUCKET" ] && [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ] || { echo "::error::Add repo secrets ASSETS_S3_ENDPOINT, ASSETS_S3_BUCKET, ASSETS_S3_ACCESS_KEY, ASSETS_S3_SECRET_KEY (optional ASSETS_S3_REGION)"; exit 1; }'
+      - name: Sync images and downloads to the bucket
+        run: |
+          for d in images download; do
+            aws s3 sync "web/public/$d" "s3://$BUCKET/$d" --endpoint-url "$ENDPOINT" --delete --only-show-errors --cache-control "public, max-age=86400"
+          done
+
   deploy:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' # push only triggers on main
-    needs: [test, audit, image]
+    needs: [test, audit, image, assets]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: production
