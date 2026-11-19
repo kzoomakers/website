@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import qrcode from "qrcode-generator";
+import Agree from "@/components/agree";
 import Notice from "@/components/notice";
 import SignPad from "@/components/sign-pad";
 import { Agreement } from "@/components/agreement";
@@ -26,8 +27,6 @@ const GCSS = `dialog.wz.gz{width:min(820px,calc(100% - 24px))}
 .gz .gz-opt:has(input:checked)::before{box-shadow:inset 0 0 0 8px var(--acc)}
 .gz .gz-opt:has(input:focus-visible){outline:3px solid color-mix(in srgb,var(--acc) 45%,transparent);outline-offset:2px}
 .gz .gz-opt b{display:block;font-size:1.05em}.gz .gz-opt small{display:block;color:var(--mut);font-size:.85em;line-height:1.35;margin-top:2px}
-.gz .gz-ack{display:flex!important;gap:12px;align-items:flex-start;padding:14px;cursor:pointer}
-.gz .gz-ack input{flex:none;width:20px;height:20px;min-height:0;margin:2px 0 0;accent-color:var(--acc)}
 .gz-qr{display:grid;justify-items:center;gap:8px}.gz-qr img{width:min(260px,70vw);height:auto;image-rendering:pixelated;background:#fff;padding:10px;border-radius:10px}`;
 
 export default function GuestWizard({ id, token, resume, onClose }: { id?: number; token?: string; resume?: boolean; onClose: () => void }) {
@@ -156,12 +155,9 @@ function AgreementStep({ q, g, version, years, next, cancel }: { q: string; g: G
       {minor && <Notice kind="info">A parent or legal guardian must be present to sign this agreement as well.</Notice>}
     </fieldset>
     <article className="wz-doc" tabIndex={0}><Agreement sections={version.sections} closing={version.closing} /></article>
-    <label className="card gz-ack">
-      <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} />
-      <span>I understand and agree that my information, including my signed agreement, emergency contacts and photo ID, will be kept for at least {years} years after my last visit.</span>
-    </label>
+    <Agree checked={ack} onChange={setAck}>I understand and agree that my information, including my signed agreement, emergency contacts and photo ID, will be kept for at least {years} years after my last visit.</Agree>
     {minor === null ? <p className="sub">Answer the question above to continue.</p>
-      : !ack ? <p className="sub">Tick the box above before signing.</p>
+      : !ack ? <p className="sub">Tick “I agree” above before signing.</p>
       : minor && first ? <>
         <p><b>Parent or legal guardian:</b> please type your name and sign below.</p>
         <SignPad name="" busy={s.busy} drawRequired label="Guardian signs and finish" onSign={(signature, drawn) => submit(first, { signature, drawn })} />
