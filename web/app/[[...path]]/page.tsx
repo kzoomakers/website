@@ -30,7 +30,7 @@ export default async function Page({ params }: P) {
   const [hours, page, menu, board, posts, guided0] = await Promise.all([getHours(), getPage(slug), getPublicMenu(), getBoard(), home ? listPosts({ limit: 3, light: true }) : null, getGuided(slug)]);
   const contact = hours.contact, address = contact.address;
   const data = fillAddress(page, address);
-  if (!data) notFound();
+  if (!data || (slug === "tools-we-are-seeking-donations-kalamazoo" && guided0?.enabled === "no")) notFound();
   const bodyClass = ((data.root?.props as any)?.bodyClass ?? "").replace(/[^\w\- ]/g, "");
   const rp: any = data.root?.props ?? {};
   const bare = !!rp.bare;
