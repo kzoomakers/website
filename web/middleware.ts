@@ -3,6 +3,8 @@ import { getSecHeaders } from "@/lib/sechead-store";
 import { headersFor } from "@/lib/sechead";
 import { uploadLimits } from "@/lib/upload-cfg";
 import { publicTooLarge } from "@/lib/upload-limit";
+import { getFeedConfig, isFeedHost } from "@/feed/config";
+import { feedRewrite } from "@/feed/rewrite";
 
 // Node runtime (Postgres needs it): adds the security headers (Admin > Security headers) and refuses oversized requests. The HTTP log is written by lib/httplog-hook.ts, which sees the response code.
 // The upload routes are left out on purpose: they check who you are first and then apply the (larger) signed-in limit themselves (lib/image.ts uploadGate). Everything else is behind this file,
@@ -15,7 +17,18 @@ export async function middleware(req: NextRequest) {
     const mb = (await uploadLimits()).publicMb;
     if (len > mb * 1024 * 1024) return new NextResponse(publicTooLarge(mb), { status: 413, headers: { "content-type": "text/plain; charset=utf-8" } });
   }
-  const res = NextResponse.next();
+  let res = NextResponse.next();
+  if (isFeedHost(req.headers.get("host"))) { // talk.kzoomakers.org: a separate site served by the same app (feed/, app/feed-site/)
+    if (!(await getFeedConfig()).enabled) return new NextResponse("not found", { status: 404 });
+    const t = feedRewrite(req.nextUrl.pathname);
+    if (!t) return new NextResponse("not found", { status: 404 });
+    if ("redirect" in t) return NextResponse.redirect(new URL(t.redirect + req.nextUrl.search, req.url), t.status);
+    if ("rewrite" in t) {
+      const h = new Headers(req.headers); h.set("x-feed", "1"); // the root layout swaps in the feed's own <html>
+      const u = req.nextUrl.clone(); u.pathname = t.rewrite;
+      res = NextResponse.rewrite(u, { request: { headers: h } });
+    }
+  } else if (req.nextUrl.pathname === "/feed-site" || req.nextUrl.pathname.startsWith("/feed-site/")) return new NextResponse("not found", { status: 404 }); // internal routes only exist behind the feed host
   try {
     // Fly's proxy ends TLS, so HTTPS shows in x-forwarded-proto, not in the URL.
     const https = (req.headers.get("x-forwarded-proto") ?? req.nextUrl.protocol.replace(":", "")) === "https";

@@ -275,6 +275,7 @@ async function migrate(pool: Pool) {
        IF EXISTS (SELECT 1 FROM site_users GROUP BY lower(email) HAVING count(*) > 1) THEN RAISE NOTICE 'site_users has emails differing only by case; unique lower(email) index not created';
        ELSE CREATE UNIQUE INDEX IF NOT EXISTS site_users_email_lower ON site_users ((lower(email))); END IF; END $$`,
   ]);
+  await (await import("../feed/schema")).ensureFeedSchema(pool); // the feed (talk.kzoomakers.org) keeps its tables in their own schema
   // First start: stage the built-in board and calendar link in Postgres (plus a baseline revision to roll back to). Admin screens replace them.
   for (const [key, data, action] of [["board", boardSeed, "board.import"], ["calendar", { url: CAL_DEFAULT }, "calendar.import"],
     ...(await Promise.all(GUIDED_SEEDS.map(async (g) => [`guided:${g}`, JSON.parse(await readFile(path.join(process.cwd(), "data", "guided", g + ".json"), "utf8")), `guided.${g}.import`] as const)))] as const)
