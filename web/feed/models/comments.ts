@@ -1,0 +1,30 @@
+import { conn } from "@/lib/db";
+import type { Comment } from "./story-page";
+
+export const COMMENTS_PER_PAGE = 20;
+
+const SELECT = `SELECT c.id, c.short_id, c.story_id, c.parent_comment_id, c.depth, c.comment, c.markeddown_comment, c.score, c.flags, c.created_at, c.last_edited_at, c.is_deleted, c.is_moderated, c.is_from_email,
+  u.username, u.id AS user_id, u.created_at AS user_created_at, u.deleted_at AS user_deleted_at, u.banned_at AS user_banned_at, h.hat, h.link AS hat_link, h.created_at AS hat_created_at, m.reason AS mod_reason, mu.username AS moderator,
+  s.title AS story_title, s.short_id AS story_short_id, s.user_id AS story_user_id, s.user_is_author AS story_user_is_author, ps.parent_short_id
+  FROM feed.comments c JOIN feed.users u ON u.id = c.user_id JOIN feed.stories s ON s.id = c.story_id LEFT JOIN feed.hats h ON h.id = c.hat_id
+  LEFT JOIN LATERAL (SELECT reason, moderator_user_id FROM feed.moderations WHERE comment_id = c.id ORDER BY id DESC LIMIT 1) m ON true LEFT JOIN feed.users mu ON mu.id = m.moderator_user_id
+  LEFT JOIN LATERAL (SELECT pc.short_id AS parent_short_id FROM feed.comments pc WHERE pc.id = c.parent_comment_id) ps ON true`;
+
+export type ListedComment = Comment & { parent_short_id: string | null };
+
+/** /comments: the newest comments a visitor may see (comments.active, on stories that are not deleted). */
+export async function newestComments(page = 1): Promise<{ comments: ListedComment[]; more: boolean }> {
+  const r = await (await conn()).query(`${SELECT} WHERE NOT c.is_deleted AND NOT c.is_moderated AND NOT s.is_deleted ORDER BY c.id DESC LIMIT $1 OFFSET $2`, [COMMENTS_PER_PAGE + 1, (page - 1) * COMMENTS_PER_PAGE]);
+  return { comments: r.rows.slice(0, COMMENTS_PER_PAGE), more: r.rows.length > COMMENTS_PER_PAGE };
+}
+
+/** ~user/comments.rss: everything the user wrote on stories that are not deleted (gone comments show their removal text), newest first. */
+export async function commentsByUser(userId: number, limit = 100): Promise<ListedComment[]> {
+  return (await (await conn()).query(`${SELECT} WHERE c.user_id = $1 AND NOT s.is_deleted ORDER BY c.id DESC LIMIT $2`, [userId, limit])).rows;
+}
+
+/** Comment by short id for /c/:id.json (any comment, as Lobsters does). */
+export async function findComment(shortId: string): Promise<(ListedComment & { story_token: string }) | null> {
+  const r = await (await conn()).query(`${SELECT.replace("s.title AS story_title", "s.token AS story_token, s.title AS story_title")} WHERE c.short_id = $1`, [shortId]);
+  return r.rows[0] ?? null;
+}
