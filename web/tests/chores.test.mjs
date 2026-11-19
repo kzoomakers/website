@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert";
 
-const { choreName, dueAt, stats, achievements, matchMember, daysBetween, dayStart, dayNum, periodStart } = await import("../lib/chores-calc.ts");
+const { choreName, renamed, dueAt, stats, achievements, matchMember, daysBetween, dayStart, dayNum, periodStart } = await import("../lib/chores-calc.ts");
 
 const DAY = 86400;
 const now = Date.UTC(2026, 10, 18, 17) / 1000; // Wed 2026-11-18 noon in Detroit
@@ -61,4 +61,10 @@ test("a chore's name is area, station, task; Room and blanks are left out", () =
   assert.equal(choreName("Wood Shop", "Table Saw", "Lube Adjustment Gears"), "Wood Shop · Table Saw · Lube Adjustment Gears");
   assert.equal(choreName("Wood Shop", "Room", "Sweep Floor"), "Wood Shop · Sweep Floor");
   assert.equal(choreName(" Grounds ", "", "Mow"), "Grounds · Mow");
+});
+
+test("renaming an area changes every chore in it; renaming a station only that station's", () => {
+  const rows = [{ id: 1, area: "Wood Shop", station: "Room", task: "Sweep Floor" }, { id: 2, area: "Wood Shop", station: "Table Saw", task: "Lube" }];
+  assert.deepEqual(renamed(rows, null, "Woodshop").map((r) => r.name), ["Woodshop · Sweep Floor", "Woodshop · Table Saw · Lube"]);
+  assert.deepEqual(renamed(rows.slice(1), "Table Saw", "Sawstop"), [{ id: 2, area: "Wood Shop", station: "Sawstop", name: "Wood Shop · Sawstop · Lube" }]);
 });

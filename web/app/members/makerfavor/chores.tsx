@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ROOM } from "@/lib/chores-calc";
 import { awardText, dueText, every, hrs, measureText, when } from "../../admin/makerfavor/format";
 
 type Chore = { id: number; name: string; area: string; station: string; task: string; every_days: number | null; notes: string; due_at: number | null; overdue_days: number | null; last_done_at: number | null; last_by: string | null; being_done_by: string[] };
@@ -13,7 +14,6 @@ const rpc = async (op: string, args: Record<string, unknown> = {}) => {
 };
 const PERIODS = [["this_week", "This week"], ["this_month", "This month"], ["this_year", "This year"], ["all_time", "All time"]];
 const TABS = [["todo", "🧹 To do"], ["hours", "⏱️ Hours"], ["fame", "🏆 Achievements"], ["stats", "📊 Stats"]];
-const ROOM = "Room";
 const worst = (cs: Chore[]) => cs.some((c) => urgency(c) === "late") ? "late" : cs.some((c) => urgency(c) === "soon") ? "soon" : "ok";
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
 const CHEERS = ["Nice work! 🎉", "You're a legend! 🌟", "The space thanks you! 💛", "Look at you go! 🚀", "Spotless! ✨", "High five! 🙌", "Makers gonna make! 🛠️"];

@@ -34,6 +34,10 @@ export const ROOM = "Room"; // the station for "the whole area", so nothing need
 /** The one-line name of a chore, "Wood Shop · Table Saw · Lube". Room is left out: "Wood Shop · Sweep Floor". */
 export const choreName = (area: string, station: string, task: string) => [area, station === ROOM ? "" : station, task].map((x) => x.trim()).filter(Boolean).join(" · ");
 
+/** The new area and station of each chore when an area (station = null) or one of its stations is renamed. */
+export const renamed = (rows: { id: number; area: string; station: string; task: string }[], station: string | null, to: string) =>
+  rows.map((r) => { const area = station === null ? to : r.area, st = station === null ? r.station : to; return { id: r.id, area, station: st, name: choreName(area, st, r.task) }; });
+
 // ---- when a chore is due
 export const dueAt = (c: Chore, lastEnd: number | null) =>
   c.every_days ? Math.max((lastEnd ?? c.created_at) + c.every_days * 86400, c.snoozed_until ?? 0) : null;

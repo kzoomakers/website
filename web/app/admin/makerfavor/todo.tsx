@@ -1,6 +1,6 @@
 "use client";
 import Notice from "@/components/notice";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { confirmDialog, promptDialog } from "@/components/dialog";
 import { choreName, ROOM } from "@/lib/chores-calc";
 import { chores } from "./rpc";
@@ -26,9 +26,10 @@ const CSS = `
 .mf .ghost:hover{background:var(--acc-bg)}
 .mf .hero{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0}
 .mf .hero .big{font-size:1rem;padding:12px 20px;border-radius:99px}
-.mf .shade{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:80;display:flex;align-items:flex-end;justify-content:center;animation:mfFade .2s both}
-.mf .sheet{background:var(--card);color:var(--ink);width:100%;max-width:560px;max-height:92dvh;overflow:auto;border-radius:22px 22px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));animation:mfUp .3s cubic-bezier(.2,.9,.3,1) both;box-shadow:0 -10px 40px rgba(0,0,0,.3)}
-@media (min-width:700px){.mf .shade{align-items:center}.mf .sheet{border-radius:22px}}
+.mf dialog.sheet{border:0;background:var(--card);color:var(--ink);width:100%;max-width:560px;max-height:92dvh;margin:auto auto 0;overflow:auto;border-radius:22px 22px 0 0;padding:0;animation:mfUp .3s cubic-bezier(.2,.9,.3,1) both;box-shadow:0 -10px 40px rgba(0,0,0,.3)}
+.mf dialog.sheet::backdrop{background:rgba(0,0,0,.5)}
+.mf .sheet form{padding:20px 20px calc(20px + env(safe-area-inset-bottom))}
+@media (min-width:700px){.mf dialog.sheet{margin:auto;border-radius:22px}}
 .mf .dots{display:flex;gap:6px;margin:0 0 14px}.mf .dots button{flex:1;border:0;height:6px;border-radius:99px;background:var(--line);padding:0;cursor:pointer}.mf .dots button.on{background:var(--acc)}.mf .dots button.past{background:var(--ok)}
 .mf .sheet h2{margin:0 0 4px;font-size:1.4rem}
 .mf .opts{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
@@ -39,13 +40,15 @@ const CSS = `
 .mf .trail{padding:10px 14px;border-radius:12px;background:var(--acc-bg);margin:12px 0;font-weight:600}
 .mf .nav{display:flex;gap:8px;justify-content:space-between;margin-top:16px}
 .mf .nav button{min-height:48px;padding:0 22px;border-radius:99px;font:inherit}
-@keyframes mfUp{from{transform:translateY(40px);opacity:0}}@keyframes mfFade{from{opacity:0}}
+@keyframes mfUp{from{transform:translateY(40px);opacity:0}}
 @media (prefers-reduced-motion:reduce){.mf *{animation:none!important;transition:none!important}}
 `;
 
 // The wizard: four short steps (where, what, task, how often); the dots on top jump anywhere, so editing is the same sheet.
 function Wizard({ rows, start, onSave, onClose }: { rows: Row[]; start: Draft; onSave: (d: Draft) => Promise<void>; onClose: () => void }) {
   const [d, setD] = useState(start), [step, setStep] = useState(start.id ? 2 : start.area ? (start.station ? 2 : 1) : 0), [busy, setBusy] = useState(false), [err, setErr] = useState(""), [newArea, setNewArea] = useState(false), [newStn, setNewStn] = useState(false);
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => { ref.current?.showModal(); }, []); // a real modal: focus is trapped and Esc closes it
   const areas = useMemo(() => uniq(rows.map((r) => r.area)), [rows]);
   const stations = useMemo(() => uniq([ROOM, ...rows.filter((r) => r.area === d.area).map((r) => r.station)]), [rows, d.area]);
   const upd = (p: Partial<Draft>) => setD((x) => ({ ...x, ...p }));
@@ -55,8 +58,8 @@ function Wizard({ rows, start, onSave, onClose }: { rows: Row[]; start: Draft; o
   const next = () => { if (!ok[step]) return setErr(step === 0 ? "Pick an area, or add a new one." : "Say what the task is."); go(step + 1); };
   const finish = async () => { setBusy(true); try { await onSave(d); } catch (e: any) { setErr(e.message); setBusy(false); } };
   return (
-    <div className="shade" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <form className="sheet" role="dialog" aria-modal="true" aria-label={d.id ? "Edit task" : "Add a task"} onSubmit={(e) => { e.preventDefault(); step < 3 ? next() : finish(); }}>
+    <dialog ref={ref} className="sheet" aria-label={d.id ? "Edit task" : "Add a task"} onCancel={(e) => { e.preventDefault(); onClose(); }} onClick={(e) => { if (e.target === ref.current) onClose(); }}>
+      <form onSubmit={(e) => { e.preventDefault(); step < 3 ? next() : finish(); }}>
         <div className="dots" aria-label="Steps">{STEPS.map((s, i) => <button type="button" key={s} className={i === step ? "on" : i < step ? "past" : ""} aria-label={`Step ${i + 1}: ${s}`} onClick={() => (i <= step || ok.slice(0, i).every(Boolean)) && go(i)} />)}</div>
         <div className="sub" style={{ margin: 0 }}>Step {step + 1} of 4</div>
         {step === 0 && <>
@@ -94,7 +97,7 @@ function Wizard({ rows, start, onSave, onClose }: { rows: Row[]; start: Draft; o
           {step < 3 ? <button className="pri">Next</button> : <button className="pri" disabled={busy || !d.area.trim() || !d.task.trim()}>{d.id ? "Save task" : "Add task"}</button>}
         </div>
       </form>
-    </div>
+    </dialog>
   );
 }
 

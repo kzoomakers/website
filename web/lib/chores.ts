@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { achievements, choreName, ROOM, dayNum, dueAt, MEASURES, periodStart, PERIODS, stats, type Achievement, type Chore, type Done, daysBetween, matchMember } from "./chores-calc";
+import { achievements, choreName, renamed, ROOM, dayNum, dueAt, MEASURES, periodStart, PERIODS, stats, type Achievement, type Chore, type Done, daysBetween, matchMember } from "./chores-calc";
 
 // Volunteer chores, ported from YAMNet (shop/volunteer.py): the chores that keep the space running, how often each wants doing, and the time members give to them.
 export const MAX_SHIFT_H = 12, MAX_LOG_H = 16; // an open shift longer than this needs its minutes said; the longest a logged stretch may claim
@@ -67,11 +67,11 @@ export async function listing(which: "all" | "due" = "all") {
 export async function saveChore(x: any, who: string) {
   const [area, station, task] = (["area", "station", "task"] as const).map((k) => String(x[k] ?? "").trim().replace(/\s+/g, " ").slice(0, 60));
   const name = choreName(area, station, task), every = x.every_days === "" || x.every_days == null ? null : Number(x.every_days);
-  if (!name) throw new Error("Pick an area and say what the task is, like Wood Shop and Sweep Floor.");
   if (!area || !task) throw new Error("Pick an area and say what the task is, like Wood Shop and Sweep Floor.");
   if (every !== null && !(every > 0 && every <= 366)) throw new Error("Every so many days, between 1 and 366; leave it empty for as needed.");
   const aliases = (Array.isArray(x.aliases) ? x.aliases : String(x.aliases ?? "").split(",")).map((a: unknown) => String(a).trim()).filter(Boolean).slice(0, 12);
   const notes = String(x.notes ?? "").trim().slice(0, 1000);
+  if ((await q("SELECT 1 FROM chores WHERE active AND lower(name) = lower($1) AND id IS DISTINCT FROM $2", [name, x.id ?? null])).length) throw new Error(`"${name}" is already on the list.`);
   if (x.id) {
     if (!(await q("UPDATE chores SET name=$2, every_days=$3, aliases=$4, notes=$5, area=$6, station=$7, task=$8, updated_at=now() WHERE id=$1 RETURNING id", [x.id, name, every, aliases, notes, area, station || ROOM, task])).length) throw new Error("No such chore.");
     return x.id as number;
@@ -84,10 +84,12 @@ export async function renameGroup(area: string, station: string | null, to: stri
   if (!to) throw new Error("Type the new name.");
   const rows = await q(`SELECT id, area, station, task FROM chores WHERE area = $1 AND ($2::text IS NULL OR station = $2)`, [area, station]);
   if (!rows.length) throw new Error("Nothing is filed there.");
-  for (const r of rows) {
-    const a = station === null ? to : r.area, s = station === null ? r.station : to;
-    await q("UPDATE chores SET area=$2, station=$3, name=$4, updated_at=now() WHERE id=$1", [r.id, a, s, choreName(a, s, r.task)]);
-  }
+  const c = await (await conn()).connect(); // one transaction: a dropped connection can't leave an area half renamed
+  try {
+    await c.query("BEGIN");
+    for (const r of renamed(rows, station, to)) await c.query("UPDATE chores SET area=$2, station=$3, name=$4, updated_at=now() WHERE id=$1", [r.id, r.area, r.station, r.name]);
+    await c.query("COMMIT");
+  } catch (e) { await c.query("ROLLBACK").catch(() => {}); throw e; } finally { c.release(); }
   return rows.length;
 }
 export const snoozeChore = (id: number, days: number) => q("UPDATE chores SET snoozed_until = (date_trunc('day', now() AT TIME ZONE 'America/Detroit') + make_interval(days => $2::int + 1)) AT TIME ZONE 'America/Detroit' WHERE id = $1", [id, Math.min(Math.max(Math.round(days) || 7, 1), 366)]);
