@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logSelf } from "@/lib/pii";
 import { currentVerified } from "@/lib/readers";
 import { SELF_FIELDS, deleteContact, getProfile, listContacts, saveContact, updateProfile } from "@/lib/profiles";
 
@@ -9,9 +10,10 @@ const fail = (e: any) => new NextResponse(e?.message ?? "failed", { status: 400 
 const noAuth = () => new NextResponse("Sign in first.", { status: 401 });
 
 // The signed-in member's own details and emergency contacts.
-export async function GET() {
+export async function GET(req: Request) {
   const u = await who();
   if (!u) return noAuth();
+  await logSelf(req, u, { type: "member", id: u.id }, "personal", u.name, ["phone", "address", "contacts"]); // their own data: recorded as "self" (one row per ten minutes)
   return NextResponse.json({ profile: await getProfile(u.id), contacts: await listContacts(u.id) });
 }
 

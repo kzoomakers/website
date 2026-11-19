@@ -60,7 +60,7 @@ function Http({ fail }: { fail: (e: Error) => void }) {
   const [rows, setRows] = useState<any[]>([]), [un, setUn] = useState(true);
   useEffect(() => { call<any[]>({ op: "http", unmatched: un }).then(setRows, fail); }, [un]);
   return <>
-    <p className="sub">Successful requests to the routes that carry personal information, copied out of the HTTP log nightly. A request with <b>no access record</b> got data without going through the reason prompt: a possible bypass or leak.</p>
+    <p className="sub">Successful requests to the routes that carry personal information, copied out of the HTTP log hourly. A request with <b>no access record</b> got data without going through the reason prompt: a possible bypass or leak.</p>
     <label><input type="checkbox" checked={un} onChange={(e) => setUn(e.target.checked)} /> Only requests with no access record</label>
     <Table heads={["When", "Request", "IP", "Who", "Browser", "Came from", "Access record"]} rows={rows.map((r) => [when(r.at), `${r.method} ${r.path}`, r.ip, r.user || "?", <small>{r.ua.slice(0, 60)}</small>, <small>{r.referer}</small>,
       r.access_id ? `#${r.access_id}` : <b style={{ color: "var(--bad)" }}>no access record</b>])} empty={un ? "Every request is explained by an access record." : "Nothing yet."} />

@@ -72,7 +72,7 @@ Tabs:
 4. **Flags**: bulk viewing, off-hours access, access from a new IP, repeated views of the same person, viewing without a prior tour or ticket, and access by a permission that was just granted.
 5. **Integrity**: result of the hash-chain check, with the first broken row if any.
 
-Note: `http_log` is partitioned by day and pruned by `KEEP_ROWS`. Correlation only works while those partitions exist, so the nightly job copies the PII-route hits into `pii_access_http` (path, ip, ua, user, status, at) so the evidence outlives the HTTP log.
+Note: `http_log` is partitioned by day and pruned by `KEEP_ROWS`. Correlation only works while those partitions exist, so an hourly job copies the PII-route hits into `pii_access_http` (path, ip, ua, user, status, at) so the evidence outlives the HTTP log.
 
 ## Monthly report
 
