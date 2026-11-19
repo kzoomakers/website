@@ -25,7 +25,8 @@ export default function LegacyScripts({ extra = [], inline = [], bare = false }:
     } as typeof document.addEventListener;
 
     const runInline = () => {
-      document.getElementById("preloader")?.remove(); // script.js waits for window "load", which already fired
+      // script.js waits for window "load", which already fired. Hide, never remove: React owns this node and crashes ("insertBefore/removeChild ... not a child") if it vanishes.
+      document.getElementById("preloader")?.style.setProperty("display", "none");
       inline.forEach((code) => {
         const el = document.createElement("script");
         if (/^\s*import[\s{]/.test(code)) el.type = "module";
