@@ -53,3 +53,9 @@ test("records are kept the full period; a guest is deletable only the day after,
   assert.equal(retention("2024-02-29T15:00:00Z", null, true, 1, at("2025-03-02T15:00:00Z")).deletable, true);
   assert.equal(retention("2024-01-01T00:00:00Z", "2025-06-01T00:00:00Z", true, 2, at("2026-01-01T00:00:00Z")).deletable, false); // later of visit and signing wins
 });
+
+test("a host can never fetch a guest's government ID: the photo route only accepts uploads", async () => {
+  const src = (await import("node:fs")).readFileSync(new URL("../app/api/guests/photo/route.ts", import.meta.url), "utf8");
+  assert.match(src, /export async function POST/);
+  assert.doesNotMatch(src, /export async function GET/);
+});
