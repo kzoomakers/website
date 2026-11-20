@@ -45,6 +45,7 @@ export async function trainingSchema(pool: Pool) {
     status text NOT NULL DEFAULT 'in_progress' CHECK (status IN ('in_progress','submitted','expired','void')), preview boolean NOT NULL DEFAULT false, started_at timestamptz NOT NULL DEFAULT now(), due_at timestamptz, submitted_at timestamptz,
     seed int NOT NULL DEFAULT 0, answers jsonb NOT NULL DEFAULT '{}', per_question jsonb NOT NULL DEFAULT '{}', points numeric, max_points numeric, pct numeric, passed boolean,
     accommodation text NOT NULL DEFAULT '', ip text NOT NULL DEFAULT '', user_agent text NOT NULL DEFAULT '', voided_by text, voided_reason text)`);
+  await q("ALTER TABLE attempts ADD COLUMN IF NOT EXISTS seq int NOT NULL DEFAULT 0");
   await q("CREATE INDEX IF NOT EXISTS attempts_user ON attempts (user_id, revision_id)");
   await q("CREATE UNIQUE INDEX IF NOT EXISTS attempts_one_open ON attempts (user_id, revision_id) WHERE status = 'in_progress' AND NOT preview");
   await q(`CREATE TABLE IF NOT EXISTS certifications (id serial PRIMARY KEY, user_id int NOT NULL REFERENCES site_users ON DELETE CASCADE, tool_id int NOT NULL REFERENCES tools,

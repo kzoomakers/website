@@ -163,6 +163,12 @@ export function memberQuestion(q: Q & { id: number }, seed: number, shuffle = tr
   return { id: q.id, type: q.type, prompt_html: cleanHtml(q.prompt_html), points: q.points, view: TYPE_DEFS[q.type].toMember(q.config, rnd, shuffle) };
 }
 
+/** The questions one attempt shows: a seeded pick of `pool` of them (all when unset), in a seeded order or the author's. Same seed, same result, so a reload matches. */
+export function drawQuestions<T extends { id: number }>(qs: T[], seed: number, pool: number | null, shuffle: boolean): T[] {
+  const rnd = mulberry(hash(`draw:${seed}`)), picked = pool && pool < qs.length ? shuffled(qs, rnd).slice(0, pool) : qs;
+  return shuffle ? shuffled(picked, rnd) : qs.filter((q) => picked.includes(q));
+}
+
 export type Scored = { per: { id: number; points: number; max: number; correct: boolean }[]; points: number; max: number; pct: number; passed: boolean; criticalMissed: number };
 /** Grades a whole attempt. A critical question must be fully right whatever the total is. Used by preview now and by real attempts in the next phase. */
 export function scoreQuestions(qs: (Q & { id: number })[], answers: Record<string, unknown>, passPct: number): Scored {
