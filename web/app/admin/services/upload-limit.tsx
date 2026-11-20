@@ -14,7 +14,7 @@ export default function UploadLimit({ initial, max, maxPublic }: { initial: { mb
   };
   const num = (v: string, set: (x: string) => void, hi: number) => <input type="number" min={1} max={hi} step={1} value={v} onChange={(e) => { set(e.target.value); setOk(false); }} />;
   return (
-    <Card title="Upload size limits" hint="In megabytes. People who are not signed in can only send small requests, so a stranger can't tie up the server with huge files. People who are signed in can upload bigger files, such as photos and IDs. A change takes up to a minute to reach every server.">
+    <Card title="Largest uploads" hint="In megabytes. People who are not signed in can only send small requests, so a stranger can't tie up the server with huge files. People who are signed in can upload bigger files, such as photos and IDs. A change takes up to a minute to reach every server.">
       <Notice kind="error">{msg}</Notice>
       <label>Signed in: largest upload (1 to {max} MB)
         {num(mb, setMb, max)}</label>

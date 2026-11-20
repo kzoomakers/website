@@ -7,8 +7,8 @@ import { Database, Storage, type Status } from "./connection";
 
 export const dynamic = "force-dynamic";
 
-// Answers within 4 seconds or counts as down, so a dead server doesn't hang the page.
-const alive = (p: Promise<unknown>) => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error("no answer")), 4000))]).then(() => true, () => false);
+// Answers within 3 seconds or counts as down, so a dead server doesn't hang the page.
+const alive = (p: Promise<unknown>) => new Promise<boolean>((done) => { const t = setTimeout(() => done(false), 3000); p.then(() => done(true), () => done(false)).finally(() => clearTimeout(t)); });
 
 export default async function Setup() {
   if ((await gate("admin", "/admin/services")) !== "write") redirect("/admin");

@@ -29,16 +29,13 @@ export const pageOf = (url: string): Page | undefined => {
 const rank = (l?: Level) => (l === "write" ? 2 : l === "read" ? 1 : 0);
 const best = (...ls: (Level | undefined)[]) => ls.reduce<Level | undefined>((a, l) => (rank(l) > rank(a) ? l : a), undefined);
 /** Level for a section, or for one page of it (or the best of several pages, or "*" for any page). Full administrators have write everywhere. Without a page, only a whole-section grant counts. */
-// Pages split out of an older one: whoever held the old page keeps the new one (no database change needed).
-const SPLIT_FROM: Record<string, string> = { "admin:seal": "admin:setup", "admin:maps": "admin:setup", "admin:captcha": "admin:setup", "admin:uploads": "admin:setup", "crm:membership-classes": "admin:setup" };
-const held = (perms: Perms, section: string, key: string) => best(perms[`${section}:${key}`], perms[SPLIT_FROM[`${section}:${key}`]]);
 export function levelFor(perms: Perms, section: Section, page?: string | string[]): Level | undefined {
   if (perms.admin === "write") return "write";
   const keys = page === "*" ? pagesOf(section).map((p) => p.key) : page === undefined ? [] : [page].flat(); // "*" = an endpoint every page of the section shares
-  return best(perms[section], ...keys.map((k) => held(perms, section, k)));
+  return best(perms[section], ...keys.map((k) => perms[`${section}:${k}`]));
 }
 /** Any access at all inside a section: the whole thing or any one page. Decides who sees the tab, not what they may do. */
 export const anyLevel = (perms: Perms, section: Section): Level | undefined =>
-  perms.admin === "write" ? "write" : best(perms[section], ...pagesOf(section).map((p) => held(perms, section, p.key)));
+  perms.admin === "write" ? "write" : best(perms[section], ...pagesOf(section).map((p) => perms[`${section}:${p.key}`]));
 /** The URL to send someone to for a section: its front page if they may open it, else the first page they can. */
 export const entryPath = (perms: Perms, section: Section): string | undefined => pagesOf(section).find((p) => levelFor(perms, section, p.key))?.path;

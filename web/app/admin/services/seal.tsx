@@ -21,7 +21,7 @@ export default function Seal({ initial }: { initial: Info }) {
   const have = info?.source === "db";
   const replace = async () => !have || (await confirmDialog("Replace the current certificate? PDFs signed from now on use the new one; PDFs already signed are not changed.", { ok: "Replace" }));
   return (
-    <Card title="Signing certificate">
+    <Card title="Certificate">
       {info?.broken ? <Banner kind="bad" title="The certificate can’t be used">PDFs are being saved unsigned ({info.broken}). Generate or upload a new one below.</Banner>
         : info?.source === "env" ? <Banner kind="ok" title="Signing is on">Using the certificate set by the server’s SIGN_P12_* settings.</Banner>
         : info && days !== undefined && days < 30 ? <Banner kind="warn" title={days < 0 ? "The certificate has expired" : `The certificate expires in ${days} day${days === 1 ? "" : "s"}`}>“{info.name}” (valid until {info.expires.slice(0, 10)}). Replace it soon so PDFs stay signed.</Banner>
@@ -29,7 +29,8 @@ export default function Seal({ initial }: { initial: Info }) {
         : <Banner kind="off" title="No certificate yet">Finished PDFs are still hashed and encrypted, but not digitally signed.</Banner>}
       <p className="sub">A certificate lets Adobe prove a finished e-signed PDF wasn’t changed afterwards. A generated one shows as “unknown signer”; a purchased one shows as trusted. It is stored encrypted in the database.</p>
       {msg && <p className="err" role="alert">✗ {msg}</p>}
-      {info?.source !== "env" && <>
+      {info?.source === "env" && <p className="sub">The server’s SIGN_P12_* settings supply the certificate now. Generating or uploading one here stores a second certificate in the database.</p>}
+      <>
         <h3>Generate one</h3>
         <Field label="Name on the certificate" value={org} set={setOrg} help="Usually the organization’s name." />
         <div className="set-actions"><button className="pri" disabled={busy || !org.trim()} onClick={async () => { if (await replace()) op("generate", "Certificate generated"); }}>{have ? "Generate a new one" : "Generate certificate"}</button></div>
@@ -41,7 +42,7 @@ export default function Seal({ initial }: { initial: Info }) {
           <button disabled={busy || !file} onClick={async () => { if (!file || !(await replace())) return; const d = new FormData(); d.set("file", file); d.set("pass", pass); call(d, "Certificate uploaded"); }}>Upload</button>
           {have && <button className="danger-text" disabled={busy} onClick={async () => { if (await confirmDialog("Remove the certificate? New PDFs will be saved unsigned.", { ok: "Remove" })) op("remove", "Certificate removed"); }}>Remove</button>}
         </div>
-      </>}
+      </>
       {snack}
     </Card>
   );

@@ -6,10 +6,10 @@ import { Card, Secret } from "./card";
 export type Status = { kind: "ok" | "bad" | "off"; text: string };
 
 // Test or save one connection. A save that works reloads the page (or, the very first time the database is set, goes on to the admin).
-function useConnect(part: "db" | "s3", fields: Record<string, string>, configured: boolean, warn: string) {
+function useConnect(part: "db" | "s3", fields: Record<string, string>, risky: boolean, warn: string) {
   const [busy, setBusy] = useState(false), [res, setRes] = useState<{ error: string; tested: boolean } | null>(null);
   const go = async (test: boolean) => {
-    if (!test && configured && !(await confirmDialog(warn, { ok: "Save and switch" }))) return;
+    if (!test && risky && !(await confirmDialog(warn, { ok: "Save and switch" }))) return;
     setBusy(true); setRes(null);
     const r = await fetch("/api/webmaster/setup", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ part, test, ...fields }) }).catch(() => null);
     const j = r?.ok ? await r.json() : { error: r ? await r.text() : "Couldn't reach the server. Try again.", saved: false, first: false };
@@ -23,7 +23,7 @@ function useConnect(part: "db" | "s3", fields: Record<string, string>, configure
 
 export function Database({ host, fromEnv, status }: { host?: string; fromEnv: boolean; status: Status }) {
   const [url, setUrl] = useState(""), [ca, setCa] = useState("");
-  const { buttons, out } = useConnect("db", { databaseUrl: url, databaseCa: ca }, !!host, "This changes where ALL of the site's data lives. If the new database is empty, the site will look empty. Only continue if you mean to switch.");
+  const { buttons, out } = useConnect("db", { databaseUrl: url, databaseCa: ca }, !!host && !!url.trim(), "This changes where ALL of the site's data lives. If the new database is empty, the site will look empty. Only continue if you mean to switch.");
   return (
     <Card title="Database" status={status} hint="The Postgres database that holds everything (pages, people, messages).">
       {host && <p>Connected to <b>{host}</b>{fromEnv && " (set by the DATABASE_URL environment variable, so it can only be changed there)"}.</p>}
@@ -39,7 +39,7 @@ export function Database({ host, fromEnv, status }: { host?: string; fromEnv: bo
 export function Storage({ s3, dbReady, status }: { s3?: { endpoint: string; bucket: string; region: string }; dbReady: boolean; status: Status }) {
   const [v, setV] = useState<Record<string, string>>({ endpoint: s3?.endpoint ?? "", bucket: s3?.bucket ?? "", region: s3?.region ?? "", accessKey: "", secretKey: "" });
   const set = (k: string) => (x: string) => setV((o) => ({ ...o, [k]: x }));
-  const { buttons, out } = useConnect("s3", v, !!s3, "Uploaded files stay in the old bucket. After the switch, images and documents the site already has will stop loading unless they are copied over. Only continue if you mean to switch.");
+  const { buttons, out } = useConnect("s3", v, !!s3 && (v.endpoint.trim() !== s3.endpoint || (v.bucket.trim() || "uploads") !== s3.bucket), "Uploaded files stay in the old bucket. After the switch, images and documents the site already has will stop loading unless they are copied over. Only continue if you mean to switch.");
   const F = (k: string, label: string, ph: string) => <label>{label}<input value={v[k]} placeholder={ph} onChange={(e) => set(k)(e.target.value)} /></label>;
   return (
     <Card title="File storage" status={status} hint="An S3-compatible bucket for uploaded photos, documents and signed PDFs. Blank keys keep the saved ones.">

@@ -22,7 +22,7 @@ export default function Captcha({ initial }: { initial: { site: string; hasSecre
     if (r?.ok) { setHas((await r.json()).hasSecret); setSavedSite(s); setSite(s); setSecret(""); say(done); } else setMsg(r ? await r.text() : "Couldn't reach the server. Try again.");
   };
   return (
-    <Card title="Spam protection">
+    <Card title="reCAPTCHA">
       {on ? <Banner kind="ok" title="Spam protection is on">Visitors see Google’s “I’m not a robot” box on the contact, board, donation, newsletter and tour forms.</Banner> : <Banner kind="off" title="Spam protection is off">Forms accept anyone. Turn it on to stop automated sign-ups and messages.</Banner>}
       <Steps open={!on}>
         <li>Open <a href="https://www.google.com/recaptcha/admin/create" {...LINK}>reCAPTCHA admin</a> and create a key of type <b>reCAPTCHA v2 → “I’m not a robot” checkbox</b>.</li>

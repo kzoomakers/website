@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { actor, editingAllowed } from "@/lib/guard";
-import { envConfig, getConfig, saveConfig, type Cfg, type S3Cfg } from "@/lib/config";
+import { envConfig, getConfig, saveConfig, type S3Cfg } from "@/lib/config";
 import { ensureSchema, poolFor } from "@/lib/db";
+import { mergeS3, planDb } from "@/lib/setup-plan";
 import { forgetS3Settings, probeS3 } from "@/lib/s3";
 import { logAudit } from "@/lib/store";
 
@@ -18,11 +19,9 @@ export async function POST(req: Request) {
   const out = (error: string, saved = false) => NextResponse.json({ error, saved, first: !had });
 
   if (b.part === "db") {
-    if (env) return out("The database is set by the DATABASE_URL environment variable; change it there.");
-    const url = str(b.databaseUrl), dbCfg: Pick<Cfg, "databaseUrl" | "databaseCa"> | null = url ? { databaseUrl: url, databaseCa: str(b.databaseCa) || undefined } : had;
-    if (!dbCfg?.databaseUrl) return out("Database URL required");
-    // This server's disk is wiped on every Fly deploy, so a config.json written here would vanish and the site would forget its database.
-    if (!test && process.env.FLY_APP_NAME) return out("Set DATABASE_URL (and DATABASE_CA) as Fly secrets: `fly secrets set DATABASE_URL=...`. A database saved from this page would be lost on the next deploy.");
+    const plan = planDb({ env, had, url: b.databaseUrl, ca: b.databaseCa, test, fly: !!process.env.FLY_APP_NAME });
+    if ("error" in plan) return out(plan.error);
+    const dbCfg = plan.cfg;
     const pool = poolFor(dbCfg);
     try {
       try { await (test ? pool.query("SELECT 1") : ensureSchema(pool)); } catch (e) { return out(msg(e)); }
@@ -39,10 +38,7 @@ export async function POST(req: Request) {
     const pool = poolFor(dbCfg);
     try {
       const old = ((await pool.query("SELECT data FROM settings WHERE key='s3'").catch(() => null))?.rows[0]?.data as S3Cfg | undefined) ?? had?.s3; // else the legacy env / config.json storage
-      const s3: S3Cfg = {
-        endpoint: str(b.endpoint), bucket: str(b.bucket) || "uploads", region: str(b.region) || "us-east-1",
-        accessKey: str(b.accessKey) || old?.accessKey || "", secretKey: str(b.secretKey) || old?.secretKey || "",
-      };
+      const s3 = mergeS3(b, old);
       if (!s3.endpoint || !s3.accessKey || !s3.secretKey) return out("Endpoint, access key and secret key required");
       try { await probeS3(s3); } catch (e) { return out(msg(e)); }
       if (test) return out("");
