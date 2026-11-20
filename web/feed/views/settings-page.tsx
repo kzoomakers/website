@@ -103,6 +103,29 @@ export default async function SettingsPage() {
         </form>
       </section>
       <section><h2 id="invite">Invite a New User</h2><p><a href="/invitations">Send and track invitations</a></p></section>
+      {ext && (
+        <section>
+          <form method="post" action="/settings/deactivate" id="deactivate_user">
+            <input type="hidden" name="csrf" value={me!.csrf} />
+            <h2>Deactivate Account</h2>
+            <p>To deactivate your account, verify your current password below.</p>
+            <ul>
+              <li>Your profile will show that you deactivated your account.</li>
+              <li>You will not be able to log in. To come back, contact a moderator.</li>
+              <li>Your username will remain reserved and will not be available for any other account.</li>
+              <li>Your private messages will be deleted (recipients will keep their copies of messages).</li>
+              <li>Your submitted stories will not be deleted.</li>
+              <li>Your comments with negative scores will be deleted, and you can check "disown" below if you want all of your stories and comments to list <a href="/~inactive-user">inactive-user</a> instead of your username.</li>
+            </ul>
+            <div className="labelled_grid">
+              <label htmlFor="deactivate_password">Verify Password</label><input id="deactivate_password" name="password" type="password" required autoComplete="off" maxLength={200} />
+              <label htmlFor="i_am_sure" className="for_checkbox">I am sure</label><span><input id="i_am_sure" name="i_am_sure" type="checkbox" value="1" required /></span>
+              <label htmlFor="disown" className="for_checkbox">Disown stories/comments</label><span><input id="disown" name="disown" type="checkbox" value="1" aria-describedby="disownhint" /> <span className="hint" id="disownhint">(optional)</span></span>
+            </div>
+            <input type="submit" value="Yes, Deactivate My Account" className="deletion" />
+          </form>
+        </section>
+      )}
     </Shell>
   );
 }

@@ -34,7 +34,7 @@ export const addModNote = (moderator: { id: number }, username: string, note: st
 });
 
 /** The account automatic notes are written as (InactiveUser.inactive_user). Created on first use, and deactivated so nobody can sign in as it. */
-async function systemUser(c: PoolClient): Promise<number> {
+export async function systemUser(c: PoolClient): Promise<number> {
   await c.query("INSERT INTO feed.users (username, token, kind, deleted_at, created_at) VALUES ('inactive-user', $1, 'external', now(), now()) ON CONFLICT (lower(username)) DO NOTHING", [`user_${randomBytes(16).toString("hex")}`]);
   return Number((await c.query("SELECT id FROM feed.users WHERE lower(username) = 'inactive-user'")).rows[0].id);
 }
