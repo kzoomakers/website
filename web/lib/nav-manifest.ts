@@ -2,7 +2,7 @@
 // To add a page, add a line here. `key` makes an entry a permission page (section:key); entries without one belong to the page above them in the URL.
 import type { Section } from "./access";
 
-export type AlertKey = "reviews" | "comments" | "forms" | "applicants" | "walkups";
+export type AlertKey = "reviews" | "comments" | "forms" | "applicants" | "walkups" | "renewals";
 export type Entry = {
   href: string; icon: string; label: string; exact?: boolean;
   key?: string; pageLabel?: string; // permission page key, and its name when it differs from the menu label
@@ -51,7 +51,7 @@ export const NAV: Tab[] = [
     E("/admin/people", "👥", "People", "people", { zone: "Records", exact: true }), E("/admin/people/guests", "🧑‍🤝‍🧑", "Guests", "guests", { zone: "Records" }), E("/admin/people/approvals", "✅", "New members", "approvals", { alert: "applicants" }), E("/admin/people/classes", "🎓", "Classes", "classes", { zone: "Records" }),
     E("/admin/people/tools", "🔧", "Tools & sign-offs", "tools", { zone: "Settings" }), E("/admin/people/skills", "🛠️", "Skills", "skills", { zone: "Settings" }), E("/admin/people/values", "🏷️", "Profile options", "values", { zone: "Settings" }),
     E("/admin/people/membership-classes", "💳", "Membership classes", "membership-classes", { section: "system", zone: "Settings" }),
-    E("/admin/people/waiver", "📜", "Membership agreement", "waiver", { zone: "Settings" }), E("/admin/people/guest-agreement", "🪪", "Guest agreement", "guest-agreement", { zone: "Settings" }), E("/admin/people/id-renewals", "🪪", "ID renewals", "id-renewals"),
+    E("/admin/people/waiver", "📜", "Membership agreement", "waiver", { zone: "Settings" }), E("/admin/people/guest-agreement", "🪪", "Guest agreement", "guest-agreement", { zone: "Settings" }), E("/admin/people/id-renewals", "🪪", "ID renewals", "id-renewals", { alert: "renewals" }),
   ] },
   { href: "/admin/signdocs", label: "SignDocs", section: "signdocs", zones: ["Work", "Records", "Settings"], items: [
     E("/admin/signdocs", "📄", "Documents", "documents", { exact: true }), E("/admin/signdocs/new", "➕", "New document", "new"), E("/admin/signdocs/templates", "📑", "Templates", "templates", { zone: "Settings" }), E("/admin/signdocs/buckets", "🗂️", "Folders", "buckets", { zone: "Settings" }),
@@ -71,6 +71,17 @@ export const NAV: Tab[] = [
     E("/admin/system/audit", "📋", "Audit log", "audit", { zone: "Logs" }), E("/admin/system/pii", "🔍", "Audit PII", "pii", { zone: "Logs", full: true }), E("/admin/system/httplog", "🌐", "HTTP log", "httplog", { zone: "Logs" }),
     E("/admin/system/pgstats", "📈", "Database stats", "pgstats", { zone: "Health" }), E("/admin/system/debug", "🐞", "Debug", "debug", { zone: "Health" }),
   ] },
+];
+
+/** The top bar: six groups, each one or more of the sections above. Home has no section (it is the "needs attention" page). */
+export type Group = { label: string; sections: Section[]; href?: string };
+export const GROUPS: Group[] = [
+  { label: "Home", sections: [], href: "/admin/landing" },
+  { label: "Members", sections: ["people", "tours", "makerfavor"] },
+  { label: "Communications", sections: ["messages", "email", "blog"] },
+  { label: "Website", sections: ["website"] },
+  { label: "SignDocs", sections: ["signdocs"] },
+  { label: "System", sections: ["system"] },
 ];
 
 /** Members side menu: [href, icon, label]. */

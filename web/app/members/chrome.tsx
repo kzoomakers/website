@@ -24,7 +24,7 @@ export function Bar({ signedIn }: { signedIn: boolean }) {
 }
 
 // `limited`: not approved yet, so only Home and Account.
-export function Side({ user, limited, admin }: { user: ReactNode; limited?: boolean; admin?: boolean }) {
+export function Side({ user, limited }: { user: ReactNode; limited?: boolean }) {
   const here = usePathname();
   return (
     <aside className="adm-side"><Collapse>
@@ -32,8 +32,9 @@ export function Side({ user, limited, admin }: { user: ReactNode; limited?: bool
         const on = href === "/members" ? here === href : here === href || here.startsWith(href + "/");
         return <Link key={href} href={href} className="adm-link" aria-current={on ? "page" : undefined}><span aria-hidden>{icon}</span>{label}</Link>;
       })}
+      {limited && <p className="sub" style={{ padding: "8px 12px", fontSize: 13 }}>Only Home and My account are open until your membership is approved.</p>}
+      {limited && <p className="sub" style={{ padding: "8px 12px", fontSize: 13 }}>Only Home and My account are open until your membership is approved.</p>}
       <span className="adm-sp" />
-      {admin && <a className="adm-link" href="/admin">🛠️ Admin panel</a>}
       <a className="adm-link" href="/" target="_blank">↗ View site</a>
       {user}
     </Collapse></aside>

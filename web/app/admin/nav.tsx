@@ -1,10 +1,10 @@
 "use client";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Collapse from "./collapse";
-import { tabOf } from "./tabs";
+import { groupOf } from "./tabs";
 import { levelFor, pageOf, type Perms } from "@/lib/access";
 import { useAlerts } from "./alerts";
 import { NAV, menuOf, zoneOf, zonesOf, type Item } from "@/lib/nav-manifest";
@@ -47,18 +47,20 @@ export default function Nav({ admin, audit = false, perms, user }: { admin: bool
   // Only the pages this person may open (a page-only grant must not show the rest of the section).
   const may = (i: Item): boolean => { if ("items" in i) return i.items.some(may); const pg = pageOf(i.href); if (audit && pg?.key === "pii") return true; /* on the Audit PII special list */ return !pg || !!levelFor(perms, pg.section, pg.key); };
   const prune = (i: Item): Item => ("items" in i ? { ...i, items: i.items.filter(may) } : i);
-  const tab = tabOf(here), tabDef = NAV.find((t) => t.href === tab) ?? NAV[0], links = (MENUS.find(([p]) => p === tab)?.[1] ?? []).filter((l) => (admin || !("href" in l && l.href.endsWith("/system"))) && may(l)).map(prune);
-  const all = links.flatMap(hrefs), zoned = new Set(links.map((l) => zoneOf(tabDef, l))).size > 1;
+  // The group you are in (Members, Communications, ...) can hold several sections; each section's links are cleaned up and then shown under shared zone headings.
+  const parts = NAV.filter((t) => groupOf(here).sections.includes(t.section)).map((t) => ({ t, links: menuOf(t).filter((l) => (admin || !("href" in l && l.href.endsWith("/system"))) && may(l)).map(prune) })).filter((p) => p.links.length);
+  const links = parts.flatMap((p) => p.links), all = links.flatMap(hrefs);
+  const zones = parts.flatMap((p) => zonesOf(p.t)).filter((z, i, a) => a.findIndex((y) => y.name === z.name) === i);
+  const zoned = new Set(parts.flatMap((p) => p.links.map((l) => zoneOf(p.t, l)))).size > 1;
   return (
     <Collapse>
-      {zonesOf(tabDef).map((z) => {
-        const zl = links.filter((l) => zoneOf(tabDef, l) === z.name); if (!zl.length) return null;
-        const body = zl.map((l) => <Node key={l.label} item={l} here={here} all={all} n={n} />);
+      {zones.map((z) => {
+        const chunks = parts.map((p) => ({ t: p.t, zl: p.links.filter((l) => zoneOf(p.t, l) === z.name) })).filter((c) => c.zl.length); if (!chunks.length) return null;
+        const body = chunks.map((c) => <Fragment key={c.t.href}>{parts.length > 1 && <span className="adm-ah">{c.t.label}</span>}{c.zl.map((l) => <Node key={l.label} item={l} here={here} all={all} n={n} />)}</Fragment>);
         if (!zoned) return body; // one zone only: no headings
         // A folded zone (Settings) stays closed unless you are on one of its pages.
-        return z.fold ? <details key={z.name} className="adm-zone" open={zl.flatMap(hrefs).some((h) => current(h, here, all))}><summary>{z.name}</summary>{body}</details> : <div key={z.name} className="adm-zone"><span className="adm-zh">{z.name}</span>{body}</div>;
+        return z.fold ? <details key={z.name} className="adm-zone" open={chunks.some((c) => c.zl.flatMap(hrefs).some((h) => current(h, here, all)))}><summary>{z.name}</summary>{body}</details> : <div key={z.name} className="adm-zone"><span className="adm-zh">{z.name}</span>{body}</div>;
       })}
-      <span className="adm-sp" />
       {!links.length && <img className="adm-ease" src="/images/atease.webp" alt="" />}
       <a className="adm-link" href="/" target="_blank">↗ View site</a>
       {user}

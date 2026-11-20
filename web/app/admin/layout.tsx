@@ -19,7 +19,7 @@ export default async function AdminRoot({ children }: { children: ReactNode }) {
     <div className="adm adm-root">
       <Frame /><AdminBar allowed={Object.fromEntries(SECTIONS.filter((s) => hasAny(m, s)).map((s) => [s, (m && entryPath(m.perms, s)) || ""]))} /><DocTitle />
       <div className="adm-body">
-        <aside className="adm-side"><Nav admin={levelOf(m, "system") === "write"} audit={audit} perms={m?.perms ?? {}} user={m && <UserMenu name={m.name} email={m.email} image={m.image} />} /></aside>
+        <aside className="adm-side"><Nav admin={levelOf(m, "system") === "write"} audit={audit} perms={m?.perms ?? {}} user={m && <UserMenu name={m.name} email={m.email} image={m.image} swap={{ href: "/members", label: "Member view" }} />} /></aside>
         <main className="adm-main">{noStorage && <p className="err">Image storage isn't set up, so uploads will fail. <a href="/admin/system">Set it up</a>.</p>}{children}</main>
       </div>
     </div>
