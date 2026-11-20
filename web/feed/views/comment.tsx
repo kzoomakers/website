@@ -21,20 +21,21 @@ function Hat({ c }: { c: Comment }) {
     <span className="crown">{linked ? <a href={c.hat_link!} target="_blank" rel="noopener">{c.hat}</a> : c.hat}</span></span>;
 }
 
-/** Reply, edit, delete: only what this signed-in person may do (the server checks again). */
-function Tools({ c, me, vote }: { c: Comment; me: Me; vote: number }) {
-  const gone = c.is_deleted || c.is_moderated, mine = c.user_id === me.id;
-  const post = (action: string, label: string) => (
+/** The action row under a comment (permalink, reply, ...): only what this viewer may do (the server checks again). */
+function Actions({ c, me, vote }: { c: Comment; me?: Me | null; vote: number }) {
+  const gone = c.is_deleted || c.is_moderated, mine = me?.id === c.user_id;
+  const post = (me: Me, action: string, label: string) => (
     <form method="post" action={`/c/${c.short_id}/${action}`} style={{ display: "inline" }}><input type="hidden" name="csrf" value={me.csrf} /><button type="submit">{label}</button></form>
   );
   return (
-    <span className="comment_tools">
-      {!gone && c.depth < MAX_DEPTH && <> | <a href={`/c/${c.short_id}/reply`}>reply</a></>}
-      {mine && isEditable(c, me.id) && <> | <a href={`/c/${c.short_id}/edit`}>edit</a></>}
-      {!gone && !mine && vote !== 1 && c.created_at.getTime() > Date.now() - 7 * 864e5 && <> | <Flagger base={`/c/${c.short_id}`} me={me} kind="comment" flagged={vote === -1} /></>}
-      {me.isModerator && !mine && <> | <ModDelete base={`/c/${c.short_id}`} me={me} deleted={gone} /></>}
-      {mine && !c.is_moderated && (c.is_deleted ? <> | {post("undelete", "undelete")}</> : isDeletable(c, me.id) ? <> | {post("delete", "delete")}</> : null)}
-    </span>
+    <div className="comment_actions">
+      <a href={`/c/${c.short_id}`}>permalink</a>
+      {me && !gone && c.depth < MAX_DEPTH && <a href={`/c/${c.short_id}/reply`}>reply</a>}
+      {me && mine && isEditable(c, me.id) && <a href={`/c/${c.short_id}/edit`}>edit</a>}
+      {me && !gone && !mine && vote !== 1 && c.created_at.getTime() > Date.now() - 7 * 864e5 && <Flagger base={`/c/${c.short_id}`} me={me} kind="comment" flagged={vote === -1} />}
+      {me?.isModerator && !mine && <ModDelete base={`/c/${c.short_id}`} me={me} deleted={gone} />}
+      {me && mine && !c.is_moderated && (c.is_deleted ? post(me, "undelete", "undelete") : isDeletable(c, me.id) ? post(me, "delete", "delete") : null)}
+    </div>
   );
 }
 
@@ -57,17 +58,18 @@ export function CommentItem({ c, story, newUserDays, showStory = false, me, vote
             {wasMerged && <span className="merge" aria-label="Merged" />}
             <span className="">
               <a className={ucls || undefined} aria-label={newAria(c, newUserDays, c.user_id === story.user_id ? (story.user_is_author ? "Author" : "Submitter") : undefined)} href={`/~${c.username}`}>{c.username}</a> <Hat c={c} />
+              {!gone && <span className="points">{score === "~" ? "[score hidden]" : `${score} point${score === 1 ? "" : "s"}`}</span>}{" "}
               {edited ? "edited" : c.is_from_email ? "e-mailed" : ""}{" "}
               <a href={`/c/${c.short_id}`}><TimeLabel time={c.last_edited_at} /></a>
             </span>
             <span className="flagger flagger_stub" />
             {showStory && c.story_title && <> | on: <a href={titlePath({ short_id: c.story_short_id!, title: c.story_title })}>{c.story_title}</a></>}
             <span className="reason" />
-            {me && <Tools c={c} me={me} vote={vote} />}
           </div>
           <div role="heading" aria-level={3} className="comment_text" {...(gone ? {} : { dangerouslySetInnerHTML: html(c.markeddown_comment) })}>
             {gone ? <p><span className="na">[{goneText(c)}]</span></p> : null}
           </div>
+          <Actions c={c} me={me} vote={vote} />
         </div>
       </div>
     </>

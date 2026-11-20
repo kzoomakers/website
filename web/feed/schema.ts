@@ -594,8 +594,18 @@ const IDENTITY = [
   `ALTER TABLE feed.users ALTER COLUMN password_digest TYPE text`,
 ];
 
+// Image posts: stories.image holds the /uploads URL; the "images" tag (a media tag, so it can't be a story's only tag) is what allows an upload.
+const IMAGES = [
+  `ALTER TABLE feed.stories ADD COLUMN IF NOT EXISTS image text`,
+  `INSERT INTO feed.categories (category, token) SELECT 'Media', 'category_' || md5(random()::text)
+     WHERE NOT EXISTS (SELECT 1 FROM feed.tags WHERE lower(tag) = 'images') AND NOT EXISTS (SELECT 1 FROM feed.categories WHERE lower(category) = 'media')`,
+  `INSERT INTO feed.tags (tag, description, is_media, category_id, token) SELECT 'images', 'Pictures: lets you upload a photo', true,
+     (SELECT id FROM feed.categories WHERE lower(category) = 'media'), 'tag_' || md5(random()::text) WHERE NOT EXISTS (SELECT 1 FROM feed.tags WHERE lower(tag) = 'images')`,
+];
+
 /** Idempotent: run at startup from lib/db.ts ensureSchema, under the same advisory lock as every other migration. */
 export async function ensureFeedSchema(pool: Pool) {
   await applyOnce(pool, "feed-001-baseline", BASELINE);
   await applyOnce(pool, "feed-002-identity", IDENTITY);
+  await applyOnce(pool, "feed-003-images", IMAGES);
 }

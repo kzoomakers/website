@@ -9,7 +9,7 @@ export type Comment = {
   story_title?: string; story_short_id?: string; story_user_id?: number; story_user_is_author?: boolean; // only on comment lists
 };
 
-const STORY = `SELECT s.id, s.short_id, s.title, s.url, s.created_at, s.score, s.flags, s.comments_count, s.stories_count, s.merged_story_id, s.description, s.markeddown_description, s.user_is_author, s.is_moderated, s.is_deleted, s.token, s.user_id,
+const STORY = `SELECT s.id, s.short_id, s.title, s.url, s.created_at, s.score, s.flags, s.comments_count, s.stories_count, s.merged_story_id, s.description, s.image, s.markeddown_description, s.user_is_author, s.is_moderated, s.is_deleted, s.token, s.user_id,
   u.username, u.created_at AS user_created_at, u.deleted_at AS user_deleted_at, u.banned_at AS user_banned_at, d.domain, o.identifier AS origin,
   COALESCE((SELECT json_agg(json_build_object('tag', t.tag, 'description', t.description, 'is_media', t.is_media) ORDER BY tg.id) FROM feed.taggings tg JOIN feed.tags t ON t.id = tg.tag_id WHERE tg.story_id = s.id), '[]') AS tags
   FROM feed.stories s JOIN feed.users u ON u.id = s.user_id LEFT JOIN feed.domains d ON d.id = s.domain_id LEFT JOIN feed.origins o ON o.id = s.origin_id`;

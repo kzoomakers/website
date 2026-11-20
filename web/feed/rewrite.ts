@@ -4,7 +4,7 @@
 export const FEED_PREFIX = "/feed-site";
 export type Rewrite = { pass: true } | { rewrite: string } | { redirect: string; status: 301 | 302 };
 
-const pass = (p: string) => /^\/(feed\/|_next\/|favicon\.ico$|robots\.txt$|sitemap)/.test(p); // static files the feed shares with the host app
+const pass = (p: string) => /^\/(feed\/|uploads\/|_next\/|favicon\.ico$|robots\.txt$|sitemap)/.test(p); // static files the feed shares with the host app
 
 /** Legacy URLs Lobsters redirects (routes.rb). Returns the target path or null. */
 function legacy(p: string): string | null {

@@ -15,39 +15,80 @@ async function StoryFormPage({ path, edit, start, notice }: { path: string; edit
   if (!v) redirect(`/login?return=${path}`);
   if (!v.username) redirect(`/login/username?return=${path}`);
   const flash = takeFlash(v.id), f = flash?.input ?? edit?.input ?? (start as Submission | undefined);
-  const tags: { tag: string; description: string | null; privileged: boolean; is_media: boolean }[] = (await (await conn()).query(
-    "SELECT t.tag, t.description, t.privileged, t.is_media FROM feed.tags t JOIN feed.categories c ON c.id = t.category_id WHERE t.active ORDER BY lower(c.category), lower(t.tag)")).rows.filter((t) => !t.privileged || v.isModerator);
+  const tags: { tag: string; description: string | null; privileged: boolean; is_media: boolean; category: string }[] = (await (await conn()).query(
+    "SELECT c.category, t.tag, t.description, t.privileged, t.is_media FROM feed.tags t JOIN feed.categories c ON c.id = t.category_id WHERE t.active ORDER BY lower(c.category), lower(t.tag)")).rows.filter((t) => !t.privileged || v.isModerator);
+  const groups = new Map<string, typeof tags>();
+  for (const t of tags) groups.set(t.category, [...(groups.get(t.category) ?? []), t]);
+  const chosen = new Set(f?.tags.map((t) => t.toLowerCase()));
   return (
     <Shell title={edit ? "Edit Story" : "Submit Story"} path={path}>
-      <div className="box wide">
+      <script src="/feed/js/submit.js" defer />
+      <div className="submit">
+        <header className="submit_head">
+          <h1>{edit ? "Edit your story" : "Submit a story"}</h1>
+          <p>Share a link, write something, or post a picture. A good title and the right tags are what get a post read.</p>
+        </header>
         {!edit && (
-          <form method="get" action="/stories/new">
-            <label htmlFor="start_url">Start from a link: </label><input id="start_url" name="url" type="url" maxLength={URL_MAX} defaultValue={start?.url} />{" "}
-            <input type="submit" value="Fetch title" />
+          <form method="get" action="/stories/new" className="submit_fetch">
+            <label htmlFor="start_url">Have a link?</label>
+            <input id="start_url" name="url" type="url" maxLength={URL_MAX} defaultValue={start?.url} placeholder="https://" />
+            <button type="submit">Fetch title</button>
           </form>
         )}
         {notice && <div className="flash-notice" role="status">{notice}</div>}
         {flash?.errors.length ? <div className="flash-error" role="alert"><ul>{flash.errors.map((e) => <li key={e}>{e}</li>)}</ul></div> : null}
         {flash?.similar?.length ? <div className="flash-notice"><p>Similar stories:</p><ul>{flash.similar.map((s) => <li key={s.short_id}><a href={`/s/${s.short_id}`}>{s.title}</a></li>)}</ul></div> : null}
-        <form method="post" action={edit ? `/stories/${edit.shortId}/update` : "/stories"}>
+        <form method="post" action={edit ? `/stories/${edit.shortId}/update` : "/stories"} encType="multipart/form-data" className="submit_grid">
           <input type="hidden" name="csrf" value={v.csrf} />
-          <div className="labelled_grid">
-            <label htmlFor="url">URL</label>
-            <input id="url" name="url" type="url" maxLength={URL_MAX} defaultValue={f?.url} autoComplete="off" />
-            <label htmlFor="title">Title</label>
-            <input id="title" name="title" type="text" required maxLength={TITLE_MAX} defaultValue={f?.title} autoComplete="off" />
-            <label htmlFor="user_is_author">Author</label>
-            <span><input id="user_is_author" name="user_is_author" type="checkbox" defaultChecked={f?.userIsAuthor} /> I'm the author of the story at this URL.</span>
-            <label htmlFor="description">Text</label>
-            <textarea id="description" name="description" rows={8} maxLength={65535} defaultValue={f?.description} />
-            <label htmlFor="tags">Tags</label>
-            <select id="tags" name="tags" multiple size={10} defaultValue={f?.tags}>
-              {tags.map((t) => <option key={t.tag} value={t.tag} title={t.description ?? undefined}>{t.tag}{t.description ? ` - ${t.description}` : ""}</option>)}
-            </select>
+          <div className="submit_main">
+            <section className="card">
+              <h2><span className="step">1</span>Title</h2>
+              <input id="title" name="title" type="text" required maxLength={TITLE_MAX} defaultValue={f?.title} autoComplete="off" placeholder="Make it specific and honest" data-count="title_count" />
+              <p className="meta"><span id="title_count">0</span> / {TITLE_MAX}</p>
+            </section>
+            <section className="card">
+              <h2><span className="step">2</span>Content <small>link, text, or both</small></h2>
+              <label htmlFor="url">Link</label>
+              <input id="url" name="url" type="url" maxLength={URL_MAX} defaultValue={f?.url} autoComplete="off" placeholder="https:// (leave blank for a text or picture post)" />
+              <label htmlFor="description">Text</label>
+              <textarea id="description" name="description" rows={8} maxLength={65535} defaultValue={f?.description} placeholder="Markdown is supported." />
+              <label className="check"><input id="user_is_author" name="user_is_author" type="checkbox" defaultChecked={f?.userIsAuthor} /> I'm the author of the story at this link.</label>
+            </section>
+            {!edit && (
+              <section className="card dropzone_card">
+                <h2><span className="step">+</span>Picture</h2>
+                <label className="dropzone" htmlFor="image">
+                  <input id="image" name="image" type="file" accept="image/*" />
+                  <span className="dz_icon" aria-hidden="true" />
+                  <span className="dz_text"><b>Drop a picture here</b> or click to choose one</span>
+                  <img className="dz_preview" alt="" hidden />
+                </label>
+                <p className="meta">JPG, PNG, WebP, GIF or HEIC. It is resized and shown as a thumbnail you can expand in the list.</p>
+              </section>
+            )}
+            {edit?.byModerator && <section className="card"><label htmlFor="reason">Reason</label><input id="reason" name="reason" type="text" maxLength={200} placeholder="for the moderation log" autoComplete="off" /></section>}
           </div>
-          {edit?.byModerator && <div className="labelled_grid"><label htmlFor="reason">Reason</label><input id="reason" name="reason" type="text" maxLength={200} placeholder="for the moderation log" autoComplete="off" /></div>}
-          <p>Leave the URL blank to post text only. Hold Ctrl or Cmd to choose several tags; at least one must not be a media tag.</p>
-          <input type="submit" value={edit ? "Save" : "Submit"} />
+          <aside className="submit_side">
+            <section className="card">
+              <h2><span className="step">3</span>Tags</h2>
+              <p className="meta">Pick at least one topic. Media tags can't stand alone.{!edit && <> Choose <b>images</b> to attach a picture.</>}</p>
+              {[...groups].map(([cat, list]) => (
+                <fieldset key={cat} className="tagset"><legend>{cat}</legend>
+                  <div className="chips">{list.map((t) => (
+                    <label key={t.tag} className={`chip${t.is_media ? " chip_media" : ""}`} title={t.description ?? undefined}>
+                      <input id={`tag_${t.tag}`} type="checkbox" name="tags" value={t.tag} defaultChecked={chosen.has(t.tag.toLowerCase())} /><span>{t.tag}</span>
+                    </label>))}
+                  </div>
+                </fieldset>
+              ))}
+            </section>
+            <button type="submit" className="submit_go">{edit ? "Save changes" : "Submit story"}</button>
+            <ul className="tips">
+              <li>Use the original title; skip ALL CAPS and emoji.</li>
+              <li>Link to the source, and say what's interesting in a line or two.</li>
+              <li>Search first: duplicates get merged.</li>
+            </ul>
+          </aside>
         </form>
       </div>
     </Shell>
