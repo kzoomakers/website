@@ -87,3 +87,13 @@ test("diff: a typo is minor; a changed answer, a new question, or a new pass mar
   assert.equal(D.diffRevisions(a, a).moved, false); assert.equal(D.diffRevisions(a, rev([["k2", a.questions[1]], ["k1", a.questions[0]]])).moved, true);
   assert.equal(D.revisionHash(a), D.revisionHash(rev(a.questions.map((q) => [q.qkey, q])))); assert.notEqual(D.revisionHash(a), D.revisionHash(typo));
 });
+
+test("drawQuestions: same seed same draw, pool limits it, no shuffle keeps the author's order", async () => {
+  const { drawQuestions } = await import("../lib/training/questions.ts");
+  const qs = Array.from({ length: 10 }, (_, i) => ({ id: i + 1 }));
+  assert.deepEqual(drawQuestions(qs, 7, 4, true), drawQuestions(qs, 7, 4, true));
+  assert.equal(drawQuestions(qs, 7, 4, true).length, 4);
+  const plain = drawQuestions(qs, 7, 4, false).map((q) => q.id);
+  assert.deepEqual(plain, [...plain].sort((a, b) => a - b));
+  assert.equal(drawQuestions(qs, 7, null, false).length, 10);
+});
