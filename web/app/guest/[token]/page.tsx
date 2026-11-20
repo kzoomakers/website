@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { getGuest, guestOfLink } from "@/lib/guests";
 import GuestPage from "./guest-page";
-import "../../admin/webmaster/webmaster.css";
+import "../../admin/website/webmaster.css";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Guest form | Kzoo Makers", robots: { index: false, follow: false }, referrer: "no-referrer" };

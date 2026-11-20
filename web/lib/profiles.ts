@@ -81,8 +81,8 @@ export async function deleteUser(id: number, who: string) {
     if (!u) return null;
     if (u.email.toLowerCase() === who.toLowerCase()) throw new Error("You can't delete your own account here.");
     if ((await c.query("SELECT 1 FROM user_perms WHERE user_id = $1 AND locked", [id])).rowCount) throw new Error("The founding administrator can't be deleted.");
-    if ((await c.query("SELECT 1 FROM user_perms WHERE user_id = $1 AND section = 'admin' AND level = 'write'", [id])).rowCount
-      && (await c.query("SELECT count(*)::int n FROM user_perms p JOIN site_users s ON s.id = p.user_id WHERE p.section = 'admin' AND p.level = 'write' AND s.disabled_at IS NULL")).rows[0].n <= MIN_ADMINS)
+    if ((await c.query("SELECT 1 FROM user_perms WHERE user_id = $1 AND section = 'system' AND level = 'write'", [id])).rowCount
+      && (await c.query("SELECT count(*)::int n FROM user_perms p JOIN site_users s ON s.id = p.user_id WHERE p.section = 'system' AND p.level = 'write' AND s.disabled_at IS NULL")).rows[0].n <= MIN_ADMINS)
       throw new Error(`At least ${MIN_ADMINS} administrators must remain. Make someone else an administrator first.`);
     await c.query("DELETE FROM site_users WHERE id = $1", [id]);
     return u;
@@ -141,8 +141,8 @@ export async function setDisabled(id: number, reason: string | null, who: string
   } else {
     if (u.email.toLowerCase() === who.toLowerCase()) throw new Error("You can't disable your own account.");
     if ((await c.query("SELECT 1 FROM user_perms WHERE user_id = $1 AND locked", [id])).rowCount) throw new Error("The founding administrator can't be disabled.");
-    if (!u.disabled_at && (await c.query("SELECT 1 FROM user_perms WHERE user_id = $1 AND section = 'admin' AND level = 'write'", [id])).rowCount
-      && (await c.query("SELECT count(*)::int n FROM user_perms p JOIN site_users s ON s.id = p.user_id WHERE p.section = 'admin' AND p.level = 'write' AND s.disabled_at IS NULL")).rows[0].n <= MIN_ADMINS)
+    if (!u.disabled_at && (await c.query("SELECT 1 FROM user_perms WHERE user_id = $1 AND section = 'system' AND level = 'write'", [id])).rowCount
+      && (await c.query("SELECT count(*)::int n FROM user_perms p JOIN site_users s ON s.id = p.user_id WHERE p.section = 'system' AND p.level = 'write' AND s.disabled_at IS NULL")).rows[0].n <= MIN_ADMINS)
       throw new Error(`At least ${MIN_ADMINS} administrators must stay active. Make someone else an administrator first.`);
     const text = clip(reason, 300) === disabledMsg("") ? "" : clip(reason, 300);
     await c.query("UPDATE site_users SET disabled_at = COALESCE(disabled_at, now()), disabled_reason = $2 WHERE id = $1", [id, text]);

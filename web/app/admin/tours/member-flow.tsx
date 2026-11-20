@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { alertDialog, confirmDialog, promptDialog } from "@/components/dialog";
-import { crm } from "../crm/rpc";
+import { crm } from "../people/rpc";
 import type { MembershipClass } from "@/lib/membership";
 import type { Acct } from "@/lib/tours";
 import { isStaffEmail } from "@/lib/tours-fmt";

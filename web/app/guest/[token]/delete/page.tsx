@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { getGuest, guestOfLink } from "@/lib/guests";
 import Delete from "./delete";
-import "../../../admin/webmaster/webmaster.css";
+import "../../../admin/website/webmaster.css";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Delete my profile | Kzoo Makers", robots: { index: false, follow: false }, referrer: "no-referrer" };

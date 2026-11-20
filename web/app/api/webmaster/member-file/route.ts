@@ -11,12 +11,12 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const q = new URL(req.url).searchParams, hdr = { "cache-control": "no-store", "x-content-type-options": "nosniff" };
   if (q.get("ver")) { // a blank copy of one agreement version, for legal review or printing
-    if (!(await editingAllowed("crm", "read", ["waiver", "guest-agreement"]))) return new NextResponse("not found", { status: 404 });
+    if (!(await editingAllowed("people", "read", ["waiver", "guest-agreement"]))) return new NextResponse("not found", { status: 404 });
     const v = await getVersion(Number(q.get("ver")));
     return v ? new NextResponse(new Uint8Array(await buildAgreementPdf(v, null)), { headers: { ...hdr, "content-type": "application/pdf", "content-disposition": `attachment; filename="membership-agreement-${v.revision.replace(/[^\w.-]+/g, "_")}.pdf"` } }) : new NextResponse("not found", { status: 404 });
   }
   const kind = await signedKind(Number(q.get("pdf")));
-  if (!kind || kind === "waiver" || kind === "guest" || !(await editingAllowed("board", "read", ["documents"]))) return new NextResponse("not found", { status: 404 }); // authorize before the decrypt
+  if (!kind || kind === "waiver" || kind === "guest" || !(await editingAllowed("signdocs", "read", ["documents"]))) return new NextResponse("not found", { status: 404 }); // authorize before the decrypt
   const f = await signedPdf(Number(q.get("pdf")));
   return f ? new NextResponse(new Uint8Array(f.pdf), { headers: { ...hdr, "content-type": "application/pdf", "content-disposition": `attachment; filename="${f.title.replace(/[^\w.-]+/g, "_").slice(0, 60)}.pdf"` } }) : new NextResponse("not found", { status: 404 });
 }

@@ -11,7 +11,7 @@ const uid = async (c: Ctx) => { const n = Number((await c.params).id); return Nu
 // The member-roster photo is internal only: staff with CRM access read it, staff with write access set or remove it. No member or public route serves it.
 export async function GET(_: Request, c: Ctx) {
   const id = await uid(c);
-  if (id === null || !(await editingAllowed("crm", "read", "people"))) return off();
+  if (id === null || !(await editingAllowed("people", "read", "people"))) return off();
   const img = await getRoster(id);
   return img ? new NextResponse(new Uint8Array(img), { headers: { "content-type": "image/webp", "cache-control": "private, no-store", "x-content-type-options": "nosniff" } }) : off();
 }
@@ -19,7 +19,7 @@ export async function GET(_: Request, c: Ctx) {
 // POST (multipart "file"): a portrait, cropped to 3:4 and shrunk.
 export async function POST(req: Request, c: Ctx) {
   const id = await uid(c);
-  if (id === null || !(await editingAllowed("crm", "write", "people"))) return off();
+  if (id === null || !(await editingAllowed("people", "write", "people"))) return off();
   const who = await actor(), no = await uploadGate(req, "roster:" + who, 60);
   if (no) return no;
   const file = (await req.formData().catch(() => null))?.get("file");
@@ -29,7 +29,7 @@ export async function POST(req: Request, c: Ctx) {
 
 export async function DELETE(_: Request, c: Ctx) {
   const id = await uid(c);
-  if (id === null || !(await editingAllowed("crm", "write", "people"))) return off();
+  if (id === null || !(await editingAllowed("people", "write", "people"))) return off();
   await setRoster(id, null, await actor());
   return NextResponse.json({ ok: true });
 }

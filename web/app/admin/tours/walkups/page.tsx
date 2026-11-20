@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function WalkupsPage() {
   await gate("tours", "/admin/tours/walkups");
-  if (!getConfig()) redirect("/admin/services");
+  if (!getConfig()) redirect("/admin/system");
   const m = await me();
   return <Walkups initial={await listRequests(false)} email={m?.email.includes("@") ? m.email : ""} name={m?.name ?? ""} />;
 }

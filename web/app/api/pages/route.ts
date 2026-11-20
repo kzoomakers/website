@@ -8,13 +8,13 @@ const off = () => new NextResponse("not found", { status: 404 });
 // Scripts and raw HTML on a page run as whoever visits it, so only a full administrator may change them.
 const NO_SCRIPTS = "Only a full administrator can add or change scripts, raw HTML blocks or redirects on a page.";
 async function scriptsLocked(slug: string, next: unknown) {
-  if (levelOf(await me(), "admin") === "write") return false;
+  if (levelOf(await me(), "system") === "write") return false;
   const old = await getPage(slug);
   return execParts(old ?? { content: [] }) !== execParts(next);
 }
 
 export async function GET(req: Request) {
-  if (!(await editingAllowed("webmaster", "read", "pages"))) return off();
+  if (!(await editingAllowed("website", "read", "pages"))) return off();
   const q = new URL(req.url).searchParams;
   if (q.has("deleted")) return NextResponse.json(await deletedPages());
   if (q.has("tree")) return NextResponse.json((await siteTreeFresh()).tree);
@@ -30,7 +30,7 @@ export async function GET(req: Request) {
 }
 
 export async function PUT(req: Request) {
-  if (!await editingAllowed("webmaster", "write", "pages")) return off();
+  if (!await editingAllowed("website", "write", "pages")) return off();
   const { slug, data } = await req.json();
   if (typeof slug !== "string" || !Array.isArray(data?.content)) return new NextResponse("bad request", { status: 400 });
   if (await scriptsLocked(slug, data)) return new NextResponse(NO_SCRIPTS, { status: 403 });
@@ -40,7 +40,7 @@ export async function PUT(req: Request) {
 
 // Revert a page to an old revision, or restore a deleted one (same thing, but the slug must be free).
 export async function POST(req: Request) {
-  if (!await editingAllowed("webmaster", "write", "pages")) return off();
+  if (!await editingAllowed("website", "write", "pages")) return off();
   const { slug, revision, restore } = await req.json();
   const rev = Number.isInteger(revision) ? await pageRevision(revision) : undefined;
   if (!rev || rev.slug !== slug) return off();
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  if (!await editingAllowed("webmaster", "write", "pages")) return off();
+  if (!await editingAllowed("website", "write", "pages")) return off();
   const q = new URL(req.url).searchParams;
   const slug = q.get("slug") ?? "";
   try { await deletePage(slug, await actor(), q.has("menu")); } catch { return new NextResponse("bad slug", { status: 400 }); }

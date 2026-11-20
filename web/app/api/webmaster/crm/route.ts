@@ -24,7 +24,7 @@ const PAGE: Record<string, string | string[]> = {
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
   if (!a?.op) return new NextResponse("bad request", { status: 400 });
-  if (!(await editingAllowed("crm", READS.has(a.op) ? "read" : "write", PAGE[a.op]))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("people", READS.has(a.op) ? "read" : "write", PAGE[a.op]))) return new NextResponse("not found", { status: 404 });
   const who = await actor();
   try {
     const res = await (async () => { switch (a.op) {

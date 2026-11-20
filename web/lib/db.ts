@@ -126,6 +126,9 @@ async function migrate(pool: Pool) {
   await pool.query("ALTER TABLE user_perms ADD COLUMN IF NOT EXISTS locked boolean NOT NULL DEFAULT false"); // the founding admin: never changeable
   // The Setup page was split up: whoever could open Setup gets each page that came out of it.
   await applyOnce(pool, "2026-11-20-split-setup-perms", ["seal", "maps", "captcha", "uploads", "membership-classes"].map((k) => `INSERT INTO user_perms (user_id, section, level) SELECT user_id, 'admin:${k}', level FROM user_perms WHERE section = 'admin:setup' ON CONFLICT DO NOTHING`));
+  // Permission sections were renamed to match the menu names. Reverse: the same UPDATE with old and new swapped (the app also reads old names, see modernKey in lib/access.ts).
+  const RENAMED: [string, string][] = [["webmaster", "website"], ["mail", "email"], ["forms", "messages"], ["crm", "people"], ["board", "signdocs"], ["chores", "makerfavor"], ["admin", "system"]];
+  await applyOnce(pool, "2026-11-21-rename-permission-sections", RENAMED.map(([o, n]) => `UPDATE user_perms SET section = '${n}' || substr(section, ${o.length + 1}) WHERE section = '${o}' OR section LIKE '${o}:%'`));
   await pool.query(`CREATE TABLE IF NOT EXISTS comments (id serial PRIMARY KEY, post_id int NOT NULL REFERENCES posts ON DELETE CASCADE, user_id int NOT NULL REFERENCES site_users ON DELETE CASCADE,
     body text NOT NULL, hidden boolean NOT NULL DEFAULT false, created_at timestamptz NOT NULL DEFAULT now())`);
   await pool.query("CREATE INDEX IF NOT EXISTS comments_post ON comments (post_id, id)");

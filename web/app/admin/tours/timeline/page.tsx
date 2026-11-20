@@ -8,6 +8,6 @@ export const dynamic = "force-dynamic";
 
 export default async function TimelinePage() {
   await gate("tours", "/admin/tours/timeline");
-  if (!getConfig()) redirect("/admin/services");
+  if (!getConfig()) redirect("/admin/system");
   return <Timeline initial={await timeline({})} />;
 }

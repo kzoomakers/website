@@ -5,7 +5,7 @@ import Frame from "../admin/frame";
 import UserMenu from "../admin/user-menu";
 import { Bar, Side } from "./chrome";
 import Wizard from "./wizard";
-import "../admin/webmaster/webmaster.css";
+import "../admin/website/webmaster.css";
 
 // Members area wears the admin chrome: framed page, top bar, left menu with your account at the bottom.
 export default async function MembersLayout({ children }: { children: ReactNode }) {

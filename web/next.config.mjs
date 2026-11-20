@@ -16,11 +16,14 @@ const nextConfig = {
   devIndicators: { position: "bottom-right" },
   async redirects() {
     return [
-      { source: "/webmaster/:p*", destination: "/admin/webmaster/:p*", permanent: false },
-      { source: "/admin/mail/:p*", destination: "/admin/mailer/:p*", permanent: true },
-      { source: "/mailadmin/:p*", destination: "/admin/mailer/:p*", permanent: false },
-      { source: "/admin/board/:p*", destination: "/admin/esign/:p*", permanent: false },
-      { source: "/admin/signed-docs/:p*", destination: "/admin/esign/:p*", permanent: true },
+      // Admin URLs before the reorganization (keep for at least two releases), and the older aliases that now skip a hop.
+      ...[["webmaster", "website"], ["mailer", "email"], ["forms", "messages"], ["crm", "people"], ["esign", "signdocs"], ["users", "system/access"], ["services", "system"]]
+        .map(([from, to]) => ({ source: `/admin/${from}/:p*`, destination: `/admin/${to}/:p*`, permanent: true })),
+      { source: "/webmaster/:p*", destination: "/admin/website/:p*", permanent: false },
+      { source: "/admin/mail/:p*", destination: "/admin/email/:p*", permanent: true },
+      { source: "/mailadmin/:p*", destination: "/admin/email/:p*", permanent: false },
+      { source: "/admin/board/:p*", destination: "/admin/signdocs/:p*", permanent: false },
+      { source: "/admin/signed-docs/:p*", destination: "/admin/signdocs/:p*", permanent: true },
       // Old redirect pages: tours are booked on /tours now; Discord goes through /go so the click is counted.
       { source: "/tour-form-redirect(.html)?", destination: "/tours", permanent: true },
       { source: "/discord-redirect(.html)?", destination: "/go?l=discord", permanent: false },

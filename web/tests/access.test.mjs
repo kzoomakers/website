@@ -12,17 +12,17 @@ test("a whole-section grant covers every page; a page grant covers only that pag
   assert.equal(levelFor({ "tours:walkups": "write" }, "tours", "walkups"), "write");
   assert.equal(levelFor({ "tours:walkups": "write" }, "tours", "stats"), undefined);
   assert.equal(levelFor({ "tours:walkups": "write" }, "tours"), undefined, "no page named: only a whole-section grant counts");
-  assert.equal(levelFor({ "tours:walkups": "write" }, "crm", "walkups"), undefined, "page grants never cross sections");
+  assert.equal(levelFor({ "tours:walkups": "write" }, "people", "walkups"), undefined, "page grants never cross sections");
   assert.equal(levelFor({ tours: "read", "tours:walkups": "write" }, "tours", "walkups"), "write", "a page can be raised above the section");
   assert.equal(levelFor({ "tours:stats": "read", "tours:walkups": "write" }, "tours", ["stats", "walkups"]), "write", "the best of several pages");
   assert.equal(levelFor({ "tours:stats": "read" }, "tours", "*"), "read");
-  assert.equal(levelFor({ admin: "write" }, "mail", "queue"), "write");
-  assert.equal(levelFor({ admin: "read" }, "mail", "queue"), undefined, "admin view-only is not access elsewhere");
+  assert.equal(levelFor({ system: "write" }, "email", "queue"), "write");
+  assert.equal(levelFor({ system: "read" }, "email", "queue"), undefined, "admin view-only is not access elsewhere");
 });
 
 test("tabs show for any access in the section, and lead to the first page the person may open", () => {
   assert.equal(anyLevel({ "tours:walkups": "read" }, "tours"), "read");
-  assert.equal(anyLevel({ "tours:walkups": "read" }, "crm"), undefined);
+  assert.equal(anyLevel({ "tours:walkups": "read" }, "people"), undefined);
   assert.equal(entryPath({ tours: "read" }, "tours"), "/admin/tours");
   assert.equal(entryPath({ "tours:availability": "read", "tours:walkups": "write" }, "tours"), "/admin/tours/walkups");
   assert.equal(entryPath({}, "tours"), undefined);
@@ -31,27 +31,27 @@ test("tabs show for any access in the section, and lead to the first page the pe
 test("a URL belongs to the longest page path above it", () => {
   const k = (u) => { const p = pageOf(u); return p && `${p.section}:${p.key}`; };
   assert.equal(k("/admin/tours"), "tours:bookings"); assert.equal(k("/admin/tours/walkups"), "tours:walkups"); assert.equal(k("/admin/tours/walkups/"), "tours:walkups");
-  assert.equal(k("/admin/crm/people/42"), "crm:people"); assert.equal(k("/admin/crm/approvals"), "crm:approvals");
-  assert.equal(k("/admin/mailer/email/7/send"), "mail:emails"); assert.equal(k("/admin/mailer/queue"), "mail:queue"); assert.equal(k("/admin/mailer"), "mail:overview");
-  assert.equal(k("/admin/webmaster/guided/about"), "webmaster:guided"); assert.equal(k("/admin/webmaster/history"), "webmaster:pages");
-  assert.equal(k("/admin/services/privacy"), "admin:privacy"); assert.equal(k("/admin/services"), "admin:setup"); assert.equal(k("/admin/users/special"), "admin:special"); assert.equal(k("/admin/users"), "admin:users");
+  assert.equal(k("/admin/people/people/42"), "people:people"); assert.equal(k("/admin/people/approvals"), "people:approvals");
+  assert.equal(k("/admin/email/email/7/send"), "email:emails"); assert.equal(k("/admin/email/queue"), "email:queue"); assert.equal(k("/admin/email"), "email:overview");
+  assert.equal(k("/admin/website/guided/about"), "website:guided"); assert.equal(k("/admin/website/history"), "website:pages");
+  assert.equal(k("/admin/system/privacy"), "system:privacy"); assert.equal(k("/admin/system"), "system:setup"); assert.equal(k("/admin/system/access/special"), "system:special"); assert.equal(k("/admin/system/access"), "system:users");
   assert.equal(k("/admin/nowhere"), undefined);
 });
 
 test("the pages split out of Setup (and Membership classes) are admin-section pages, so a whole People grant cannot reach them", () => {
-  for (const k of ["seal", "maps", "captcha", "uploads", "membership-classes"]) { assert.ok(has("admin", k), k); assert.equal(levelFor({ crm: "write" }, "admin", k), undefined); }
-  assert.equal(pageOf("/admin/crm/membership-classes").section, "admin");
+  for (const k of ["seal", "maps", "captcha", "uploads", "membership-classes"]) { assert.ok(has("system", k), k); assert.equal(levelFor({ people: "write" }, "system", k), undefined); }
+  assert.equal(pageOf("/admin/people/membership-classes").section, "system");
 });
 
 test("menu zones and tab matching", async () => {
   const { NAV, ENTRIES, zoneOf } = await import("../lib/nav-manifest.ts");
   const { tabOf } = await import("../app/admin/tabs.ts");
   for (const [t, e] of ENTRIES) assert.ok(!e.zone || t.zones.includes(e.zone), `${e.href}: zone ${e.zone} is not one of ${t.label}'s zones`);
-  assert.equal(zoneOf(NAV[0], ENTRIES.find(([, e]) => e.href === "/admin/webmaster/calendar")[1]), "Settings");
-  assert.equal(zoneOf(NAV[0], ENTRIES.find(([, e]) => e.href === "/admin/webmaster/reviews")[1]), "Work");
-  assert.equal(tabOf("/admin/services/privacy"), "/admin/webmaster"); assert.equal(tabOf("/admin/services/google-analytics"), "/admin/webmaster");
-  assert.equal(tabOf("/admin/services/seal"), "/admin/users"); assert.equal(tabOf("/admin/services"), "/admin/users"); assert.equal(tabOf("/admin/webmaster/guided/about"), "/admin/webmaster");
-  assert.equal(tabOf("/admin/crm/membership-classes"), "/admin/crm"); assert.equal(tabOf("/admin/nowhere"), undefined);
+  assert.equal(zoneOf(NAV[0], ENTRIES.find(([, e]) => e.href === "/admin/website/calendar")[1]), "Settings");
+  assert.equal(zoneOf(NAV[0], ENTRIES.find(([, e]) => e.href === "/admin/website/reviews")[1]), "Work");
+  assert.equal(tabOf("/admin/system/privacy"), "/admin/website"); assert.equal(tabOf("/admin/system/google-analytics"), "/admin/website");
+  assert.equal(tabOf("/admin/system/seal"), "/admin/system"); assert.equal(tabOf("/admin/system"), "/admin/system"); assert.equal(tabOf("/admin/website/guided/about"), "/admin/website");
+  assert.equal(tabOf("/admin/people/membership-classes"), "/admin/people"); assert.equal(tabOf("/admin/nowhere"), undefined);
 });
 
 test("Database & storage: test never needs a Fly secret, blank URL keeps the saved one, blank keys keep the saved keys", async () => {
@@ -123,3 +123,13 @@ test("every sub-paged API is checked with a page, so a page-only grant can reach
   }
 });
 test("staff check is unchanged", () => assert.equal(isStaffEmail("a@kzoomakers.org"), true));
+
+test("old permission names still resolve, and every old admin URL redirects to its new home", async () => {
+  const { modernKey } = await import("../lib/access.ts");
+  assert.equal(modernKey("crm:classes"), "people:classes"); assert.equal(modernKey("admin"), "system"); assert.equal(modernKey("webmaster:guided"), "website:guided"); assert.equal(modernKey("tours:walkups"), "tours:walkups");
+  const rs = await (await import("../next.config.mjs")).default.redirects();
+  const to = (u) => { const r = rs.find((x) => new RegExp("^" + x.source.replace(/:p\*/, "(.*)").replace(/\(\.html\)\?/, "(?:\\.html)?") + "$").test(u)); return r && r.destination.replace(":p*", u.slice(r.source.indexOf(":p*"))); };
+  assert.equal(to("/admin/webmaster/guided/about"), "/admin/website/guided/about"); assert.equal(to("/admin/crm/people/42"), "/admin/people/people/42");
+  assert.equal(to("/admin/mailer/email/7/send"), "/admin/email/email/7/send"); assert.equal(to("/admin/services/seal"), "/admin/system/seal");
+  assert.equal(to("/admin/users/special"), "/admin/system/access/special"); assert.equal(to("/admin/esign/templates"), "/admin/signdocs/templates"); assert.equal(to("/admin/forms/contact"), "/admin/messages/contact");
+});

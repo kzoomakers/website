@@ -37,7 +37,7 @@ async function conn() {
     // One-time move off the old self-hosted ntfy server: its tables are dropped, and the page permission keeps its holders under the new name.
     await p.query("DROP TABLE IF EXISTS ntfy_links, ntfy_clients, ntfy_tokens, ntfy_messages, ntfy_topics CASCADE");
     await p.query("DELETE FROM settings WHERE key = 'ntfy:config'");
-    await p.query("UPDATE user_perms SET section = 'admin:pushover' WHERE section = 'admin:ntfy' AND NOT EXISTS (SELECT 1 FROM user_perms u WHERE u.user_id = user_perms.user_id AND u.section = 'admin:pushover')");
+    await p.query("UPDATE user_perms SET section = 'system:pushover' WHERE section = 'admin:ntfy' AND NOT EXISTS (SELECT 1 FROM user_perms u WHERE u.user_id = user_perms.user_id AND u.section = 'system:pushover')");
     await p.query("DELETE FROM user_perms WHERE section = 'admin:ntfy'");
   })().catch((x) => { ready = undefined; throw x; });
   await ready;

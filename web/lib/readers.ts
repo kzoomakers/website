@@ -88,7 +88,7 @@ export async function consumeLink(token: string, base: string) {
   const u = (await c.query("UPDATE site_users u SET verified_at = COALESCE(u.verified_at, now()) FROM (SELECT id, verified_at AS was FROM site_users WHERE id = $1) o WHERE u.id = o.id RETURNING u.email, u.name, o.was", [r.rows[0].user_id])).rows[0];
   if (u && !u.was) {
     // With no ADMIN_EMAILS set, the very first verified account on a fresh site becomes the admin (and is approved); with it set, Google admins grant access instead. shortcut: two simultaneous first verifications could both miss; a Google ADMIN_EMAILS admin can grant access instead.
-    const founder = (await (await conn()).query("INSERT INTO user_perms (user_id, section, level, locked) SELECT $1, 'admin', 'write', true WHERE $2::boolean AND NOT EXISTS (SELECT 1 FROM site_users WHERE verified_at IS NOT NULL AND id <> $1)", [r.rows[0].user_id, !(process.env.ADMIN_EMAILS ?? "").trim()])).rowCount;
+    const founder = (await (await conn()).query("INSERT INTO user_perms (user_id, section, level, locked) SELECT $1, 'system', 'write', true WHERE $2::boolean AND NOT EXISTS (SELECT 1 FROM site_users WHERE verified_at IS NOT NULL AND id <> $1)", [r.rows[0].user_id, !(process.env.ADMIN_EMAILS ?? "").trim()])).rowCount;
     if (founder) { await (await conn()).query("UPDATE site_users SET approval = 'approved' WHERE id = $1", [r.rows[0].user_id]); await addRegistered(u.email, u.name, base).catch(() => {}); }
     else await import("./approvals").then((a) => a.applied(r.rows[0].user_id)).catch(() => {}); // joins the "Registered users" list once approved
   }

@@ -14,7 +14,7 @@ const audit = async (action: string, detail: string) => { try { await logAudit(a
 // Postgres is the only bootstrap config (env, or config.json written here); storage is saved in the database (settings row "s3").
 // A blank URL or key keeps what is already stored. Answers { error: "" when it passed, saved, first: the database was not configured before }.
 export async function POST(req: Request) {
-  if (!(await editingAllowed("admin", "write", "setup"))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("system", "write", "setup"))) return new NextResponse("not found", { status: 404 });
   const b = await req.json().catch(() => ({})), test = b.test === true, env = envConfig(), had = getConfig();
   const out = (error: string, saved = false) => NextResponse.json({ error, saved, first: !had });
 

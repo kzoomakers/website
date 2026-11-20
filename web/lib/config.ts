@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 
 export type S3Cfg = { endpoint: string; bucket: string; region: string; accessKey: string; secretKey: string };
-// Only the database is bootstrap config. Storage lives in the settings table (key "s3", edited on /admin/services);
+// Only the database is bootstrap config. Storage lives in the settings table (key "s3", edited on /admin/system);
 // `s3` here is the legacy S3_* env / config.json fallback.
 export type Cfg = { databaseUrl: string; databaseCa?: string; s3?: S3Cfg };
 

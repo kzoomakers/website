@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-const css = readFileSync("app/admin/webmaster/webmaster.css", "utf8");
+const css = readFileSync("app/admin/website/webmaster.css", "utf8");
 const nav = readFileSync("app/admin/nav.tsx", "utf8");
 
 test("phone block: menu toggle, no horizontal page scroll", () => {

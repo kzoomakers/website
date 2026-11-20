@@ -55,7 +55,7 @@ export async function POST(req: Request) {
       case "importBookings": return NextResponse.json(await t.importBookings(a.csv));
       case "offer": await t.offerTimes(id, a.offers, { name: String(a.guide_name ?? ""), email: String(a.guide_email ?? "") }, await baseUrl(req)); break;
       case "activate": case "undoActivation": { // both change a member's account, so they need CRM write too
-        if (!(await editingAllowed("crm", "write", ["people", "approvals"]))) return new NextResponse("Activating or undoing a member needs CRM access.", { status: 403 });
+        if (!(await editingAllowed("people", "write", ["people", "approvals"]))) return new NextResponse("Activating or undoing a member needs CRM access.", { status: 403 });
         const kind = a.kind === "booking" ? "booking" : "request", base = await baseUrl(req);
         if (a.op === "activate") {
           const r = await activateTourPerson(kind, id, who, base, String(a.level ?? ""), typeof a.email === "string" ? a.email : undefined);

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { confirmDialog } from "@/components/dialog";
 import { ImagePick } from "../media-picker";
 import RichEditor from "../rich-editor";
-import Revisions from "../../webmaster/revisions";
+import Revisions from "../../website/revisions";
 import type { Author, Cat, Post } from "@/lib/blog";
 
 // <input type=datetime-local> wants local "YYYY-MM-DDTHH:mm"; the API wants an ISO instant.

@@ -8,7 +8,7 @@ export const clientFor = (c: S3Cfg) =>
 
 const g = globalThis as unknown as { s3?: { key: string; client: S3Client }; s3cfg?: { v: S3Cfg | null; at: number } };
 
-/** Storage settings: the settings row saved on /admin/services, else the legacy S3_* env / config.json. Cached 30s so image requests don't each hit the DB. */
+/** Storage settings: the settings row saved on /admin/system, else the legacy S3_* env / config.json. Cached 30s so image requests don't each hit the DB. */
 export async function s3Settings(): Promise<S3Cfg | null> {
   const c = getConfig(), d = db();
   if (!c || !d) return null;

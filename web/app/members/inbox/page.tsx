@@ -3,7 +3,7 @@ import { listNotes } from "@/lib/notifications";
 import MarkRead from "./mark-read";
 import { conversations } from "@/lib/crm";
 import { Side } from "./side";
-import { ago } from "../../admin/webmaster/ago";
+import { ago } from "../../admin/website/ago";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Messages | Kzoo Makers", robots: { index: false } };
