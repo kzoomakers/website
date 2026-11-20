@@ -19,7 +19,7 @@ export const pageNumber = (seg: string[] = []) => {
 
 const TABS: [Kind, string, string][] = [["hottest", "/", "hot"], ["newest", "/newest", "new"], ["active", "/active", "active"], ["recent", "/recent", "recent"]];
 const SortTabs = ({ kind }: { kind: Kind }) => (
-  <nav className="sorttabs" aria-label="Sort">{TABS.map(([k, href, label]) => <a key={k} href={href} aria-current={k === kind ? "page" : undefined}>{label}</a>)}<a href="/top">top</a></nav>
+  <nav className="sorttabs" aria-label="Sort"><span className="sort_label">Sort</span><span className="sort_bar" aria-hidden="true">|</span>{TABS.map(([k, href, label]) => <a key={k} href={href} aria-current={k === kind ? "page" : undefined}>{label}</a>)}<a href="/top">top</a></nav>
 );
 
 export default async function Listing({ kind, page }: { kind: Kind; page: number }) {

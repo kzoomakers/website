@@ -603,9 +603,16 @@ const IMAGES = [
      (SELECT id FROM feed.categories WHERE lower(category) = 'media'), 'tag_' || md5(random()::text) WHERE NOT EXISTS (SELECT 1 FROM feed.tags WHERE lower(tag) = 'images')`,
 ];
 
+// Story search: title (weight A) and text (weight B) in one generated tsvector with a GIN index; feed.comments already has tsv and its index.
+const SEARCH = [
+  `ALTER TABLE feed.stories ADD COLUMN IF NOT EXISTS search tsvector GENERATED ALWAYS AS (setweight(to_tsvector('english'::regconfig, coalesce(title, '')), 'A') || setweight(to_tsvector('english'::regconfig, coalesce(description, '')), 'B')) STORED`,
+  `CREATE INDEX IF NOT EXISTS stories_search_idx ON feed.stories USING gin (search)`,
+];
+
 /** Idempotent: run at startup from lib/db.ts ensureSchema, under the same advisory lock as every other migration. */
 export async function ensureFeedSchema(pool: Pool) {
   await applyOnce(pool, "feed-001-baseline", BASELINE);
   await applyOnce(pool, "feed-002-identity", IDENTITY);
   await applyOnce(pool, "feed-003-images", IMAGES);
+  await applyOnce(pool, "feed-004-search", SEARCH);
 }

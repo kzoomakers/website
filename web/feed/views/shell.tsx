@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { takeError } from "../flash";
 import { currentFeedUser } from "../identity";
 import { Account } from "./auth";
+import { Icon } from "./icons";
 import { Nav } from "./nav";
 
 export const SITE_NAME = "Kzoo Makers Talk";
@@ -29,15 +30,13 @@ export default function Shell({ title, path, subnav, children }: { title?: strin
       <script type="module" src="/feed/js/application.js" async />
       <header id="header">
         <div id="header-top">
-          <h1 id="logo"><a href="/" title={SITE_NAME}><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#f0abfc" /><stop offset="1" stopColor="#818cf8" /></linearGradient></defs><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="url(#lg)" /></svg><span>Makertalk</span></a></h1>
+          <h1 id="logo"><a href="/" title={SITE_NAME}><img src="/feed/mascot.webp" alt="" width="42" height="40" /><span>Makertalk</span></a></h1>
           <input type="checkbox" id="nav_toggle" className="nav_toggle" aria-label="Show menu" />
           <label htmlFor="nav_toggle" className="nav_burger" aria-hidden="true"><i /><i /><i /></label>
           <nav aria-label="Menu">
             <ul>
-              <li><Nav href="/active" path={path} icon="active">Active</Nav></li>
-              <li><Nav href="/recent" path={path} icon="recent">Recent</Nav></li>
               <li><Nav href="/comments" path={path} icon="comments">Comments</Nav></li>
-              <li><Nav href="/search" path={path} icon="search">Search</Nav></li>
+              <li className="search"><form action="/search" method="get" role="search"><Icon name="search" /><input type="search" name="q" placeholder="Search" aria-label="Search stories and comments" maxLength={200} autoComplete="off" /></form></li>
               <Account path={path} />
             </ul>
           </nav>

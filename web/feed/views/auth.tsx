@@ -155,17 +155,32 @@ export async function Account({ path = "" }: { path?: string }) {
       <button type="submit">{action === "logout" && <Icon name="logout" />}<span>{label}</span></button>
     </form>
   );
-  return (
+  if (!v.username) return (
     <>
-      {v.username && <li className="push-right"><Nav href="/stories/new" path={path} icon="submit">Submit</Nav></li>}
-      {v.username && <li><Nav href="/invitations" path={path} icon="invitations">Invitations</Nav></li>}
-      {v.username && <li><Nav href="/messages" path={path} icon="messages">Messages{unreadMessages > 0 && ` (${unreadMessages})`}</Nav></li>}
-      <li><Nav href="/settings" path={path} icon="settings">Settings</Nav></li>
-      {v.isModerator && <li className="compact"><Nav href="/mod/mails" path={path} icon="mod" title="Mod Mail">Mod Mail</Nav></li>}
-      {v.isModerator && <li className="compact"><Nav href="/hat_requests" path={path} icon="hats" title="Hat Requests">Hat Requests</Nav></li>}
-      <li className={v.username ? undefined : "push-right"}>{v.username ? <Nav href={`/~${v.username}`} path={path} icon="user">{v.username}</Nav> : <Nav href="/login/username" path={path} icon="user">Choose a username</Nav>}</li>
+      <li className="push-right"><Nav href="/login/username" path={path} icon="user">Choose a username</Nav></li>
       {v.kind === "external" && !v.verified && <li>{post("resend", "Confirm your email")}</li>}
       <li className="logout">{post("logout", "Logout")}</li>
+    </>
+  );
+  // the everyday links stay on the bar; the rest live under the username so the bar fits at any width
+  return (
+    <>
+      <li className="push-right"><Nav href="/stories/new" path={path} icon="submit">Submit</Nav></li>
+      <li><Nav href="/messages" path={path} icon="messages">Messages{unreadMessages > 0 && ` (${unreadMessages})`}</Nav></li>
+      <li className="usermenu">
+        <details>
+          <summary><Icon name="user" /><span>{v.username}</span><svg className="chev" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9" /></svg></summary>
+          <ul>
+            <li><Nav href={`/~${v.username}`} path={path} icon="user">Profile</Nav></li>
+            <li><Nav href="/invitations" path={path} icon="invitations">Invitations</Nav></li>
+            <li><Nav href="/settings" path={path} icon="settings">Settings</Nav></li>
+            {v.isModerator && <li><Nav href="/mod/mails" path={path} icon="mod">Mod Mail</Nav></li>}
+            {v.isModerator && <li><Nav href="/hat_requests" path={path} icon="hats">Hat Requests</Nav></li>}
+            {v.kind === "external" && !v.verified && <li>{post("resend", "Confirm your email")}</li>}
+            <li className="logout">{post("logout", "Logout")}</li>
+          </ul>
+        </details>
+      </li>
     </>
   );
 }

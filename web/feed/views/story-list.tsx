@@ -30,7 +30,7 @@ export function UserLink({ s, newUserDays }: { s: Pick<Story, "username" | "user
 const IMG_URL = /\.(jpe?g|png|gif|webp|avif)(\?.*)?$/i;
 
 /** stories/_listdetail.html.erb (logged-out). Hide/save/flag/edit controls come with accounts (phase 2/3). */
-export function StoryItem({ story: s, newUserDays, me = null, vote = 0, hidden = false, rank }: { rank?: number; story: Story; newUserDays: number; me?: Me | null; vote?: number; hidden?: boolean }) {
+export function StoryItem({ story: s, newUserDays, me = null, vote = 0, hidden = false, rank, snippet }: { rank?: number; snippet?: React.ReactNode; story: Story; newUserDays: number; me?: Me | null; vote?: number; hidden?: boolean }) {
   const href = s.url || titlePath(s);
   const referrer = s.merged_story_id == null && Date.now() - s.created_at.getTime() < 3600_000;
   const cls = ["story", negativityClass(s.score, s.flags), vote === 1 && "upvoted", vote === -1 && "flagged"].filter(Boolean).join(" ");
@@ -61,6 +61,7 @@ export function StoryItem({ story: s, newUserDays, me = null, vote = 0, hidden =
             <span className="comments_label"><Divider /><a href={titlePath(s)}>{s.comments_count === 0 ? "no comments" : `${s.comments_count} comment${s.comments_count === 1 ? "" : "s"}`}</a></span>
             {me && <><Divider /><ActionForm path={`/stories/${s.short_id}/${hidden ? "unhide" : "hide"}`} me={me} label={hidden ? "unhide" : "hide"} /></>}
           </div>
+          {snippet}
           {pic && <div className="expando_box"><a href={pic === s.image ? pic : titlePath(s)}><img src={pic} alt={s.title} loading="lazy" /></a></div>}
         </div>
       </div>

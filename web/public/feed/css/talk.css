@@ -1,11 +1,6 @@
 /* Look of story lists, threaded comments and the submit page. Loaded after application.css and the color scheme, so it only overrides; every color comes from the theme variables (dark by default). */
-body { max-width: 78rem; }
+html body { max-width: 78rem; }
 @media screen and (min-width: 481px) { ol.stories.list { margin-left: 0; } ol.stories.list div.voters { width: 3.2em; } }
-
-/* sort tabs */
-.sorttabs { display: flex; gap: 0.25rem; border-bottom: 1px solid var(--color-box-border); margin-bottom: 0.25rem; }
-.sorttabs a { padding: 0.15rem 0.7rem; font-weight: bold; text-transform: lowercase; text-decoration: none; border: 1px solid transparent; border-bottom: 0; border-radius: 3px 3px 0 0; color: var(--color-fg-link); }
-.sorttabs a[aria-current=page] { background: var(--color-box-bg); border-color: var(--color-box-border); color: var(--color-fg-accent); margin-bottom: -1px; }
 
 /* story rows */
 ol.stories.list li.story { border-bottom: 1px solid var(--color-box-border); }
@@ -142,21 +137,93 @@ ol.comments1 > li.comments_subtree > ol.comments, #story_comments > li.comments_
 .nav_toggle:checked + .nav_burger i:nth-child(2) { opacity: 0; }
 .nav_toggle:checked + .nav_burger i:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-/* below ~1150px the links no longer fit one row: they fold into the burger menu */
-@media (max-width: 1150px) {
+/* header search box: a pill that widens when focused */
+#header-top > nav li.search { align-self: center; margin: 0 0.4rem; }
+#header-top .search form { position: relative; display: flex; align-items: center; }
+#header-top .search .nav_icon { position: absolute; left: 0.75rem; pointer-events: none; color: #c4b5fd; }
+#header-top .search input { width: 9.5rem; box-sizing: border-box; padding: 0.55rem 0.9rem 0.55rem 2.3rem; font: inherit; font-size: 0.9rem; color: #fff; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 999px; transition: width 0.25s, background 0.2s, border-color 0.2s; }
+#header-top .search input::placeholder { color: rgba(255, 255, 255, 0.6); }
+#header-top .search input:focus { outline: none; width: 14rem; background: rgba(255, 255, 255, 0.18); border-color: #f0abfc; }
+@media (max-width: 900px) { #header-top > nav li.search { align-self: stretch; margin: 0.2rem 0 0.4rem; } #header-top .search form, #header-top .search input, #header-top .search input:focus { width: 100%; } }
+
+/* search page */
+.search_page { max-width: 56rem; margin: 0 auto; }
+.search_form { padding: 1rem 1.1rem; border: 1px solid var(--color-box-border); border-radius: 12px; background: var(--color-box-bg); margin-bottom: 1rem; }
+.search_row { position: relative; display: flex; gap: 0.5rem; align-items: center; }
+.search_row .nav_icon { position: absolute; left: 0.85rem; color: var(--color-fg-contrast-4-5); pointer-events: none; }
+.search_row input[type=search] { flex: 1; box-sizing: border-box; padding: 0.7rem 0.9rem 0.7rem 2.6rem; font-size: 1.05rem; color: var(--color-fg); background: var(--color-bg); border: 1px solid var(--color-box-border); border-radius: 999px; }
+.search_row input[type=search]:focus { outline: none; border-color: var(--color-fg-link); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-fg-link) 25%, transparent); }
+.search_row button { padding: 0.7rem 1.4rem; font-weight: bold; color: #fff; border: 0; border-radius: 999px; cursor: pointer; background: linear-gradient(120deg, #3b0f8c, #7c3aed); }
+.search_row button:hover { filter: brightness(1.15); }
+.search_opts { display: flex; flex-wrap: wrap; gap: 0.5rem 2rem; margin-top: 0.7rem; }
+.search_opts fieldset { display: flex; align-items: center; gap: 0.9rem; border: 0; padding: 0; margin: 0; font-size: 0.9rem; }
+.search_opts legend { float: left; padding: 0; margin-right: 0.8rem; font-weight: bold; color: var(--color-fg-contrast-4-5); }
+.search_help { margin: 0.6rem 0 0; font-size: 0.8rem; color: var(--color-fg-contrast-4-5); }
+.search_help code { padding: 0.05rem 0.35rem; margin-right: 0.3rem; border-radius: 4px; background: var(--color-box-bg-shaded); }
+.search_count { margin: 0.2rem 0 0.6rem; }
+.search_chip { margin-left: 0.4rem; padding: 0.1rem 0.55rem; border-radius: 999px; font-size: 0.8rem; border: 1px solid var(--color-tag-border); background: var(--color-tag-bg); text-decoration: none; }
+.search_note { color: var(--color-fg-contrast-4-5); }
+.snippet { flex-basis: 100%; order: 6; margin: 0.25rem 0 0; font-size: 0.88rem; color: var(--color-fg-contrast-6); overflow-wrap: anywhere; }
+.snippet mark, .search_page mark { padding: 0 0.15rem; border-radius: 3px; color: inherit; background: color-mix(in srgb, #a855f7 45%, transparent); }
+ol.comment_hits { margin: 0; padding: 0; list-style: none; }
+ol.comment_hits li { padding: 0.75rem 0.25rem; border-bottom: 1px solid var(--color-box-border); }
+ol.comment_hits .byline { font-size: 0.8rem; }
+ol.comment_hits .snippet { font-size: 0.95rem; white-space: pre-wrap; }
+
+/* the logo: the mascot beside the name */
+#header #logo img { display: block; width: 42px; height: auto; filter: drop-shadow(0 3px 8px rgba(167, 139, 250, 0.45)); transition: transform 0.25s; }
+#header #logo a:hover img { transform: rotate(-6deg) scale(1.06); }
+
+/* username menu: everyday links stay on the bar, the rest drop down from here (a native <details>, so it works without JavaScript) */
+#header-top .usermenu { position: relative; align-self: stretch; align-items: flex-end; }
+#header-top .usermenu details { position: relative; display: flex; align-items: flex-end; }
+#header-top .usermenu summary { display: flex; align-items: center; gap: 0.5rem; padding: 1.2rem 0.85rem; font-size: 0.92rem; font-weight: 600; line-height: 1; white-space: nowrap; color: rgba(255, 255, 255, 0.86); border-radius: 14px 14px 0 0; cursor: pointer; list-style: none; transition: background 0.25s, color 0.2s; }
+#header-top .usermenu summary::-webkit-details-marker { display: none; }
+#header-top .usermenu summary:hover, #header-top .usermenu details[open] summary { color: #fff; background: rgba(255, 255, 255, 0.1); }
+#header-top .usermenu summary:focus-visible { outline: 2px solid #f0abfc; outline-offset: -2px; }
+#header-top .usermenu .chev { transition: transform 0.2s; }
+#header-top .usermenu details[open] .chev { transform: rotate(180deg); }
+#header-top .usermenu details > ul { position: absolute; top: 100%; right: 0; z-index: 50; display: flex; flex-direction: column; align-items: stretch; gap: 0.1rem; width: max-content; min-width: 13rem; margin-top: 0.4rem; padding: 0.4rem; border-radius: 12px; background: #1b0b45; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.65); }
+#header-top .usermenu details > ul li { display: flex; }
+#header-top .usermenu details > ul a, #header-top .usermenu details > ul button { width: 100%; box-sizing: border-box; padding: 0.7rem 0.85rem; border-radius: 8px; }
+#header-top .usermenu details > ul a[aria-current=page] { background: rgba(255, 255, 255, 0.14); color: #fff; }
+#header-top .usermenu details > ul a[aria-current=page]::before, #header-top .usermenu details > ul a[aria-current=page]::after { content: none; }
+#header-top .usermenu details > ul a[aria-current=page] .nav_icon { color: var(--ic, #e9d5ff); }
+#header-top .usermenu details > ul form { display: flex; width: 100%; }
+
+/* small screens: the links fold into the burger menu. The rules say #header-top .nav_toggle:checked so they outrank the #header-top > nav { display: none } that hides the list */
+@media (max-width: 900px) {
 	#header-top { flex-wrap: wrap; gap: 0; padding: 0.7rem 1rem; min-height: 0; border-radius: 16px; }
-	.nav_burger { display: flex; }
+	#header-top .nav_burger { display: flex; }
 	#header-top > nav { display: none; flex-basis: 100%; padding-top: 0.6rem; }
-	.nav_toggle:checked ~ nav { display: block; }
-	#header-top > nav ul { flex-direction: column; gap: 0.15rem; }
+	#header-top .nav_toggle:checked ~ nav { display: block; }
+	#header-top > nav ul { flex-direction: column; align-items: stretch; gap: 0.15rem; }
+	#header-top > nav li { display: block; }
 	#header-top > nav li.push-right { margin-left: 0; }
-	#header-top > nav a, #header-top > nav li button { width: 100%; box-sizing: border-box; padding: 0.75rem 0.9rem; border-radius: 10px; }
+	#header-top > nav a, #header-top > nav li button { width: 100%; box-sizing: border-box; padding: 0.8rem 0.9rem; border-radius: 10px; }
 	#header-top > nav a[aria-current=page] { background: rgba(255, 255, 255, 0.16); color: #fff; }
 	#header-top > nav a[aria-current=page]::before, #header-top > nav a[aria-current=page]::after { content: none; }
 	#header-top > nav a[aria-current=page] .nav_icon { color: var(--ic, #e9d5ff); }
+	#header-top .usermenu details { display: block; }
+	#header-top .usermenu summary { padding: 0.8rem 0.9rem; border-radius: 10px; }
+	#header-top .usermenu details > ul { position: static; width: auto; min-width: 0; margin: 0.2rem 0 0 0.9rem; padding: 0; background: none; border: 0; border-left: 2px solid rgba(255, 255, 255, 0.15); border-radius: 0; box-shadow: none; }
+	#header-top .usermenu details > ul a, #header-top .usermenu details > ul button { padding: 0.7rem 0.9rem; }
 	#subnav { padding-top: 0.6rem; }
 }
-/* a signed-in moderator has the most links: tighten them before folding */
-@media (max-width: 1400px) and (min-width: 1151px) { #header-top > nav a, #header-top > nav li button { padding-left: 0.6rem; padding-right: 0.6rem; gap: 0.4rem; font-size: 0.88rem; } #header-top { gap: 0.75rem; } }
-/* moderator-only links are icon-only on the wide bar (label is the tooltip and the accessible name); the folded menu shows them in full */
-@media (min-width: 1151px) { #header-top > nav li.compact a span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; } }
+
+/* sort tabs: SORT | HOT NEW ACTIVE RECENT TOP, a muted segmented strip with a purple underline on the current one */
+.sorttabs { display: flex; align-items: center; gap: 0.15rem; margin: 0 0 0.6rem; padding: 0.3rem 0.4rem; border: 1px solid var(--color-box-border); border-radius: 12px; background: var(--color-box-bg); overflow-x: auto; scrollbar-width: none; }
+.sort_label { text-transform: uppercase; padding-left: 0.5rem; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.14em; color: var(--color-fg-contrast-4-5); }
+.sort_bar { margin: 0 0.35rem 0 0.15rem; color: var(--color-box-border-focus); }
+.sorttabs a { position: relative; flex: none; padding: 0.45rem 0.85rem; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none; color: var(--color-fg-contrast-4-5); border-radius: 8px; transition: color 0.15s, background 0.15s; }
+.sorttabs a:hover { color: var(--color-fg); background: var(--color-box-bg-shaded); }
+.sorttabs a[aria-current=page] { color: var(--color-fg); background: var(--color-box-bg-shaded); }
+.sorttabs a[aria-current=page]::after { content: ""; position: absolute; left: 0.85rem; right: 0.85rem; bottom: 0.15rem; height: 2px; border-radius: 2px; background: linear-gradient(90deg, #7c3aed, #c084fc); }
+
+/* footer links as muted tabs sitting on a rule */
+footer { padding-bottom: 0; align-items: flex-end; border-bottom: 1px solid var(--color-box-border); }
+footer nav { display: flex; flex-wrap: wrap; gap: 0.3rem; justify-content: flex-end; }
+footer nav a { margin-bottom: -1px; padding: 0.55rem 1.05rem 0.5rem; font-size: 0.82rem; letter-spacing: 0.02em; color: var(--color-fg-contrast-4-5); background: linear-gradient(var(--color-box-bg-shaded), var(--color-box-bg)); border: 1px solid var(--color-box-border); border-bottom: 0; border-radius: 10px 10px 0 0; transition: color 0.15s, background 0.15s, transform 0.15s; }
+footer nav a:hover { color: var(--color-fg); background: var(--color-box-bg-shaded); transform: translateY(-2px); }
+footer nav a:focus-visible { outline: 2px solid var(--color-fg-link); outline-offset: -2px; }
+@media (max-width: 600px) { footer { flex-direction: column; align-items: stretch; gap: 0.5rem; } footer nav { justify-content: flex-start; } }
