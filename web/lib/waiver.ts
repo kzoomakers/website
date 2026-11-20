@@ -1,5 +1,6 @@
 import { conn } from "./db";
 import { PII_PERMS } from "./pii-shared";
+import { TRAINING_PERMS } from "./training/perms";
 import { logAudit } from "./store";
 import { addMember, getMailCfg, mailReady, sendQueued as send } from "./mail";
 import { complete } from "./ai";
@@ -162,7 +163,7 @@ export async function discardDraft(kind: Kind, who: string) {
 }
 
 // ---- special permissions: who may publish an agreement. An empty list means every full administrator may (so nobody is locked out before the list is set up).
-export const SPECIAL = { "agreement.member": "Publish the membership agreement", "agreement.guest": "Publish the guest agreement", ...PII_PERMS } as const;
+export const SPECIAL = { "agreement.member": "Publish the membership agreement", "agreement.guest": "Publish the guest agreement", ...PII_PERMS, ...TRAINING_PERMS } as const;
 export type Special = keyof typeof SPECIAL;
 export const specialList = async (): Promise<Record<Special, string[]>> => {
   const out = Object.fromEntries(Object.keys(SPECIAL).map((k) => [k, []])) as unknown as Record<Special, string[]>;

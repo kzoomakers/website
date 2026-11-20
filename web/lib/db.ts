@@ -5,6 +5,7 @@ import boardSeed from "@/data/board.json";
 import waiverSeed from "@/data/waiver-2025.1.json";
 import guestSeed from "@/data/guest-agreement-1.0.json";
 import { getConfig, pgConnection, type Cfg } from "./config";
+import { trainingSchema } from "./training/schema";
 
 /** Pages managed by their own admin screen: not listed, not editable in Puck. */
 export const LOCKED = ["index", "sitemap", "calendar", "board", "team", "history", "pricing", "handbook", "about", "contact", "other-makerspaces", "laser-shop", "wood-shop", "metal-shop", "3d-printing", "craft-room-kalamazoo", "meeting-space", "what_is_a_makerspace", "why-kzoo-makers", "how-to", "tools-we-are-seeking-donations-kalamazoo", "board-contact"];
@@ -85,6 +86,7 @@ async function migrate(pool: Pool) {
   await pool.query("CREATE UNIQUE INDEX IF NOT EXISTS tools_name ON tools ((lower(name)))");
   await pool.query(`CREATE TABLE IF NOT EXISTS tool_auths (user_id int NOT NULL REFERENCES site_users ON DELETE CASCADE, tool_id int NOT NULL REFERENCES tools ON DELETE CASCADE,
     granted_by text NOT NULL DEFAULT '', granted_at timestamptz NOT NULL DEFAULT now(), expires_on date, note text NOT NULL DEFAULT '', PRIMARY KEY (user_id, tool_id))`);
+  await trainingSchema(pool); // tests, attempts, certifications; extends tool_auths
   await pool.query(`CREATE TABLE IF NOT EXISTS classes (id serial PRIMARY KEY, title text NOT NULL, description text NOT NULL DEFAULT '', starts_at timestamptz NOT NULL, ends_at timestamptz,
     location text NOT NULL DEFAULT '', instructor text NOT NULL DEFAULT '', capacity int NOT NULL DEFAULT 0, price text NOT NULL DEFAULT '', cancelled boolean NOT NULL DEFAULT false)`);
   await pool.query("ALTER TABLE classes ADD COLUMN IF NOT EXISTS image text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS level text NOT NULL DEFAULT 'all', ADD COLUMN IF NOT EXISTS prerequisites text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS materials text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS summary text NOT NULL DEFAULT ''");

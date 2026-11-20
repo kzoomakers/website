@@ -18,5 +18,5 @@ export const groupOf = (here: string) => {
 export const visibleGroups = (allowed: Record<string, string>) =>
   GROUPS.flatMap((g) => {
     const s = g.sections.find((x) => allowed[x] !== undefined);
-    return g.sections.length && s === undefined ? [] : [{ group: g, href: g.sections.map((x) => allowed[x]).find(Boolean) || g.href || NAV.find((t) => t.section === s)!.href }];
+    return g.sections.length && s === undefined ? [] : [{ group: g, href: g.sections.map((x) => allowed[x]).find(Boolean) || g.href || NAV.find((t) => t.section === s)?.href || "/admin" }];
   });

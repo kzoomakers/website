@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { auth, isAdmin } from "@/auth";
 import { db } from "./db";
 import { currentMember } from "./readers";
+import type { TrainingPerm } from "./training/perms";
 
 // Admin RBAC. Each top-level admin page is a section; a user has no access, "read" (view only) or "write" (view + change) to each.
 // "admin" is the Admin page itself (users and access); admin:write is a full admin and implies write everywhere.
@@ -53,7 +54,7 @@ export async function actor() {
 }
 
 /** May the caller do this special thing (publish an agreement)? Anyone on the list for it; with an empty list, any full administrator. Set the lists at Admin > Access > Special permissions. */
-export async function canSpecial(perm: "agreement.member" | "agreement.guest") {
+export async function canSpecial(perm: "agreement.member" | "agreement.guest" | TrainingPerm) {
   const m = await me();
   if (!m) return false;
   const d = db();

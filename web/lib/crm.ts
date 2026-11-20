@@ -227,36 +227,8 @@ export async function mergeSkills(id: number, into: number) {
   await c.query("DELETE FROM skills WHERE id = $1", [id]);
 }
 
-// ---- Tools and authorizations --------------------------------------------------------------------------------------------------------
-export type Tool = { id: number; name: string; category: string; description: string };
-export const listTools = async () => (await (await conn()).query("SELECT t.id, t.name, t.category, t.description, count(a.user_id)::int AS authorized FROM tools t LEFT JOIN tool_auths a ON a.tool_id = t.id GROUP BY t.id ORDER BY lower(t.category), lower(t.name)")).rows;
-export async function saveTool(b: any) {
-  const name = clip(b?.name, 80);
-  if (!name) throw new Error("A tool needs a name.");
-  const v = [name, clip(b?.category, 60), clip(b?.description, 500)], c = await conn();
-  try {
-    if (Number.isInteger(b?.id)) await c.query("UPDATE tools SET name=$2, category=$3, description=$4 WHERE id = $1", [b.id, ...v]);
-    else await c.query("INSERT INTO tools (name, category, description) VALUES ($1,$2,$3)", v);
-  } catch (e: any) { throw new Error(e.code === "23505" ? "A tool with that name already exists." : e.message); }
-}
-export const deleteTool = async (id: number) => void (await (await conn()).query("DELETE FROM tools WHERE id = $1", [id]));
-
-export type Auth = { tool_id: number; name: string; category: string; granted_by: string; granted_at: string; expires_on: string | null; note: string; expired: boolean };
-export const authsFor = async (userId: number): Promise<Auth[]> =>
-  (await (await conn()).query(`SELECT a.tool_id, t.name, t.category, a.granted_by, a.granted_at, to_char(a.expires_on, 'YYYY-MM-DD') AS expires_on, a.note, COALESCE(a.expires_on < current_date, false) AS expired
-    FROM tool_auths a JOIN tools t ON t.id = a.tool_id WHERE a.user_id = $1 ORDER BY lower(t.category), lower(t.name)`, [userId])).rows;
-export async function grantAuth(userId: number, toolId: number, expires: unknown, note: unknown, who: string) {
-  const exp = typeof expires === "string" && /^\d{4}-\d{2}-\d{2}$/.test(expires) ? expires : null, c = await conn();
-  const t = (await c.query("SELECT name FROM tools WHERE id = $1", [toolId])).rows[0], u = (await c.query("SELECT email FROM site_users WHERE id = $1", [userId])).rows[0];
-  if (!t || !u) throw new Error("No such tool or member.");
-  await c.query(`INSERT INTO tool_auths (user_id, tool_id, granted_by, granted_at, expires_on, note) VALUES ($1,$2,$3, now(), $4, $5)
-    ON CONFLICT (user_id, tool_id) DO UPDATE SET granted_by = EXCLUDED.granted_by, granted_at = now(), expires_on = EXCLUDED.expires_on, note = EXCLUDED.note`, [userId, toolId, who, exp, clip(note, 200)]);
-  await logAudit(who, "user.authorize", `${u.email}: ${t.name}${exp ? " until " + exp : ""}`);
-}
-export async function revokeAuth(userId: number, toolId: number, who: string) {
-  const r = (await (await conn()).query("DELETE FROM tool_auths a USING tools t, site_users u WHERE a.user_id = $1 AND a.tool_id = $2 AND t.id = a.tool_id AND u.id = a.user_id RETURNING t.name, u.email", [userId, toolId])).rows[0];
-  if (r) await logAudit(who, "user.deauthorize", `${r.email}: ${r.name}`);
-}
+// ---- Tools and authorizations: lib/tools.ts (re-exported so existing imports keep working)
+export * from "./tools";
 
 // ---- Classes -------------------------------------------------------------------------------------------------------------------------
 export type Klass = { id: number; title: string; description: string; starts_at: string; ends_at: string | null; location: string; instructor: string; capacity: number; price: string; cancelled: boolean; image: string; level: string; summary: string; prerequisites: string; materials: string; signed: number; mine: "confirmed" | "waitlist" | null };

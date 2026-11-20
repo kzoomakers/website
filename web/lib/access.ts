@@ -2,7 +2,7 @@ import { ENTRIES } from "./nav-manifest";
 // Admin access, pure (no database) so the admin screens can use it too.
 // A person's rows in user_perms are keyed "section" (the whole section: every page in it) or "section:page" (just that page).
 // Page rows only ever ADD access; setting a whole section replaces them. So a check that doesn't name a page can never be widened by a page row.
-export const SECTIONS = ["website", "email", "blog", "messages", "people", "signdocs", "tours", "makerfavor", "system"] as const;
+export const SECTIONS = ["website", "email", "blog", "messages", "people", "signdocs", "tours", "makerfavor", "training", "system"] as const;
 /** Section names before the rename: rows saved under them still count (and the startup migration rewrites them). */
 export const LEGACY_SECTION: Record<string, Section> = { webmaster: "website", mail: "email", forms: "messages", crm: "people", board: "signdocs", chores: "makerfavor", admin: "system" };
 /** A saved permission key ("crm" or "crm:classes") under today's section name. */
@@ -11,7 +11,7 @@ export type Section = (typeof SECTIONS)[number];
 export type Level = "read" | "write";
 export type Perms = Partial<Record<string, Level>>;
 
-export const SECTION_LABEL: Record<Section, string> = { website: "Website", email: "Email", blog: "Blog", messages: "Messages", people: "People", signdocs: "SignDocs", tours: "Tours", makerfavor: "MakerFavor", system: "System" };
+export const SECTION_LABEL: Record<Section, string> = { website: "Website", email: "Email", blog: "Blog", messages: "Messages", people: "People", signdocs: "SignDocs", tours: "Tours", makerfavor: "MakerFavor", training: "Training", system: "System" };
 
 /** Every admin page that access can be given to on its own. `path` is the URL (and everything under it, unless a longer path below is listed). The first page of a section is its front page.
  *  `full` pages are never granted one by one: they change who has access, so only a full administrator may open them. */
