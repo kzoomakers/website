@@ -3,6 +3,8 @@ import { Fragment, type ReactNode } from "react";
 import { getFeedConfig } from "../config";
 import { INTERVALS, timeInterval } from "../interval";
 import { byCategories, byDomain, byOrigin, byTags, byUser, findCategories, findDomain, findOrigin, findTags, findUser, listBy, relatedTags, top, type Banned, type Query, type TagRow } from "../models/stories";
+import { currentFeedUser } from "../identity";
+import { storyVotes } from "../models/viewer-state";
 import Shell, { StoriesSubnav } from "./shell";
 import { StoryList, TimeLabel } from "./story-list";
 
@@ -21,12 +23,14 @@ export function splitPage(seg: string[] = []): { rest: string[]; page: number } 
 }
 
 async function Render({ title, base, page, query, above, below, subnav, h1 }: { title: string; base: string; page: number; query: Query; above?: ReactNode; below?: ReactNode; subnav?: boolean; h1?: boolean }) {
-  const [{ stories, more }, cfg] = await Promise.all([listBy(query, page), getFeedConfig()]);
+  const me = await currentFeedUser().catch(() => null);
+  const [{ stories, more }, cfg] = await Promise.all([listBy(query, page, me?.id), getFeedConfig()]);
+  const votes = me ? await storyVotes(me.id, stories.map((s) => s.id)) : undefined;
   const path = base + (page > 1 ? `/page/${page}` : "");
   return (
     <Shell title={title} path={path} subnav={subnav ? <StoriesSubnav path={path} /> : undefined}>
       {h1 && <h1 className="">{title}</h1>}
-      <StoryList stories={stories} page={page} more={more} base={base} above={above} below={below} newUserDays={cfg.newUserDays} />
+      <StoryList stories={stories} page={page} more={more} base={base} above={above} below={below} newUserDays={cfg.newUserDays} me={me} votes={votes} />
     </Shell>
   );
 }

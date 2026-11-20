@@ -29,3 +29,19 @@ export async function findComment(shortId: string): Promise<(ListedComment & { s
   const r = await (await conn()).query(`${SELECT.replace("s.title AS story_title", "s.token AS story_token, s.title AS story_title")} WHERE c.short_id = $1`, [shortId]);
   return r.rows[0] ?? null;
 }
+
+export const INBOX_PER_PAGE = 25;
+export type InboxComment = ListedComment & { notification_id: number; read_at: Date | null };
+
+/** inbox_controller#all and #unread: the viewer's comment notifications, newest first. Listing them marks them read (as Lobsters does). */
+export async function inboxFor(userId: number, unreadOnly: boolean, page = 1): Promise<{ comments: InboxComment[]; more: boolean }> {
+  const c = await conn();
+  const r = await c.query(
+    `SELECT x.* FROM (SELECT n.id AS notification_id, n.read_at, n.created_at AS notified_at, q.* FROM feed.notifications n JOIN LATERAL (${SELECT} WHERE c.id = n.notifiable_id) q ON true
+       WHERE n.user_id = $1 AND n.notifiable_type = 'Comment' ${unreadOnly ? "AND n.read_at IS NULL" : ""}) x ORDER BY x.notified_at DESC, x.notification_id DESC LIMIT $2 OFFSET $3`,
+    [userId, INBOX_PER_PAGE + 1, unreadOnly ? 0 : (page - 1) * INBOX_PER_PAGE]);
+  const rows: InboxComment[] = r.rows.slice(0, INBOX_PER_PAGE);
+  const unread = rows.filter((x) => !x.read_at).map((x) => x.notification_id);
+  if (unread.length) await c.query("UPDATE feed.notifications SET read_at = now(), updated_at = now() WHERE id = ANY($1::bigint[]) AND user_id = $2", [unread, userId]);
+  return { comments: rows, more: r.rows.length > INBOX_PER_PAGE };
+}

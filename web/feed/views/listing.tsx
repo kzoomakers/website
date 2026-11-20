@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import { getFeedConfig } from "../config";
+import { currentFeedUser } from "../identity";
+import { storyVotes } from "../models/viewer-state";
 import { listStories, type Kind } from "../models/stories";
 import Shell, { StoriesSubnav } from "./shell";
 import { StoryList } from "./story-list";
@@ -16,13 +18,15 @@ export const pageNumber = (seg: string[] = []) => {
 };
 
 export default async function Listing({ kind, page }: { kind: Kind; page: number }) {
-  const [{ stories, more }, cfg] = await Promise.all([listStories(kind, page), getFeedConfig()]);
+  const me = await currentFeedUser().catch(() => null);
+  const [{ stories, more }, cfg] = await Promise.all([listStories(kind, page, me?.id), getFeedConfig()]);
+  const votes = me ? await storyVotes(me.id, stories.map((s) => s.id)) : undefined;
   const path = BASE[kind] + (page > 1 ? `/page/${page}` : "") || "/";
   const above = kind === "active" ? <p className="hint">Stories sorted by last comment to foster active discussions</p> : undefined;
   const below = kind === "recent" ? <p className="hint">The <a href="/newest">newest</a> stories that have not yet reached the front page.</p> : undefined;
   return (
     <Shell title={TITLE[kind]} path={path} subnav={kind === "hottest" ? undefined : <StoriesSubnav path={path} />}>
-      <StoryList stories={stories} page={page} more={more} base={BASE[kind]} above={above} below={below} newUserDays={cfg.newUserDays} />
+      <StoryList stories={stories} page={page} more={more} base={BASE[kind]} above={above} below={below} newUserDays={cfg.newUserDays} me={me} votes={votes} />
     </Shell>
   );
 }

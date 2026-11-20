@@ -127,3 +127,29 @@ test("moderator delete and undelete write the mod log", { skip }, async () => {
   assert.equal((await c.query("SELECT is_moderated FROM feed.comments WHERE id = $1", [cr.id])).rows[0].is_moderated, false);
   assert.equal((await logs("comment_id", cr.id)).at(-1).action, "undeleted comment");
 });
+
+test("inbox lists notifications newest first and marks them read; lists skip hidden stories", { skip }, async () => {
+  const { conn } = await import("../lib/db.ts");
+  const { createComment } = await import("../feed/models/comment-write.ts");
+  const { inboxFor } = await import("../feed/models/comments.ts");
+  const { listBy, kindQuery } = await import("../feed/models/stories.ts");
+  const { markStory } = await import("../feed/models/hide-save.ts");
+  const c = await conn(), n = Date.now().toString(36) + "i";
+  const mk = async (name) => (await c.query(`INSERT INTO feed.users (username, email, token, karma, created_at) VALUES ($1, $2, $3, 20, now() - interval '200 days') RETURNING id`, [name + n, `${name}${n}@example.org`, `u${name}${n}`])).rows[0];
+  const [a, b] = [await mk("a"), await mk("b")];
+  const st = (await c.query("INSERT INTO feed.stories (user_id, title, short_id, token, last_edited_at, created_at, user_is_following, score) VALUES ($1, 'A story', $2, $3, now(), now(), true, 1) RETURNING id, short_id", [a.id, n.slice(-6).padStart(6, "x"), "s" + n])).rows[0];
+  const one = await createComment(b, { storyShortId: st.short_id, comment: "First comment for the inbox" });
+  const two = await createComment(b, { storyShortId: st.short_id, comment: "Second comment for the inbox" });
+  assert.ok(one.ok && two.ok);
+  const u = await inboxFor(a.id, true);
+  assert.deepEqual(u.comments.map((x) => x.short_id), [two.shortId, one.shortId]);
+  assert.equal((await inboxFor(a.id, true)).comments.length, 0, "listing marked them read");
+  const all = await inboxFor(a.id, false);
+  assert.equal(all.comments.length, 2); assert.ok(all.comments.every((x) => x.read_at), "they are read now");
+  assert.equal((await inboxFor(b.id, false)).comments.length, 0);
+
+  const has = async (viewer) => (await listBy(kindQuery("newest"), 1, viewer)).stories.some((s) => s.short_id === st.short_id);
+  assert.ok(await has(a.id) && await has(undefined));
+  await markStory(a, st.short_id, "hide");
+  assert.ok(!(await has(a.id)), "hidden for a"); assert.ok(await has(b.id) && await has(undefined), "not for others");
+});

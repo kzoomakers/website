@@ -1,4 +1,5 @@
 import type { Story } from "../models/stories";
+import { ActionForm, Upvoter, type Me } from "./controls";
 import { howLongAgo, negativityClass, titleAsSlug, truncate, zoned } from "../util";
 
 export const titlePath = (s: Pick<Story, "short_id" | "title">) => `/s/${s.short_id}/${titleAsSlug(s.title)}`;
@@ -26,14 +27,14 @@ export function UserLink({ s, newUserDays }: { s: Pick<Story, "username" | "user
 }
 
 /** stories/_listdetail.html.erb (logged-out). Hide/save/flag/edit controls come with accounts (phase 2/3). */
-export function StoryItem({ story: s, newUserDays }: { story: Story; newUserDays: number }) {
+export function StoryItem({ story: s, newUserDays, me = null, vote = 0 }: { story: Story; newUserDays: number; me?: Me | null; vote?: number }) {
   const href = s.url || titlePath(s);
   const referrer = s.merged_story_id == null && Date.now() - s.created_at.getTime() < 3600_000;
-  const cls = ["story", negativityClass(s.score, s.flags)].filter(Boolean).join(" ");
+  const cls = ["story", negativityClass(s.score, s.flags), vote === 1 && "upvoted", vote === -1 && "flagged"].filter(Boolean).join(" ");
   return (
     <li id={`story_${s.short_id}`} data-shortid={s.short_id} className={cls}>
       <div className="story_liner h-entry">
-        <div className="voters"><a className="upvoter" href="/login">{s.score}</a></div>
+        <div className="voters"><Upvoter base={`/stories/${s.short_id}`} me={me} voted={vote === 1} score={s.score} own={!!me && me.id === s.user_id} /></div>
         <div className="details">
           <h2 className="link h-cite u-repost-of"><a className="u-url" href={href} rel={`ugc ${referrer ? "" : "noreferrer"}`.trim()}>{s.title}</a></h2>
           {s.stories_count > 0 ? <span className="merge" role="img" aria-label={`${s.stories_count + 1} stories merged`}>{s.stories_count + 1}</span> : s.merged_story_id ? <span className="merge">merged</span> : null}
@@ -47,6 +48,7 @@ export function StoryItem({ story: s, newUserDays }: { story: Story; newUserDays
             <UserLink s={s} newUserDays={newUserDays} /> <TimeLabel time={s.created_at} />
             {s.url && <><Divider /><Caches url={s.url} /></>}
             <span className="comments_label"><Divider /><a href={titlePath(s)}>{s.comments_count === 0 ? "no comments" : `${s.comments_count} comment${s.comments_count === 1 ? "" : "s"}`}</a></span>
+            {me && <><Divider /><ActionForm path={`/stories/${s.short_id}/hide`} me={me} label="hide" /></>}
           </div>
         </div>
       </div>
@@ -56,12 +58,12 @@ export function StoryItem({ story: s, newUserDays }: { story: Story; newUserDays
 }
 
 /** home/index.html.erb: the list plus "Page N" links. `base` is "" for the home page (links are /page/2) or e.g. "/newest". */
-export function StoryList({ stories, page, more, base, above, below, newUserDays }: { stories: Story[]; page: number; more: boolean; base: string; above?: React.ReactNode; below?: React.ReactNode; newUserDays: number }) {
+export function StoryList({ stories, page, more, base, above, below, newUserDays, me = null, votes }: { stories: Story[]; page: number; more: boolean; base: string; above?: React.ReactNode; below?: React.ReactNode; newUserDays: number; me?: Me | null; votes?: Map<number, number> }) {
   const link = (p: number) => `${base}/page/${p}${base === "/newest" ? "?last_read_timestamp=0" : ""}`; // newest keeps the "Last Read" marker position in the URL; a visitor has none
   return (
     <>
       {above}
-      <ol className="stories list">{stories.map((s) => <StoryItem key={s.id} story={s} newUserDays={newUserDays} />)}</ol>
+      <ol className="stories list">{stories.map((s) => <StoryItem key={s.id} story={s} newUserDays={newUserDays} me={me} vote={votes?.get(s.id) ?? 0} />)}</ol>
       {below}
       <nav className="morelink">
         {page > 1 && <a href={link(page - 1)} rel="prev">{`Page ${page - 1}`}</a>}
