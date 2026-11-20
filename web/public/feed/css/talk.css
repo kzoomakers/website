@@ -1,4 +1,4 @@
-/* Old-reddit look for story lists, threaded comments and the submit page. Loaded after application.css and the color scheme, so it only overrides; every color comes from the theme variables (dark by default). */
+/* Look of story lists, threaded comments and the submit page. Loaded after application.css and the color scheme, so it only overrides; every color comes from the theme variables (dark by default). */
 body { max-width: 78rem; }
 @media screen and (min-width: 481px) { ol.stories.list { margin-left: 0; } ol.stories.list div.voters { width: 3.2em; } }
 

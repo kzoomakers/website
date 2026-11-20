@@ -29,7 +29,7 @@ export default function Shell({ title, path, subnav, children }: { title?: strin
       <meta name="theme-color" content="#AC130D" />
       <meta name="robots" content="noai, noimageai" />
       <link rel="stylesheet" href="/feed/css/application.css" precedence="feed" />
-      <link rel="stylesheet" href="/feed/css/reddit.css" precedence="feed-late" />
+      <link rel="stylesheet" href="/feed/css/talk.css" precedence="feed-late" />
       <Theme />
       <script type="module" src="/feed/js/application.js" async />
       <header id="header">
