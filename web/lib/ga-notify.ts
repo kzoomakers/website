@@ -6,8 +6,8 @@ import { cleanEmail } from "./tours-fmt";
 import { clockIn, delta, detect, digestDue, digestLines, n, withYesterday } from "./ga-digest";
 
 // Two ways the site tells staff what Google Analytics sees:
-//  1. Alerts: a Pushover alert (the "ga" group in Admin > Setup > Alert delivery) when yesterday was far above or below normal.
-//  2. A weekly email summary (Mondays, Eastern time) to a list of addresses, with an on/off switch. Both are set up in Admin > Setup > Analytics & cookies.
+//  1. Alerts: a Pushover alert (the "ga" group in Admin > System > Alert delivery) when yesterday was far above or below normal.
+//  2. A weekly email summary (Mondays, Eastern time) to a list of addresses, with an on/off switch. Both are set up in Admin > Website > Analytics & cookies.
 export type Digest = { on: boolean; emails: string[]; last: string };
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 

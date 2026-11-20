@@ -38,6 +38,35 @@ test("a URL belongs to the longest page path above it", () => {
   assert.equal(k("/admin/nowhere"), undefined);
 });
 
+test("the pages split out of Setup (and Membership classes) are admin-section pages, so a whole People grant cannot reach them", () => {
+  for (const k of ["seal", "maps", "captcha", "uploads", "membership-classes"]) { assert.ok(has("admin", k), k); assert.equal(levelFor({ crm: "write" }, "admin", k), undefined); }
+  assert.equal(pageOf("/admin/crm/membership-classes").section, "admin");
+});
+
+test("menu zones and tab matching", async () => {
+  const { NAV, ENTRIES, zoneOf } = await import("../lib/nav-manifest.ts");
+  const { tabOf } = await import("../app/admin/tabs.ts");
+  for (const [t, e] of ENTRIES) assert.ok(!e.zone || t.zones.includes(e.zone), `${e.href}: zone ${e.zone} is not one of ${t.label}'s zones`);
+  assert.equal(zoneOf(NAV[0], ENTRIES.find(([, e]) => e.href === "/admin/webmaster/calendar")[1]), "Settings");
+  assert.equal(zoneOf(NAV[0], ENTRIES.find(([, e]) => e.href === "/admin/webmaster/reviews")[1]), "Work");
+  assert.equal(tabOf("/admin/services/privacy"), "/admin/webmaster"); assert.equal(tabOf("/admin/services/google-analytics"), "/admin/webmaster");
+  assert.equal(tabOf("/admin/services/seal"), "/admin/users"); assert.equal(tabOf("/admin/services"), "/admin/users"); assert.equal(tabOf("/admin/webmaster/guided/about"), "/admin/webmaster");
+  assert.equal(tabOf("/admin/crm/membership-classes"), "/admin/crm"); assert.equal(tabOf("/admin/nowhere"), undefined);
+});
+
+test("Database & storage: test never needs a Fly secret, blank URL keeps the saved one, blank keys keep the saved keys", async () => {
+  const { planDb, mergeS3 } = await import("../lib/setup-plan.ts");
+  const had = { databaseUrl: "postgres://old/db" };
+  assert.match(planDb({ env: { databaseUrl: "x" }, had, url: "", ca: "", test: false, fly: false }).error, /environment variable/);
+  assert.equal(planDb({ env: null, had: null, url: "", ca: "", test: true, fly: false }).error, "Database URL required");
+  assert.deepEqual(planDb({ env: null, had, url: "  ", ca: "", test: false, fly: false }).cfg, had);
+  assert.equal(planDb({ env: null, had, url: "postgres://new/db", ca: "ca", test: false, fly: false }).cfg.databaseCa, "ca");
+  assert.match(planDb({ env: null, had, url: "postgres://new/db", ca: "", test: false, fly: true }).error, /Fly secrets/);
+  assert.equal(planDb({ env: null, had, url: "postgres://new/db", ca: "", test: true, fly: true }).cfg.databaseUrl, "postgres://new/db");
+  const old = { endpoint: "http://a", bucket: "b", region: "r", accessKey: "AK", secretKey: "SK" };
+  assert.deepEqual(mergeS3({ endpoint: " http://c ", accessKey: "", secretKey: "NEW" }, old), { endpoint: "http://c", bucket: "uploads", region: "us-east-1", accessKey: "AK", secretKey: "NEW" });
+});
+
 test("the pages that change who has access (or show who looked at personal data) are never grantable one by one", () => {
   assert.deepEqual(PAGES.filter((p) => p.full).map((p) => p.key).sort(), ["pii", "special", "users"]); // Audit PII is opened by full admins or the "Audit PII" special permission instead
 });
@@ -58,11 +87,14 @@ test("every admin page's gate() names a section that owns that URL", () => {
   assert.ok(n > 40);
 });
 
-test("every menu link is a registered page", () => {
-  const nav = src(new URL("../app/admin/nav.tsx", import.meta.url).pathname);
-  const hrefs = [...nav.matchAll(/href: "(\/admin[^"]*)"/g)].map((m) => m[1]);
-  assert.ok(hrefs.length > 40);
-  for (const h of hrefs) assert.ok(pageOf(h), `${h} is in the menu but is not a page in lib/access.ts`);
+test("every menu link is a registered page, and no label repeats inside a menu", async () => {
+  const { NAV, ENTRIES, flat, menuOf } = await import("../lib/nav-manifest.ts");
+  assert.ok(ENTRIES.length > 80);
+  for (const [, e] of ENTRIES) {
+    assert.ok(pageOf(e.href), `${e.href} is in the manifest but is not a page`);
+  }
+  for (const t of NAV) { const l = flat(menuOf(t)).map((e) => e.label); assert.equal(new Set(l).size, l.length, `duplicate label in ${t.label}`); }
+  const keys = ENTRIES.filter(([, e]) => e.key).map(([t, e]) => `${e.section ?? t.section}:${e.key}`); assert.equal(new Set(keys).size, keys.length, "duplicate permission page");
 });
 
 test("every page named in an API check exists in the section it is checked against", () => {

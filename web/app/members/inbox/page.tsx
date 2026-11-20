@@ -6,12 +6,12 @@ import { Side } from "./side";
 import { ago } from "../../admin/webmaster/ago";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Inbox | Kzoo Makers", robots: { index: false } };
+export const metadata = { title: "Messages | Kzoo Makers", robots: { index: false } };
 
 // Replies and other notices. New ones are marked read once the page is actually open in the browser (not while it renders on the server).
 export default function Inbox() {
   return (
-    <MembersShell title="Inbox" path="/members/inbox">
+    <MembersShell title="Messages" path="/members/inbox">
       {async (u) => {
         const [convos, { notes: all }] = await Promise.all([conversations(u.id), listNotes(u.id, 100)]);
         // Member messages live in their conversations (with their own unread counts); only other notices are listed below.

@@ -1,8 +1,9 @@
-// Top-level admin sections: path, label, ribbon colour, and the permission section that unlocks it.
-export const TABS = [["/admin/webmaster", "Website", "#c00", "webmaster"], ["/admin/mailer", "Email", "#1b7f3b", "mail"], ["/admin/blog", "Blog", "#2563eb", "blog"], ["/admin/forms", "Messages", "#7c3aed", "forms"], ["/admin/crm", "People", "#0891b2", "crm"], ["/admin/esign", "eSign", "#0f766e", "board"], ["/admin/tours", "Tours", "#e11d48", "tours"], ["/admin/makerfavor", "Chores", "#65a30d", "chores"], ["/admin/users", "System", "#d97706", "admin"]] as const;
+import { NAV, ENTRIES } from "@/lib/nav-manifest";
 
-// Pages that live under another section's URL but belong to a different tab (public content kept under /admin/services).
-const ELSEWHERE: [string, string][] = [["/admin/services/privacy", "/admin/webmaster"], ["/admin/services/links", "/admin/webmaster"], ["/admin/services", "/admin/users"]];
+// Top-level admin sections: path, label, and the permission section that unlocks it.
+export const TABS = NAV.map((t) => [t.href, t.label, t.section] as const);
 
-/** The tab path (a TABS entry) that owns this admin URL, or undefined. */
-export const tabOf = (here: string) => ELSEWHERE.find(([p]) => here === p || here.startsWith(p + "/"))?.[1] ?? TABS.find(([h]) => here === h || here.startsWith(h + "/"))?.[0];
+const under = (here: string, p: string) => here === p || here.startsWith(p + "/");
+/** The tab path (a TABS entry) that owns this admin URL, or undefined: the tab whose menu has the longest matching link (public-content pages live under /admin/services but show in Website), else the tab's own URL. */
+export const tabOf = (here: string) =>
+  ENTRIES.filter(([, e]) => under(here, e.href)).sort((a, b) => b[1].href.length - a[1].href.length)[0]?.[0].href ?? TABS.find(([h]) => under(here, h))?.[0];

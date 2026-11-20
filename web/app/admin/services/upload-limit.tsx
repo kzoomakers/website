@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Notice from "@/components/notice";
+import { Card } from "./card";
 
 // The biggest request signed-in people can upload, and the biggest anyone else can send to any page or form. Each has a fixed ceiling the server enforces.
 export default function UploadLimit({ initial, max, maxPublic }: { initial: { mb: number; publicMb: number }; max: number; maxPublic: number }) {
@@ -13,9 +14,7 @@ export default function UploadLimit({ initial, max, maxPublic }: { initial: { mb
   };
   const num = (v: string, set: (x: string) => void, hi: number) => <input type="number" min={1} max={hi} step={1} value={v} onChange={(e) => { set(e.target.value); setOk(false); }} />;
   return (
-    <div style={{ maxWidth: 560, marginTop: 32 }}>
-      <h2>Upload size limits</h2>
-      <p className="sub">In megabytes. People who are not signed in can only send small requests, so a stranger can't tie up the server with huge files. People who are signed in can upload bigger files, such as photos and IDs. A change takes up to a minute to reach every server.</p>
+    <Card title="Largest uploads" hint="In megabytes. People who are not signed in can only send small requests, so a stranger can't tie up the server with huge files. People who are signed in can upload bigger files, such as photos and IDs. A change takes up to a minute to reach every server.">
       <Notice kind="error">{msg}</Notice>
       <label>Signed in: largest upload (1 to {max} MB)
         {num(mb, setMb, max)}</label>
@@ -23,6 +22,6 @@ export default function UploadLimit({ initial, max, maxPublic }: { initial: { mb
         {num(pub, setPub, maxPublic)}</label>
       <button className="pri" disabled={busy} onClick={save}>{busy ? "Saving…" : "Save"}</button>
       {ok && <p className="ok" role="status">✓ Saved</p>}
-    </div>
+    </Card>
   );
 }

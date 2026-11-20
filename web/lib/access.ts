@@ -1,3 +1,4 @@
+import { ENTRIES } from "./nav-manifest";
 // Admin access, pure (no database) so the admin screens can use it too.
 // A person's rows in user_perms are keyed "section" (the whole section: every page in it) or "section:page" (just that page).
 // Page rows only ever ADD access; setting a whole section replaces them. So a check that doesn't name a page can never be widened by a page row.
@@ -6,34 +7,16 @@ export type Section = (typeof SECTIONS)[number];
 export type Level = "read" | "write";
 export type Perms = Partial<Record<string, Level>>;
 
-export const SECTION_LABEL: Record<Section, string> = { webmaster: "Website", mail: "Email", blog: "Blog", forms: "Messages", crm: "People", board: "eSign", tours: "Tours", chores: "Chores", admin: "System" };
+export const SECTION_LABEL: Record<Section, string> = { webmaster: "Website", mail: "Email", blog: "Blog", forms: "Messages", crm: "People", board: "SignDocs", tours: "Tours", chores: "MakerFavor", admin: "System" };
 
 /** Every admin page that access can be given to on its own. `path` is the URL (and everything under it, unless a longer path below is listed). The first page of a section is its front page.
  *  `full` pages are never granted one by one: they change who has access, so only a full administrator may open them. */
 export type Page = { section: Section; key: string; label: string; path: string; full?: boolean; also?: string[] }; // also: other URLs that belong to this page (the email editor lives under /admin/mailer/email)
-const P = (section: Section, rows: [string, string, string][]): Page[] => rows.map(([key, label, path]) => ({ section, key, label, path }));
-export const PAGES: Page[] = [
-  ...P("webmaster", [["pages", "Pages", "/admin/webmaster"], ["guided", "Guided pages", "/admin/webmaster/guided"], ["calendar", "Calendar", "/admin/webmaster/calendar"], ["board", "Board", "/admin/webmaster/board"], ["financials", "Financials", "/admin/webmaster/financials"],
-    ["hours", "Hours & address", "/admin/webmaster/hours"], ["menu", "Menu", "/admin/webmaster/menu"], ["robots", "Search engine settings", "/admin/webmaster/robots"], ["reviews", "Reviews", "/admin/webmaster/reviews"],
-    ["analytics", "Analytics", "/admin/webmaster/analytics"], ["handbook-updates", "Handbook updates", "/admin/webmaster/handbook-updates"]]),
-  ...P("mail", [["overview", "Overview", "/admin/mailer"], ["emails", "Emails", "/admin/mailer/emails"], ["forms", "Signup forms", "/admin/mailer/forms"], ["subscribers", "Subscribers", "/admin/mailer/subscribers"], ["lists", "Lists", "/admin/mailer/lists"],
-    ["queue", "Queue", "/admin/mailer/queue"], ["settings", "Settings", "/admin/mailer/settings"], ["tracking", "Tracking", "/admin/mailer/tracking"]]),
-  ...P("blog", [["posts", "Posts", "/admin/blog"], ["categories", "Categories", "/admin/blog/categories"], ["authors", "Authors", "/admin/blog/authors"], ["media", "Media", "/admin/blog/media"], ["comments", "Comments", "/admin/blog/comments"]]),
-  ...P("forms", [["messages", "Messages", "/admin/forms"]]),
-  ...P("crm", [["people", "People", "/admin/crm"], ["approvals", "New members", "/admin/crm/approvals"], ["classes", "Classes", "/admin/crm/classes"], ["tools", "Tools & sign-offs", "/admin/crm/tools"], ["skills", "Skills", "/admin/crm/skills"],
-    ["values", "Profile options", "/admin/crm/values"], ["waiver", "Membership agreement", "/admin/crm/waiver"], ["guest-agreement", "Guest agreement", "/admin/crm/guest-agreement"], ["guests", "Guests", "/admin/crm/guests"], ["id-renewals", "ID renewals", "/admin/crm/id-renewals"]]),
-  ...P("board", [["documents", "Documents", "/admin/esign"], ["new", "New document", "/admin/esign/new"], ["templates", "Templates", "/admin/esign/templates"], ["buckets", "Folders", "/admin/esign/buckets"]]),
-  ...P("tours", [["bookings", "Bookings", "/admin/tours"], ["walkups", "Walk-ups", "/admin/tours/walkups"], ["availability", "Availability", "/admin/tours/availability"], ["stats", "Statistics", "/admin/tours/stats"], ["timeline", "Timeline", "/admin/tours/timeline"],
-    ["notifications", "Tour alerts", "/admin/tours/notifications"]]),
-  ...P("chores", [["todo", "To do", "/admin/makerfavor"], ["log", "Hours", "/admin/makerfavor/log"], ["stats", "Stats", "/admin/makerfavor/stats"], ["achievements", "Achievements", "/admin/makerfavor/achievements"]]),
-  ...P("admin", [["setup", "Setup", "/admin/services"], ["audit", "Audit log", "/admin/services/audit"], ["pushover", "Alert delivery", "/admin/services/pushover"], ["api-keys", "API keys", "/admin/services/api-keys"], ["ai", "AI", "/admin/services/ai"],
-    ["google-analytics", "Analytics & cookies", "/admin/services/google-analytics"], ["privacy", "Privacy statement", "/admin/services/privacy"], ["links", "External links", "/admin/services/links"], ["feed", "Feed", "/admin/services/feed"], ["debug", "Debug", "/admin/services/debug"],
-    ["httplog", "HTTP log", "/admin/services/httplog"], ["pgstats", "Database stats", "/admin/services/pgstats"], ["security", "Security headers", "/admin/services/security"]]),
-  { section: "admin", key: "pii", label: "Audit PII", path: "/admin/services/pii", full: true },
-  { section: "admin", key: "users", label: "Access", path: "/admin/users", full: true },
-  { section: "admin", key: "special", label: "Special permissions", path: "/admin/users/special", full: true },
-];
-PAGES.find((p) => p.section === "mail" && p.key === "emails")!.also = ["/admin/mailer/email"];
+// Permission pages come from the nav manifest. A section's own pages come first (its first one is its front page), then pages shown in another tab, then the full-admin-only ones.
+const order = (p: Page, tab: Section) => (p.full ? 2 : p.section === tab ? 0 : 1);
+export const PAGES: Page[] = ENTRIES.filter(([, e]) => e.key)
+  .map(([t, e]) => ({ p: { section: e.section ?? t.section, key: e.key!, label: e.pageLabel ?? e.label, path: e.href, full: e.full, also: e.also } as Page, tab: t.section }))
+  .sort((a, b) => order(a.p, a.tab) - order(b.p, b.tab)).map((x) => x.p);
 export const pagesOf = (s: Section) => PAGES.filter((p) => p.section === s);
 
 /** The page a URL belongs to: the longest listed path that is the URL or a parent of it. */

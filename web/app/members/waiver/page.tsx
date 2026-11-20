@@ -5,7 +5,7 @@ import { accountView } from "@/lib/waiver";
 import { summarize, type Change } from "@/lib/waiver-diff";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Liability Waiver | Kzoo Makers", robots: { index: false } };
+export const metadata = { title: "Membership agreement | Kzoo Makers", robots: { index: false } };
 
 const day = (s: string) => new Date(s).toLocaleDateString([], { dateStyle: "long" });
 
@@ -27,7 +27,7 @@ function Diff({ c }: { c: Change }) {
 
 export default function WaiverPage() {
   return (
-    <MembersShell title="Liability Waiver" path="/members/waiver">
+    <MembersShell title="Membership agreement" path="/members/waiver">
       {async (u) => {
         const v = await accountView(u.id);
         if (!v) return <p>You haven't signed a waiver yet.</p>;

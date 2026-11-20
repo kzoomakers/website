@@ -98,7 +98,7 @@ export default function Wizard() {
       <div className="wz-body">
         <Notice kind="error">{err}</Notice>
         {screen === "waiver" && info.version && <>
-          <h2 id="wz-h">Welcome, {info.name.split(" ")[0]}! Liability waiver</h2>
+          <h2 id="wz-h">Welcome, {info.name.split(" ")[0]}! Membership agreement</h2>
           <p className="sub">Please read the whole agreement ({info.version.title}, revision {info.version.revision}), then sign at the bottom. A signed PDF is emailed to you and kept encrypted.</p>
           <article className="wz-doc" tabIndex={0}><Agreement sections={info.version.sections} closing={info.version.closing} /></article>
           <SignPad name={info.name} busy={busy} initials drawRequired label="Sign and continue" onSign={(signature, drawn, initials) => post({ step: "waiver", signature, initials, drawn }, "handbook")} />

@@ -1,36 +1,49 @@
 "use client";
 import { useState } from "react";
+import { confirmDialog } from "@/components/dialog";
+import { Banner, Card, Field, Steps, useSnack } from "./card";
 
 type Info = { source: "db"; name: string; expires: string; generated: boolean; broken?: string } | { source: "env"; broken?: string } | null;
 
 // Digital-signature certificate for finished PDFs: generate one, or upload a purchased .p12.
 export default function Seal({ initial }: { initial: Info }) {
   const [info, setInfo] = useState<Info>(initial);
-  const [org, setOrg] = useState("Kzoo Makers"), [pass, setPass] = useState("");
-  const [msg, setMsg] = useState(""), [busy, setBusy] = useState(false);
-  const call = async (body: BodyInit, json?: boolean) => {
+  const [org, setOrg] = useState("Kzoo Makers"), [pass, setPass] = useState(""), [file, setFile] = useState<File | null>(null);
+  const [msg, setMsg] = useState(""), [busy, setBusy] = useState(false), [snack, say] = useSnack();
+  const call = async (body: BodyInit, done: string, json?: boolean) => {
     setBusy(true); setMsg("");
     const r = await fetch("/api/webmaster/seal", { method: "POST", headers: json ? { "content-type": "application/json" } : undefined, body });
-    if (r.ok) setInfo(await r.json()); else setMsg(await r.text());
+    if (r.ok) { setInfo(await r.json()); setFile(null); setPass(""); say(done); } else setMsg(await r.text());
     setBusy(false);
   };
-  const op = (o: string) => call(JSON.stringify({ op: o, org }), true);
+  const op = (o: string, done: string) => call(JSON.stringify({ op: o, org }), done, true);
+  const days = info?.source === "db" ? Math.floor((Date.parse(info.expires) - Date.now()) / 864e5) : undefined;
+  const have = info?.source === "db";
+  const replace = async () => !have || (await confirmDialog("Replace the current certificate? PDFs signed from now on use the new one; PDFs already signed are not changed.", { ok: "Replace" }));
   return (
-    <div style={{ maxWidth: 560, marginTop: 32 }}>
-      <h2>Signed-PDF certificate</h2>
-      <p className="sub">Finished e-signed PDFs are always hashed and encrypted. A certificate also lets Adobe prove the file wasn't altered afterwards. A generated one shows as “unknown signer”; an uploaded purchased certificate shows as trusted. It is stored encrypted in the database.</p>
-      {info?.broken && <p className="err">✗ The stored certificate can't be used, so PDFs are being saved unsigned ({info.broken}). Generate or upload a new one.</p>}
-      {info?.source === "db" && !info.broken && <p className="ok">✓ {info.generated ? "Generated" : "Uploaded"} certificate “{info.name}”, valid until {info.expires.slice(0, 10)}</p>}
-      {info?.source === "env" && !info.broken && <p className="ok">✓ Using the SIGN_P12_* environment variables</p>}
-      {!info && <p>No certificate yet: PDFs are not digitally signed.</p>}
-      <label>Name on the certificate<input value={org} onChange={(e) => setOrg(e.target.value)} /></label>
-      <button className="pri" disabled={busy || !org.trim()} onClick={() => op("generate")}>{info?.source === "db" ? "Generate a new one" : "Generate a certificate"}</button>
-      <h3>Or upload a .p12</h3>
-      <label>File<input type="file" accept=".p12,.pfx" id="p12" /></label>
-      <label>Passphrase<input type="password" value={pass} onChange={(e) => setPass(e.target.value)} /></label>
-      <button disabled={busy} onClick={() => { const f = (document.getElementById("p12") as HTMLInputElement).files?.[0]; if (!f) return setMsg("Choose a file first"); const d = new FormData(); d.set("file", f); d.set("pass", pass); call(d); }}>Upload</button>
-      {info?.source === "db" && <button disabled={busy} onClick={() => op("remove")}>Remove</button>}
-      {msg && <p className="err">✗ {msg}</p>}
-    </div>
+    <Card title="Certificate">
+      {info?.broken ? <Banner kind="bad" title="The certificate can’t be used">PDFs are being saved unsigned ({info.broken}). Generate or upload a new one below.</Banner>
+        : info?.source === "env" ? <Banner kind="ok" title="Signing is on">Using the certificate set by the server’s SIGN_P12_* settings.</Banner>
+        : info && days !== undefined && days < 30 ? <Banner kind="warn" title={days < 0 ? "The certificate has expired" : `The certificate expires in ${days} day${days === 1 ? "" : "s"}`}>“{info.name}” (valid until {info.expires.slice(0, 10)}). Replace it soon so PDFs stay signed.</Banner>
+        : info ? <Banner kind="ok" title="Signing is on">{info.generated ? "Generated" : "Uploaded"} certificate “{info.name}”, valid until {info.expires.slice(0, 10)}.</Banner>
+        : <Banner kind="off" title="No certificate yet">Finished PDFs are still hashed and encrypted, but not digitally signed.</Banner>}
+      <p className="sub">A certificate lets Adobe prove a finished e-signed PDF wasn’t changed afterwards. A generated one shows as “unknown signer”; a purchased one shows as trusted. It is stored encrypted in the database.</p>
+      {msg && <p className="err" role="alert">✗ {msg}</p>}
+      {info?.source === "env" && <p className="sub">The server’s SIGN_P12_* settings supply the certificate now. Generating or uploading one here stores a second certificate in the database.</p>}
+      <>
+        <h3>Generate one</h3>
+        <Field label="Name on the certificate" value={org} set={setOrg} help="Usually the organization’s name." />
+        <div className="set-actions"><button className="pri" disabled={busy || !org.trim()} onClick={async () => { if (await replace()) op("generate", "Certificate generated"); }}>{have ? "Generate a new one" : "Generate certificate"}</button></div>
+        <Steps open={false}><li>Already bought a certificate? Choose its <b>.p12 / .pfx</b> file below and enter its passphrase.</li></Steps>
+        <h3>Or upload a purchased one</h3>
+        <label className="set-field"><span>Certificate file (.p12 or .pfx)</span><input type="file" accept=".p12,.pfx" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></label>
+        <label className="set-field"><span>Passphrase</span><input type="password" value={pass} autoComplete="new-password" onChange={(e) => setPass(e.target.value)} /></label>
+        <div className="set-actions">
+          <button disabled={busy || !file} onClick={async () => { if (!file || !(await replace())) return; const d = new FormData(); d.set("file", file); d.set("pass", pass); call(d, "Certificate uploaded"); }}>Upload</button>
+          {have && <button className="danger-text" disabled={busy} onClick={async () => { if (await confirmDialog("Remove the certificate? New PDFs will be saved unsigned.", { ok: "Remove" })) op("remove", "Certificate removed"); }}>Remove</button>}
+        </div>
+      </>
+      {snack}
+    </Card>
   );
 }
