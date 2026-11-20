@@ -15,7 +15,7 @@ export default async function MembersLayout({ children }: { children: ReactNode 
     <div className="adm adm-root">
       <Frame /><Bar signedIn={ok} />
       <div className="adm-body">
-        <Side admin={admin} limited={!!u && !ok} user={u && <UserMenu name={u.name} email={u.email} limited={!ok} />} />
+        <Side limited={!!u && !ok} user={u && <UserMenu name={u.name} email={u.email} swap={admin ? { href: "/admin", label: "Admin" } : undefined} />} />
         <main className="adm-main">{children}</main>
         {u && u.approval !== "rejected" && u.onboarding !== "resign" && (!ok || u.fresh) && <Wizard />}
       </div>

@@ -285,3 +285,4 @@ html:has(.adm-root){background:#f5f6f8}
 .set-card button.text{border:0;background:none;color:var(--acc);padding:7px 10px}
 .set-card button.danger-text{border:0;background:none;color:var(--bad);padding:7px 10px}
 .set-snack{position:fixed;left:24px;bottom:24px;z-index:99999;background:#202124;color:#fff;padding:12px 18px;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.adm-ah{padding:8px 12px 0;font-size:12px;font-weight:600;color:var(--mut)}

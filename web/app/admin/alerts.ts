@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 
-export type Alerts = { reviews: number; comments: number; forms: number; applicants: number; walkups: number };
+export type Alerts = { reviews: number; comments: number; forms: number; applicants: number; walkups: number; renewals: number };
 
 // What is waiting for staff, for the tab badges and the left menu. One request is shared by whoever asks within 10 seconds, then refreshed every minute and when you move to another page.
 let last: { at: number; p: Promise<Alerts | null> } | undefined;
