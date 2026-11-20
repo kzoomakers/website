@@ -3,6 +3,9 @@ import { feedOrigin } from "@/feed/config";
 import { csrfOk, originOk } from "@/feed/auth";
 import { viewerFor } from "@/feed/identity";
 import { putCommentFlash } from "@/feed/flash";
+import { modSetCommentDeleted } from "@/feed/models/mod";
+import { castVote } from "@/feed/models/vote";
+import { hit } from "@/lib/limit";
 import { setCommentDeleted, updateComment } from "@/feed/models/comment-write";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +15,7 @@ const to = (path: string) => NextResponse.redirect(feedOrigin() + path, { status
 // comments#update, #destroy and #undelete as POSTs, so the same-site and CSRF checks cover every change.
 export async function POST(req: Request, { params }: { params: Promise<{ id: string; action: string }> }) {
   const { id, action } = await params;
-  if (!/^[a-z0-9]{1,10}$/.test(id) || !["update", "delete", "undelete"].includes(action)) return new NextResponse("not found", { status: 404 });
+  if (!/^[a-z0-9]{1,10}$/.test(id) || !["update", "delete", "undelete", "upvote", "unvote", "flag", "mod-delete", "mod-undelete"].includes(action)) return new NextResponse("not found", { status: 404 });
   if (!originOk(req.headers)) return new NextResponse("forbidden", { status: 403 });
   const f = await req.formData().catch(() => null);
   if (!f) return new NextResponse("bad request", { status: 400 });
@@ -20,6 +23,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const v = await viewerFor(cookie);
   if (!v || !v.username || !csrfOk(cookie, String(f.get("csrf") ?? "").slice(0, 100))) return new NextResponse("forbidden", { status: 403 });
   try {
+    if (action === "upvote" || action === "unvote" || action === "flag") {
+      if (!(await hit(`feed:vote:${v.id}`, 300, 3_600_000, true))) return new NextResponse("too many votes", { status: 429 });
+      await castVote(v, "comment", id, action === "upvote" ? 1 : action === "flag" ? -1 : 0, String(f.get("reason") ?? "").slice(0, 1));
+      return to(`/c/${id}`);
+    }
+    if (action === "mod-delete" || action === "mod-undelete") {
+      await modSetCommentDeleted(v, id, action === "mod-delete", String(f.get("reason") ?? ""));
+      return to(`/c/${id}`);
+    }
     if (action === "update") {
       const text = String(f.get("comment") ?? "").slice(0, 70_000), r = await updateComment(v, id, text);
       if (r.ok) return to(`/c/${id}`);

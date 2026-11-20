@@ -6,20 +6,22 @@ import { CommentItem, html } from "./comment";
 import { takeCommentFlash } from "../flash";
 import { currentFeedUser } from "../identity";
 import { editable } from "../models/submit";
+import { ActionForm, Flagger, ModDelete, Upvoter, type Me } from "./controls";
+import { viewerState, type ViewerState } from "../models/viewer-state";
 import { CommentBox } from "./comment-form";
 import Shell from "./shell";
 import { Caches, Divider, TimeLabel, UserLink, titlePath } from "./story-list";
 
 /** comments/_threads + _thread_to_tree: the flat, depth-first list becomes nested <li class="comments_subtree"><ol class="comments">. */
-function Tree({ comments, story, newUserDays, me }: { comments: Comment[]; story: StoryFull; newUserDays: number; me?: { id: number; csrf: string } | null }) {
+function Tree({ comments, story, newUserDays, me, votes }: { comments: Comment[]; story: StoryFull; newUserDays: number; me?: Me | null; votes?: ViewerState["comment"] }) {
   const kids = new Map<number | null, Comment[]>();
   for (const c of comments) kids.set(c.parent_comment_id, [...(kids.get(c.parent_comment_id) ?? []), c]);
   const render = (parent: number | null): React.ReactNode => (kids.get(parent) ?? []).map((c) => (
-    <li className="comments_subtree" key={c.id}><CommentItem c={c} story={story} newUserDays={newUserDays} me={me} /><ol className="comments">{render(c.id)}</ol></li>
+    <li className="comments_subtree" key={c.id}><CommentItem c={c} story={story} newUserDays={newUserDays} me={me} votes={votes} /><ol className="comments">{render(c.id)}</ol></li>
   ));
   // a reply whose parent is missing (a deleted-and-purged row) still shows, at the top
   const ids = new Set(comments.map((c) => c.id)), orphans = comments.filter((c) => c.parent_comment_id != null && !ids.has(c.parent_comment_id));
-  return <ol className="comments" id="story_comments">{render(null)}{orphans.map((c) => <li className="comments_subtree" key={c.id}><CommentItem c={c} story={story} newUserDays={newUserDays} me={me} /><ol className="comments">{render(c.id)}</ol></li>)}</ol>;
+  return <ol className="comments" id="story_comments">{render(null)}{orphans.map((c) => <li className="comments_subtree" key={c.id}><CommentItem c={c} story={story} newUserDays={newUserDays} me={me} votes={votes} /><ol className="comments">{render(c.id)}</ol></li>)}</ol>;
 }
 
 const Tags = ({ s }: { s: StoryFull }) => (
@@ -28,12 +30,12 @@ const Tags = ({ s }: { s: StoryFull }) => (
 const label = (n: number) => (n === 0 ? "no comment" : `${n} comment${n === 1 ? "" : "s"}`);
 
 /** stories/_singledetail.html.erb */
-function Detail({ all, newUserDays }: { all: StoryFull[]; newUserDays: number }) {
+function Detail({ all, newUserDays, me, st }: { all: StoryFull[]; newUserDays: number; me: Me | null; st: ViewerState | null }) {
   const first = all[0];
   return (
-    <li id={`story_${first.short_id}`} data-shortid={first.short_id} className={["story", negativityClass(first.score, first.flags)].filter(Boolean).join(" ")}>
+    <li id={`story_${first.short_id}`} data-shortid={first.short_id} className={["story", negativityClass(first.score, first.flags), st?.storyVote === 1 && "upvoted", st?.storyVote === -1 && "flagged"].filter(Boolean).join(" ")}>
       <div className="story_liner h-entry">
-        <div className="voters"><a className="upvoter" href="/login">{first.score}</a></div>
+        <div className="voters"><Upvoter base={`/stories/${first.short_id}`} me={me} voted={st?.storyVote === 1} score={first.score} own={me?.id === first.user_id} /></div>
         {all.map((ms) => {
           const referrer = ms.merged_story_id == null && Date.now() - ms.created_at.getTime() < 3600_000;
           return (
@@ -61,9 +63,11 @@ function Detail({ all, newUserDays }: { all: StoryFull[]; newUserDays: number })
 export default async function StoryPage({ all, comments }: { all: StoryFull[]; comments: Comment[] }) {
   const story = all[0], cfg = await getFeedConfig(), merged = story.stories_count > 0, path = titlePath(story);
   const me = await currentFeedUser().catch(() => null), mine = !!me && editable(story, me.id);
+  const st = me ? await viewerState(me.id, all.map((a) => a.id), comments.map((c) => c.id)) : null;
+  const own = me?.id === story.user_id, base = `/stories/${story.short_id}`;
   return (
     <Shell title={story.title} path={path}>
-      <ol className="stories"><Detail all={all} newUserDays={cfg.newUserDays} /></ol>
+      <ol className="stories"><Detail all={all} newUserDays={cfg.newUserDays} me={me} st={st} /></ol>
       {mine && me && (
         <p className="story_owner_tools">
           <a href={`/stories/${story.short_id}/edit`}>Edit</a>{" "}
@@ -72,6 +76,14 @@ export default async function StoryPage({ all, comments }: { all: StoryFull[]; c
           </form>
         </p>
       )}
+      {me && st && !isGone(story) && (
+        <p className="story_actions">
+          <ActionForm path={`${base}/${st.hidden ? "unhide" : "hide"}`} me={me} label={st.hidden ? "unhide" : "hide"} />{" "}
+          <ActionForm path={`${base}/${st.saved ? "unsave" : "save"}`} me={me} label={st.saved ? "unsave" : "save"} />
+          {!own && st.storyVote !== 1 && story.created_at.getTime() > Date.now() - 14 * 864e5 && <>{" "}<Flagger base={base} me={me} kind="story" flagged={st.storyVote === -1} /></>}
+        </p>
+      )}
+      {me?.isModerator && !own && <p className="story_mod_tools"><ModDelete base={base} me={me} deleted={story.is_deleted} /></p>}
       <div className="story_content">{story.markeddown_description && !merged && <div className="story_text" id="story_text" dangerouslySetInnerHTML={html(story.markeddown_description)} />}</div>
       {all.filter((ms) => !isGone(ms)).map((ms) => (
         <div key={ms.id}>
@@ -82,7 +94,7 @@ export default async function StoryPage({ all, comments }: { all: StoryFull[]; c
             <div className="story_content">{ms.markeddown_description && <div className="story_text" dangerouslySetInnerHTML={html(ms.markeddown_description)} />}</div>
           </>}
           <ol className="comments comments1"><li className="comments_subtree" id={`comments-${ms.short_id}`}>
-            <Tree comments={comments.filter((c) => c.story_id === ms.id)} story={story} newUserDays={cfg.newUserDays} me={me} />
+            <Tree comments={comments.filter((c) => c.story_id === ms.id)} story={story} newUserDays={cfg.newUserDays} me={me} votes={st?.comment} />
           </li></ol>
           <br />
         </div>

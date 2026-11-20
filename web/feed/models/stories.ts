@@ -3,7 +3,7 @@ import { conn } from "@/lib/db";
 export const STORIES_PER_PAGE = 25;
 export type Tag = { tag: string; description: string | null; is_media: boolean };
 export type Story = {
-  id: number; short_id: string; title: string; url: string | null; created_at: Date; score: number; flags: number; comments_count: number; stories_count: number; merged_story_id: number | null;
+  id: number; user_id: number; short_id: string; title: string; url: string | null; created_at: Date; score: number; flags: number; comments_count: number; stories_count: number; merged_story_id: number | null;
   description: string | null; markeddown_description: string | null; user_is_author: boolean; is_moderated: boolean;
   username: string; user_created_at: Date | null; user_deleted_at: Date | null; user_banned_at: Date | null; domain: string | null; origin: string | null; tags: Tag[];
 };
@@ -11,7 +11,7 @@ export type Kind = "hottest" | "newest" | "active" | "recent";
 
 // What a logged-out visitor may see (story.rb visible_to): not deleted, and not a negative-score story by a banned user that no moderator has reviewed.
 const VISIBLE = "NOT s.is_deleted AND NOT (s.score < 0 AND NOT s.is_moderated AND u.banned_at IS NOT NULL)";
-const SELECT = `SELECT s.id, s.short_id, s.title, s.url, s.created_at, s.score, s.flags, s.comments_count, s.stories_count, s.merged_story_id, s.description, s.markeddown_description, s.user_is_author, s.is_moderated,
+const SELECT = `SELECT s.id, s.user_id, s.short_id, s.title, s.url, s.created_at, s.score, s.flags, s.comments_count, s.stories_count, s.merged_story_id, s.description, s.markeddown_description, s.user_is_author, s.is_moderated,
   u.username, u.created_at AS user_created_at, u.deleted_at AS user_deleted_at, u.banned_at AS user_banned_at, d.domain, o.identifier AS origin,
   COALESCE((SELECT json_agg(json_build_object('tag', t.tag, 'description', t.description, 'is_media', t.is_media) ORDER BY tg.id) FROM feed.taggings tg JOIN feed.tags t ON t.id = tg.tag_id WHERE tg.story_id = s.id), '[]') AS tags
   FROM feed.stories s JOIN feed.users u ON u.id = s.user_id LEFT JOIN feed.domains d ON d.id = s.domain_id LEFT JOIN feed.origins o ON o.id = s.origin_id`;
@@ -29,11 +29,14 @@ const WHERE: Record<Kind, { where: string; order: string }> = {
 export type Query = { where: string; order: string; params?: unknown[] }; // `where` may use $3, $4... for params (1 and 2 are limit and offset)
 
 /** One page of stories for a logged-out visitor, plus whether another page follows (it fetches one extra row to know). */
-export async function listBy(q: Query, page = 1): Promise<{ stories: Story[]; more: boolean }> {
-  const r = await (await conn()).query(`${SELECT} WHERE ${q.where} ORDER BY ${q.order} LIMIT $1 OFFSET $2`, [STORIES_PER_PAGE + 1, (page - 1) * STORIES_PER_PAGE, ...(q.params ?? [])]);
+export async function listBy(q: Query, page = 1, viewerId?: number): Promise<{ stories: Story[]; more: boolean }> {
+  const params = q.params ?? [];
+  // a signed-in viewer doesn't see the stories they hid (last parameter)
+  const hidden = viewerId ? ` AND NOT EXISTS (SELECT 1 FROM feed.hidden_stories hs WHERE hs.story_id = s.id AND hs.user_id = $${3 + params.length})` : "";
+  const r = await (await conn()).query(`${SELECT} WHERE (${q.where})${hidden} ORDER BY ${q.order} LIMIT $1 OFFSET $2`, [STORIES_PER_PAGE + 1, (page - 1) * STORIES_PER_PAGE, ...params, ...(viewerId ? [viewerId] : [])]);
   return { stories: r.rows.slice(0, STORIES_PER_PAGE), more: r.rows.length > STORIES_PER_PAGE };
 }
-export const listStories = (kind: Kind, page = 1) => listBy(WHERE[kind], page);
+export const listStories = (kind: Kind, page = 1, viewerId?: number) => listBy(WHERE[kind], page, viewerId);
 export const kindQuery = (kind: Kind): Query => WHERE[kind];
 
 const UNMERGED = `${VISIBLE} AND s.merged_story_id IS NULL`;

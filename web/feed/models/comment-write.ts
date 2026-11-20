@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import type { PoolClient } from "pg";
 import { COMMENTABLE_DAYS, MAX_DEPTH, commentProblems, isDeletable, isEditable, speedDelayMins } from "../comment-rules";
 import { recalcComment } from "./comment-cache";
+import { notifyComment } from "./notify";
 import { renderPost } from "./render";
 import { live, tx } from "./submit";
 
@@ -63,6 +64,7 @@ export const createComment = (user: { id: number }, o: { storyShortId: string; p
   await c.query("UPDATE feed.stories SET last_comment_at = now(), updated_at = now() WHERE id = $1", [s.id]);
   await c.query("INSERT INTO feed.keystores (key, value) VALUES ($1, 1) ON CONFLICT (key) DO UPDATE SET value = COALESCE(feed.keystores.value, 0) + 1", [`user:${user.id}:comments_posted`]);
   await recalcComment(c, r.id);
+  await notifyComment(c, r.id);
   return { ok: true, shortId: sid, storyShortId: s.short_id } as CommentResult;
 });
 
