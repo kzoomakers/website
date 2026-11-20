@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { takeError } from "../flash";
 import { currentFeedUser } from "../identity";
 import { Account } from "./auth";
+import { Icon } from "./icons";
 import { Nav } from "./nav";
 
 export const SITE_NAME = "Kzoo Makers Talk";
@@ -34,10 +35,8 @@ export default function Shell({ title, path, subnav, children }: { title?: strin
           <label htmlFor="nav_toggle" className="nav_burger" aria-hidden="true"><i /><i /><i /></label>
           <nav aria-label="Menu">
             <ul>
-              <li><Nav href="/active" path={path} icon="active">Active</Nav></li>
-              <li><Nav href="/recent" path={path} icon="recent">Recent</Nav></li>
               <li><Nav href="/comments" path={path} icon="comments">Comments</Nav></li>
-              <li><Nav href="/search" path={path} icon="search">Search</Nav></li>
+              <li className="search"><form action="/search" method="get" role="search"><Icon name="search" /><input type="search" name="q" placeholder="Search" aria-label="Search stories and comments" maxLength={200} autoComplete="off" /></form></li>
               <Account path={path} />
             </ul>
           </nav>

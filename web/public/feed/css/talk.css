@@ -160,3 +160,36 @@ ol.comments1 > li.comments_subtree > ol.comments, #story_comments > li.comments_
 @media (max-width: 1400px) and (min-width: 1151px) { #header-top > nav a, #header-top > nav li button { padding-left: 0.6rem; padding-right: 0.6rem; gap: 0.4rem; font-size: 0.88rem; } #header-top { gap: 0.75rem; } }
 /* moderator-only links are icon-only on the wide bar (label is the tooltip and the accessible name); the folded menu shows them in full */
 @media (min-width: 1151px) { #header-top > nav li.compact a span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; } }
+
+/* header search box: a pill that widens when focused */
+#header-top > nav li.search { align-self: center; margin: 0 0.4rem; }
+#header-top .search form { position: relative; display: flex; align-items: center; }
+#header-top .search .nav_icon { position: absolute; left: 0.75rem; pointer-events: none; color: #c4b5fd; }
+#header-top .search input { width: 9.5rem; box-sizing: border-box; padding: 0.55rem 0.9rem 0.55rem 2.3rem; font: inherit; font-size: 0.9rem; color: #fff; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 999px; transition: width 0.25s, background 0.2s, border-color 0.2s; }
+#header-top .search input::placeholder { color: rgba(255, 255, 255, 0.6); }
+#header-top .search input:focus { outline: none; width: 14rem; background: rgba(255, 255, 255, 0.18); border-color: #f0abfc; }
+@media (max-width: 1150px) { #header-top > nav li.search { margin: 0.2rem 0 0.4rem; } #header-top .search form, #header-top .search input, #header-top .search input:focus { width: 100%; } }
+
+/* search page */
+.search_page { max-width: 56rem; margin: 0 auto; }
+.search_form { padding: 1rem 1.1rem; border: 1px solid var(--color-box-border); border-radius: 12px; background: var(--color-box-bg); margin-bottom: 1rem; }
+.search_row { position: relative; display: flex; gap: 0.5rem; align-items: center; }
+.search_row .nav_icon { position: absolute; left: 0.85rem; color: var(--color-fg-contrast-4-5); pointer-events: none; }
+.search_row input[type=search] { flex: 1; box-sizing: border-box; padding: 0.7rem 0.9rem 0.7rem 2.6rem; font-size: 1.05rem; color: var(--color-fg); background: var(--color-bg); border: 1px solid var(--color-box-border); border-radius: 999px; }
+.search_row input[type=search]:focus { outline: none; border-color: var(--color-fg-link); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-fg-link) 25%, transparent); }
+.search_row button { padding: 0.7rem 1.4rem; font-weight: bold; color: #fff; border: 0; border-radius: 999px; cursor: pointer; background: linear-gradient(120deg, #3b0f8c, #7c3aed); }
+.search_row button:hover { filter: brightness(1.15); }
+.search_opts { display: flex; flex-wrap: wrap; gap: 0.5rem 2rem; margin-top: 0.7rem; }
+.search_opts fieldset { display: flex; align-items: center; gap: 0.9rem; border: 0; padding: 0; margin: 0; font-size: 0.9rem; }
+.search_opts legend { float: left; padding: 0; margin-right: 0.8rem; font-weight: bold; color: var(--color-fg-contrast-4-5); }
+.search_help { margin: 0.6rem 0 0; font-size: 0.8rem; color: var(--color-fg-contrast-4-5); }
+.search_help code { padding: 0.05rem 0.35rem; margin-right: 0.3rem; border-radius: 4px; background: var(--color-box-bg-shaded); }
+.search_count { margin: 0.2rem 0 0.6rem; }
+.search_chip { margin-left: 0.4rem; padding: 0.1rem 0.55rem; border-radius: 999px; font-size: 0.8rem; border: 1px solid var(--color-tag-border); background: var(--color-tag-bg); text-decoration: none; }
+.search_note { color: var(--color-fg-contrast-4-5); }
+.snippet { flex-basis: 100%; order: 6; margin: 0.25rem 0 0; font-size: 0.88rem; color: var(--color-fg-contrast-6); overflow-wrap: anywhere; }
+.snippet mark, .search_page mark { padding: 0 0.15rem; border-radius: 3px; color: inherit; background: color-mix(in srgb, #a855f7 45%, transparent); }
+ol.comment_hits { margin: 0; padding: 0; list-style: none; }
+ol.comment_hits li { padding: 0.75rem 0.25rem; border-bottom: 1px solid var(--color-box-border); }
+ol.comment_hits .byline { font-size: 0.8rem; }
+ol.comment_hits .snippet { font-size: 0.95rem; white-space: pre-wrap; }

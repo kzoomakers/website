@@ -41,7 +41,7 @@ export async function listBy(q: Query, page = 1, viewerId?: number, filtered = f
 export const listStories = (kind: Kind, page = 1, viewerId?: number) => listBy(WHERE[kind], page, viewerId, true);
 export const kindQuery = (kind: Kind): Query => WHERE[kind];
 
-const UNMERGED = `${VISIBLE} AND s.merged_story_id IS NULL`;
+export const UNMERGED = `${VISIBLE} AND s.merged_story_id IS NULL`;
 const tagged = (col: string) => `EXISTS (SELECT 1 FROM feed.taggings tg WHERE tg.story_id = s.id AND ${col})`;
 // The queries behind the other lists; each is the matching scope in story.rb.
 export const byTags = (tagIds: number[]): Query => ({ where: `${UNMERGED} AND s.score >= 0 AND ${tagged("tg.tag_id = ANY($3::bigint[])")}`, order: "s.created_at DESC, s.id DESC", params: [tagIds] });
