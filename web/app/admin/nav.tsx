@@ -47,7 +47,7 @@ export default function Nav({ admin, audit = false, perms, user }: { admin: bool
   // Only the pages this person may open (a page-only grant must not show the rest of the section).
   const may = (i: Item): boolean => { if ("items" in i) return i.items.some(may); const pg = pageOf(i.href); if (audit && pg?.key === "pii") return true; /* on the Audit PII special list */ return !pg || !!levelFor(perms, pg.section, pg.key); };
   const prune = (i: Item): Item => ("items" in i ? { ...i, items: i.items.filter(may) } : i);
-  const tab = tabOf(here), tabDef = NAV.find((t) => t.href === tab) ?? NAV[0], links = (MENUS.find(([p]) => p === tab)?.[1] ?? []).filter((l) => (admin || !("href" in l && l.href.endsWith("/services"))) && may(l)).map(prune);
+  const tab = tabOf(here), tabDef = NAV.find((t) => t.href === tab) ?? NAV[0], links = (MENUS.find(([p]) => p === tab)?.[1] ?? []).filter((l) => (admin || !("href" in l && l.href.endsWith("/system"))) && may(l)).map(prune);
   const all = links.flatMap(hrefs), zoned = new Set(links.map((l) => zoneOf(tabDef, l))).size > 1;
   return (
     <Collapse>

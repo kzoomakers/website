@@ -8,6 +8,6 @@ export const dynamic = "force-dynamic";
 
 export default async function MediaPage() {
   await gate("blog", "/admin/blog/media");
-  if (!getConfig()) redirect("/admin/services");
+  if (!getConfig()) redirect("/admin/system");
   return <Library initial={await listMedia()} />;
 }

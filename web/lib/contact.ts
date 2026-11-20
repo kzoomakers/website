@@ -137,6 +137,6 @@ export async function replyVisitor(token: string, body: string, base: string) {
   const cfg = await getMailCfg();
   if (!mailReady(cfg)) return;
   const all = await thread(m.id, false);
-  await send({ to: TO[m.kind], subject: `[${LABEL[m.kind]}] ${m.name} replied`, headers: { "Reply-To": m.email }, text: `${m.name} <${m.email}> replied. The conversation so far:\n\n${transcript(all)}\n\nAnswer in the admin: ${base}/admin/forms/${m.kind}`,
-    html: `<p>${esc(m.name)} &lt;${esc(m.email)}&gt; replied. The conversation so far:</p>${transcriptHtml(all)}<p><a href="${esc(`${base}/admin/forms/${m.kind}`)}">Answer in the admin</a></p>` }, cfg).catch(() => {});
+  await send({ to: TO[m.kind], subject: `[${LABEL[m.kind]}] ${m.name} replied`, headers: { "Reply-To": m.email }, text: `${m.name} <${m.email}> replied. The conversation so far:\n\n${transcript(all)}\n\nAnswer in the admin: ${base}/admin/messages/${m.kind}`,
+    html: `<p>${esc(m.name)} &lt;${esc(m.email)}&gt; replied. The conversation so far:</p>${transcriptHtml(all)}<p><a href="${esc(`${base}/admin/messages/${m.kind}`)}">Answer in the admin</a></p>` }, cfg).catch(() => {});
 }

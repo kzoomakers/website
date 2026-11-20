@@ -31,8 +31,8 @@ async function setState(c: Awaited<ReturnType<typeof conn>>, id: number, from: S
 /** Everyone who can work the queue: CRM access or full admin. */
 async function tellStaff(title: string, id: number) {
   const c = await conn();
-  const staff = (await c.query("SELECT DISTINCT user_id FROM user_perms WHERE section IN ('crm', 'crm:approvals') OR (section = 'admin' AND level = 'write')")).rows;
-  await Promise.all(staff.map((a) => notifyUser(a.user_id, { kind: "approval", title, url: `/admin/crm/approvals?u=${id}` }).catch(() => {})));
+  const staff = (await c.query("SELECT DISTINCT user_id FROM user_perms WHERE section IN ('people', 'people:approvals') OR (section = 'system' AND level = 'write')")).rows;
+  await Promise.all(staff.map((a) => notifyUser(a.user_id, { kind: "approval", title, url: `/admin/people/approvals?u=${id}` }).catch(() => {})));
 }
 
 /** A new account just verified its email: it enters the queue and staff are told. */

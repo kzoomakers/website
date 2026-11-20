@@ -2,7 +2,7 @@ import { readFileSync } from "fs";
 import type { Signer } from "@libpdf/core";
 
 // Cryptographic (PAdES / CAdES-detached) signature over the finished PDF (same engine Documenso uses). Adobe and other readers validate it and flag any later edit.
-// The certificate lives in the settings table (key "seal"), encrypted with PII_CRYPTO_SECRET; /admin/services can generate one or take an uploaded .p12.
+// The certificate lives in the settings table (key "seal"), encrypted with PII_CRYPTO_SECRET; /admin/system can generate one or take an uploaded .p12.
 // SIGN_P12_FILE / SIGN_P12_BASE64 + SIGN_P12_PASSPHRASE still work as a fallback. Without any certificate the PDF is still built, hashed and encrypted, just not digitally signed.
 // shortcut: no RFC 3161 timestamp / long-term validation; add `timestampAuthority` to pdf.sign when a TSA is chosen.
 type Stored = { kind: "key"; key: string; cert: string; name: string; expires: string } | { kind: "p12"; p12: string; pass: string; name: string; expires: string };

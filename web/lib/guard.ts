@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { anyLevel, levelFor, pageOf, SECTIONS, type Level, type Perms, type Section } from "./access";
+import { anyLevel, levelFor, modernKey, pageOf, SECTIONS, type Level, type Perms, type Section } from "./access";
 import { redirect } from "next/navigation";
 import { auth, isAdmin } from "@/auth";
 import { db } from "./db";
@@ -10,7 +10,7 @@ import { currentMember } from "./readers";
 export { SECTIONS, type Section, type Level } from "./access";
 export type Me = { email: string; name: string; image?: string; perms: Perms };
 
-const ROOT: Me["perms"] = { admin: "write" };
+const ROOT: Me["perms"] = { system: "write" };
 
 /** Who is signed in: a Google account on ADMIN_EMAILS (full admin), or a site account with rows in user_perms. Local `npm run dev` with ALLOW_DEV_ADMIN=1 (never in production) is a full admin. */
 export const me = cache(async (): Promise<Me | null> => {
@@ -22,8 +22,10 @@ export const me = cache(async (): Promise<Me | null> => {
   if (!r || !d) return null;
   await d.ready;
   const perms: Me["perms"] = {};
-  for (const x of (await d.pool.query("SELECT section, level FROM user_perms WHERE user_id = $1", [r.id])).rows)
-    if ((SECTIONS as readonly string[]).includes(x.section.split(":")[0])) perms[x.section] = x.level; // "tours" or "tours:walkups"
+  for (const x of (await d.pool.query("SELECT section, level FROM user_perms WHERE user_id = $1", [r.id])).rows) {
+    const k = modernKey(x.section); // rows not yet rewritten by the rename migration still count
+    if ((SECTIONS as readonly string[]).includes(k.split(":")[0])) perms[k] = x.level; // "tours" or "tours:walkups"
+  }
   return { email: r.email, name: r.name, perms };
 });
 
@@ -55,10 +57,10 @@ export async function canSpecial(perm: "agreement.member" | "agreement.guest") {
   const m = await me();
   if (!m) return false;
   const d = db();
-  if (!d) return levelOf(m, "admin") === "write";
+  if (!d) return levelOf(m, "system") === "write";
   await d.ready;
   const list = (await d.pool.query("SELECT email FROM special_perms WHERE perm = $1", [perm])).rows.map((r) => String(r.email).toLowerCase());
-  return list.length ? list.includes(m.email.toLowerCase()) : levelOf(m, "admin") === "write";
+  return list.length ? list.includes(m.email.toLowerCase()) : levelOf(m, "system") === "write";
 }
 
 /** A hard-coded site admin (ADMIN_EMAILS, signed in with Google), not just someone granted a section. Some data, like who clicked which link in an email, is for these people only. */

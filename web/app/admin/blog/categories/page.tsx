@@ -8,6 +8,6 @@ export const dynamic = "force-dynamic";
 
 export default async function Page() {
   await gate("blog", "/admin/blog/categories");
-  if (!getConfig()) redirect("/admin/services");
+  if (!getConfig()) redirect("/admin/system");
   return <Lookup kind="category" noun="category" initial={await listCategories()} fields={[{ key: "name", label: "Name" }, { key: "slug", label: "URL slug (blank = from name)" }, { key: "description", label: "Description", area: true }]} />;
 }

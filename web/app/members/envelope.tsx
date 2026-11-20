@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { Note } from "@/lib/notifications";
-import { ago } from "../admin/webmaster/ago";
+import { ago } from "../admin/website/ago";
 
 // Top-right notifications: a gray wireframe envelope when there is nothing new, an orange filled one (with a count) when there is.
 export default function Envelope() {

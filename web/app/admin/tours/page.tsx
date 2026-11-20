@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ToursPage() {
   await gate("tours", "/admin/tours");
-  if (!getConfig()) redirect("/admin/services");
+  if (!getConfig()) redirect("/admin/system");
   const m = await me();
   return <><WeekCalendar /><Bookings initial={await listBookings(true)} tabs={await listTabs()} waiting={await listWaiting()} email={m?.email.includes("@") ? m.email : ""} /></>;
 }

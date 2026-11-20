@@ -8,14 +8,14 @@ import { logAudit } from "@/lib/store";
 type Ctx = { params: Promise<{ id: string }> };
 const off = () => new NextResponse("not found", { status: 404 });
 const fail = (e: any) => new NextResponse(e?.message ?? "failed", { status: 400 });
-const fullAdmin = async () => (await me())?.perms.admin === "write";
+const fullAdmin = async () => (await me())?.perms.system === "write";
 const locked = () => new NextResponse("Only a full administrator can do that to someone who has admin access.", { status: 403 });
 const uid = async (c: Ctx) => { const n = Number((await c.params).id); return Number.isInteger(n) ? n : null; };
 
 // A member's details. Phone, address and emergency contacts are not here: they come from /api/pii/retrieve (logged).
 export async function GET(_: Request, c: Ctx) {
   const id = await uid(c);
-  if (id === null || !(await editingAllowed("crm", "read", ["people", "approvals"]))) return off();
+  if (id === null || !(await editingAllowed("people", "read", ["people", "approvals"]))) return off();
   const profile = await getProfile(id);
   return profile ? NextResponse.json({ profile: { ...profile, phone: "", address1: "", address2: "", city: "", state: "", zip: "" } }) : off();
 }
@@ -23,7 +23,7 @@ export async function GET(_: Request, c: Ctx) {
 // PUT { first_name, last_name, email, phone, address1, ..., access_card_number, qb_id, notes }
 export async function PUT(req: Request, c: Ctx) {
   const id = await uid(c), b = await req.json().catch(() => null);
-  if (id === null || !b || !(await editingAllowed("crm", "write", "people"))) return off();
+  if (id === null || !b || !(await editingAllowed("people", "write", "people"))) return off();
   const cur = await getProfile(id);
   if (!cur) return off();
   if (typeof b.email === "string" && b.email.trim().toLowerCase() !== cur.email && !(await mayTakeOver(await fullAdmin(), id))) return locked();
@@ -33,7 +33,7 @@ export async function PUT(req: Request, c: Ctx) {
 // POST { action: "sendReset" | "setPassword", password } or { action: "disable", reason } / { action: "enable" }
 export async function POST(req: Request, c: Ctx) {
   const id = await uid(c), b = await req.json().catch(() => null);
-  if (id === null || !(await editingAllowed("crm", "write", "people"))) return off();
+  if (id === null || !(await editingAllowed("people", "write", "people"))) return off();
   if (!(await mayTakeOver(await fullAdmin(), id))) return locked();
   try {
     const p = await getProfile(id);
@@ -49,7 +49,7 @@ export async function POST(req: Request, c: Ctx) {
 
 export async function DELETE(_: Request, c: Ctx) {
   const id = await uid(c);
-  if (id === null || !(await editingAllowed("crm", "write", "people"))) return off();
+  if (id === null || !(await editingAllowed("people", "write", "people"))) return off();
   if (!(await mayTakeOver(await fullAdmin(), id))) return locked();
   try { return (await deleteUser(id, await actor())) ? NextResponse.json({ ok: true }) : off(); } catch (e) { return fail(e); }
 }

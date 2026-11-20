@@ -58,7 +58,7 @@ export async function viewer(): Promise<Viewer | null> {
   const m = await me();
   if (!m) return null;
   const id = (await (await conn()).query("SELECT id FROM site_users WHERE lower(email) = lower($1)", [m.email])).rows[0]?.id ?? null;
-  return { id, email: m.email, name: m.name, isAdmin: m.perms.admin === "write" };
+  return { id, email: m.email, name: m.name, isAdmin: m.perms.system === "write" };
 }
 /** May this person open the Audit PII page? Full admins, or anyone on the Audit PII list. */
 export async function mayAudit() { const v = await viewer(); return !!v && (v.isAdmin || (await special(PII_AUDIT_PERM, v.email))); }
@@ -154,7 +154,7 @@ export async function logGuestSelf(req: Request, a: { g: { id: number; first_nam
 
 // ---- alerts
 export async function adminEmails(): Promise<string[]> {
-  return (await (await conn()).query("SELECT DISTINCT u.email FROM user_perms p JOIN site_users u ON u.id = p.user_id WHERE p.section = 'admin' AND p.level = 'write' AND u.disabled_at IS NULL")).rows.map((r) => r.email);
+  return (await (await conn()).query("SELECT DISTINCT u.email FROM user_perms p JOIN site_users u ON u.id = p.user_id WHERE p.section = 'system' AND p.level = 'write' AND u.disabled_at IS NULL")).rows.map((r) => r.email);
 }
 async function email(to: string[], subject: string, text: string) {
   const cfg = await getMailCfg().catch(() => null);
@@ -164,13 +164,13 @@ async function email(to: string[], subject: string, text: string) {
 async function alerts(v: Viewer, kind: PiiKind, name: string) {
   const base = (await getMailCfg().catch(() => null))?.siteUrl?.replace(/\/+$/, "") ?? "";
   if (!v.isAdmin && (kind === "id" || kind === "id_renewal")) // a Gov ID opened by someone who isn't a full admin
-    await notify("pii", { title: `${v.name || v.email} opened a Gov ID`, message: `${v.email} viewed the ID of ${name}.`, priority: 4, tags: "warning", click: base + "/admin/services/pii" });
+    await notify("pii", { title: `${v.name || v.email} opened a Gov ID`, message: `${v.email} viewed the ID of ${name}.`, priority: 4, tags: "warning", click: base + "/admin/system/pii" });
   const { bulk } = await getCfg();
   const n = (await (await conn()).query("SELECT count(*)::int n FROM pii_access WHERE viewer_email = $1 AND via <> 'self' AND at > now() - interval '1 hour'", [v.email])).rows[0].n;
   if (n > bulk && (await hit(`pii-bulk:${v.email}`, 1, 3600_000))) {
     const msg = `${v.email} has viewed personal information ${n} times in the last hour (the alert level is ${bulk}).`;
-    await notify("pii", { title: "Bulk viewing of personal information", message: msg, priority: 5, tags: "rotating_light", click: base + "/admin/services/pii" });
-    await email(await adminEmails(), "Bulk viewing of personal information", msg + (base ? `\n\nSee ${base}/admin/services/pii` : ""));
+    await notify("pii", { title: "Bulk viewing of personal information", message: msg, priority: 5, tags: "rotating_light", click: base + "/admin/system/pii" });
+    await email(await adminEmails(), "Bulk viewing of personal information", msg + (base ? `\n\nSee ${base}/admin/system/pii` : ""));
   }
 }
 
@@ -256,7 +256,7 @@ export async function buildReport(month: string, base: string) {
 <h3>People whose information was viewed (${subjects.length})</h3><p>${subjects.map((r: any) => `${esc(r.subject_name)} (${r.n})`).join(", ") || "none"}</p>
 <h3>Access changes</h3>${grants.length ? table(["When", "By", "Change"], grants.map((g: any) => [new Date(g.at).toLocaleString("en-US", { timeZone: TZ }), g.actor, g.target])) : "<p>No permissions were granted or removed.</p>"}
 <h3>Checks</h3><ul><li>Bulk-viewing flags raised: ${bulkFlags}</li><li>Requests to PII routes with no access record: ${unmatched}</li><li>Log integrity: ${chain.ok ? "intact" : `<b>BROKEN at row ${chain.bad}</b>`} (${chain.rows} rows)</li><li>Log head (keep a copy elsewhere): <code>${esc(chain.head)}</code></li></ul>
-${base ? `<p><a href="${esc(base)}/admin/services/pii">Open the Audit PII page</a></p>` : ""}`;
+${base ? `<p><a href="${esc(base)}/admin/system/pii">Open the Audit PII page</a></p>` : ""}`;
   return { month, count: n, chainOk: chain.ok, subject: `Personal information access report: ${month}`, html };
 }
 

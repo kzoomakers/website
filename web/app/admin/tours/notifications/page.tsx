@@ -8,6 +8,6 @@ export const dynamic = "force-dynamic";
 
 export default async function NotificationsPage() {
   await gate("tours", "/admin/tours/notifications");
-  if (!getConfig()) redirect("/admin/services");
+  if (!getConfig()) redirect("/admin/system");
   return <Notifications initial={await overview()} />;
 }

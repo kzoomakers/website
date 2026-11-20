@@ -17,7 +17,7 @@ const csv = (rows: Record<string, unknown>[]) => {
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
   if (!a?.op || !(await P.mayAudit())) return new NextResponse("not found", { status: 404 });
-  const full = (await me())?.perms.admin === "write";
+  const full = (await me())?.perms.system === "write";
   try {
     switch (a.op) {
       case "events": return NextResponse.json(await P.events(a.f ?? {}));

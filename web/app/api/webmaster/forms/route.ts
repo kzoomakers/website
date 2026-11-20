@@ -9,7 +9,7 @@ const deny = () => new NextResponse("not found", { status: 404 });
 
 // GET ?status=held|sent|rejected|all&kind=contact|board
 export async function GET(req: Request) {
-  if (!(await editingAllowed("forms", "read"))) return deny();
+  if (!(await editingAllowed("messages", "read"))) return deny();
   const q = new URL(req.url).searchParams;
   if (q.get("thread")) return NextResponse.json(await thread(Number(q.get("thread"))).catch(() => []));
   return NextResponse.json({ messages: await listMessages(q.get("status") || "held", q.get("kind") || undefined), counts: await messageCounts(q.get("kind") || undefined) });
@@ -17,7 +17,7 @@ export async function GET(req: Request) {
 
 // PATCH { id, action: approve | reject | restore }
 export async function PATCH(req: Request) {
-  if (!(await editingAllowed("forms"))) return deny();
+  if (!(await editingAllowed("messages"))) return deny();
   const b = await req.json().catch(() => null);
   if (!Number.isInteger(b?.id) || !["approve", "reject", "restore"].includes(b?.action)) return new NextResponse("bad request", { status: 400 });
   try {
@@ -31,7 +31,7 @@ export async function PATCH(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  if (!(await editingAllowed("forms"))) return deny();
+  if (!(await editingAllowed("messages"))) return deny();
   const id = Number(new URL(req.url).searchParams.get("id"));
   if (!Number.isInteger(id)) return new NextResponse("bad id", { status: 400 });
   await deleteMessage(id);
@@ -41,7 +41,7 @@ export async function DELETE(req: Request) {
 
 // POST { id, body, internal }: reply to the visitor by email (copied to the inbox with the thread), or save an internal note
 export async function POST(req: Request) {
-  if (!(await editingAllowed("forms"))) return deny();
+  if (!(await editingAllowed("messages"))) return deny();
   const b = await req.json().catch(() => null);
   if (!Number.isInteger(b?.id) || typeof b?.body !== "string") return new NextResponse("bad request", { status: 400 });
   try {

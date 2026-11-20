@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default async function BlogAdminList() {
   await gate("blog", "/admin/blog");
-  if (!getConfig()) redirect("/admin/services");
+  if (!getConfig()) redirect("/admin/system");
   const posts = await listPosts(true);
   const now = Date.now();
   return (

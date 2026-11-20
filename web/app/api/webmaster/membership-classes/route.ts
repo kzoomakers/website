@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
-  if (!(await editingAllowed("admin", "write", "membership-classes"))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("system", "write", "membership-classes"))) return new NextResponse("not found", { status: 404 });
   try {
     await saveMembershipClasses(a?.classes, await actor());
     return NextResponse.json(await membershipClasses());

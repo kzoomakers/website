@@ -15,11 +15,11 @@ test("admin allow-list: exact address or whole domain, never a lookalike", () =>
 });
 
 test("admin:write reaches every section; other levels stay in their own section", () => {
-  assert.equal(levelOf(null, "mail"), undefined);
-  assert.equal(levelOf({ perms: { admin: "write" } }, "crm"), "write");
-  assert.equal(levelOf({ perms: { admin: "read" } }, "crm"), undefined); // reading Admin is not admin
+  assert.equal(levelOf(null, "email"), undefined);
+  assert.equal(levelOf({ perms: { system: "write" } }, "people"), "write");
+  assert.equal(levelOf({ perms: { system: "read" } }, "people"), undefined); // reading Admin is not admin
   assert.equal(levelOf({ perms: { blog: "read" } }, "blog"), "read");
-  assert.equal(levelOf({ perms: { blog: "read" } }, "mail"), undefined);
+  assert.equal(levelOf({ perms: { blog: "read" } }, "email"), undefined);
 });
 
 const walk = (d) => readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirectory() ? walk(join(d, f)) : [join(d, f)]));

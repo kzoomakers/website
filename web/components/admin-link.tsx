@@ -12,7 +12,7 @@ export function AdminLink() {
   return (
     <h6 style={{ opacity: 0.7 }}>
       {email
-        ? <><a href="/admin/webmaster">Admin</a> · <a href="#" onClick={(e) => { e.preventDefault(); fetch("/api/blog/auth", { method: "DELETE" }).then(() => signOut({ callbackUrl: "/" })); }}>Log out ({email})</a></>
+        ? <><a href="/admin/website">Admin</a> · <a href="#" onClick={(e) => { e.preventDefault(); fetch("/api/blog/auth", { method: "DELETE" }).then(() => signOut({ callbackUrl: "/" })); }}>Log out ({email})</a></>
         : <a href="/admin-login?next=/admin">Admin login</a>}
     </h6>
   );

@@ -23,7 +23,7 @@ test("the feed schema is created by startup, holds Lobsters' 36 tables plus the 
 
 // Plan section 2.3: nothing outside the feed's own folders imports from feed/ except the listed glue.
 test("only the glue points import from feed/", () => {
-  const ok = new Set(["middleware.ts", "lib/db.ts", "app/api/webmaster/feed/route.ts", "app/admin/services/feed/page.tsx", "app/admin/services/feed/feed.tsx", "app/feed-sso/route.ts"]);
+  const ok = new Set(["middleware.ts", "lib/db.ts", "app/api/webmaster/feed/route.ts", "app/admin/system/feed/page.tsx", "app/admin/system/feed/feed.tsx", "app/feed-sso/route.ts"]);
   const root = new URL("..", import.meta.url).pathname;
   const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => ["node_modules", ".next", "tests", "feed", "feed-site"].includes(e.name) ? [] : e.isDirectory() ? walk(path.join(d, e.name)) : /\.(ts|tsx)$/.test(e.name) ? [path.join(d, e.name)] : []);
   for (const f of walk(root)) if (/from "(@|\.\.?)\/(\.\.\/)*feed\/|import\("\.\.?\/feed\//.test(fs.readFileSync(f, "utf8"))) assert.ok(ok.has(path.relative(root, f)), `${path.relative(root, f)} imports from feed/`);

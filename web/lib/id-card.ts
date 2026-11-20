@@ -51,8 +51,8 @@ export async function myImage(userId: number) {
 }
 
 async function tellStaff(title: string, id: number) {
-  const staff = (await (await conn()).query("SELECT DISTINCT user_id FROM user_perms WHERE section IN ('crm', 'crm:id-renewals') OR (section = 'admin' AND level = 'write')")).rows;
-  await Promise.all(staff.map((a) => notifyUser(a.user_id, { kind: "id-renewal", title, url: `/admin/crm/id-renewals?r=${id}` }).catch(() => {})));
+  const staff = (await (await conn()).query("SELECT DISTINCT user_id FROM user_perms WHERE section IN ('people', 'people:id-renewals') OR (section = 'system' AND level = 'write')")).rows;
+  await Promise.all(staff.map((a) => notifyUser(a.user_id, { kind: "id-renewal", title, url: `/admin/people/id-renewals?r=${id}` }).catch(() => {})));
 }
 
 /** A replacement ID from the member: goes to review, replacing any earlier upload still waiting. The ID on file stays in use meanwhile. */

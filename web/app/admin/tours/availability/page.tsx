@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AvailabilityPage() {
   await gate("tours", "/admin/tours/availability");
-  if (!getConfig()) redirect("/admin/services");
+  if (!getConfig()) redirect("/admin/system");
   const m = await me();
   return <Availability initial={await listBlocks(false)} email={m?.email.includes("@") ? m.email : ""} name={m?.name ?? ""} />;
 }

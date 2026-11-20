@@ -21,7 +21,7 @@ const PAGE: Record<string, string | string[]> = {
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
   if (!a?.op) return new NextResponse("bad request", { status: 400 });
-  if (!(await editingAllowed("mail", READS.has(a.op) ? "read" : "write", PAGE[a.op]))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("email", READS.has(a.op) ? "read" : "write", PAGE[a.op]))) return new NextResponse("not found", { status: 404 });
   // Who opened or clicked what is for hard-coded site admins only; everyone else with access to Email gets totals.
   const admin = await siteAdmin();
   if (!admin && (a.op === "recipients" || a.op === "clickLog")) return new NextResponse("Only site administrators can see who opened or clicked an email.", { status: 403 });

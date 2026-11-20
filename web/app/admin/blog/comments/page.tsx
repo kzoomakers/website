@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function CommentsPage() {
   await gate("blog", "/admin/blog/comments");
-  if (!getConfig()) redirect("/admin/services");
+  if (!getConfig()) redirect("/admin/system");
   const [n, settings] = await Promise.all([counts(), getSettings()]);
   // Open on the queue that needs attention, else everything.
   const tab = n.pending ? "pending" : "approved";

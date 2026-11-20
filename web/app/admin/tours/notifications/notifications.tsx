@@ -49,7 +49,7 @@ export default function Notifications({ initial }: { initial: Data }) {
       ))}
 
       <h2>Push notifications</h2>
-      <p className="sub">Push alerts for each of these go to a Pushover delivery group. Set the groups, and who is in them, in <a href="/admin/services/pushover">Alert delivery</a>.</p>
+      <p className="sub">Push alerts for each of these go to a Pushover delivery group. Set the groups, and who is in them, in <a href="/admin/system/pushover">Alert delivery</a>.</p>
 
       <h2>Untaken walk-ups</h2>
       <div className="card" style={{ padding: 14 }}>

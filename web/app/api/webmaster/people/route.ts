@@ -8,7 +8,7 @@ const cell = (v: unknown) => { const t = String(v ?? "").replace(/^[=+\-@\t\r]/,
 
 // GET ?q&sort&dir&status&approval&level&flag&offset lists site accounts for CRM (50 a page). &export=1 returns the whole filtered list as CSV (no phone or address).
 export async function GET(req: Request) {
-  if (!(await editingAllowed("crm", "read", "*"))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("people", "read", "*"))) return new NextResponse("not found", { status: 404 });
   const g = new URL(req.url).searchParams, o = { q: g.get("q") ?? "", sort: g.get("sort") ?? "", dir: g.get("dir") ?? "", status: g.get("status") ?? "", approval: g.get("approval") ?? "", level: g.get("level") ?? "", flag: g.get("flag") ?? "", offset: Number(g.get("offset")) || 0 };
   if (!g.get("export")) return NextResponse.json(await listPeople(o));
   const { rows } = await listPeople({ ...o, offset: 0, limit: 10000 });
