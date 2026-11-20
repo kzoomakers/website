@@ -32,7 +32,7 @@ export function BulbTv({ src }: { src: string }) {
     if (!b || !v || !c || matchMedia("(prefers-reduced-motion: reduce)").matches || (navigator as { connection?: { saveData?: boolean } }).connection?.saveData) return;
     setMotion(true);
     const ctx = c.getContext("2d");
-    let visible = false, i = 0, timer: ReturnType<typeof setTimeout> | undefined, raf = 0, busy = false;
+    let visible = false, failed = false, i = 0, timer: ReturnType<typeof setTimeout> | undefined, raf = 0, busy = false;
     const draw = () => { if (ctx) noiseFrame(ctx, c.width, c.height); raf = requestAnimationFrame(draw); };
     const size = () => { c.width = c.clientWidth; c.height = c.clientHeight; };
     const ro = new ResizeObserver(size); ro.observe(c); size();
@@ -41,7 +41,7 @@ export function BulbTv({ src }: { src: string }) {
       timer = setTimeout(() => {
         if (!visible) return;
         v.src = CLIPS[i % CLIPS.length];
-        v.play().catch(() => { busy = false; setPhase("still"); }); // autoplay refused: leave the picture
+        v.play().catch(() => { busy = false; failed = true; cancelAnimationFrame(raf); ctx?.clearRect(0, 0, c.width, c.height); setMotion(false); setPhase("still"); }); // autoplay refused (e.g. low-power mode): settle on the still picture, no effects
       }, wait);
     };
     const onPlaying = () => setPhase("play");
@@ -51,8 +51,8 @@ export function BulbTv({ src }: { src: string }) {
       const now = e.intersectionRatio >= 0.98; // the whole set, allowing for sub-pixel rounding
       if (now === visible) return;
       visible = now;
-      if (now) { raf = requestAnimationFrame(draw); if (!busy) start(POWER_ON_MS); }
-      else { clearTimeout(timer); cancelAnimationFrame(raf); busy = false; v.pause(); setPhase("still"); }
+      if (now) { if (failed) return; raf = requestAnimationFrame(draw); if (!busy) start(POWER_ON_MS); }
+      else { clearTimeout(timer); cancelAnimationFrame(raf); ctx?.clearRect(0, 0, c.width, c.height); busy = false; v.pause(); setPhase("still"); }
     }, { threshold: [0, 0.98, 1] });
     io.observe(b);
     return () => { io.disconnect(); ro.disconnect(); clearTimeout(timer); cancelAnimationFrame(raf); v.removeEventListener("playing", onPlaying); v.removeEventListener("ended", onEnded); };
@@ -84,6 +84,7 @@ const CSS = `
 .bulb_tv_glitch { mix-blend-mode: multiply; opacity: .1; }
 .bulb_tv[data-motion] .bulb_tv_glitch { animation: bulb_tv_jitter .2s infinite linear; }
 .bulb_tv_snow { transition: opacity .35s ease-in-out; }
+.bulb_tv:not([data-motion]) .bulb_tv_glitch, .bulb_tv:not([data-motion]) .bulb_tv_snow, .bulb_tv:not([data-motion]) canvas { display: none; } /* still picture only: no animated overlays */
 .bulb_tv_lines { pointer-events: none; background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0, rgba(0,0,0,.2) 1px, rgba(0,0,0,0) 2px); }
 .bulb_tv_frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 @keyframes bulb_tv_jitter { 0% { transform: translateX(0) } 33% { transform: translateX(-5px) } 66% { transform: translateX(5px) } 100% { transform: translateX(0) } }
