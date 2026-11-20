@@ -9,7 +9,7 @@ import Shell from "./shell";
 
 // Every message a page can show. Pages look the code up here; nothing from the address bar or a form is ever printed.
 const ERRORS: Record<string, string> = {
-  login_bad: "Wrong email or password.", slow_down: "Too many tries. Please wait a few minutes and try again.", banned: "This account can't sign in.",
+  login_bad: "Wrong email or password.", slow_down: "Too many tries. Please wait a few minutes and try again.", banned: "This account can't sign in.", deactivated: "You deactivated this account. Use \"Forgot password\" to come back.",
   not_allowed: "You can't sign in this way. Members need an approved account on the main site; admins need an admin Google account.",
   handoff: "That sign-in link didn't work. It may have expired or been used already. Please try again.", link_bad: "That link didn't work. It may have expired or been used already.",
   email_bad: "That email address doesn't look right.", password_bad: "Passwords need 10 to 200 characters, and can't be your email address.",

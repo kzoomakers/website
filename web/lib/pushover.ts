@@ -97,3 +97,15 @@ export async function notify(channel: Channel, m: Msg, sender = "system") {
 }
 
 export const recent = () => q("SELECT id, at, channel, title, message, priority, status, error, sender FROM pushover_log ORDER BY id DESC LIMIT 100");
+
+export const userKeyOk = (k: string) => KEY_OK.test(k);
+/** One person's own Pushover key, through the site's application token (the Talk community site's reply, mention and message alerts). Never throws, and logs nothing: a personal key must not land in the staff log. */
+export async function pushToUser(userKey: string, m: Msg): Promise<void> {
+  try {
+    const { token } = await getCfg();
+    if (!token || !KEY_OK.test(userKey)) return;
+    const p = new Pushover(userKey, token);
+    if (m.click) p.setUrl(m.click, "Open");
+    await p.send((m.title ?? "").slice(0, 250), (m.message ?? "").slice(0, 1024) || "(no details)");
+  } catch (e: any) { console.error("pushover user send failed:", String(e?.message ?? e?.errors ?? e).slice(0, 200)); }
+}

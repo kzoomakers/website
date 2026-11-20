@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { conn } from "@/lib/db";
 import { EMAIL_OK, checkPassword, hashPassword, passwordProblem, usernameProblem } from "../auth";
+import { userKeyOk } from "@/lib/pushover";
 import { tx } from "./submit";
 
 // /settings (settings_controller#index and #update, user.rb). Profile and display choices for everyone; password and email only for external accounts, since admins and members sign in through the main site.
@@ -11,10 +12,10 @@ export const SCHEMES = ["system", "light", "dark"], CONTRASTS = ["system", "norm
 export const ABOUT_MAX = 20_000, HOMEPAGE_MAX = 200;
 const HOMEPAGE = /^(?:https?|gemini|gopher):\/\/[^/\s]+\.[^./\s]+(\/.*)?$/;
 
-export type SettingsRow = { username: string | null; email: string; kind: "admin" | "member" | "external"; about: string; homepage: string; show_email: boolean; scheme: string; contrast: string; bools: Record<(typeof BOOLS)[number], boolean>; renamedAt: Date | null };
+export type SettingsRow = { username: string | null; email: string; kind: "admin" | "member" | "external"; about: string; homepage: string; show_email: boolean; scheme: string; contrast: string; bools: Record<(typeof BOOLS)[number], boolean>; renamedAt: Date | null; pushoverKey: string };
 export type SettingsInput = {
   username: string; email: string; homepage: string; about: string; show_email: boolean; scheme: string; contrast: string; bools: Record<(typeof BOOLS)[number], boolean>;
-  currentPassword: string; password: string; confirm: string;
+  pushoverKey: string; currentPassword: string; password: string; confirm: string;
 };
 export type Saved = { ok: true; verify?: string; newPassword?: boolean } | { ok: false; error: string };
 const bad = (error: string): Saved => ({ ok: false, error });
@@ -25,7 +26,7 @@ export async function getSettings(userId: number): Promise<SettingsRow | null> {
   if (!u) return null;
   const s = u.settings ?? {}, flag = (k: string) => (typeof s[k] === "boolean" ? s[k] : DEFAULT_ON.has(k));
   const last = (await c.query("SELECT max(created_at) AS at FROM feed.usernames WHERE user_id = $1", [userId])).rows[0].at;
-  return { username: u.username, email: u.email, kind: u.kind, about: u.about ?? "", homepage: s.homepage ?? "", show_email: u.show_email, renamedAt: last,
+  return { username: u.username, email: u.email, kind: u.kind, about: u.about ?? "", homepage: s.homepage ?? "", pushoverKey: s.pushover_user_key ?? "", show_email: u.show_email, renamedAt: last,
     scheme: SCHEMES.includes(s.prefers_color_scheme) ? s.prefers_color_scheme : "system", contrast: CONTRASTS.includes(s.prefers_contrast) ? s.prefers_contrast : "system",
     bools: Object.fromEntries(BOOLS.map((k) => [k, flag(k)])) as SettingsRow["bools"] };
 }
@@ -42,6 +43,8 @@ export const saveSettings = (userId: number, i: SettingsInput): Promise<Saved> =
   if (homepage && (homepage.length > HOMEPAGE_MAX || !HOMEPAGE.test(homepage))) return bad("Homepage is invalid");
   if (about.length > ABOUT_MAX) return bad(`About is too long (maximum is ${ABOUT_MAX} characters)`);
 
+  const pushoverKey = i.pushoverKey.trim();
+  if (pushoverKey && !userKeyOk(pushoverKey)) return bad("Pushover user key is invalid (30 letters and numbers)");
   const username = i.username.trim(), rename = !!u.username && username !== u.username;
   if (rename) {
     const p = usernameProblem(username);
@@ -81,7 +84,7 @@ export const saveSettings = (userId: number, i: SettingsInput): Promise<Saved> =
     await c.query("INSERT INTO feed.usernames (username, user_id) VALUES ($1, $2)", [username, u.id]);
     await c.query("INSERT INTO feed.moderations (moderator_user_id, user_id, is_from_suggestions, action, token) VALUES (NULL, $1, true, $2, $3)", [u.id, `changed own username from "${u.username}" to "${username}"`, `moderation_${randomBytes(16).toString("hex")}`]);
   }
-  const prefs = { prefers_color_scheme: i.scheme, prefers_contrast: i.contrast, homepage, ...i.bools };
+  const prefs = { prefers_color_scheme: i.scheme, prefers_contrast: i.contrast, homepage, pushover_user_key: pushoverKey, ...i.bools };
   await c.query(
     `UPDATE feed.users SET username = $2, email = $3, about = $4, show_email = $5, settings = COALESCE(settings, '{}'::jsonb) || $6::jsonb,
        email_verified_at = CASE WHEN $7::boolean THEN NULL ELSE email_verified_at END,

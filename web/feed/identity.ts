@@ -158,7 +158,7 @@ export async function passwordLogin(req: Request, emailIn: string, password: str
   const u = (await (await conn()).query("SELECT id, password_digest, banned_at, deleted_at FROM feed.users WHERE lower(email) = $1 AND kind = 'external'", [email])).rows[0];
   const ok = await checkPassword(password.slice(0, 200), u?.password_digest ?? DUMMY_DIGEST); // always run, whether or not the account exists
   if (!ok || !u?.password_digest) throw new Refused("login_bad");
-  if (u.banned_at || u.deleted_at) { await tattle(u.id, u.banned_at ? "Attempted to log in while banned." : "Attempted to log in after deleting their account."); throw new Refused("banned"); }
+  if (u.banned_at || u.deleted_at) { await tattle(u.id, u.banned_at ? "Attempted to log in while banned." : "Attempted to log in after deleting their account."); throw new Refused(u.banned_at || String(email).endsWith("@talk.invalid") ? "banned" : "deactivated"); }
   return startSession(u.id);
 }
 

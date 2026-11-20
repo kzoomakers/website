@@ -3,14 +3,13 @@ import type { PoolClient } from "pg";
 import { conn } from "@/lib/db";
 import { feedOrigin } from "../config";
 import { SITE_NAME } from "../format";
-import { feedMail } from "../mail";
+import { feedMail, feedPush, type Push } from "../mail";
 import { hatId } from "./hats";
 import { insertNote } from "./mod-notes";
 import { live, tx } from "./submit";
 import { renderPost } from "./render";
 
 // Private messages (message.rb, messages_controller, notify_message_job.rb). A message is visible to its author and recipient, each deleting their own copy; it is gone once both have.
-// Not ported: Pushover delivery.
 
 export const SUBJECT_MAX = 100, BODY_MIN = 5, BODY_MAX = 8192;
 export type Result<T = {}> = ({ ok: true } & T) | { ok: false; errors: string[] };
@@ -53,7 +52,7 @@ export async function sendMessage(user: { id: number }, d: Draft): Promise<Resul
   if (!subject || subject.length > SUBJECT_MAX) errors.push(`Subject must be 1 to ${SUBJECT_MAX} characters`);
   if (body.length < BODY_MIN || body.length > BODY_MAX) errors.push(`Body must be ${BODY_MIN} to ${BODY_MAX} characters`);
   if (errors.length) return bad(...errors);
-  const mails: { to: string; subject: string; text: string }[] = [];
+  const mails: { to: string; subject: string; text: string }[] = [], pushes: Push[] = [];
   const r = await tx<Result<{ to: string }>>(async (c) => {
     const me = await live(c, user.id);
     if (!me || me.banned_at || me.deleted_at) return bad("You can't send messages.");
@@ -69,9 +68,10 @@ export async function sendMessage(user: { id: number }, d: Draft): Promise<Resul
       await insertNote(c, user.id, Number(rcpt.id), `*${from} -> ${rcpt.username}*: ${subject}\n\n${body}\n`);
     }
     if (rcpt.email && rcpt.settings?.email_messages === true) mails.push({ to: rcpt.email, subject: `[${SITE_NAME}] Private Message from ${from}: ${subject}`, text: `${body}\n\nReply at ${feedOrigin()}/messages/${m.short_id}\n` });
+    if (rcpt.settings?.pushover_user_key && rcpt.settings?.pushover_messages === true) pushes.push({ key: rcpt.settings.pushover_user_key, title: `${SITE_NAME} message from ${from}: ${subject}`, message: body, click: `${feedOrigin()}/messages/${m.short_id}` });
     return { ok: true, to: rcpt.username };
   });
-  if (r.ok) for (const x of mails) await feedMail(x.to, x.subject, x.text); // after the commit: a slow mail server never holds the send open
+  if (r.ok) { for (const x of pushes) await feedPush(x); for (const x of mails) await feedMail(x.to, x.subject, x.text); } // after the commit: a slow mail server never holds the send open
   return r;
 }
 

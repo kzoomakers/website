@@ -11,7 +11,7 @@ async function setup() {
   const c = await conn(), n = Date.now().toString(36).slice(-8);
   const mk = async (name, kind) => (await c.query(`INSERT INTO feed.users (username, email, token, kind, password_digest, created_at) VALUES ($1, $2, $3, $4, $5, now() - interval '3 years') RETURNING id`,
     [name + n, `${name}${n}@example.org`, `u${name}${n}`, kind, kind === "external" ? await hashPassword("old password 123") : null])).rows[0];
-  const form = (o = {}) => ({ username: "", email: "", homepage: "", about: "", show_email: false, scheme: "system", contrast: "system", bools: Object.fromEntries(S.BOOLS.map((k) => [k, false])), currentPassword: "", password: "", confirm: "", ...o });
+  const form = (o = {}) => ({ username: "", email: "", homepage: "", pushoverKey: "", about: "", show_email: false, scheme: "system", contrast: "system", bools: Object.fromEntries(S.BOOLS.map((k) => [k, false])), currentPassword: "", password: "", confirm: "", ...o });
   return { c, n, mk, form, S };
 }
 

@@ -5,8 +5,8 @@ import { feedOrigin } from "../config";
 import { tattle } from "./mod-notes";
 import { COMMENTABLE_DAYS, MAX_DEPTH, commentProblems, isDeletable, isEditable, speedDelayMins } from "../comment-rules";
 import { lockCommentStory, recalcComment } from "./comment-cache";
-import { feedMail } from "../mail";
-import { notifyComment, type Mail } from "./notify";
+import { feedMail, feedPush } from "../mail";
+import { notifyComment, type Out } from "./notify";
 import { renderPost } from "./render";
 import { live, tx } from "./submit";
 
@@ -30,7 +30,7 @@ async function speedWait(c: PoolClient, userId: number, parent: { id: number; th
 
 /** comments#create. Resubmitting the exact same comment (slow connections) quietly returns the existing one. */
 export const createComment = async (user: { id: number }, o: { storyShortId: string; parentShortId?: string; comment: string; hat?: string }): Promise<CommentResult> => {
-  const mails: Mail[] = [];
+  const out: Out = { mails: [], pushes: [] };
   const r = await tx<CommentResult>(async (c) => {
   const u = await live(c, user.id);
   if (banned(u)) return fail(["You can't comment."]);
@@ -71,10 +71,10 @@ export const createComment = async (user: { id: number }, o: { storyShortId: str
   await c.query("UPDATE feed.stories SET last_comment_at = now(), updated_at = now() WHERE id = $1", [s.id]);
   await c.query("INSERT INTO feed.keystores (key, value) VALUES ($1, 1) ON CONFLICT (key) DO UPDATE SET value = COALESCE(feed.keystores.value, 0) + 1", [`user:${user.id}:comments_posted`]);
   await recalcComment(c, r.id);
-  mails.push(...(await notifyComment(c, r.id)));
+  const n = await notifyComment(c, r.id); out.mails.push(...n.mails); out.pushes.push(...n.pushes);
   return { ok: true, shortId: sid, storyShortId: s.short_id } as CommentResult;
   });
-  if (r.ok) for (const x of mails) await feedMail(x.to, x.subject, x.text, x.headers); // after the commit: a slow mail server never holds the comment open
+  if (r.ok) { for (const x of out.mails) await feedMail(x.to, x.subject, x.text, x.headers); for (const x of out.pushes) await feedPush(x); } // after the commit: a slow mail server never holds the comment open
   return r;
 };
 

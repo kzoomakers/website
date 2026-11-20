@@ -57,7 +57,14 @@ export default async function SettingsPage() {
               </div>
             ) : <p>You sign in through the main site, so your password and email are managed there.</p>}
           </section>
-          <p className="hint">Email and Pushover alerts are saved but not sent yet; the inbox works.</p>
+          <section>
+            <h2>Pushover</h2>
+            <div className="labelled_grid">
+              <label htmlFor="pushover_user_key">Pushover user key</label>
+              <input id="pushover_user_key" name="pushover_user_key" autoCapitalize="off" autoCorrect="off" maxLength={40} defaultValue={s.pushoverKey} />
+              <span /><span className="hint">Your key from pushover.net; needed for the Pushover alerts below.</span>
+            </div>
+          </section>
           <section>
             <h2>Comment Reply Notification Settings</h2>
             <div className="labelled_grid">

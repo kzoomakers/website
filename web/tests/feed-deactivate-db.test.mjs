@@ -69,17 +69,19 @@ test("reply and mention emails go only to people who asked, once", { skip }, asy
   const { notifyComment } = await import("../feed/models/notify.ts"), { createComment } = await import("../feed/models/comment-write.ts");
   const c = await conn(), n = Date.now().toString(36).slice(-8);
   const mk = async (name, settings) => (await c.query(`INSERT INTO feed.users (username, email, token, kind, settings, created_at) VALUES ($1, $2, $3, 'external', $4, now() - interval '200 days') RETURNING id`, [name + n, `${name}${n}@example.org`, `u${name}${n}`, settings])).rows[0];
-  const author = await mk("author", { email_replies: true }), writer = await mk("writer", {}), quiet = await mk("quiet", {}), pinged = await mk("pinged", { email_mentions: true });
+  const author = await mk("author", { email_replies: true, pushover_replies: true, pushover_user_key: "u".repeat(30) }), writer = await mk("writer", {}), quiet = await mk("quiet", {}), pinged = await mk("pinged", { email_mentions: true });
   const st = (await c.query("INSERT INTO feed.stories (user_id, title, short_id, token, last_edited_at, created_at, user_is_following) VALUES ($1, 'Mail story', $2, $3, now(), now(), true) RETURNING short_id", [author.id, n.slice(-6).padStart(6, "m"), "sm" + n])).rows[0];
   const top = await createComment(writer, { storyShortId: st.short_id, comment: `hello @quiet and @pinged${n}` });
   const id = (await c.query("SELECT id FROM feed.comments WHERE short_id = $1", [top.shortId])).rows[0].id;
-  const mails = await tx((x) => notifyComment(x, id));
+  const mails = (await tx((x) => notifyComment(x, id))).mails;
   assert.deepEqual(mails, [], "rows already exist, so nothing is re-sent");
   await c.query("DELETE FROM feed.notifications WHERE notifiable_id = $1", [id]);
-  const again = await tx((x) => notifyComment(x, id));
+  const out = await tx((x) => notifyComment(x, id)), again = out.mails;
   assert.deepEqual(again.map((m) => m.to).sort(), [`author${n}@example.org`, `pinged${n}@example.org`], "the story author wants replies, @pinged wants mentions; @quiet (no @-match: wrong name) and the commenter get none");
   assert.match(again[0].subject, /Reply from writer/);
   assert.match(again.find((m) => m.to.startsWith("pinged")).subject, /Mention from writer/);
+  assert.match(again[0].headers["In-Reply-To"], /^<story\./, "a top-level comment replies to the story");
+  assert.deepEqual(out.pushes.map((p) => p.key), ["u".repeat(30)], "only the story author turned Pushover on, and has a key");
 });
 
 test("a deactivated person comes back with a password reset; a banned one does not", { skip }, async () => {
@@ -95,4 +97,22 @@ test("a deactivated person comes back with a password reset; a banned one does n
   assert.deepEqual((await c.query("SELECT action FROM feed.moderations WHERE user_id = $1", [left.id])).rows, [{ action: "reactivated" }]);
   await setNewPassword("tok-banned-" + n, "a brand new password 1");
   assert.ok((await c.query("SELECT deleted_at FROM feed.users WHERE id = $1", [banned.id])).rows[0].deleted_at, "a ban stays");
+});
+
+test("a flagged commenter who deactivates loses the address", { skip }, async () => {
+  const { conn } = await import("../lib/db.ts"), { hashPassword } = await import("../feed/auth.ts"), { deactivate } = await import("../feed/models/deactivate.ts");
+  const c = await conn(), n = Date.now().toString(36).slice(-8), pw = await hashPassword("old password 123");
+  const mk = async (name) => (await c.query(`INSERT INTO feed.users (username, email, token, kind, password_digest, created_at) VALUES ($1, $2, $3, 'external', $4, now() - interval '200 days') RETURNING id`, [name + n, `${name}${n}@example.org`, `u${name}${n}`, pw])).rows[0];
+  const stories = [];
+  const author = await mk("sauthor");
+  for (let i = 0; i < 3; i++) stories.push((await c.query("INSERT INTO feed.stories (user_id, title, short_id, token, last_edited_at, created_at) VALUES ($1, 'S', $2, $3, now(), now()) RETURNING id", [author.id, `${n.slice(-5)}${i}`.padStart(6, "f"), `fs${n}${i}`])).rows[0].id);
+  const flaggy = await mk("flaggy"), fine = await mk("fine");
+  const cm = (u, st, i, flags) => c.query("INSERT INTO feed.comments (short_id, story_id, user_id, thread_id, comment, markeddown_comment, depth, flags, token, last_edited_at, created_at) VALUES ($1, $2, $3, $4, 'x', 'x', 0, $5, $6, now(), now() - interval '5 days')", [`${u.id}${i}`.slice(-6).padStart(6, "c"), st, u.id, Number(u.id) * 100 + i, flags, `fc${u.id}${i}${n}`]);
+  for (let i = 0; i < 6; i++) await cm(flaggy, stories[i % 3], i, 2); // 6 flagged comments on 3 stories, 12 flags
+  for (let i = 0; i < 6; i++) await cm(fine, stories[i % 3], i, 0);
+  await deactivate(Number(fine.id), { password: "old password 123", sure: true, disown: false });
+  await deactivate(Number(flaggy.id), { password: "old password 123", sure: true, disown: false });
+  const email = async (u) => (await c.query("SELECT email FROM feed.users WHERE id = $1", [u.id])).rows[0].email;
+  assert.equal(await email(fine), `fine${n}@example.org`);
+  assert.equal(await email(flaggy), `flaggy${n}@talk.invalid`);
 });

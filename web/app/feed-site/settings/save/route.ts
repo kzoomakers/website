@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   let session: string | undefined;
   try {
     const r = await saveSettings(v.id, {
-      username: s("username", 60), email: s("email", 200), homepage: s("homepage", 400), about: s("about", 25_000), show_email: f.get("show_email") === "1",
+      username: s("username", 60), email: s("email", 200), homepage: s("homepage", 400), pushoverKey: s("pushover_user_key", 60), about: s("about", 25_000), show_email: f.get("show_email") === "1",
       scheme: s("prefers_color_scheme", 20), contrast: s("prefers_contrast", 20), bools: Object.fromEntries(BOOLS.map((k) => [k, f.get(k) === "1"])) as Record<(typeof BOOLS)[number], boolean>,
       currentPassword: s("current_password", 201), password: s("password", 201), confirm: s("password_confirmation", 201),
     });
