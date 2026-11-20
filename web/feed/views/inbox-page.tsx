@@ -13,15 +13,17 @@ export default async function InboxPage({ which, page }: { which: "all" | "unrea
   const me = await currentFeedUser().catch(() => null);
   if (!me?.username) redirect("/login?return=/inbox");
   const [{ comments, more }, cfg] = await Promise.all([inboxFor(me.id, which === "unread", page), getFeedConfig()]);
-  const unreadMessages = (await listMessages(me.id, "in")).filter((m) => m.unread);
+  const received = await listMessages(me.id, "in"); // oldest first
+  const shownMessages = which === "unread" ? received.filter((m) => m.unread) : page === 1 ? received.slice(-20).reverse() : []; // "all": the latest 20 on page 1, the rest at /messages
   const votes = await commentVotes(me.id, comments.map((c) => c.id));
   const title = which === "unread" ? "Unread Inbox" : "Inbox", path = `/inbox/${which}${page > 1 ? `/page/${page}` : ""}`;
   return (
     <Shell title={title} path={path} subnav={<><li><a href="/inbox/unread" aria-current={which === "unread" ? "page" : undefined}>Unread</a></li><li><a href="/inbox/all" aria-current={which === "all" ? "page" : undefined}>All</a></li><li><a href="/messages">Messages</a></li><li><a href="/mod_mails">Mod Mail</a></li></>}>
       <h1>{title}</h1>
-      {unreadMessages.length > 0 && <>
-        <h2>Unread private messages</h2>
-        <ul>{unreadMessages.map((m) => <li key={m.short_id}><a href={`/messages/${m.short_id}`}>{m.subject}</a> from {m.author ? <a href={`/~${m.author}`}>{m.author}</a> : "System"}</li>)}</ul>
+      {shownMessages.length > 0 && <>
+        <h2>{which === "unread" ? "Unread private messages" : "Private messages"}</h2>
+        <ul>{shownMessages.map((m) => <li key={m.short_id} className={m.unread ? "bold" : undefined}><a href={`/messages/${m.short_id}`}>{m.subject}</a> from {m.author ? <a href={`/~${m.author}`}>{m.author}</a> : "System"}</li>)}</ul>
+        {which === "all" && received.length > shownMessages.length && <p><a href="/messages">All messages</a></p>}
       </>}
       {comments.length === 0 && <p>{which === "unread" ? "Nothing unread." : "Nothing here yet."}</p>}
       <ol className="comments comments1">

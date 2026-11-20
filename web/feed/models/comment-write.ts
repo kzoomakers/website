@@ -74,7 +74,7 @@ export const createComment = async (user: { id: number }, o: { storyShortId: str
   mails.push(...(await notifyComment(c, r.id)));
   return { ok: true, shortId: sid, storyShortId: s.short_id } as CommentResult;
   });
-  if (r.ok) for (const x of mails) await feedMail(x.to, x.subject, x.text); // after the commit: a slow mail server never holds the comment open
+  if (r.ok) for (const x of mails) await feedMail(x.to, x.subject, x.text, x.headers); // after the commit: a slow mail server never holds the comment open
   return r;
 };
 

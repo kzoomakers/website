@@ -165,7 +165,7 @@ export async function passwordLogin(req: Request, emailIn: string, password: str
 export async function forgotPassword(req: Request, emailIn: string) {
   const email = emailIn.trim().toLowerCase();
   if (!(await hit("feed:reset:ip:" + clientIp(req), 5, 3_600_000, true)) || !(await hit("feed:reset:acct:" + email.slice(0, 100), 3, 3_600_000, true))) throw new Refused("slow_down");
-  const u = (await (await conn()).query("SELECT id FROM feed.users WHERE lower(email) = $1 AND kind = 'external' AND banned_at IS NULL AND deleted_at IS NULL", [email])).rows[0];
+  const u = (await (await conn()).query("SELECT id FROM feed.users WHERE lower(email) = $1 AND kind = 'external' AND banned_at IS NULL AND email NOT LIKE '%@talk.invalid'", [email])).rows[0]; // a deactivated person may come back this way; one who left badly (address replaced) must ask a moderator
   if (u) await mailLink(email, "Reset your password", "Use this link to choose a new password. It works once, for one hour:", "/login/set_new_password", await newToken(u.id, "reset", 1));
 }
 
@@ -179,8 +179,10 @@ export async function setNewPassword(t: string, password: string) {
   if (passwordProblem(password, peek.email)) throw new Refused("password_bad");
   const digest = await hashPassword(password), id = await spendToken(t, "reset");
   if (!id) throw new Refused("link_bad");
-  // New password, every other session ended, address proven by the link.
-  await c.query("UPDATE feed.users SET password_digest = $2, session_version = session_version + 1, email_verified_at = COALESCE(email_verified_at, now()) WHERE id = $1 AND kind = 'external'", [id, digest]);
+  // New password, every other session ended, address proven by the link. A self-deactivated account (not banned) comes back too.
+  const back = (await c.query("SELECT 1 FROM feed.users WHERE id = $1 AND deleted_at IS NOT NULL AND banned_at IS NULL", [id])).rowCount;
+  if (back) await c.query("INSERT INTO feed.moderations (moderator_user_id, user_id, action, token) VALUES (NULL, $1, 'reactivated', $2)", [id, `moderation_${randomBytes(16).toString("hex")}`]);
+  await c.query("UPDATE feed.users SET deleted_at = CASE WHEN banned_at IS NULL THEN NULL ELSE deleted_at END, password_digest = $2, session_version = session_version + 1, email_verified_at = COALESCE(email_verified_at, now()) WHERE id = $1 AND kind = 'external'", [id, digest]);
   await c.query("DELETE FROM feed.auth_tokens WHERE user_id = $1", [id]);
   return startSession(id);
 }

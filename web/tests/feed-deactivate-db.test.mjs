@@ -2,6 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 process.env.CONFIG_PATH = "/nonexistent";
+process.env.AUTH_SECRET ??= "test-secret-for-feed-tests";
 const url = process.env.TEST_DATABASE_URL;
 if (url) process.env.DATABASE_URL = url; else delete process.env.DATABASE_URL;
 const skip = !url && "set TEST_DATABASE_URL";
@@ -79,4 +80,19 @@ test("reply and mention emails go only to people who asked, once", { skip }, asy
   assert.deepEqual(again.map((m) => m.to).sort(), [`author${n}@example.org`, `pinged${n}@example.org`], "the story author wants replies, @pinged wants mentions; @quiet (no @-match: wrong name) and the commenter get none");
   assert.match(again[0].subject, /Reply from writer/);
   assert.match(again.find((m) => m.to.startsWith("pinged")).subject, /Mention from writer/);
+});
+
+test("a deactivated person comes back with a password reset; a banned one does not", { skip }, async () => {
+  const { createHash } = await import("node:crypto");
+  const { conn } = await import("../lib/db.ts"), { setNewPassword } = await import("../feed/identity.ts");
+  const c = await conn(), n = Date.now().toString(36).slice(-8);
+  const mk = async (name, banned) => (await c.query(`INSERT INTO feed.users (username, email, token, kind, deleted_at, banned_at, created_at) VALUES ($1, $2, $3, 'external', now(), ${banned ? "now()" : "NULL"}, now() - interval '200 days') RETURNING id`, [name + n, `${name}${n}@example.org`, `u${name}${n}`])).rows[0];
+  const tok = async (u, t) => c.query("INSERT INTO feed.auth_tokens (hash, user_id, purpose, expires_at) VALUES ($1, $2, 'reset', now() + interval '1 hour')", [createHash("sha256").update(t).digest("hex"), u.id]);
+  const left = await mk("left", false), banned = await mk("banned", true);
+  await tok(left, "tok-left-" + n); await tok(banned, "tok-banned-" + n);
+  await setNewPassword("tok-left-" + n, "a brand new password 1");
+  assert.equal((await c.query("SELECT deleted_at FROM feed.users WHERE id = $1", [left.id])).rows[0].deleted_at, null);
+  assert.deepEqual((await c.query("SELECT action FROM feed.moderations WHERE user_id = $1", [left.id])).rows, [{ action: "reactivated" }]);
+  await setNewPassword("tok-banned-" + n, "a brand new password 1");
+  assert.ok((await c.query("SELECT deleted_at FROM feed.users WHERE id = $1", [banned.id])).rows[0].deleted_at, "a ban stays");
 });

@@ -111,7 +111,7 @@ export default async function SettingsPage() {
             <p>To deactivate your account, verify your current password below.</p>
             <ul>
               <li>Your profile will show that you deactivated your account.</li>
-              <li>You will not be able to log in. To come back, contact a moderator.</li>
+              <li>You will not be able to log in. To come back, reset your password from the login page (if you leave on bad terms, contact a moderator instead).</li>
               <li>Your username will remain reserved and will not be available for any other account.</li>
               <li>Your private messages will be deleted (recipients will keep their copies of messages).</li>
               <li>Your submitted stories will not be deleted.</li>
