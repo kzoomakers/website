@@ -8,6 +8,7 @@ import { currentFeedUser } from "../identity";
 import { editable } from "../models/submit";
 import { ActionForm, Flagger, ModDelete, Upvoter, type Me } from "./controls";
 import { viewerState, type ViewerState } from "../models/viewer-state";
+import { wearableHats } from "../models/hats";
 import { CommentBox } from "./comment-form";
 import Shell from "./shell";
 import { Caches, Divider, TimeLabel, UserLink, titlePath } from "./story-list";
@@ -63,6 +64,7 @@ function Detail({ all, newUserDays, me, st }: { all: StoryFull[]; newUserDays: n
 export default async function StoryPage({ all, comments }: { all: StoryFull[]; comments: Comment[] }) {
   const story = all[0], cfg = await getFeedConfig(), merged = story.stories_count > 0, path = titlePath(story);
   const me = await currentFeedUser().catch(() => null), mine = !!me && editable(story, me.id);
+  const hats = me?.username ? await wearableHats(me.id) : [];
   const st = me ? await viewerState(me.id, all.map((a) => a.id), comments.map((c) => c.id)) : null;
   const own = me?.id === story.user_id, base = `/stories/${story.short_id}`;
   return (
@@ -83,7 +85,15 @@ export default async function StoryPage({ all, comments }: { all: StoryFull[]; c
           {!own && st.storyVote !== 1 && story.created_at.getTime() > Date.now() - 14 * 864e5 && <>{" "}<Flagger base={base} me={me} kind="story" flagged={st.storyVote === -1} /></>}
         </p>
       )}
-      {me?.isModerator && !own && <p className="story_mod_tools"><ModDelete base={base} me={me} deleted={story.is_deleted} /></p>}
+      {me?.isModerator && !own && <p className="story_mod_tools"><a href={`/stories/${story.short_id}/edit`}>mod edit</a>{" "}<ModDelete base={base} me={me} deleted={story.is_deleted} /></p>}
+      {me?.isModerator && !story.is_deleted && (
+        <p className="story_mod_tools">
+          <ActionForm path={`${base}/mod-merge`} me={me} label={story.merged_story_id ? "unmerge" : "merge"}>
+            {!story.merged_story_id && <><input name="target" maxLength={10} required placeholder="story short id" aria-label="Story to merge into" />{" "}</>}
+            <input name="reason" maxLength={200} placeholder="reason" aria-label="Moderation reason" />{" "}
+          </ActionForm>
+        </p>
+      )}
       <div className="story_content">{story.markeddown_description && !merged && <div className="story_text" id="story_text" dangerouslySetInnerHTML={html(story.markeddown_description)} />}</div>
       {all.filter((ms) => !isGone(ms)).map((ms) => (
         <div key={ms.id}>
@@ -99,7 +109,7 @@ export default async function StoryPage({ all, comments }: { all: StoryFull[]; c
           <br />
         </div>
       ))}
-      {me?.username && !isGone(story) && (() => { const f = takeCommentFlash(me.id); return <div id="comment_form"><CommentBox action={`/stories/${story.short_id}/comment`} csrf={me.csrf} label="Post comment" text={f?.text} errors={f?.errors} storyShortId={story.short_id} /></div>; })()}
+      {me?.username && !isGone(story) && (() => { const f = takeCommentFlash(me.id); return <div id="comment_form"><CommentBox action={`/stories/${story.short_id}/comment`} csrf={me.csrf} label="Post comment" text={f?.text} errors={f?.errors} hats={hats} storyShortId={story.short_id} /></div>; })()}
       {!me && <p><a href={`/login?return=${path}`}>Log in</a> to comment.</p>}
     </Shell>
   );

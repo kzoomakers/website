@@ -18,6 +18,13 @@ export async function newestComments(page = 1): Promise<{ comments: ListedCommen
   return { comments: r.rows.slice(0, COMMENTS_PER_PAGE), more: r.rows.length > COMMENTS_PER_PAGE };
 }
 
+/** /upvoted/comments: comments the viewer upvoted, newest vote target first, not their own and not on deleted stories. */
+export async function upvotedComments(userId: number, page = 1): Promise<{ comments: ListedComment[]; more: boolean }> {
+  const r = await (await conn()).query(`${SELECT} WHERE c.user_id <> $3 AND NOT c.is_deleted AND NOT c.is_moderated AND NOT s.is_deleted
+    AND EXISTS (SELECT 1 FROM feed.votes v WHERE v.comment_id = c.id AND v.user_id = $3 AND v.vote = 1) ORDER BY c.id DESC LIMIT $1 OFFSET $2`, [COMMENTS_PER_PAGE + 1, (page - 1) * COMMENTS_PER_PAGE, userId]);
+  return { comments: r.rows.slice(0, COMMENTS_PER_PAGE), more: r.rows.length > COMMENTS_PER_PAGE };
+}
+
 /** ~user/comments.rss: what the user wrote on stories that are not deleted (gone comments show their removal text), oldest first as Lobsters lists it.
  *  shortcut: Lobsters has no limit; this takes the newest 500 so one prolific user cannot make a huge response. Raise it if feeds look cut short. */
 export async function commentsByUser(userId: number, limit = 500): Promise<ListedComment[]> {

@@ -35,7 +35,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       return to(`/c/${id}`);
     }
     if (action === "update") {
-      const text = String(f.get("comment") ?? "").slice(0, 70_000), r = await updateComment(v, id, text);
+      const text = String(f.get("comment") ?? "").slice(0, 70_000), r = await updateComment(v, id, text, String(f.get("hat") ?? "").slice(0, 10));
       if (r.ok) return to(`/c/${id}`);
       putCommentFlash(v.id, { text, errors: r.errors });
       return to(`/c/${id}/edit`);

@@ -1,8 +1,12 @@
 import { randomBytes } from "node:crypto";
+import { hatId } from "./hats";
 import type { PoolClient } from "pg";
+import { feedOrigin } from "../config";
+import { tattle } from "./mod-notes";
 import { COMMENTABLE_DAYS, MAX_DEPTH, commentProblems, isDeletable, isEditable, speedDelayMins } from "../comment-rules";
 import { lockCommentStory, recalcComment } from "./comment-cache";
-import { notifyComment } from "./notify";
+import { feedMail, feedPush } from "../mail";
+import { notifyComment, type Out } from "./notify";
 import { renderPost } from "./render";
 import { live, tx } from "./submit";
 
@@ -25,7 +29,9 @@ async function speedWait(c: PoolClient, userId: number, parent: { id: number; th
 }
 
 /** comments#create. Resubmitting the exact same comment (slow connections) quietly returns the existing one. */
-export const createComment = (user: { id: number }, o: { storyShortId: string; parentShortId?: string; comment: string }): Promise<CommentResult> => tx(async (c) => {
+export const createComment = async (user: { id: number }, o: { storyShortId: string; parentShortId?: string; comment: string; hat?: string }): Promise<CommentResult> => {
+  const out: Out = { mails: [], pushes: [] };
+  const r = await tx<CommentResult>(async (c) => {
   const u = await live(c, user.id);
   if (banned(u)) return fail(["You can't comment."]);
   const s = (await c.query("SELECT s.id, s.short_id, s.created_at, (s.is_deleted OR (b.banned_at IS NOT NULL AND s.score < 0 AND NOT s.is_moderated)) AS gone FROM feed.stories s JOIN feed.users b ON b.id = s.user_id WHERE s.short_id = $1 FOR UPDATE OF s", [o.storyShortId])).rows[0];
@@ -41,32 +47,42 @@ export const createComment = (user: { id: number }, o: { storyShortId: string; p
 
   const errors = commentProblems(o.comment);
   if (parent && (parent.is_deleted || parent.is_moderated)) errors.push("Comment was deleted by the author or a mod while you were writing.");
-  if (parent && parent.depth >= MAX_DEPTH) errors.push("You have replied too greedily and too deep.");
+  if (parent && parent.depth >= MAX_DEPTH) { errors.push("You have replied too greedily and too deep."); void tattle(user.id, `Hit max comment depth replying to [${o.parentShortId}](${feedOrigin()}/c/${o.parentShortId})`); }
   if (new Date(s.created_at).getTime() < Date.now() - COMMENTABLE_DAYS * 864e5) errors.push("Story is no longer accepting comments.");
   if (parent && (await c.query("SELECT 1 FROM feed.votes WHERE user_id = $1 AND comment_id = $2 AND vote = -1", [user.id, parent.id])).rowCount) errors.push("You've flagged that comment for the mods, so you can leave it for the mods.");
   if (errors.length) return fail(errors);
   if (parent && !u.is_moderator) { const w = await speedWait(c, user.id, parent); if (w) return fail([`Thread speed limit reached, next comment allowed in about ${w} minute${w === 1 ? "" : "s"}.`]); }
 
   const thread = parent?.thread_id ?? (await c.query("INSERT INTO feed.keystores (key, value) VALUES ('thread_id', 1) ON CONFLICT (key) DO UPDATE SET value = COALESCE(feed.keystores.value, 0) + 1 RETURNING value", [])).rows[0].value;
-  const html = await renderPost(c, text);
+  const html = await renderPost(c, text), hat = await hatId(c, user.id, o.hat);
   // The unique index on short_id settles races: a taken id inserts nothing and we draw another.
   let sid = "", r: { id: number } | undefined;
   for (let i = 0; !r; i++) {
     if (i === 10) throw new Error("too many short id collisions");
     sid = newShort();
     r = (await c.query(
-      `INSERT INTO feed.comments (short_id, story_id, user_id, parent_comment_id, thread_id, comment, markeddown_comment, depth, last_edited_at, token)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8, now(), $9) ON CONFLICT (short_id) DO NOTHING RETURNING id`,
-      [sid, s.id, user.id, parent?.id ?? null, thread, text, html, parent ? parent.depth + 1 : 0, `comment_${randomBytes(16).toString("hex")}`])).rows[0];
+      `INSERT INTO feed.comments (short_id, story_id, user_id, parent_comment_id, thread_id, comment, markeddown_comment, depth, last_edited_at, token, hat_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8, now(), $9, $10) ON CONFLICT (short_id) DO NOTHING RETURNING id`,
+      [sid, s.id, user.id, parent?.id ?? null, thread, text, html, parent ? parent.depth + 1 : 0, `comment_${randomBytes(16).toString("hex")}`, hat])).rows[0];
   }
+  if (hat) await logHatUse(c, r.id, user.id, hat);
   await c.query("INSERT INTO feed.votes (user_id, story_id, comment_id, vote) VALUES ($1, $2, $3, 1)", [user.id, s.id, r.id]); // own upvote: no karma
   if (parent) await c.query("UPDATE feed.comments SET reply_count = reply_count + 1, last_reply_at = now(), updated_at = now() WHERE id = $1", [parent.id]);
   await c.query("UPDATE feed.stories SET last_comment_at = now(), updated_at = now() WHERE id = $1", [s.id]);
   await c.query("INSERT INTO feed.keystores (key, value) VALUES ($1, 1) ON CONFLICT (key) DO UPDATE SET value = COALESCE(feed.keystores.value, 0) + 1", [`user:${user.id}:comments_posted`]);
   await recalcComment(c, r.id);
-  await notifyComment(c, r.id);
+  const n = await notifyComment(c, r.id); out.mails.push(...n.mails); out.pushes.push(...n.pushes);
   return { ok: true, shortId: sid, storyShortId: s.short_id } as CommentResult;
-});
+  });
+  if (r.ok) { for (const x of out.mails) await feedMail(x.to, x.subject, x.text, x.headers); for (const x of out.pushes) await feedPush(x); } // after the commit: a slow mail server never holds the comment open
+  return r;
+};
+
+/** comment.rb log_hat_use: using a hat marked for the moderation log leaves an entry, when a comment is created or its hat changes. */
+const logHatUse = async (c: PoolClient, commentId: number, userId: number, hat: number) => {
+  const h = (await c.query("SELECT hat FROM feed.hats WHERE id = $1 AND modlog_use", [hat])).rows[0];
+  if (h) await c.query("INSERT INTO feed.moderations (comment_id, moderator_user_id, action, token) VALUES ($1, $2, $3, $4)", [commentId, userId, `used ${h.hat} hat`, `moderation_${randomBytes(16).toString("hex")}`]);
+};
 
 const own = async (c: PoolClient, shortId: string) => {
   await lockCommentStory(c, shortId);
@@ -74,13 +90,15 @@ const own = async (c: PoolClient, shortId: string) => {
 };
 
 /** comments#update: edit within 6 hours of the last edit. */
-export const updateComment = (user: { id: number }, shortId: string, comment: string): Promise<CommentResult> => tx(async (c) => {
+export const updateComment = (user: { id: number }, shortId: string, comment: string, hatShort?: string): Promise<CommentResult> => tx(async (c) => {
   const u = await live(c, user.id), row = await own(c, shortId);
   if (banned(u) || !row || !isEditable(row, user.id)) return fail(["You cannot edit that comment."]);
   const errors = commentProblems(comment);
   if (errors.length) return fail(errors);
   const text = comment.replace(/\s+$/, "");
-  await c.query("UPDATE feed.comments SET comment = $2, markeddown_comment = $3, last_edited_at = now(), updated_at = now() WHERE id = $1", [row.id, text, await renderPost(c, text)]);
+  const hat = await hatId(c, user.id, hatShort); // no hat picked takes the hat off, as comments#update does
+  await c.query("UPDATE feed.comments SET comment = $2, markeddown_comment = $3, hat_id = $4, last_edited_at = now(), updated_at = now() WHERE id = $1", [row.id, text, await renderPost(c, text), hat]);
+  if (hat && Number(row.hat_id) !== hat) await logHatUse(c, row.id, user.id, hat);
   if (row.parent_comment_id) await c.query("UPDATE feed.comments SET last_reply_at = now(), updated_at = now() WHERE id = $1", [row.parent_comment_id]);
   return { ok: true, shortId, storyShortId: row.story_short_id } as CommentResult;
 });

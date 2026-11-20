@@ -13,7 +13,9 @@ export default async function Page({ params }: { params: Promise<{ slug?: string
     const me = await currentFeedUser().catch(() => null);
     if (!me) redirect("/login?return=/inbox");
     const n = (await (await conn()).query("SELECT 1 FROM feed.notifications WHERE user_id = $1 AND read_at IS NULL AND notifiable_type = 'Comment' LIMIT 1", [me.id])).rowCount;
-    redirect(n ? "/inbox/unread" : "/inbox/all");
+    if (n) redirect("/inbox/unread");
+    const m = (await (await conn()).query("SELECT 1 FROM feed.notifications WHERE user_id = $1 AND read_at IS NULL AND notifiable_type = 'Message' LIMIT 1", [me.id])).rowCount;
+    redirect(m ? "/messages" : "/inbox/all");
   }
   if (seg[0] === "unread" && seg.length === 1) return <InboxPage which="unread" page={1} />;
   if (seg[0] === "all" && seg.length === 1) return <InboxPage which="all" page={1} />;

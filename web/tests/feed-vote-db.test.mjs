@@ -173,3 +173,230 @@ test("replying and voting on the same comment at once never deadlocks", { skip }
     await Promise.all(jobs); // any deadlock rejects here
   }
 });
+
+test("hidden, saved and upvoted lists hold only the viewer's own marks", { skip }, async () => {
+  const { conn } = await import("../lib/db.ts");
+  const { castVote } = await import("../feed/models/vote.ts");
+  const { markStory } = await import("../feed/models/hide-save.ts");
+  const { listBy, hiddenBy, savedBy, upvotedBy } = await import("../feed/models/stories.ts");
+  const { upvotedComments } = await import("../feed/models/comments.ts");
+  const { createComment } = await import("../feed/models/comment-write.ts");
+  const c = await conn(), n = Date.now().toString(36);
+  const mk = async (name) => (await c.query(`INSERT INTO feed.users (username, email, token, karma, created_at) VALUES ($1, $2, $3, 20, now() - interval '200 days') RETURNING id`, [name + n, `${name}${n}@example.org`, `u${name}${n}`])).rows[0];
+  const [a, b] = [await mk("la"), await mk("lb")];
+  const story = async (i) => (await c.query("INSERT INTO feed.stories (user_id, title, short_id, token, last_edited_at, created_at) VALUES ($1, $2, $3, $4, now(), now()) RETURNING id, short_id", [a.id, "List story " + i, n.slice(-4) + "l" + i, "ls" + n + i])).rows[0];
+  const [s1, s2] = [await story(1), await story(2)];
+  const ids = async (q) => (await listBy(q, 1)).stories.map((s) => s.id);
+
+  assert.ok((await markStory(b, s1.short_id, "hide")).ok); assert.ok((await markStory(b, s2.short_id, "save")).ok);
+  assert.deepEqual(await ids(hiddenBy(b.id)), [s1.id]); assert.deepEqual(await ids(savedBy(b.id)), [s2.id]);
+  assert.deepEqual(await ids(hiddenBy(a.id)), [], "other users see none of b's marks");
+
+  assert.ok((await castVote(b, "story", s2.short_id, 1)).ok);
+  assert.deepEqual(await ids(upvotedBy(b.id)), [s2.id]);
+  assert.deepEqual(await ids(upvotedBy(a.id)), [], "own stories never count as upvoted");
+
+  const cm = await createComment(a, { storyShortId: s2.short_id, comment: "A comment b will upvote" });
+  assert.ok((await castVote(b, "comment", cm.shortId, 1)).ok);
+  assert.deepEqual((await upvotedComments(b.id)).comments.map((x) => x.short_id), [cm.shortId]);
+  assert.deepEqual((await upvotedComments(a.id)).comments, []);
+});
+
+test("moderation log: filters by moderator and kind, pages", { skip }, async () => {
+  const { conn } = await import("../lib/db.ts");
+  const { listModerations } = await import("../feed/models/moderations.ts");
+  const c = await conn(), n = Date.now().toString(36);
+  const u = (await c.query(`INSERT INTO feed.users (username, email, token, is_moderator) VALUES ($1, $2, $3, true) RETURNING id`, ["mm" + n, `mm${n}@example.org`, "umm" + n])).rows[0];
+  const st = (await c.query("INSERT INTO feed.stories (user_id, title, short_id, token, last_edited_at) VALUES ($1, 'Logged story', $2, $3, now()) RETURNING id", [u.id, n.slice(-4) + "mm", "sm" + n])).rows[0];
+  await c.query("INSERT INTO feed.moderations (moderator_user_id, story_id, action, reason, token) VALUES ($1, $2, 'deleted story', 'spam', $3), ($1, NULL, 'banned', NULL, $4)", [u.id, st.id, "mt1" + n, "mt2" + n]);
+  const mine = (what) => listModerations("mm" + n, what, 1).then((r) => r.rows);
+  assert.equal((await mine([])).length, 2);
+  const s = await mine(["stories"]); assert.equal(s.length, 1); assert.equal(s[0].story_title, "Logged story"); assert.equal(s[0].reason, "spam");
+  assert.equal((await mine(["tags"])).length, 0);
+  assert.equal((await listModerations("(Users)", [], 1)).rows.filter((r) => r.moderator === "mm" + n).length, 0);
+  assert.ok((await listModerations("(Moderators)", [], 1)).rows.length >= 2);
+});
+
+test("moderator merge, unmerge and domain/origin bans are validated and logged", { skip }, async () => {
+  const { conn } = await import("../lib/db.ts");
+  const { modMergeStory, modToggleBan } = await import("../feed/models/mod.ts");
+  const c = await conn(), n = Date.now().toString(36);
+  const mk = async (name, mod) => (await c.query(`INSERT INTO feed.users (username, email, token, is_moderator) VALUES ($1, $2, $3, $4) RETURNING id`, [name + n, `${name}${n}@example.org`, `u${name}${n}`, mod])).rows[0];
+  const [m, u] = [await mk("mgm", true), await mk("mgu", false)];
+  const story = async (i) => (await c.query("INSERT INTO feed.stories (user_id, title, short_id, token, last_edited_at, created_at) VALUES ($1, $2, $3, $4, now(), now()) RETURNING id, short_id", [u.id, "Merge story " + i, n.slice(-4) + "g" + i, "mg" + n + i])).rows[0];
+  const [a, b, d] = [await story(1), await story(2), await story(3)];
+  const row = (s) => c.query("SELECT merged_story_id, stories_count, is_moderated FROM feed.stories WHERE id = $1", [s.id]).then((r) => r.rows[0]);
+
+  assert.ok(!(await modMergeStory(u, a.short_id, b.short_id)).ok, "not a moderator");
+  assert.ok(!(await modMergeStory(m, a.short_id, a.short_id)).ok, "not into itself");
+  assert.ok(!(await modMergeStory(m, a.short_id, "nope00")).ok);
+  assert.ok((await modMergeStory(m, a.short_id, b.short_id, "dupe")).ok);
+  assert.equal((await row(a)).merged_story_id, b.id); assert.equal((await row(a)).is_moderated, true); assert.equal((await row(b)).stories_count, 1);
+  assert.ok(!(await modMergeStory(m, d.short_id, a.short_id)).ok, "no merging into a merged story");
+  assert.ok(!(await modMergeStory(m, b.short_id, d.short_id)).ok, "no merging a story others are merged into");
+  assert.ok((await modMergeStory(m, a.short_id, "")).ok);
+  assert.equal((await row(a)).merged_story_id, null); assert.equal((await row(b)).stories_count, 0);
+  const log = (await c.query("SELECT action, reason FROM feed.moderations WHERE story_id = $1 ORDER BY id", [a.id])).rows;
+  assert.deepEqual(log.map((r) => r.action), [`merged into ${b.short_id} (Merge story 2)`, "unmerged from another story"]); assert.equal(log[0].reason, "dupe");
+
+  const host = `ban${n}.example.org`;
+  assert.ok(!(await modToggleBan(m, "domain", host, "")).ok, "reason required");
+  assert.ok(!(await modToggleBan(m, "domain", "not a host", "x")).ok);
+  assert.ok(!(await modToggleBan(u, "domain", host, "x")).ok);
+  assert.ok((await modToggleBan(m, "domain", host.toUpperCase(), "spam")).ok);
+  assert.ok((await modToggleBan(m, "origin", `${host}/blog`, "spam blog")).ok);
+  const dom = () => c.query("SELECT banned_at, banned_reason FROM feed.domains WHERE domain = $1", [host]).then((r) => r.rows[0]);
+  assert.equal((await dom()).banned_reason, "spam");
+  assert.equal((await c.query("SELECT banned_reason FROM feed.origins WHERE identifier = $1", [`${host}/blog`])).rows[0].banned_reason, "spam blog");
+  assert.ok((await modToggleBan(m, "domain", host, "relented")).ok); assert.equal((await dom()).banned_at, null, "second call unbans");
+  const acts = (await c.query("SELECT m.action FROM feed.moderations m JOIN feed.domains d ON d.id = m.domain_id WHERE d.domain = $1 ORDER BY m.id", [host])).rows.map((r) => r.action);
+  assert.deepEqual(acts, ["Banned", "Unbanned"]);
+});
+
+test("moderator story edit is logged; user bans end sessions and are logged; mod mail reaches its recipients", { skip }, async () => {
+  const { conn } = await import("../lib/db.ts");
+  const { modUpdateStory } = await import("../feed/models/mod.ts");
+  const { modBanUser, modUnbanUser } = await import("../feed/models/mod-users.ts");
+  const { createModMail, updateModMail, sendModMailMessage, getModMail, listModMails } = await import("../feed/models/mod-mail.ts");
+  const c = await conn(), n = Date.now().toString(36);
+  const mk = async (name, mod = false) => (await c.query(`INSERT INTO feed.users (username, email, token, is_moderator, created_at) VALUES ($1, $2, $3, $4, now() - interval '200 days') RETURNING id, username`, [name + n, `${name}${n}@example.org`, `u${name}${n}`, mod])).rows[0];
+  const [m, a, b] = [await mk("em", true), await mk("ea"), await mk("eb")];
+  const cat = (await c.query("INSERT INTO feed.categories (category, token) VALUES ($1, $2) RETURNING id", ["ecat" + n, "ec" + n])).rows[0].id;
+  const tag = (await c.query("INSERT INTO feed.tags (tag, category_id, token, hotness_mod) VALUES ($1, $2, $3, 0) RETURNING id, tag", ["etg" + n, cat, "et" + n])).rows[0];
+  const st = (await c.query("INSERT INTO feed.stories (user_id, title, short_id, token, last_edited_at, created_at, description, markeddown_description, user_is_author) VALUES ($1, 'Old title', $2, $3, now(), now(), 'text', '<p>text</p>', true) RETURNING id, short_id", [a.id, n.slice(-4) + "ed", "ed" + n])).rows[0];
+  await c.query("INSERT INTO feed.taggings (story_id, tag_id) VALUES ($1, $2)", [st.id, tag.id]);
+
+  // moderator edit
+  const input = { title: "New title", url: "", description: "text", tags: [tag.tag], userIsAuthor: false };
+  assert.ok(!(await modUpdateStory(a, st.short_id, input)).ok, "not a moderator");
+  assert.ok((await modUpdateStory(m, st.short_id, input, "clearer")).ok);
+  const row = (await c.query("SELECT title, is_moderated FROM feed.stories WHERE id = $1", [st.id])).rows[0];
+  assert.deepEqual(row, { title: "New title", is_moderated: true });
+  const lg = (await c.query("SELECT action, reason FROM feed.moderations WHERE story_id = $1", [st.id])).rows;
+  assert.deepEqual(lg, [{ action: 'changed title from "Old title" to "New title"', reason: "clearer" }]);
+  assert.ok(!(await modUpdateStory(m, st.short_id, { ...input, tags: ["no-such-tag"] })).ok, "unknown tag refused");
+
+  // ban
+  await c.query("INSERT INTO feed.invitations (user_id, code, token) VALUES ($1, 'c', $2)", [b.id, "inv" + n]);
+  assert.ok(!(await modBanUser(a, b.username, "x")).ok, "not a moderator");
+  assert.ok(!(await modBanUser(m, b.username, "  ")).ok, "reason required");
+  assert.ok(!(await modBanUser(m, m.username, "x")).ok, "not yourself");
+  assert.ok(!(await modBanUser(m, "nobody" + n, "x")).ok);
+  const ver = (await c.query("SELECT session_version v FROM feed.users WHERE id = $1", [b.id])).rows[0].v;
+  assert.ok((await modBanUser(m, b.username, "spamming")).ok);
+  const bu = (await c.query("SELECT banned_at, banned_reason, deleted_at, session_version v FROM feed.users WHERE id = $1", [b.id])).rows[0];
+  assert.ok(bu.banned_at && bu.deleted_at); assert.equal(bu.banned_reason, "spamming"); assert.equal(bu.v, ver + 1, "sessions end");
+  assert.ok((await c.query("SELECT used_at FROM feed.invitations WHERE user_id = $1", [b.id])).rows[0].used_at, "invitations voided");
+  assert.ok((await modUnbanUser(m, b.username, "appealed")).ok);
+  assert.deepEqual((await c.query("SELECT banned_at, deleted_at FROM feed.users WHERE id = $1", [b.id])).rows[0], { banned_at: null, deleted_at: null });
+  assert.deepEqual((await c.query("SELECT action FROM feed.moderations WHERE user_id = $1 ORDER BY id", [b.id])).rows.map((r) => r.action), ["Banned", "Unbanned"]);
+
+  // mod mail
+  const mv = { id: m.id, isModerator: true }, bv = { id: b.id, isModerator: false }, av = { id: a.id, isModerator: false };
+  assert.ok(!(await createModMail(a, { subject: "s", recipients: b.username, commentRefs: "", storyRefs: "" })).ok, "moderators only");
+  assert.ok(!(await createModMail(m, { subject: "", recipients: b.username, commentRefs: "", storyRefs: "" })).ok);
+  assert.ok(!(await createModMail(m, { subject: "s", recipients: "ghost" + n, commentRefs: "", storyRefs: "" })).ok, "unknown recipient");
+  const mail = await createModMail(m, { subject: "About your story", recipients: b.username, commentRefs: "", storyRefs: st.short_id });
+  assert.ok(mail.ok);
+  assert.ok(!(await sendModMailMessage(m, mail.shortId, "too short")).ok);
+  assert.ok(!(await sendModMailMessage(a, mail.shortId, "I am not a recipient of this mail.")).ok);
+  assert.ok((await sendModMailMessage(m, mail.shortId, "Please read the topicality guideline.")).ok);
+  assert.equal((await listModMails(bv))[0].unread, 1);
+  assert.equal((await listModMails(av)).length, 0, "non-recipients see nothing");
+  assert.equal(await getModMail(mail.shortId, av), null);
+  const page = await getModMail(mail.shortId, bv);
+  assert.equal(page.messages.length, 1); assert.deepEqual(page.storyRefs.map((s) => s.short_id), [st.short_id]);
+  assert.equal((await listModMails(bv))[0].unread, 0, "opening marks read");
+  assert.ok((await sendModMailMessage(b, mail.shortId, "Thanks, I will fix it right away.")).ok);
+  assert.equal((await listModMails(mv))[0].unread, 0, "a moderator who is not a recipient is not notified, though the thread is theirs to read");
+  assert.ok((await updateModMail(m, mail.shortId, { subject: "Renamed", recipients: `${b.username} ${a.username}`, commentRefs: "", storyRefs: "" })).ok);
+  assert.equal((await listModMails(av))[0].subject, "Renamed");
+});
+
+test("mod notes: moderators add them, automatic ones skip repeats and show no moderator", { skip }, async () => {
+  const { conn } = await import("../lib/db.ts");
+  const { addModNote, tattle, notesFor } = await import("../feed/models/mod-notes.ts");
+  const { modToggleBan } = await import("../feed/models/mod.ts");
+  const { createStory } = await import("../feed/models/submit.ts");
+  const c = await conn(), n = Date.now().toString(36);
+  const mk = async (name, mod = false) => (await c.query(`INSERT INTO feed.users (username, email, token, is_moderator, karma, created_at) VALUES ($1, $2, $3, $4, 20, now() - interval '200 days') RETURNING id, username`, [name + n, `${name}${n}@example.org`, `u${name}${n}`, mod])).rows[0];
+  const [m, u] = [await mk("nm", true), await mk("nu")];
+  assert.ok(!(await addModNote(u, u.username, "I am not a moderator")).ok);
+  assert.ok(!(await addModNote(m, u.username, "   ")).ok, "blank");
+  assert.ok(!(await addModNote(m, "ghost" + n, "who?")).ok, "unknown user");
+  assert.ok((await addModNote(m, u.username, "Talked to them about *tone*.")).ok);
+  await tattle(u.id, "Attempted to log in while banned."); await tattle(u.id, "Attempted to log in while banned.");
+  const notes = await notesFor(u.id);
+  assert.equal(notes.length, 2, "the repeated automatic note is written once");
+  assert.equal(notes[0].moderator, null); assert.equal(notes[1].moderator, m.username);
+  assert.match(notes[1].markeddown_note, /<em>tone<\/em>/);
+
+  const cat = (await c.query("INSERT INTO feed.categories (category, token) VALUES ($1, $2) RETURNING id", ["ncat" + n, "nc" + n])).rows[0].id;
+  const tag = (await c.query("INSERT INTO feed.tags (tag, category_id, token, hotness_mod) VALUES ($1, $2, $3, 0) RETURNING tag", ["ntg" + n, cat, "nt" + n])).rows[0];
+  const host = `note${n}.example.org`;
+  assert.ok((await modToggleBan(m, "domain", host, "spam")).ok);
+  const r = await createStory(u, { title: "Banned site story", url: `https://${host}/x`, description: "", tags: [tag.tag], userIsAuthor: false });
+  assert.ok(!r.ok);
+  await new Promise((res) => setTimeout(res, 300)); // the note is written in the background
+  assert.ok((await notesFor(u.id)).some((x) => /banned domain/.test(x.markeddown_note) && x.moderator === null));
+});
+
+test("invitations: who may send, limits, one address one code, requests queue", { skip }, async () => {
+  const { conn } = await import("../lib/db.ts");
+  const { saveFeedConfig } = await import("../feed/config.ts");
+  const { inviteRights, createInvitation, liveInvitation, sentInvitations, requestInvitation, confirmRequest, requestsAccess, listRequests, sendForRequest, deleteRequest } = await import("../feed/models/invitations.ts");
+  const { modSetInvites } = await import("../feed/models/mod-users.ts");
+  const c = await conn(), n = Date.now().toString(36);
+  const mk = async (name, o = {}) => (await c.query(`INSERT INTO feed.users (username, email, token, kind, is_moderator, karma, created_at, email_verified_at) VALUES ($1, $2, $3, $4, $5, $6, now() - ($7 || ' days')::interval, now()) RETURNING id, username`, [name + n, `${name}${n}@example.org`, `u${name}${n}`, o.kind ?? "external", !!o.mod, o.karma ?? 5, String(o.age ?? 200)])).rows[0];
+  const [mod, old, fresh, member] = [await mk("im", { mod: true }), await mk("io"), await mk("if", { age: 1 }), await mk("imb", { kind: "member", age: 1 })];
+  try {
+    await saveFeedConfig({ enabled: true, signup: "invite", invites: { who: "members+trusted", perUserLimit: 2, expiryDays: 14, requests: true } }, "test");
+    assert.ok((await inviteRights(old.id)).ok, "an established external user may");
+    assert.ok(!(await inviteRights(fresh.id)).ok, "a new external user may not");
+    assert.ok((await inviteRights(member.id)).ok, "members are trusted at once");
+    await saveFeedConfig({ enabled: true, invites: { who: "staff", perUserLimit: 2 } }, "test");
+    assert.ok(!(await inviteRights(old.id)).ok); assert.ok((await inviteRights(mod.id)).staff);
+    await saveFeedConfig({ enabled: true, invites: { who: "members+trusted", perUserLimit: 2, expiryDays: 14, requests: true } }, "test");
+
+    assert.ok(!(await createInvitation(old.id, "not an address", "")).ok);
+    const a = `a${n}@example.net`, b = `b${n}@example.net`;
+    assert.ok((await createInvitation(old.id, `  ${a.toUpperCase()} `, "welcome")).ok);
+    assert.ok(!(await createInvitation(old.id, a, "")).ok, "already invited");
+    assert.ok(!(await createInvitation(old.id, `io${n}@example.org`, "")).ok, "already has an account");
+    assert.ok((await createInvitation(old.id, b, "")).ok);
+    assert.ok(!(await createInvitation(old.id, `c${n}@example.net`, "")).ok, "limit of 2 waiting");
+    assert.ok((await createInvitation(mod.id, `d${n}@example.net`, "")).ok, "staff are not limited");
+    const sent = await sentInvitations(old.id); assert.equal(sent.length, 2);
+    const code = (await c.query("SELECT code FROM feed.invitations WHERE user_id = $1 AND email = $2", [old.id, a])).rows[0].code;
+    assert.equal((await liveInvitation(code)).email, a); assert.equal(await liveInvitation("nope" + n), null);
+    await c.query("UPDATE feed.invitations SET created_at = now() - interval '30 days' WHERE code = $1", [code]);
+    assert.equal(await liveInvitation(code), null, "expired");
+    assert.ok((await inviteRights(old.id)).ok, "an expired code no longer counts against the limit");
+
+    // a moderator turns invitations off, and says why
+    assert.ok(!(await modSetInvites(mod, old.username, true, "")).ok, "reason required");
+    assert.ok((await modSetInvites(mod, old.username, true, "sent to strangers")).ok);
+    assert.match((await inviteRights(old.id)).why, /sent to strangers/);
+    assert.ok((await modSetInvites(mod, old.username, false)).ok); assert.ok((await inviteRights(old.id)).ok);
+    assert.deepEqual((await c.query("SELECT action FROM feed.moderations WHERE user_id = $1 ORDER BY id", [old.id])).rows.map((r) => r.action), ["Disabled invitations and suggestions", "Enabled invitations"]);
+
+    // public requests: unconfirmed ones stay hidden
+    const r = `r${n}@example.net`;
+    assert.ok(!(await requestInvitation("1.2.3.4", "Rae", r, "javascript:alert(1)")).ok, "only http(s) links");
+    assert.ok((await requestInvitation("1.2.3.4", "Rae", r, "https://example.net/rae")).ok);
+    assert.equal((await listRequests()).filter((x) => x.email === r).length, 0, "not shown until confirmed");
+    const rc = (await c.query("SELECT code FROM feed.invitation_requests WHERE email = $1", [r])).rows[0].code;
+    assert.ok(await confirmRequest(rc)); assert.ok(!(await confirmRequest("nope" + n)));
+    assert.equal((await listRequests()).filter((x) => x.email === r).length, 1);
+    assert.ok(!(await requestsAccess(fresh.id)).ok); assert.ok((await requestsAccess(mod.id)).moderator);
+    assert.ok(!(await deleteRequest(fresh.id, rc)).ok, "not allowed to see the queue");
+    const sr = await sendForRequest(mod.id, rc); assert.ok(sr.ok, JSON.stringify(sr)); assert.equal(sr.name, "Rae");
+    assert.equal((await listRequests()).filter((x) => x.email === r).length, 0, "a sent request leaves the queue");
+    assert.equal((await c.query("SELECT 1 FROM feed.invitations WHERE email = $1", [r])).rowCount, 1);
+
+    const { listUsers } = await import("../feed/models/user-list.ts");
+    const mods = (await listUsers("moderators")).map((u) => u.username);
+    assert.ok(mods.includes(mod.username) && !mods.includes(old.username), "moderators list");
+    assert.ok(!(await listUsers("tree")).some((u) => u.username === "inactive-user"), "the system account is never listed");
+  } finally { await saveFeedConfig({ enabled: false }, "test"); }
+});

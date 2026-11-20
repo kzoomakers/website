@@ -24,7 +24,7 @@ export function splitPage(seg: string[] = []): { rest: string[]; page: number } 
 
 async function Render({ title, base, page, query, above, below, subnav, h1 }: { title: string; base: string; page: number; query: Query; above?: ReactNode; below?: ReactNode; subnav?: boolean; h1?: boolean }) {
   const me = await currentFeedUser().catch(() => null);
-  const [{ stories, more }, cfg] = await Promise.all([listBy(query, page, me?.id), getFeedConfig()]);
+  const [{ stories, more }, cfg] = await Promise.all([listBy(query, page, me?.id, base.startsWith("/top")), getFeedConfig()]);
   const votes = me ? await storyVotes(me.id, stories.map((s) => s.id)) : undefined;
   const path = base + (page > 1 ? `/page/${page}` : "");
   return (
@@ -69,17 +69,30 @@ export async function CategoryPage({ category, page }: { category: string; page:
 
 const BannedNote = ({ b }: { b: Banned }) => !b.banned_at ? null : <p>Banned <TimeLabel time={b.banned_at} />{b.banned_by && <> by <a href={`/~${b.banned_by}`}>{b.banned_by}</a>: <em>{b.banned_reason}</em></>}</p>;
 
+/** mod/domains/edit and mod/origins/edit, cut down to the ban toggle. Moderators only. */
+async function BanForm({ kind, name, banned }: { kind: "domain" | "origin"; name: string; banned: boolean }) {
+  const me = await currentFeedUser().catch(() => null);
+  if (!me?.isModerator) return null;
+  return (
+    <form method="post" action="/mod/ban" className="story_mod_tools">
+      <input type="hidden" name="csrf" value={me.csrf} /><input type="hidden" name="kind" value={kind} /><input type="hidden" name="name" value={name} />
+      <input name="reason" required maxLength={200} placeholder="reason" aria-label="Reason for the mod log" />{" "}
+      <button type="submit">{banned ? "Unban" : "Ban"} {kind}</button>
+    </form>
+  );
+}
+
 export async function DomainPage({ id, page }: { id: string; page: number }) {
   const d = await findDomain(segs(id));
   if (!d) notFound();
-  const above = <><p>{d.domain}: {n(d.stories_count, "story").replace("storys", "stories")} from {n(d.n_submitters, "submitter")}{d.n_origins > 0 && <> with <a href={`/domains/${d.domain}/origins`}>{n(d.n_origins, "origin")}</a></>}</p><BannedNote b={d} /></>;
+  const above = <><p>{d.domain}: {n(d.stories_count, "story").replace("storys", "stories")} from {n(d.n_submitters, "submitter")}{d.n_origins > 0 && <> with <a href={`/domains/${d.domain}/origins`}>{n(d.n_origins, "origin")}</a></>}</p><BannedNote b={d} /><BanForm kind="domain" name={d.domain} banned={!!d.banned_at} /></>;
   return <Render title={d.domain} base={`/domains/${d.domain}`} page={page} query={byDomain(d.id)} above={above} />;
 }
 
 export async function OriginPage({ identifier, page }: { identifier: string; page: number }) {
   const o = await findOrigin(segs(identifier));
   if (!o) notFound();
-  const above = <><p>{o.identifier} (part of <a href={`/domains/${o.domain}`}>{o.domain}</a>): {n(o.stories_count, "story").replace("storys", "stories")} from {n(o.n_submitters, "submitter")}</p><BannedNote b={o} /></>;
+  const above = <><p>{o.identifier} (part of <a href={`/domains/${o.domain}`}>{o.domain}</a>): {n(o.stories_count, "story").replace("storys", "stories")} from {n(o.n_submitters, "submitter")}</p><BannedNote b={o} /><BanForm kind="origin" name={o.identifier} banned={!!o.banned_at} /></>;
   return <Render title={o.identifier} base={`/origins/${o.identifier}`} page={page} query={byOrigin(o.id)} above={above} />;
 }
 

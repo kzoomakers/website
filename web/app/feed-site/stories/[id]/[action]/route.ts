@@ -4,7 +4,7 @@ import { csrfOk, originOk } from "@/feed/auth";
 import { viewerFor } from "@/feed/identity";
 import { putCommentFlash, putError, putFlash } from "@/feed/flash";
 import { createComment } from "@/feed/models/comment-write";
-import { modSetStoryDeleted } from "@/feed/models/mod";
+import { modMergeStory, modSetStoryDeleted, modUpdateStory } from "@/feed/models/mod";
 import { markStory } from "@/feed/models/hide-save";
 import { castVote } from "@/feed/models/vote";
 import { setStoryDeleted, updateStory, type Submission } from "@/feed/models/submit";
@@ -18,7 +18,7 @@ const to = (path: string) => NextResponse.redirect(feedOrigin() + path, { status
 // stories#update, #destroy and #undelete (Lobsters uses PATCH/DELETE; these are POSTs so the same-site and CSRF checks cover every change).
 export async function POST(req: Request, { params }: { params: Promise<{ id: string; action: string }> }) {
   const { id, action } = await params;
-  if (!/^[a-z0-9]{1,10}$/.test(id) || !["update", "delete", "undelete", "comment", "upvote", "unvote", "flag", "hide", "unhide", "save", "unsave", "mod-delete", "mod-undelete"].includes(action)) return new NextResponse("not found", { status: 404 });
+  if (!/^[a-z0-9]{1,10}$/.test(id) || !["update", "delete", "undelete", "comment", "upvote", "unvote", "flag", "hide", "unhide", "save", "unsave", "mod-delete", "mod-undelete", "mod-merge"].includes(action)) return new NextResponse("not found", { status: 404 });
   if (!originOk(req.headers)) return new NextResponse("forbidden", { status: 403 });
   const f = await req.formData().catch(() => null);
   if (!f) return new NextResponse("bad request", { status: 400 });
@@ -42,17 +42,22 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       if (!r.ok) putError(v.id, `Couldn't do that: ${r.error}.`);
       return to(`/s/${id}`);
     }
+    if (action === "mod-merge") { // an empty target unmerges
+      const r = await modMergeStory(v, id, String(f.get("target") ?? "").trim().slice(0, 10), String(f.get("reason") ?? ""));
+      if (!r.ok) putError(v.id, `Couldn't do that: ${r.error}.`);
+      return to(`/s/${id}`);
+    }
     if (action === "comment") {
       const text = String(f.get("comment") ?? "").slice(0, 70_000), parent = String(f.get("parent") ?? "").slice(0, 10) || undefined;
       if (!(await hit(`feed:comment:${v.id}`, 30, 3_600_000, true))) { putCommentFlash(v.id, { text, errors: ["You're commenting too fast. Please wait a bit."] }); return to(parent ? `/c/${parent}/reply` : `/s/${id}#comment_form`); }
-      const r = await createComment(v, { storyShortId: id, parentShortId: parent, comment: text });
+      const r = await createComment(v, { storyShortId: id, parentShortId: parent, comment: text, hat: String(f.get("hat") ?? "").slice(0, 10) });
       if (r.ok) return to(`/c/${r.shortId}`);
       putCommentFlash(v.id, { text, errors: r.errors });
       return to(parent ? `/c/${parent}/reply` : `/s/${id}#comment_form`);
     }
     if (action === "update") {
       const input: Submission = readSubmission(f);
-      const r = await updateStory(v, id, input);
+      const r = v.isModerator && f.get("reason") !== null ? await modUpdateStory(v, id, input, String(f.get("reason")).slice(0, 4000)) : await updateStory(v, id, input);
       if (r.ok) return to(`/s/${id}`);
       putFlash(v.id, { input, errors: r.errors });
       return to(`/stories/${id}/edit`);

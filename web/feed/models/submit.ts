@@ -4,6 +4,7 @@ import { conn } from "@/lib/db";
 import { cleanUrl, hotness } from "../logic";
 import { MAX_EDIT_MINS, RECENT_DAYS, cleanTitle, isNewUser, storyProblems } from "../story-rules";
 import { updateCachedColumns } from "./cached";
+import { tattle } from "./mod-notes";
 import { renderPost } from "./render";
 import { findTags } from "./stories";
 
@@ -28,11 +29,15 @@ function originIdentifier(d: { selector: string | null; replacement: string | nu
   } catch { return d.domain.toLowerCase(); } // a bad selector in the database must not stop submissions
 }
 
-type Prep = { title: string; description: string; html: string; cu: ReturnType<typeof cleanUrl> | { url: ""; normalized: ""; domain: null }; tags: Awaited<ReturnType<typeof findTags>> & {}; domainId: number | null; originId: number | null; isAuthor: boolean };
+export type Prep = { title: string; description: string; html: string; cu: ReturnType<typeof cleanUrl> | { url: ""; normalized: ""; domain: null }; tags: Awaited<ReturnType<typeof findTags>> & {}; domainId: number | null; originId: number | null; isAuthor: boolean };
 const fail = (errors: string[], similar?: { short_id: string; title: string }[]): SubmitResult => ({ ok: false, errors, similar });
 
+/** mod_note.rb tattle_on_story_domain!/_origin!: what a refused story looked like, so moderators can spot someone testing a banned site. */
+const bannedNote = (what: string, u: { created_at: Date | null }, url: string, title: string, description: string, tags: { tag: string }[], isAuthor: boolean) =>
+  `Attempted to post a story from a banned ${what}:\n- user joined: ${u.created_at ? new Date(u.created_at).toISOString().slice(0, 10) : "unknown"}\n- url: ${url}\n- title: ${title}\n- user_is_author: ${isAuthor}\n- tags: ${tags.map((t) => t.tag).join(" ")}\n- description: ${description}\n`;
+
 /** Validates a submission and resolves its domain, origin and markdown. `storyId` is set when editing: the "already posted", banned and new-user checks only apply to new stories (as in story.rb). */
-async function prepare(c: PoolClient, u: { is_moderator: boolean; created_at: Date | null }, input: Submission, storyId?: number): Promise<Prep | SubmitResult> {
+export async function prepare(c: PoolClient, u: { id?: number; is_moderator: boolean; created_at: Date | null }, input: Submission, storyId?: number): Promise<Prep | SubmitResult> {
   const isNew = isNewUser(u.created_at), title = cleanTitle(input.title.trim()), description = input.description.replace(/\s+$/, "");
   const tags = await findTags(input.tags);
   if (!tags || tags.some((t) => !t.active)) return fail(["Unknown tag."]); // inactive tags are retired: the form doesn't list them, and a hand-made POST can't use them either
@@ -52,7 +57,7 @@ async function prepare(c: PoolClient, u: { is_moderator: boolean; created_at: Da
     let d = (await c.query("SELECT * FROM feed.domains WHERE lower(domain) = lower($1)", [name])).rows[0];
     if (!d) d = (await c.query("INSERT INTO feed.domains (domain, token) VALUES ($1, $2) ON CONFLICT (lower(domain)) DO UPDATE SET updated_at = now() RETURNING *", [name, token("domain")])).rows[0];
     if (!storyId) {
-      if (d.banned_at) return fail([`Url is from banned domain ${d.domain}: ${d.banned_reason}`]);
+      if (d.banned_at) { if (u.id) void tattle(u.id, bannedNote("domain", u, cu.url, title, description, tags, input.userIsAuthor)); return fail([`Url is from banned domain ${d.domain}: ${d.banned_reason}`]); }
       if (isNew && !(await c.query("SELECT 1 FROM feed.stories WHERE domain_id = $1 AND NOT is_deleted LIMIT 1", [d.id])).rowCount) return fail(["Url is an unseen domain from a new user."]);
     }
     domainId = d.id;
@@ -60,14 +65,14 @@ async function prepare(c: PoolClient, u: { is_moderator: boolean; created_at: Da
     if (ident) {
       let o = (await c.query("SELECT * FROM feed.origins WHERE lower(identifier) = $1", [ident])).rows[0];
       if (!o) o = (await c.query("INSERT INTO feed.origins (domain_id, identifier, token) VALUES ($1, $2, $3) ON CONFLICT (lower(identifier)) DO UPDATE SET updated_at = now() RETURNING *", [d.id, ident, token("origin")])).rows[0];
-      if (!storyId && o.banned_at) return fail([`Url is from banned origin ${o.identifier}: ${o.banned_reason}`]);
+      if (!storyId && o.banned_at) { if (u.id) void tattle(u.id, bannedNote("origin", u, cu.url, title, description, tags, input.userIsAuthor)); return fail([`Url is from banned origin ${o.identifier}: ${o.banned_reason}`]); }
       originId = o.id;
     }
   }
   return { title, description, html: await renderPost(c, description), cu, tags, domainId, originId, isAuthor: !cu.url || input.userIsAuthor }; // a text post is always by its submitter
 }
 
-const isFail = (p: Prep | SubmitResult): p is SubmitResult => "ok" in p;
+export const isFail = (p: Prep | SubmitResult): p is SubmitResult => "ok" in p;
 export async function tx<T>(f: (c: PoolClient) => Promise<T>): Promise<T> {
   const c = await (await conn()).connect();
   try { await c.query("BEGIN"); const r = await f(c); await c.query(r && typeof r === "object" && "ok" in r && !(r as { ok: boolean }).ok ? "ROLLBACK" : "COMMIT"); return r; }
@@ -113,14 +118,10 @@ const owned = async (c: PoolClient, shortId: string, userId: number) => {
   return s && editable(s, userId) ? s : null;
 };
 
-/** stories#update: edit your own story inside the edit window. Editing also undeletes it, as Lobsters does. */
-export const updateStory = (user: { id: number }, shortId: string, input: Submission): Promise<SubmitResult> => tx(async (c) => {
-  const u = await live(c, user.id), s = u && !u.banned_at && !u.deleted_at && await owned(c, shortId, user.id);
-  if (!s) return fail(["You cannot edit that story."]);
-  const p = await prepare(c, u, input, s.id);
-  if (isFail(p)) return p;
+/** Writes an edited story: fields, tags and the domain/origin counter caches. `undelete` is true for the submitter (editing undeletes, as in Lobsters); a moderator's edit leaves the deleted state alone. */
+export async function writeStory(c: PoolClient, s: { id: number; domain_id: number | null; origin_id: number | null }, p: Prep, undelete: boolean) {
   await c.query(
-    `UPDATE feed.stories SET url = $2, normalized_url = $3, title = $4, description = $5, markeddown_description = $6, user_is_author = $7, domain_id = $8, origin_id = $9, is_deleted = false, last_edited_at = now(), updated_at = now() WHERE id = $1`,
+    `UPDATE feed.stories SET url = $2, normalized_url = $3, title = $4, description = $5, markeddown_description = $6, user_is_author = $7, domain_id = $8, origin_id = $9, is_deleted = ${undelete ? "false" : "is_deleted"}, last_edited_at = now(), updated_at = now() WHERE id = $1`,
     [s.id, p.cu.url, p.cu.normalized || null, p.title, p.description, p.html, p.isAuthor, p.domainId, p.originId]);
   await c.query("DELETE FROM feed.taggings WHERE story_id = $1", [s.id]);
   for (const t of p.tags) await c.query("INSERT INTO feed.taggings (story_id, tag_id) VALUES ($1, $2)", [s.id, t.id]);
@@ -132,6 +133,15 @@ export const updateStory = (user: { id: number }, shortId: string, input: Submis
     if (s.origin_id) await c.query("UPDATE feed.origins SET stories_count = stories_count - 1 WHERE id = $1", [s.origin_id]);
     if (p.originId) await c.query("UPDATE feed.origins SET stories_count = stories_count + 1 WHERE id = $1", [p.originId]);
   }
+}
+
+/** stories#update: edit your own story inside the edit window. Editing also undeletes it, as Lobsters does. */
+export const updateStory = (user: { id: number }, shortId: string, input: Submission): Promise<SubmitResult> => tx(async (c) => {
+  const u = await live(c, user.id), s = u && !u.banned_at && !u.deleted_at && await owned(c, shortId, user.id);
+  if (!s) return fail(["You cannot edit that story."]);
+  const p = await prepare(c, u, input, s.id);
+  if (isFail(p)) return p;
+  await writeStory(c, s, p, true);
   await updateCachedColumns(c, s.id);
   return { ok: true, shortId } as SubmitResult;
 });

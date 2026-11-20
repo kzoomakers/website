@@ -27,7 +27,7 @@ export function UserLink({ s, newUserDays }: { s: Pick<Story, "username" | "user
 }
 
 /** stories/_listdetail.html.erb (logged-out). Hide/save/flag/edit controls come with accounts (phase 2/3). */
-export function StoryItem({ story: s, newUserDays, me = null, vote = 0 }: { story: Story; newUserDays: number; me?: Me | null; vote?: number }) {
+export function StoryItem({ story: s, newUserDays, me = null, vote = 0, hidden = false }: { story: Story; newUserDays: number; me?: Me | null; vote?: number; hidden?: boolean }) {
   const href = s.url || titlePath(s);
   const referrer = s.merged_story_id == null && Date.now() - s.created_at.getTime() < 3600_000;
   const cls = ["story", negativityClass(s.score, s.flags), vote === 1 && "upvoted", vote === -1 && "flagged"].filter(Boolean).join(" ");
@@ -48,7 +48,7 @@ export function StoryItem({ story: s, newUserDays, me = null, vote = 0 }: { stor
             <UserLink s={s} newUserDays={newUserDays} /> <TimeLabel time={s.created_at} />
             {s.url && <><Divider /><Caches url={s.url} /></>}
             <span className="comments_label"><Divider /><a href={titlePath(s)}>{s.comments_count === 0 ? "no comments" : `${s.comments_count} comment${s.comments_count === 1 ? "" : "s"}`}</a></span>
-            {me && <><Divider /><ActionForm path={`/stories/${s.short_id}/hide`} me={me} label="hide" /></>}
+            {me && <><Divider /><ActionForm path={`/stories/${s.short_id}/${hidden ? "unhide" : "hide"}`} me={me} label={hidden ? "unhide" : "hide"} /></>}
           </div>
         </div>
       </div>
@@ -58,12 +58,12 @@ export function StoryItem({ story: s, newUserDays, me = null, vote = 0 }: { stor
 }
 
 /** home/index.html.erb: the list plus "Page N" links. `base` is "" for the home page (links are /page/2) or e.g. "/newest". */
-export function StoryList({ stories, page, more, base, above, below, newUserDays, me = null, votes }: { stories: Story[]; page: number; more: boolean; base: string; above?: React.ReactNode; below?: React.ReactNode; newUserDays: number; me?: Me | null; votes?: Map<number, number> }) {
+export function StoryList({ stories, page, more, base, above, below, newUserDays, me = null, votes, hidden = false }: { stories: Story[]; page: number; more: boolean; base: string; above?: React.ReactNode; below?: React.ReactNode; newUserDays: number; me?: Me | null; votes?: Map<number, number>; hidden?: boolean }) {
   const link = (p: number) => `${base}/page/${p}${base === "/newest" ? "?last_read_timestamp=0" : ""}`; // newest keeps the "Last Read" marker position in the URL; a visitor has none
   return (
     <>
       {above}
-      <ol className="stories list">{stories.map((s) => <StoryItem key={s.id} story={s} newUserDays={newUserDays} me={me} vote={votes?.get(s.id) ?? 0} />)}</ol>
+      <ol className="stories list">{stories.map((s) => <StoryItem key={s.id} story={s} newUserDays={newUserDays} me={me} vote={votes?.get(s.id) ?? 0} hidden={hidden} />)}</ol>
       {below}
       <nav className="morelink">
         {page > 1 && <a href={link(page - 1)} rel="prev">{`Page ${page - 1}`}</a>}

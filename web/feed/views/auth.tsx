@@ -1,13 +1,15 @@
+import { conn } from "@/lib/db";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { getFeedConfig } from "../config";
 import { safeReturn } from "../auth";
 import { currentFeedUser, resetLinkValid } from "../identity";
+import { liveInvitation } from "../models/invitations";
 import Shell from "./shell";
 
 // Every message a page can show. Pages look the code up here; nothing from the address bar or a form is ever printed.
 const ERRORS: Record<string, string> = {
-  login_bad: "Wrong email or password.", slow_down: "Too many tries. Please wait a few minutes and try again.", banned: "This account can't sign in.",
+  login_bad: "Wrong email or password.", slow_down: "Too many tries. Please wait a few minutes and try again.", banned: "This account can't sign in.", deactivated: "You deactivated this account. Use \"Forgot password\" to come back.",
   not_allowed: "You can't sign in this way. Members need an approved account on the main site; admins need an admin Google account.",
   handoff: "That sign-in link didn't work. It may have expired or been used already. Please try again.", link_bad: "That link didn't work. It may have expired or been used already.",
   email_bad: "That email address doesn't look right.", password_bad: "Passwords need 10 to 200 characters, and can't be your email address.",
@@ -71,20 +73,23 @@ export async function LoginPage({ q }: { q: Q }) {
 
 export async function SignupPage({ q }: { q: Q }) {
   if (await currentFeedUser().catch(() => null)) redirect("/");
-  const mode = (await getFeedConfig()).signup;
+  const cfg = await getFeedConfig(), mode = cfg.signup;
+  const code = typeof q.code === "string" ? q.code.slice(0, 60) : "", inv = code ? await liveInvitation(code) : null; // /invitations/:code lands here
   return (
     <Page title="Create an account" path="/signup" q={q}>
+      {mode === "invite" && code && !inv && <div className="flash-error" role="alert">That invitation is not valid any more. Ask the person who invited you to send a new one.</div>}
       {mode === "closed" ? <p>New accounts aren't being created right now.</p> : (
         <form method="post" action="/auth/signup">
           <div className="labelled_grid">
-            <Field id="email" label="Email" type="email" required maxLength={100} autoComplete="email" autoCapitalize="off" />
+            <Field id="email" label="Email" type="email" required maxLength={100} autoComplete="email" autoCapitalize="off" defaultValue={inv?.email || undefined} />
             <Field id="password" label="Password" type="password" required minLength={10} maxLength={200} autoComplete="new-password" />
-            {mode === "invite" && <Field id="code" label="Invitation code" type="text" required maxLength={60} autoComplete="off" />}
+            {mode === "invite" && <Field id="code" label="Invitation code" type="text" required maxLength={60} autoComplete="off" defaultValue={inv ? code : undefined} />}
           </div>
           <p>We'll email you a link to confirm your address before you can post.</p>
           <input type="submit" value="Create account" />
         </form>
       )}
+      {mode === "invite" && cfg.invites.requests && <p>No invitation? <a href="/invitations/request">Request one</a>.</p>}
       <p>Already have an account? <a href="/login">Log in</a>.</p>
     </Page>
   );
@@ -141,6 +146,7 @@ export async function UsernamePage({ q }: { q: Q }) {
 export async function Account() {
   const v = await currentFeedUser().catch(() => null);
   if (!v) return <li className="push-right"><a href="/login">Login</a></li>;
+  const unreadMessages = v.username ? (await (await conn()).query("SELECT count(*)::int AS n FROM feed.notifications WHERE user_id = $1 AND notifiable_type = 'Message' AND read_at IS NULL", [v.id])).rows[0].n : 0;
   const post = (action: string, label: string) => (
     <form method="post" action={`/auth/${action}`} style={{ display: "inline" }}>
       <input type="hidden" name="csrf" value={v.csrf} />
@@ -150,6 +156,11 @@ export async function Account() {
   return (
     <>
       {v.username && <li className="push-right"><a href="/stories/new">Submit</a></li>}
+      {v.username && <li><a href="/invitations">Invitations</a></li>}
+      {v.username && <li><a href="/messages">Messages{unreadMessages > 0 && ` (${unreadMessages})`}</a></li>}
+      <li><a href="/settings">Settings</a></li>
+      {v.isModerator && <li><a href="/mod/mails">Mod Mail</a></li>}
+      {v.isModerator && <li><a href="/hat_requests">Hat Requests</a></li>}
       <li className={v.username ? undefined : "push-right"}>{v.username ? <a href={`/~${v.username}`}>{v.username}</a> : <a href="/login/username">Choose a username</a>}</li>
       {v.kind === "external" && !v.verified && <li>{post("resend", "Confirm your email")}</li>}
       <li>{post("logout", "Logout")}</li>

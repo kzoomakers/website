@@ -4,7 +4,7 @@ import type { TagRow } from "./stories";
 export type Profile = {
   id: number; username: string; created_at: Date | null; is_admin: boolean; is_moderator: boolean; karma: number; about: string | null; banned_at: Date | null; banned_reason: string | null; banned_by: string | null;
   deleted_at: Date | null; disabled_invite_at: Date | null; invited_by: string | null; stories_submitted: number; stories_deleted: number; comments_posted: number; common_tag: Pick<TagRow, "tag" | "description" | "is_media"> | null;
-  hats: { hat: string; link: string | null; created_at: Date; doffed_at: Date | null }[];
+  hats: { short_id: string; hat: string; link: string | null; created_at: Date; doffed_at: Date | null }[];
 };
 
 // Ties for the most common tag go to the newest tag, which is what Lobsters' SQLite happens to return.
@@ -19,7 +19,7 @@ export async function findProfile(username: string): Promise<Profile | null> {
     c.query("SELECT key, value FROM feed.keystores WHERE key = ANY($1::text[])", [[`user:${u.id}:stories_submitted`, `user:${u.id}:stories_deleted`, `user:${u.id}:comments_posted`]]),
     c.query(`SELECT t.tag, t.description, t.is_media FROM feed.tags t JOIN feed.taggings tg ON tg.tag_id = t.id JOIN feed.stories s ON s.id = tg.story_id
              WHERE t.active AND s.user_id = $1 AND NOT s.is_deleted GROUP BY t.id ORDER BY count(*) DESC, t.id DESC LIMIT 1`, [u.id]),
-    c.query("SELECT hat, link, created_at, doffed_at FROM feed.hats WHERE user_id = $1 ORDER BY id", [u.id]),
+    c.query("SELECT short_id, hat, link, created_at, doffed_at FROM feed.hats WHERE user_id = $1 ORDER BY id", [u.id]),
   ]);
   const kv = (name: string) => Number(k.rows.find((r) => r.key === `user:${u.id}:${name}`)?.value ?? 0);
   return { ...u, stories_submitted: kv("stories_submitted"), stories_deleted: kv("stories_deleted"), comments_posted: kv("comments_posted"), common_tag: tag.rows[0] ?? null, hats: hats.rows };
