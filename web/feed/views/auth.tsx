@@ -6,6 +6,8 @@ import { safeReturn } from "../auth";
 import { currentFeedUser, resetLinkValid } from "../identity";
 import { liveInvitation } from "../models/invitations";
 import Shell from "./shell";
+import { Icon } from "./icons";
+import { Nav } from "./nav";
 
 // Every message a page can show. Pages look the code up here; nothing from the address bar or a form is ever printed.
 const ERRORS: Record<string, string> = {
@@ -143,27 +145,27 @@ export async function UsernamePage({ q }: { q: Q }) {
 }
 
 /** The right end of the top menu: Login for visitors; username and Logout once signed in. */
-export async function Account() {
+export async function Account({ path = "" }: { path?: string }) {
   const v = await currentFeedUser().catch(() => null);
-  if (!v) return <li className="push-right"><a href="/login">Login</a></li>;
+  if (!v) return <li className="push-right"><Nav href="/login" path={path} icon="login">Login</Nav></li>;
   const unreadMessages = v.username ? (await (await conn()).query("SELECT count(*)::int AS n FROM feed.notifications WHERE user_id = $1 AND notifiable_type = 'Message' AND read_at IS NULL", [v.id])).rows[0].n : 0;
   const post = (action: string, label: string) => (
     <form method="post" action={`/auth/${action}`} style={{ display: "inline" }}>
       <input type="hidden" name="csrf" value={v.csrf} />
-      <button type="submit">{label}</button>
+      <button type="submit">{action === "logout" && <Icon name="logout" />}<span>{label}</span></button>
     </form>
   );
   return (
     <>
-      {v.username && <li className="push-right"><a href="/stories/new">Submit</a></li>}
-      {v.username && <li><a href="/invitations">Invitations</a></li>}
-      {v.username && <li><a href="/messages">Messages{unreadMessages > 0 && ` (${unreadMessages})`}</a></li>}
-      <li><a href="/settings">Settings</a></li>
-      {v.isModerator && <li><a href="/mod/mails">Mod Mail</a></li>}
-      {v.isModerator && <li><a href="/hat_requests">Hat Requests</a></li>}
-      <li className={v.username ? undefined : "push-right"}>{v.username ? <a href={`/~${v.username}`}>{v.username}</a> : <a href="/login/username">Choose a username</a>}</li>
+      {v.username && <li className="push-right"><Nav href="/stories/new" path={path} icon="submit">Submit</Nav></li>}
+      {v.username && <li><Nav href="/invitations" path={path} icon="invitations">Invitations</Nav></li>}
+      {v.username && <li><Nav href="/messages" path={path} icon="messages">Messages{unreadMessages > 0 && ` (${unreadMessages})`}</Nav></li>}
+      <li><Nav href="/settings" path={path} icon="settings">Settings</Nav></li>
+      {v.isModerator && <li className="compact"><Nav href="/mod/mails" path={path} icon="mod" title="Mod Mail">Mod Mail</Nav></li>}
+      {v.isModerator && <li className="compact"><Nav href="/hat_requests" path={path} icon="hats" title="Hat Requests">Hat Requests</Nav></li>}
+      <li className={v.username ? undefined : "push-right"}>{v.username ? <Nav href={`/~${v.username}`} path={path} icon="user">{v.username}</Nav> : <Nav href="/login/username" path={path} icon="user">Choose a username</Nav>}</li>
       {v.kind === "external" && !v.verified && <li>{post("resend", "Confirm your email")}</li>}
-      <li>{post("logout", "Logout")}</li>
+      <li className="logout">{post("logout", "Logout")}</li>
     </>
   );
 }
