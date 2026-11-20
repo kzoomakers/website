@@ -2,7 +2,7 @@ import { forget } from "./memo";
 import { conn, db } from "./db";
 import { logAudit } from "./store";
 
-// Membership classes: what we offer, what each costs, and the text the Pricing page shows for it. Staff edit them under Admin > Setup.
+// Membership classes: what we offer, what each costs, and the text the Pricing page shows for it. Staff edit them under Admin > People > Membership classes.
 // A member's class is a row in `memberships`.
 export type MembershipClass = { name: string; price: number; per: string; normal?: string; offer?: string; blurb?: string; note?: string; features?: string };
 

@@ -4,7 +4,7 @@ import { notify, TOUR_EVENTS, type TourEvent } from "./pushover";
 import { cleanDays, cleanEmail } from "./tours-fmt";
 import { getMailCfg, mailReady, sendQueued as send } from "./mail";
 
-// Who hears about tour events. Email: a list of addresses per event, kept in settings. Push: the event's Pushover delivery group (Admin > Setup > Alert delivery).
+// Who hears about tour events. Email: a list of addresses per event, kept in settings. Push: the event's Pushover delivery group (Admin > System > Alert delivery).
 // Email lists are edited in Admin > Tours > Notifications.
 export type Cfg = { emails: Record<TourEvent, string[]>; staleDays: number };
 const EVENTS = Object.keys(TOUR_EVENTS) as TourEvent[];

@@ -38,6 +38,13 @@ test("a URL belongs to the longest page path above it", () => {
   assert.equal(k("/admin/nowhere"), undefined);
 });
 
+test("whoever held Setup keeps the pages split out of it", () => {
+  const p = { "admin:setup": "write" };
+  for (const [s, k] of [["admin", "seal"], ["admin", "maps"], ["admin", "captcha"], ["admin", "uploads"], ["crm", "membership-classes"]]) assert.equal(levelFor(p, s, k), "write", `${s}:${k}`);
+  assert.equal(anyLevel(p, "crm"), "write");
+  assert.equal(levelFor({ "admin:seal": "read" }, "admin", "maps"), undefined);
+});
+
 test("the pages that change who has access (or show who looked at personal data) are never grantable one by one", () => {
   assert.deepEqual(PAGES.filter((p) => p.full).map((p) => p.key).sort(), ["pii", "special", "users"]); // Audit PII is opened by full admins or the "Audit PII" special permission instead
 });
@@ -58,11 +65,14 @@ test("every admin page's gate() names a section that owns that URL", () => {
   assert.ok(n > 40);
 });
 
-test("every menu link is a registered page", () => {
-  const nav = src(new URL("../app/admin/nav.tsx", import.meta.url).pathname);
-  const hrefs = [...nav.matchAll(/href: "(\/admin[^"]*)"/g)].map((m) => m[1]);
-  assert.ok(hrefs.length > 40);
-  for (const h of hrefs) assert.ok(pageOf(h), `${h} is in the menu but is not a page in lib/access.ts`);
+test("every menu link is a registered page, and no label repeats inside a menu", async () => {
+  const { NAV, ENTRIES, flat, menuOf } = await import("../lib/nav-manifest.ts");
+  assert.ok(ENTRIES.length > 80);
+  for (const [, e] of ENTRIES) {
+    assert.ok(pageOf(e.href), `${e.href} is in the manifest but is not a page`);
+  }
+  for (const t of NAV) { const l = flat(menuOf(t)).map((e) => e.label); assert.equal(new Set(l).size, l.length, `duplicate label in ${t.label}`); }
+  const keys = ENTRIES.filter(([, e]) => e.key).map(([t, e]) => `${e.section ?? t.section}:${e.key}`); assert.equal(new Set(keys).size, keys.length, "duplicate permission page");
 });
 
 test("every page named in an API check exists in the section it is checked against", () => {

@@ -251,3 +251,37 @@ html:has(.adm-root){background:#f5f6f8}
 .adm .needs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:16px 0}
 .adm .needs a.card{display:block;padding:14px 16px;color:var(--ink)}.adm .needs a.card b{font-size:26px;display:block}
 .adm .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.adm-zone{display:flex;flex-direction:column;gap:4px}
+.adm-zh,.adm-zone>summary{padding:10px 12px 2px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mute,#666)}
+.adm-zone>summary{cursor:pointer;list-style:none}
+.adm-zone>summary::after{content:" ▾"}
+.adm-zone[open]>summary::after{content:" ▴"}
+
+/* Settings cards (System pages): title + status badge, a hint, the fields, then the actions. */
+.set-card{max-width:560px;margin:0 0 24px;padding:16px 20px}
+.set-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.set-head h2{margin:0;font-size:18px}
+.set-badge{font-size:12px;font-weight:600;padding:2px 10px;border-radius:99px;background:var(--bg);color:var(--mut)}
+.set-badge.ok{background:#e3f6ea;color:#14633a}.set-badge.bad{background:#fde8e8;color:#9b1c1c}
+.set-card .set-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.set-secret{display:flex;align-items:center;gap:8px;margin:4px 0 12px}
+
+/* Material-style settings: status banner, outlined fields with helper text, numbered setup steps, snackbar. */
+.set-banner{display:flex;gap:14px;align-items:flex-start;margin:14px 0;padding:14px 16px;border-radius:12px;background:var(--bg)}
+.set-banner b{display:block;font-size:16px}.set-banner span{color:var(--mut)}
+.set-banner .ico{font-size:24px;line-height:1}
+.set-banner.ok{background:#e3f6ea}.set-banner.bad{background:#fde8e8}.set-banner.warn{background:#fff4d6}
+@media (prefers-color-scheme:dark){.set-banner.ok{background:#12301f}.set-banner.bad{background:#3a1717}.set-banner.warn{background:#3a2f10}}
+.set-field{display:block;margin:16px 0}
+.set-field>span{display:block;font-size:13px;font-weight:600;margin-bottom:4px}
+.set-field input{display:block;width:100%;margin:0;padding:12px 14px;border-radius:8px}
+.set-field.mono input{font-family:ui-monospace,Menlo,monospace;font-size:14px}
+.set-field small{display:block;margin-top:4px;color:var(--mut);font-size:12.5px}
+.set-field.bad input{border-color:var(--bad)}.set-field.bad small{color:var(--bad)}
+.set-steps{margin:8px 0 4px;border:1px solid var(--btn-bd);border-radius:12px;padding:4px 14px}
+.set-steps>summary{cursor:pointer;font-weight:600;padding:8px 0}
+.set-steps ol{margin:4px 0 10px;padding-left:20px}.set-steps li{margin:6px 0}
+.set-card button.text{border:0;background:none;color:var(--acc);padding:7px 10px}
+.set-card button.danger-text{border:0;background:none;color:var(--bad);padding:7px 10px}
+.set-snack{position:fixed;left:24px;bottom:24px;z-index:99999;background:#202124;color:#fff;padding:12px 18px;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.35)}

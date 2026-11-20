@@ -4,8 +4,9 @@ import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Envelope from "./envelope";
 import Collapse from "../admin/collapse";
+import { MEMBER_MENU } from "@/lib/nav-manifest";
 
-const MENU = [["/members", "🏠", "Home"], ["/members/waiver", "📝", "Liability Waiver"], ["/members/handbook", "📖", "Handbook"], ["/members/directory", "🔎", "Member directory"], ["/members/classes", "🎓", "Classes"], ["/members/makerfavor", "🧹", "MakerFavor™"], ["/members/id", "🪪", "Gov ID"], ["/members/profile", "👤", "My profile"], ["/members/inbox", "✉️", "Inbox"], ["/account", "⚙️", "My account"]] as const;
+const MENU = MEMBER_MENU;
 
 // Same bar and sidebar as the admin area (styles come from admin's webmaster.css), with the members links.
 export function Bar({ signedIn }: { signedIn: boolean }) {

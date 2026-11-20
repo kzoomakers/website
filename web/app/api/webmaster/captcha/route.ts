@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
-  if (!(await editingAllowed("admin", "write", "setup"))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("admin", "write", "captcha"))) return new NextResponse("not found", { status: 404 });
   try {
     await setCaptcha(a?.site, a?.secret);
     await logAudit(await actor(), "captcha.keys", a?.site ? "set" : "removed");

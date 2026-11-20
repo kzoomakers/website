@@ -78,7 +78,7 @@ export async function accessToken(k: Key, scope: keyof typeof SCOPES = "analytic
 }
 
 async function api(c: Cfg, method: "runReport" | "batchRunReports" | "runRealtimeReport", body: object): Promise<any> {
-  if (!c.propertyId || !c.credentials) throw new Error("Add the Property ID and service-account key in Admin > Setup > Google Analytics first.");
+  if (!c.propertyId || !c.credentials) throw new Error("Add the Property ID and service-account key in Admin > Website > Analytics & cookies first.");
   const r = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${c.propertyId}:${method}`, {
     method: "POST", headers: { authorization: "Bearer " + (await accessToken(parseKey(openText(c.credentials)))), "content-type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(20_000),
   });

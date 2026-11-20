@@ -89,14 +89,14 @@ export default function Analytics({ ready }: { ready: boolean }) {
     return () => { live = false; clearInterval(t); };
   }, [ready]);
 
-  if (!ready) return <><h1>Analytics</h1><div className="card"><p className="sub">Google Analytics is not set up. An admin can turn it on in <Link href="/admin/services/google-analytics">Setup &gt; Google Analytics</Link>.</p></div></>;
+  if (!ready) return <><h1>Site analytics</h1><div className="card"><p className="sub">Google Analytics is not set up. An admin can turn it on in <Link href="/admin/services/google-analytics">Setup &gt; Google Analytics</Link>.</p></div></>;
   const r = d?.report, max = Math.max(1, ...(r?.daily.map((x) => x[metric]) ?? []));
   const avg = r?.daily.length ? r.daily.reduce((a, x) => a + x[metric], 0) / r.daily.length : 0, best = r?.daily.find((x) => x[metric] === max);
   const peakHour = r ? r.hourly.indexOf(Math.max(...r.hourly)) : 0;
   const kindTotal = r ? Object.values(r.kinds).reduce((a, b) => a + b, 0) || 1 : 1;
     return (
     <>
-      <h1>Analytics</h1>
+      <h1>Site analytics</h1>
       <p className="sub">From Google Analytics, refreshed at most once an hour. Covers the last full days up to yesterday. Google may hold back small counts and takes a day to finish processing.</p>
       <div className="bar" role="group" aria-label="Time range">
         {RANGES.map(([l, v]) => <button key={v} aria-pressed={!custom && days === v} className={!custom && days === v ? "pri" : undefined} onClick={() => { setCustom(null); setDays(v); }}>{l}</button>)}

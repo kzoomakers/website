@@ -4,6 +4,7 @@ import { promptDialog } from "@/components/dialog";
 import { ago } from "./ago";
 import { count, type MenuItem } from "@/lib/menu";
 
+import { GUIDED } from "@/lib/nav-manifest";
 import ParentPicker from "@/components/parent-picker";
 const api = "/api/pages";
 type N = { label: string; slug?: string; children: N[] };
@@ -109,7 +110,9 @@ export default function Pages() {
           );
         })}
         {!shown.length && <p className="sub">No pages match.</p>}
-      </div></>}
+      </div>
+      <h2>Guided pages</h2>
+      <div className="card">{GUIDED.map((g) => <div className="row" key={g.href}><span aria-hidden>{g.icon}</span><a className="grow" href={g.href}>{g.label}</a></div>)}</div></>}
       {np && (
         <div className="modal-bg" onClick={() => setNp(null)}>
           <div className="modal" role="dialog" aria-modal="true" aria-labelledby="ntitle" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.key === "Escape" && setNp(null)}>

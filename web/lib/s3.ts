@@ -28,6 +28,9 @@ export async function s3(): Promise<{ client: S3Client; bucket: string } | null>
   return { client: g.s3.client, bucket: c.bucket };
 }
 
+/** Quick check that the bucket answers (no writes); throws if not. */
+export const pingS3 = (c: S3Cfg) => clientFor(c).send(new HeadBucketCommand({ Bucket: c.bucket }));
+
 /** Creates the bucket if missing, then proves write/read/delete work. Throws on failure. */
 export async function probeS3(c: S3Cfg) {
   const client = clientFor(c);
