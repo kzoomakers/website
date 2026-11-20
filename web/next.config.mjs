@@ -8,6 +8,8 @@ const nextConfig = {
         { source: "/ebay/template", destination: `${ASSETS}/images/ebay/template.html` }, // direct: rewrites don't chain, and the file is not in the image
         // /images and /download are not in the Docker image (CI syncs them to this public Tigris bucket). afterFiles, not fallback: files in public/ still win, but the
         // catch-all page app/[[...path]] matches every URL, so a fallback rewrite would never run.
+        // The three bulb clips play over the bulb picture on the home page (components/bulb-clip.tsx): same-origin, so no cross-site media loads; the bucket answers range requests, which Safari needs.
+        ...[1, 2, 3].map((n) => ({ source: `/clips/bulbvideo${n}.mp4`, destination: `${ASSETS}/manual-upload/bulbvideo${n}.mp4` })),
         { source: "/images/:path*", destination: `${ASSETS}/images/:path*` }, { source: "/download/:path*", destination: `${ASSETS}/download/:path*` }],
     };
   },

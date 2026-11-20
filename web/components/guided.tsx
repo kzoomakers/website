@@ -1,6 +1,7 @@
 // Renderers for the guided pages. Markup mirrors the legacy HTML class-for-class so css/style.css applies unchanged.
 import type { CSSProperties } from "react";
 import { Counters } from "./chrome";
+import { BulbTv } from "./bulb-tv";
 import { DragCarousel } from "./drag-carousel";
 import { GuideBrowser } from "./guide-browser";
 import { DonationNeeds } from "./donation-needs";
@@ -536,7 +537,7 @@ function Home({ d, part }: { d: any; part?: string }) {
     <section className="about-2 section" id="about"><div className="container">
       <Title title={d.howTitle} wrap="col-lg-6" />
       <div className="row">
-        <div className="col-md-6 mb-4 mb-md-0">{d.howImage && <img loading="lazy" src={url(d.howImage)} className="img-fluid" alt="" />}</div>
+        <div className="col-md-6 mb-4 mb-md-0">{d.howImage && (d.howImage === "/images/clipart/bulb.webp" ? <BulbTv src={url(d.howImage)} /> : <img loading="lazy" src={url(d.howImage)} className="img-fluid" alt="" />)}</div>
         <div className="col-md-6">
           <ul className="checklist">{rows(d.howBullets).map((b, i) => <li key={i}>{inline(b)}</li>)}</ul>
           {d.btn1Label && <a href={url(d.btn1Href)} className="btn btn-main mt-20">{d.btn1Label}</a>}
