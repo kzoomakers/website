@@ -51,6 +51,8 @@ export const NAV: Tab[] = [
     E("/admin/people", "👥", "People", "people", { zone: "Records", exact: true }), E("/admin/people/guests", "🧑‍🤝‍🧑", "Guests", "guests", { zone: "Records" }), E("/admin/people/approvals", "✅", "New members", "approvals", { alert: "applicants" }), E("/admin/people/classes", "🎓", "Classes", "classes", { zone: "Records" }),
     E("/admin/people/tools", "🔧", "Tools & sign-offs", "tools", { zone: "Settings" }), E("/admin/people/skills", "🛠️", "Skills", "skills", { zone: "Settings" }), E("/admin/people/values", "🏷️", "Profile options", "values", { zone: "Settings" }),
     E("/admin/people/membership-classes", "💳", "Membership classes", "membership-classes", { section: "system", zone: "Settings" }),
+    E("/admin/people/training", "🏅", "Training", "queue", { section: "training", pageLabel: "Sign-off queue", zone: "Work" }), E("/admin/people/training/reports", "📊", "Training reports", "reports", { section: "training", zone: "Records" }),
+    E("/admin/people/training/tests", "📝", "Training tests", "tests", { section: "training", zone: "Work" }), E("/admin/people/training/trainers", "🧑‍🏫", "Trainers", "trainers", { section: "training", zone: "Settings" }), E("/admin/people/training/settings", "⚙️", "Training settings", "settings", { section: "training", zone: "Settings" }),
     E("/admin/people/waiver", "📜", "Membership agreement", "waiver", { zone: "Settings" }), E("/admin/people/guest-agreement", "🪪", "Guest agreement", "guest-agreement", { zone: "Settings" }), E("/admin/people/id-renewals", "🪪", "ID renewals", "id-renewals", { alert: "renewals" }),
   ] },
   { href: "/admin/signdocs", label: "SignDocs", section: "signdocs", zones: ["Work", "Records", "Settings"], items: [
@@ -77,7 +79,7 @@ export const NAV: Tab[] = [
 export type Group = { label: string; sections: Section[]; href?: string };
 export const GROUPS: Group[] = [
   { label: "Home", sections: [], href: "/admin/landing" },
-  { label: "Members", sections: ["people", "tours", "makerfavor"] },
+  { label: "Members", sections: ["people", "tours", "makerfavor", "training"] },
   { label: "Communications", sections: ["messages", "email", "blog"] },
   { label: "Website", sections: ["website"] },
   { label: "SignDocs", sections: ["signdocs"] },
@@ -85,7 +87,7 @@ export const GROUPS: Group[] = [
 ];
 
 /** Members side menu: [href, icon, label]. */
-export const MEMBER_MENU = [["/members", "🏠", "Home"], ["/members/waiver", "📝", "Membership agreement"], ["/members/handbook", "📖", "Handbook"], ["/members/directory", "🔎", "Member directory"], ["/members/classes", "🎓", "Classes"], ["/members/makerfavor", "🧹", "MakerFavor™"], ["/members/id", "🪪", "Gov ID"], ["/members/profile", "👤", "My profile"], ["/members/inbox", "✉️", "Messages"], ["/account", "⚙️", "My account"]] as const;
+export const MEMBER_MENU = [["/members", "🏠", "Home"], ["/members/waiver", "📝", "Membership agreement"], ["/members/handbook", "📖", "Handbook"], ["/members/directory", "🔎", "Member directory"], ["/members/classes", "🎓", "Classes"], ["/members/training", "🏅", "Training"], ["/members/makerfavor", "🧹", "MakerFavor™"], ["/members/id", "🪪", "Gov ID"], ["/members/profile", "👤", "My profile"], ["/members/inbox", "✉️", "Messages"], ["/account", "⚙️", "My account"]] as const;
 
 /** Every link in an item list, groups flattened. */
 export const flat = (xs: Item[]): Entry[] => xs.flatMap((i) => ("items" in i ? flat(i.items) : [i]));

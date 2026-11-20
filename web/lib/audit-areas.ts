@@ -7,6 +7,7 @@ export const AUDIT_SECTIONS: Record<string, { label: string; color: string; like
   crm: { label: "CRM", color: "#d6a21f", like: ["crm.%", "user.membership", "user.authorize", "user.deauthorize"] },
   board: { label: "Signed Docs", color: "#0f766e", like: ["board.sign.%"] },
   tours: { label: "Tours", color: "#e11d48", like: ["tour.%"] },
+  training: { label: "Training", color: "#7c5cd6", like: ["training.%"] },
   chores: { label: "MakerFavor™", color: "#65a30d", like: ["chore.%"] },
   admin: { label: "Users & access", color: "#d85b6a", like: ["privacy.%", "setup.%", "upload.%", "ntfy.%", "pushover.%", "apikey.%", "debug.%", "user.edit", "user.roster_photo%", "user.delete", "user.enable", "user.disable", "user.access", "user.reset_email", "user.set_password", "user.special", "pii.%"] },
 };
