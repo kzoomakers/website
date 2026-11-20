@@ -43,7 +43,7 @@ export async function viewerFor(cookie?: string): Promise<Viewer | null> {
   // Standing on the main site is re-derived every time: losing it ends the session, and an admin who left the allow-list is no longer one.
   if (u.kind === "admin" && !isAdmin(u.email)) { await c.query("UPDATE feed.users SET is_admin = false, is_moderator = false, session_version = session_version + 1 WHERE id = $1", [u.id]); return null; }
   if (u.kind === "member" && !(await memberStanding(u.site_user_id, u.email))) return null;
-  return { id: u.id, username: u.username, kind: u.kind, email: u.email, isAdmin: u.is_admin, isModerator: u.is_moderator, verified: !!u.email_verified_at, csrf: csrfFor(cookie!), prefs: { scheme: u.scheme ?? "system", contrast: u.contrast ?? "system" } };
+  return { id: u.id, username: u.username, kind: u.kind, email: u.email, isAdmin: u.is_admin, isModerator: u.is_moderator, verified: !!u.email_verified_at, csrf: csrfFor(cookie!), prefs: { scheme: u.scheme ?? "dark", contrast: u.contrast ?? "system" } };
 }
 
 /** The signed-in person for this request (looked up once per request). */

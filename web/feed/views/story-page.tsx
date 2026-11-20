@@ -44,6 +44,7 @@ function Detail({ all, newUserDays, me, st }: { all: StoryFull[]; newUserDays: n
               <h2 className="link h-cite u-repost-of"><a href={ms.url || titlePath(ms)} rel={`ugc ${referrer ? "" : "noreferrer"}`.trim()} className="u-url">{ms.title}</a></h2>
               {ms.markeddown_description && <a className="description_present" aria-label="Story description" href="#story_text">&#x2636;</a>}
               <Tags s={ms} />
+              {ms.image && <a className="story_image" href={ms.image}><img src={ms.image} alt={ms.title} /></a>}
               {ms.origin ? <a className="domain" href={`/origins/${ms.origin}`}>{ms.origin}</a> : ms.domain ? <a className="domain" href={`/domains/${ms.domain}`}>{ms.domain}</a> : null}
               <div className="byline">
                 <span>{ms.user_is_author ? "authored by" : "via"}</span> <UserLink s={ms} newUserDays={newUserDays} /> <TimeLabel time={ms.created_at} />

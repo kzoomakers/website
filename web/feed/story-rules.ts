@@ -13,14 +13,14 @@ export type Tag = { tag: string; permit_by_new_users: boolean; privileged: boole
 /** user.rb is_new?: under 70 days old. */
 export const isNewUser = (createdAt: Date | null, now = new Date()) => !createdAt || createdAt.getTime() > now.getTime() - NEW_USER_DAYS * 864e5;
 
-export function storyProblems(s: { title: string; url: string; description: string; tags: Tag[]; isNew: boolean; isModerator: boolean }): string[] {
+export function storyProblems(s: { title: string; url: string; description: string; tags: Tag[]; isNew: boolean; isModerator: boolean; image?: boolean }): string[] {
   const out: string[] = [];
   const t = s.title;
   if (t.length < TITLE_MIN || t.length > TITLE_MAX) out.push(`Title is too short or too long (${TITLE_MIN} to ${TITLE_MAX} characters)`);
   if (s.url.length > URL_MAX) out.push(`Url is too long (at most ${URL_MAX} characters)`);
   if (s.description.length > DESCRIPTION_MAX) out.push("Description is too long");
   if (s.url) { if (!URL_RE.test(s.url)) out.push("Url is not valid"); }
-  else if (!s.description.trim()) out.push("Description must contain text if no URL posted");
+  else if (!s.description.trim() && !s.image) out.push("Description must contain text if no URL posted");
   if (t.startsWith("Ask") && s.tags.some((x) => x.tag === "ask")) out.push("Title starting 'Ask' or similar is redundant with the ask tag.");
   if (GRAPHICS_RE.test(t)) out.push("Title may not contain emoji, dingbats, or other graphics");
   // eslint-disable-next-line no-control-regex

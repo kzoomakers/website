@@ -17,12 +17,17 @@ export const pageNumber = (seg: string[] = []) => {
   return n;
 };
 
+const TABS: [Kind, string, string][] = [["hottest", "/", "hot"], ["newest", "/newest", "new"], ["active", "/active", "active"], ["recent", "/recent", "recent"]];
+const SortTabs = ({ kind }: { kind: Kind }) => (
+  <nav className="sorttabs" aria-label="Sort">{TABS.map(([k, href, label]) => <a key={k} href={href} aria-current={k === kind ? "page" : undefined}>{label}</a>)}<a href="/top">top</a></nav>
+);
+
 export default async function Listing({ kind, page }: { kind: Kind; page: number }) {
   const me = await currentFeedUser().catch(() => null);
   const [{ stories, more }, cfg] = await Promise.all([listStories(kind, page, me?.id), getFeedConfig()]);
   const votes = me ? await storyVotes(me.id, stories.map((s) => s.id)) : undefined;
   const path = BASE[kind] + (page > 1 ? `/page/${page}` : "") || "/";
-  const above = kind === "active" ? <p className="hint">Stories sorted by last comment to foster active discussions</p> : undefined;
+  const above = <><SortTabs kind={kind} />{kind === "active" && <p className="hint">Stories sorted by last comment to foster active discussions</p>}</>;
   const below = kind === "recent" ? <p className="hint">The <a href="/newest">newest</a> stories that have not yet reached the front page.</p> : undefined;
   return (
     <Shell title={TITLE[kind]} path={path} subnav={kind === "hottest" ? undefined : <StoriesSubnav path={path} />}>

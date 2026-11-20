@@ -32,7 +32,7 @@ test("legacy URLs redirect the way routes.rb does", () => {
 test("the internal prefix is never reachable by name; shared static files pass through", () => {
   assert.equal(feedRewrite("/feed-site"), null);
   assert.equal(feedRewrite("/feed-site/newest"), null);
-  for (const p of ["/feed/css/application.css", "/_next/static/x.js", "/favicon.ico", "/robots.txt", "/sitemap.xml"]) assert.equal(rw(p), "pass", p);
+  for (const p of ["/feed/css/application.css", "/_next/static/x.js", "/favicon.ico", "/robots.txt", "/sitemap.xml", "/uploads/feed/stories/a.webp"]) assert.equal(rw(p), "pass", p);
 });
 
 // Every path literal in Lobsters' routes.rb (present on a dev machine, not in CI) must be handled, never fall through to null.

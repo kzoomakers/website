@@ -11,7 +11,7 @@ import { findTags } from "./stories";
 // Submitting a story (stories_controller#create + story.rb callbacks). Everything runs in one transaction so a failure leaves nothing half-made.
 // Tested against a scratch Postgres in tests/feed-submit-db.test.mjs (run with TEST_DATABASE_URL).
 
-export type Submission = { title: string; url: string; description: string; tags: string[]; userIsAuthor: boolean };
+export type Submission = { title: string; url: string; description: string; tags: string[]; userIsAuthor: boolean; image?: string };
 export type SubmitResult = { ok: true; shortId: string } | { ok: false; errors: string[]; similar?: { short_id: string; title: string }[] };
 
 const token = (kind: string) => `${kind}_${randomBytes(16).toString("hex")}`;
@@ -42,7 +42,7 @@ export async function prepare(c: PoolClient, u: { id?: number; is_moderator: boo
   const tags = await findTags(input.tags);
   if (!tags || tags.some((t) => !t.active)) return fail(["Unknown tag."]); // inactive tags are retired: the form doesn't list them, and a hand-made POST can't use them either
   const cu = input.url.trim() ? cleanUrl(input.url) : { url: "" as const, normalized: "" as const, domain: null };
-  const errors = storyProblems({ title, url: cu.url, description, tags, isNew, isModerator: u.is_moderator });
+  const errors = storyProblems({ title, url: cu.url, description, tags, isNew, isModerator: u.is_moderator, image: !!input.image });
   if (errors.length) return fail(errors);
 
   let domainId: number | null = null, originId: number | null = null;
@@ -89,6 +89,7 @@ export const createStory = (user: { id: number }, input: Submission): Promise<Su
   if (!u || u.banned_at || u.deleted_at) return fail(["You can't submit stories."]);
   const p = await prepare(c, u, input);
   if (isFail(p)) return p;
+  if (input.image && !p.tags.some((t) => t.tag.toLowerCase() === "images")) return fail(["Add the images tag to post a picture."]);
   const now = new Date();
   // The unique index on short_id settles races: a taken id inserts nothing and we draw another.
   let sid = "", s: { id: number } | undefined;
@@ -96,9 +97,9 @@ export const createStory = (user: { id: number }, input: Submission): Promise<Su
     if (i === 10) throw new Error("too many short id collisions");
     sid = shortId();
     s = (await c.query(
-      `INSERT INTO feed.stories (user_id, url, normalized_url, title, description, markeddown_description, short_id, user_is_author, domain_id, origin_id, created_at, last_edited_at, token)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$11,$12) ON CONFLICT (short_id) DO NOTHING RETURNING id`,
-      [user.id, p.cu.url, p.cu.normalized || null, p.title, p.description, p.html, sid, p.isAuthor, p.domainId, p.originId, now, token("story")])).rows[0];
+      `INSERT INTO feed.stories (user_id, url, normalized_url, title, description, markeddown_description, short_id, user_is_author, domain_id, origin_id, created_at, last_edited_at, token, image)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$11,$12,$13) ON CONFLICT (short_id) DO NOTHING RETURNING id`,
+      [user.id, p.cu.url, p.cu.normalized || null, p.title, p.description, p.html, sid, p.isAuthor, p.domainId, p.originId, now, token("story"), input.image || null])).rows[0];
   }
   for (const t of p.tags) await c.query("INSERT INTO feed.taggings (story_id, tag_id) VALUES ($1, $2)", [s.id, t.id]);
   await c.query("INSERT INTO feed.votes (user_id, story_id, vote) VALUES ($1, $2, 1)", [user.id, s.id]); // the submitter's own upvote: score already starts at 1 and own votes earn no karma
