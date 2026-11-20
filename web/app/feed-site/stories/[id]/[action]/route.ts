@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { feedOrigin } from "@/feed/config";
 import { csrfOk, originOk } from "@/feed/auth";
 import { viewerFor } from "@/feed/identity";
-import { putCommentFlash, putFlash } from "@/feed/flash";
+import { putCommentFlash, putError, putFlash } from "@/feed/flash";
 import { createComment } from "@/feed/models/comment-write";
 import { modSetStoryDeleted } from "@/feed/models/mod";
 import { markStory } from "@/feed/models/hide-save";
@@ -28,15 +28,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   try {
     if (action === "upvote" || action === "unvote" || action === "flag") {
       if (!(await hit(`feed:vote:${v.id}`, 300, 3_600_000, true))) return new NextResponse("too many votes", { status: 429 });
-      await castVote(v, "story", id, action === "upvote" ? 1 : action === "flag" ? -1 : 0, String(f.get("reason") ?? "").slice(0, 1));
+      const r = await castVote(v, "story", id, action === "upvote" ? 1 : action === "flag" ? -1 : 0, String(f.get("reason") ?? "").slice(0, 1));
+      if (!r.ok) putError(v.id, `Couldn't do that: ${r.error}.`);
       return to(`/s/${id}`);
     }
     if (action === "hide" || action === "unhide" || action === "save" || action === "unsave") {
-      await markStory(v, id, action);
+      const r = await markStory(v, id, action);
+      if (!r.ok) putError(v.id, `Couldn't do that: ${r.error}.`);
       return to(`/s/${id}`);
     }
     if (action === "mod-delete" || action === "mod-undelete") {
-      await modSetStoryDeleted(v, id, action === "mod-delete", String(f.get("reason") ?? ""));
+      const r = await modSetStoryDeleted(v, id, action === "mod-delete", String(f.get("reason") ?? ""));
+      if (!r.ok) putError(v.id, `Couldn't do that: ${r.error}.`);
       return to(`/s/${id}`);
     }
     if (action === "comment") {
@@ -56,5 +59,5 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
     const r = await setStoryDeleted(v, id, action === "delete");
     return to(r.ok ? `/s/${id}` : "/");
-  } catch (e) { console.error("feed story:", action, e); return to("/"); }
+  } catch (e) { console.error("feed story:", action, e); putError(v.id, "Something went wrong. Please try again."); return to(`/s/${id}`); }
 }

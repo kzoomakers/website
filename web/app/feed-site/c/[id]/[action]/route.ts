@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { feedOrigin } from "@/feed/config";
 import { csrfOk, originOk } from "@/feed/auth";
 import { viewerFor } from "@/feed/identity";
-import { putCommentFlash } from "@/feed/flash";
+import { putCommentFlash, putError } from "@/feed/flash";
 import { modSetCommentDeleted } from "@/feed/models/mod";
 import { castVote } from "@/feed/models/vote";
 import { hit } from "@/lib/limit";
@@ -25,11 +25,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   try {
     if (action === "upvote" || action === "unvote" || action === "flag") {
       if (!(await hit(`feed:vote:${v.id}`, 300, 3_600_000, true))) return new NextResponse("too many votes", { status: 429 });
-      await castVote(v, "comment", id, action === "upvote" ? 1 : action === "flag" ? -1 : 0, String(f.get("reason") ?? "").slice(0, 1));
+      const r = await castVote(v, "comment", id, action === "upvote" ? 1 : action === "flag" ? -1 : 0, String(f.get("reason") ?? "").slice(0, 1));
+      if (!r.ok) putError(v.id, `Couldn't do that: ${r.error}.`);
       return to(`/c/${id}`);
     }
     if (action === "mod-delete" || action === "mod-undelete") {
-      await modSetCommentDeleted(v, id, action === "mod-delete", String(f.get("reason") ?? ""));
+      const r = await modSetCommentDeleted(v, id, action === "mod-delete", String(f.get("reason") ?? ""));
+      if (!r.ok) putError(v.id, `Couldn't do that: ${r.error}.`);
       return to(`/c/${id}`);
     }
     if (action === "update") {
@@ -40,5 +42,5 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
     const r = await setCommentDeleted(v, id, action === "delete");
     return to(r.ok ? `/c/${id}` : "/");
-  } catch (e) { console.error("feed comment:", action, e); return to("/"); }
+  } catch (e) { console.error("feed comment:", action, e); putError(v.id, "Something went wrong. Please try again."); return to(`/c/${id}`); }
 }

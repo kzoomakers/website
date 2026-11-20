@@ -73,7 +73,11 @@ export async function tx<T>(f: (c: PoolClient) => Promise<T>): Promise<T> {
   try { await c.query("BEGIN"); const r = await f(c); await c.query(r && typeof r === "object" && "ok" in r && !(r as { ok: boolean }).ok ? "ROLLBACK" : "COMMIT"); return r; }
   catch (e) { await c.query("ROLLBACK").catch(() => {}); throw e; } finally { c.release(); }
 }
-export const live = async (c: PoolClient, id: number) => (await c.query("SELECT id, created_at, is_moderator, banned_at, deleted_at FROM feed.users WHERE id = $1 FOR UPDATE", [id])).rows[0];
+/** The acting user. Their requests are serialized by an advisory lock (so a resubmit can't race its twin), not a row lock: a row lock would block other people's karma updates on this user while we wait for the story lock, and the two can deadlock. Lock order everywhere: user (advisory), story, comment, other users' rows. */
+export const live = async (c: PoolClient, id: number) => {
+  await c.query("SELECT pg_advisory_xact_lock(hashtextextended('feed:user:' || $1::text, 0))", [id]);
+  return (await c.query("SELECT id, created_at, is_moderator, banned_at, deleted_at FROM feed.users WHERE id = $1", [id])).rows[0];
+};
 
 export const createStory = (user: { id: number }, input: Submission): Promise<SubmitResult> => tx(async (c) => {
   const u = await live(c, user.id);

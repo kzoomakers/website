@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import type { PoolClient } from "pg";
 import { COMMENTABLE_DAYS, MAX_DEPTH, commentProblems, isDeletable, isEditable, speedDelayMins } from "../comment-rules";
-import { recalcComment } from "./comment-cache";
+import { lockCommentStory, recalcComment } from "./comment-cache";
 import { notifyComment } from "./notify";
 import { renderPost } from "./render";
 import { live, tx } from "./submit";
@@ -68,7 +68,10 @@ export const createComment = (user: { id: number }, o: { storyShortId: string; p
   return { ok: true, shortId: sid, storyShortId: s.short_id } as CommentResult;
 });
 
-const own = async (c: PoolClient, shortId: string) => (await c.query("SELECT c.*, s.short_id AS story_short_id FROM feed.comments c JOIN feed.stories s ON s.id = c.story_id WHERE c.short_id = $1 FOR UPDATE OF c", [shortId])).rows[0];
+const own = async (c: PoolClient, shortId: string) => {
+  await lockCommentStory(c, shortId);
+  return (await c.query("SELECT c.*, s.short_id AS story_short_id FROM feed.comments c JOIN feed.stories s ON s.id = c.story_id WHERE c.short_id = $1 FOR UPDATE OF c", [shortId])).rows[0];
+};
 
 /** comments#update: edit within 6 hours of the last edit. */
 export const updateComment = (user: { id: number }, shortId: string, comment: string): Promise<CommentResult> => tx(async (c) => {

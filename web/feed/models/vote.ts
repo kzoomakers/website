@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import type { PoolClient } from "pg";
 import { getFeedConfig } from "../config";
 import { updateCachedColumns } from "./cached";
-import { recalcComment } from "./comment-cache";
+import { lockCommentStory, recalcComment } from "./comment-cache";
 import { live, tx } from "./submit";
 
 // Voting (vote.rb vote_thusly_on_story_or_comment_for_user_because + the vote actions of stories_ and comments_controller), one transaction each.
@@ -25,7 +25,7 @@ export async function recalcStory(c: PoolClient, storyId: number): Promise<void>
 export const castVote = (user: { id: number }, kind: "story" | "comment", shortId: string, vote: 1 | -1 | 0, reason = ""): Promise<VoteResult> => tx(async (c) => {
   const u = await live(c, user.id), cfg = await getFeedConfig();
   if (!u || u.banned_at || u.deleted_at) return fail("not permitted");
-  if (vote === -1 && !(kind === "story" ? reason in STORY_REASONS : reason in COMMENT_REASONS)) return fail("invalid reason");
+  if (vote === -1 && !Object.hasOwn(kind === "story" ? STORY_REASONS : COMMENT_REASONS, reason)) return fail("invalid reason");
 
   // the target, locked so two votes on it can't both recalculate from stale rows
   let t: { id: number; story_id: number; user_id: number; score: number; created_at: Date; gone: boolean; merged: boolean };
@@ -34,6 +34,7 @@ export const castVote = (user: { id: number }, kind: "story" | "comment", shortI
       `SELECT s.id, s.id AS story_id, s.user_id, s.score, s.created_at, (s.is_deleted OR (b.banned_at IS NOT NULL AND s.score < 0 AND NOT s.is_moderated)) AS gone, s.merged_story_id IS NOT NULL AS merged
        FROM feed.stories s JOIN feed.users b ON b.id = s.user_id WHERE s.short_id = $1 FOR UPDATE OF s`, [shortId])).rows[0];
   } else {
+    await lockCommentStory(c, shortId);
     t = (await c.query(
       `SELECT c.id, c.story_id, c.user_id, c.score, c.created_at, (c.is_deleted OR c.is_moderated OR s.is_deleted) AS gone, false AS merged
        FROM feed.comments c JOIN feed.stories s ON s.id = c.story_id WHERE c.short_id = $1 FOR UPDATE OF c`, [shortId])).rows[0];

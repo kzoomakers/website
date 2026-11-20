@@ -112,6 +112,7 @@ test("moderator delete and undelete write the mod log", { skip }, async () => {
   assert.ok((await modSetStoryDeleted(m, st.short_id, true, "again")).ok); assert.equal((await logs("story_id", st.id)).length, 1, "no change, no log");
   assert.ok((await modSetStoryDeleted(m, st.short_id, false)).ok);
   assert.equal((await logs("story_id", st.id)).at(-1).action, "undeleted story");
+  assert.equal((await c.query("SELECT is_moderated FROM feed.stories WHERE id = $1", [st.id])).rows[0].is_moderated, true, "stays moderated after a mod undelete");
 
   const cm = await createComment(b, { storyShortId: st.short_id, comment: "A comment the mod will remove" });
   assert.ok((await castVote(a, "comment", cm.shortId, 1)).ok);
@@ -152,4 +153,23 @@ test("inbox lists notifications newest first and marks them read; lists skip hid
   assert.ok(await has(a.id) && await has(undefined));
   await markStory(a, st.short_id, "hide");
   assert.ok(!(await has(a.id)), "hidden for a"); assert.ok(await has(b.id) && await has(undefined), "not for others");
+});
+
+test("replying and voting on the same comment at once never deadlocks", { skip }, async () => {
+  const { conn } = await import("../lib/db.ts");
+  const { createComment, setCommentDeleted } = await import("../feed/models/comment-write.ts");
+  const { castVote } = await import("../feed/models/vote.ts");
+  const c = await conn(), n = Date.now().toString(36) + "d";
+  const mk = async (name) => (await c.query(`INSERT INTO feed.users (username, email, token, karma, created_at) VALUES ($1, $2, $3, 50, now() - interval '200 days') RETURNING id`, [name + n, `${name}${n}@example.org`, `u${name}${n}`])).rows[0];
+  const a = await mk("a"), voters = await Promise.all([1, 2, 3, 4, 5, 6, 7, 8].map((i) => mk("v" + i)));
+  const st = (await c.query("INSERT INTO feed.stories (user_id, title, short_id, token, last_edited_at, created_at) VALUES ($1, 'A story', $2, $3, now(), now()) RETURNING id, short_id", [a.id, n.slice(-6).padStart(6, "x"), "s" + n])).rows[0];
+  const top = await createComment(a, { storyShortId: st.short_id, comment: "The comment everyone piles onto" });
+  for (let round = 0; round < 5; round++) {
+    const jobs = voters.flatMap((v, i) => [
+      createComment(v, { storyShortId: st.short_id, parentShortId: top.shortId, comment: `Reply ${round}-${i} from a voter` }),
+      castVote(voters[(i + 1) % voters.length], "comment", top.shortId, round % 2 ? 0 : 1),
+    ]);
+    jobs.push(setCommentDeleted(a, top.shortId, round % 2 === 1));
+    await Promise.all(jobs); // any deadlock rejects here
+  }
 });

@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { takeError } from "../flash";
+import { currentFeedUser } from "../identity";
 import { Account } from "./auth";
 
 export const SITE_NAME = "Kzoo Makers Talk";
@@ -8,6 +10,11 @@ const Nav = ({ href, children, path }: { href: string; children: ReactNode; path
   const strip = (p: string) => p.replace(/\/page\/\d+$/, ""), period = /\/\d+[dwmy]$/, cur = strip(path), target = strip(href);
   return <a href={href} aria-current={(period.test(target) ? cur : cur.replace(period, "")) === target ? "page" : undefined}>{children}</a>; // link_to_different_page: /top/3d is still "Top"
 };
+
+async function Notice() {
+  const me = await currentFeedUser().catch(() => null), msg = me ? takeError(me.id) : null;
+  return msg ? <div className="flash-error" role="alert">{msg}</div> : null;
+}
 
 export default function Shell({ title, path, subnav, children }: { title?: string; path: string; subnav?: ReactNode; children: ReactNode }) {
   return (
@@ -33,7 +40,7 @@ export default function Shell({ title, path, subnav, children }: { title?: strin
         </div>
         {subnav && <nav id="subnav" aria-label="Subnavigation"><ul>{subnav}</ul></nav>}
       </header>
-      <main id="inside">{children}</main>
+      <main id="inside"><Notice />{children}</main>
       <footer>
         <span id="office-hours-live" />
         <nav>
