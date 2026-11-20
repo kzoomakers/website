@@ -4,6 +4,7 @@ import { csrfOk, originOk } from "@/feed/auth";
 import { viewerFor } from "@/feed/identity";
 import { putCommentFlash, putFlash } from "@/feed/flash";
 import { createComment } from "@/feed/models/comment-write";
+import { modSetStoryDeleted } from "@/feed/models/mod";
 import { markStory } from "@/feed/models/hide-save";
 import { castVote } from "@/feed/models/vote";
 import { setStoryDeleted, updateStory, type Submission } from "@/feed/models/submit";
@@ -17,7 +18,7 @@ const to = (path: string) => NextResponse.redirect(feedOrigin() + path, { status
 // stories#update, #destroy and #undelete (Lobsters uses PATCH/DELETE; these are POSTs so the same-site and CSRF checks cover every change).
 export async function POST(req: Request, { params }: { params: Promise<{ id: string; action: string }> }) {
   const { id, action } = await params;
-  if (!/^[a-z0-9]{1,10}$/.test(id) || !["update", "delete", "undelete", "comment", "upvote", "unvote", "flag", "hide", "unhide", "save", "unsave"].includes(action)) return new NextResponse("not found", { status: 404 });
+  if (!/^[a-z0-9]{1,10}$/.test(id) || !["update", "delete", "undelete", "comment", "upvote", "unvote", "flag", "hide", "unhide", "save", "unsave", "mod-delete", "mod-undelete"].includes(action)) return new NextResponse("not found", { status: 404 });
   if (!originOk(req.headers)) return new NextResponse("forbidden", { status: 403 });
   const f = await req.formData().catch(() => null);
   if (!f) return new NextResponse("bad request", { status: 400 });
@@ -32,6 +33,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
     if (action === "hide" || action === "unhide" || action === "save" || action === "unsave") {
       await markStory(v, id, action);
+      return to(`/s/${id}`);
+    }
+    if (action === "mod-delete" || action === "mod-undelete") {
+      await modSetStoryDeleted(v, id, action === "mod-delete", String(f.get("reason") ?? ""));
       return to(`/s/${id}`);
     }
     if (action === "comment") {
