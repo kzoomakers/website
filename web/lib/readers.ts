@@ -1,8 +1,9 @@
 import { hit } from "./limit";
-import { createHash, createHmac, randomBytes, scrypt, timingSafeEqual } from "crypto";
+import { createHash, createHmac, randomBytes, randomInt, scrypt, timingSafeEqual } from "crypto";
 import { promisify } from "util";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { conn, db } from "./db";
+import { issueToken, touch, hashToken } from "./app-tokens";
 import { STEP_SQL, joinMembersIfDone } from "./waiver";
 import { addRegistered, getMailCfg, mailReady, sendQueued as send } from "./mail";
 
@@ -77,6 +78,34 @@ export async function requestLink(emailIn: string, nameIn: string, next: string,
   await send({ to: email, subject: "Your sign-in link",
     text: `Hi ${u.name},\n\nClick to sign in to the Kzoo Makers website (the link works once, for 30 minutes):\n\n${link}\n\nIf you didn't ask for this, you can ignore this email.`,
     html: `<p>Hi ${esc(u.name)},</p><p><a href="${link}">Sign in to the Kzoo Makers website</a> (the link works once, for 30 minutes).</p><p>If you didn't ask for this, you can ignore this email.</p>` }, cfg);
+}
+
+const APP_CODE = "/app-code"; // login_tokens.next marks a code for the phone app
+
+/** Emails an existing member a 6-digit code for the phone app. No sign-up here, and the answer is the same for every address. */
+export async function requestCode(emailIn: string, ip = "") {
+  const email = emailIn.trim().toLowerCase();
+  if (!EMAIL_OK.test(email) || email.length > 200) throw new Error("That email address doesn't look right.");
+  const cfg = await getMailCfg();
+  if (!mailReady(cfg)) throw new Error("Email isn't set up yet. Ask an admin.");
+  if (ip && !(await hit("code:" + ip, 5, 600_000, true))) throw new Error("Too many requests from your connection. Please try again in a few minutes.");
+  const c = await conn(), u = (await c.query("SELECT id, name FROM site_users WHERE email = $1 AND verified_at IS NOT NULL AND disabled_at IS NULL", [email])).rows[0];
+  if (!u || (await c.query("SELECT 1 FROM login_tokens WHERE user_id = $1 AND created_at > now() - interval '60 seconds'", [u.id])).rowCount) return;
+  if (!(await hit("codeto:" + email, 5, 3_600_000, true))) return; // at most 5 emails an hour to one person, whoever asks (silent, like the other no-ops)
+  await c.query("DELETE FROM login_tokens WHERE expires_at < now()");
+  const code = String(randomInt(1_000_000)).padStart(6, "0");
+  await c.query("INSERT INTO login_tokens (hash, user_id, next, expires_at) VALUES ($1,$2,$3, now() + interval '10 minutes')", [hash(`${u.id}:${code}`), u.id, APP_CODE]);
+  await send({ to: email, subject: `Your Kzoo Makers app code: ${code}`, text: `Hi ${u.name},\n\nYour code is ${code}. It works once, for 10 minutes.\n\nIf you didn't ask for this, ignore this email.`,
+    html: `<p>Hi ${esc(u.name)},</p><p>Your Kzoo Makers app code is <b style="font-size:1.4em;letter-spacing:.1em">${code}</b>. It works once, for 10 minutes.</p><p>If you didn't ask for this, ignore this email.</p>` }, cfg);
+}
+
+/** Spends the code; returns a year-long app token for this device, or null. Five wrong guesses from one connection (or 20 from anywhere) per address in ten minutes locks it, so a stranger can't lock a member out on their own. */
+export async function consumeCode(emailIn: string, code: string, device = "", ip = "") {
+  const email = emailIn.trim().toLowerCase(), c = await conn();
+  if (!/^\d{6}$/.test(code) || !(await hit(`codetry:${email}:${ip}`, 5, 600_000, true)) || !(await hit("codetry:" + email, 20, 600_000, true))) return null;
+  const u = (await c.query("SELECT id FROM site_users WHERE email = $1 AND verified_at IS NOT NULL AND disabled_at IS NULL", [email])).rows[0];
+  if (!u || !(await c.query("DELETE FROM login_tokens WHERE hash = $1 AND next = $2 AND expires_at > now() RETURNING 1", [hash(`${u.id}:${code}`), APP_CODE])).rowCount) return null;
+  return issueToken("member", email, device, u.id);
 }
 
 /** Spends a link; returns where to send the reader next and the signed session value for the cookie. */
@@ -185,11 +214,18 @@ export async function setPassword(userId: number, password: string, current = ""
 /** The user in the signed session cookie, whatever their approval state (verified and not disabled). Only the applicant pages use this; everything else wants currentVerified. */
 export async function currentApplicant(): Promise<(Reader & { approval: string; onboarding: string; fresh: boolean }) | null> {
   if (!db()) return null;
-  const [id, exp, ver, sig] = ((await cookies()).get(COOKIE_NAME)?.value ?? "").split(".");
+  const cookie = (await cookies()).get(COOKIE_NAME)?.value, bearer = /^bearer (\S+)$/i.exec((await headers()).get("authorization") ?? "")?.[1];
+  const COLS = `u.id, u.email, u.name, u.approval, ${STEP_SQL} AS onboarding, u.welcomed_at IS NULL AS fresh FROM site_users u`;
+  if (!cookie && bearer) { // the phone app: a stored per-device token (see lib/app-tokens.ts) instead of a cookie; a password change still signs it out
+    const h = hashToken(bearer), u = (await (await conn()).query(`SELECT ${COLS} JOIN app_tokens t ON t.user_id = u.id WHERE t.hash = $1 AND t.kind = 'member' AND t.expires_at > now() AND t.ver = u.session_version AND u.verified_at IS NOT NULL AND u.disabled_at IS NULL`, [h])).rows[0] ?? null;
+    if (u) void touch(h);
+    return u;
+  }
+  const [id, exp, ver, sig] = (cookie ?? "").split(".");
   if (!sig || Number(exp) < Date.now()) return null;
   const want = mac(`${id}.${exp}.${ver}`);
   if (sig.length !== want.length || !timingSafeEqual(Buffer.from(sig), Buffer.from(want))) return null;
-  return (await (await conn()).query(`SELECT u.id, u.email, u.name, u.approval, ${STEP_SQL} AS onboarding, u.welcomed_at IS NULL AS fresh FROM site_users u WHERE u.id = $1 AND u.session_version = $2 AND u.verified_at IS NOT NULL AND u.disabled_at IS NULL`, [Number(id), Number(ver)])).rows[0] ?? null;
+  return (await (await conn()).query(`SELECT ${COLS} WHERE u.id = $1 AND u.session_version = $2 AND u.verified_at IS NOT NULL AND u.disabled_at IS NULL`, [Number(id), Number(ver)])).rows[0] ?? null;
 }
 
 /** Signed-in, verified and not rejected, approved or not: enough for blog comments and the Account page. Members-only features must use currentMember instead. */
