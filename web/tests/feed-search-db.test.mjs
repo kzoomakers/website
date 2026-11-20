@@ -24,7 +24,7 @@ test("search finds stories and comments, ranks, filters, matches partial words, 
 
   const s = await search("stories", parseQuery(word), "relevance", 1);
   assert.deepEqual(s.stories.map((x) => x.short_id), [a.shortId, b.shortId], "title match (weight A) outranks a text match");
-  assert.equal(s.count, 2); assert.match(s.snippets.get(s.stories[1].id), /⟦/);
+  assert.equal(s.count, 2); assert.match(s.snippets.get(String(s.stories[1].id)), /⟦/);
   assert.equal((await search("stories", parseQuery(`${word} tag:tg${n} -acrylic`), "newest", 1)).stories.length, 1, "exclusion and tag filter");
   assert.equal((await search("stories", parseQuery(`tag:nonexistent${n}`), "newest", 1)).count, 0);
   const f = await search("stories", parseQuery(word.slice(0, -2)), "relevance", 1);

@@ -48,7 +48,7 @@ export default async function SearchPage({ q, what: w, order: o, page }: { q: st
             {what === "stories" ? (
               <ol className="stories list">{r.stories.map((s, i) => (
                 <StoryItem key={s.id} rank={(page - 1) * STORIES_PER_PAGE + i + 1} story={s} newUserDays={cfg.newUserDays}
-                  snippet={hasHit(r.snippets.get(s.id)) ? <p className="snippet"><Marked text={r.snippets.get(s.id)!} /></p> : undefined} />
+                  snippet={hasHit(r.snippets.get(String(s.id))) ? <p className="snippet"><Marked text={r.snippets.get(String(s.id))!} /></p> : undefined} />
               ))}</ol>
             ) : (
               <ol className="comment_hits">{r.comments.map((c) => (

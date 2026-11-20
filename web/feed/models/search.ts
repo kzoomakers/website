@@ -6,7 +6,7 @@ export type What = "stories" | "comments";
 export type Order = "relevance" | "newest" | "score";
 export const COMMENT_HITS_PER_PAGE = 20, COUNT_CAP = 1000, MAX_PAGE = 50;
 export type CommentHit = { short_id: string; created_at: Date; score: number; username: string; story_title: string; story_short_id: string; snippet: string };
-export type Results = { what: What; count: number; more: boolean; fuzzy: boolean; stories: Story[]; comments: CommentHit[]; snippets: Map<number, string> };
+export type Results = { what: What; count: number; more: boolean; fuzzy: boolean; stories: Story[]; comments: CommentHit[]; snippets: Map<string, string> };
 
 const HEADLINE = "StartSel=⟦, StopSel=⟧, MaxWords=40, MinWords=15, MaxFragments=2, FragmentDelimiter=…";
 
@@ -34,10 +34,10 @@ async function run(what: What, p: Parsed, order: Order, page: number, fuzzy: boo
   const b = build(what, p, order, fuzzy), where = b.conds.join(" AND ") || "true", cw = build(what, p, order, fuzzy, 0).conds.join(" AND ") || "true", c = await conn();
   if (what === "stories") {
     const { stories, more } = await listBy({ where: `${UNMERGED} AND ${where}`, order: b.by, params: b.params }, page);
-    const snippets = new Map<number, string>();
+    const snippets = new Map<string, string>();
     if (b.tsq && stories.length) {
       const r = await c.query(`SELECT id, ts_headline('english', description, ${fuzzy ? "to_tsquery" : "websearch_to_tsquery"}('english', $2), '${HEADLINE}') AS h FROM feed.stories WHERE id = ANY($1::bigint[]) AND description IS NOT NULL`, [stories.map((s) => s.id), p.text && (fuzzy ? prefixQuery(p.text) : p.text)]);
-      for (const row of r.rows) snippets.set(Number(row.id), row.h);
+      for (const row of r.rows) snippets.set(String(row.id), row.h);
     }
     const n = (await c.query(`SELECT count(*)::int AS n FROM (SELECT 1 FROM feed.stories s JOIN feed.users u ON u.id = s.user_id LEFT JOIN feed.domains d ON d.id = s.domain_id WHERE ${UNMERGED} AND ${cw} LIMIT ${COUNT_CAP + 1}) x`, b.params)).rows[0].n;
     return { stories, comments: [], snippets, more, count: n };
