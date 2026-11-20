@@ -2,6 +2,7 @@ import { MAX_DEPTH, isDeletable, isEditable } from "../comment-rules";
 import { feedHtml } from "../safe-html";
 import type { Comment } from "../models/story-page";
 import { zoned } from "../util";
+import { Flagger, ModDelete, Upvoter, type Me } from "./controls";
 import { TimeLabel, newAria, titlePath } from "./story-list";
 
 const COLLAPSE_SCORE = -5, SCORE_RANGE_TO_HIDE = [-2, 4];
@@ -21,7 +22,7 @@ function Hat({ c }: { c: Comment }) {
 }
 
 /** Reply, edit, delete: only what this signed-in person may do (the server checks again). */
-function Tools({ c, me }: { c: Comment; me: { id: number; csrf: string } }) {
+function Tools({ c, me, vote }: { c: Comment; me: Me; vote: number }) {
   const gone = c.is_deleted || c.is_moderated, mine = c.user_id === me.id;
   const post = (action: string, label: string) => (
     <form method="post" action={`/c/${c.short_id}/${action}`} style={{ display: "inline" }}><input type="hidden" name="csrf" value={me.csrf} /><button type="submit">{label}</button></form>
@@ -30,24 +31,26 @@ function Tools({ c, me }: { c: Comment; me: { id: number; csrf: string } }) {
     <span className="comment_tools">
       {!gone && c.depth < MAX_DEPTH && <> | <a href={`/c/${c.short_id}/reply`}>reply</a></>}
       {mine && isEditable(c, me.id) && <> | <a href={`/c/${c.short_id}/edit`}>edit</a></>}
+      {!gone && !mine && vote !== 1 && c.created_at.getTime() > Date.now() - 7 * 864e5 && <> | <Flagger base={`/c/${c.short_id}`} me={me} kind="comment" flagged={vote === -1} /></>}
+      {me.isModerator && !mine && <> | <ModDelete base={`/c/${c.short_id}`} me={me} deleted={gone} /></>}
       {mine && !c.is_moderated && (c.is_deleted ? <> | {post("undelete", "undelete")}</> : isDeletable(c, me.id) ? <> | {post("delete", "delete")}</> : null)}
     </span>
   );
 }
 
 /** comments/_comment.html.erb for a logged-out visitor. `showStory` adds "on: story title" (comment lists). */
-export function CommentItem({ c, story, newUserDays, showStory = false, me }: { c: Comment; story: { id: number; user_id: number; user_is_author: boolean }; newUserDays: number; showStory?: boolean; me?: { id: number; csrf: string } | null }) {
-  const gone = c.is_deleted || c.is_moderated, score = commentScore(c);
+export function CommentItem({ c, story, newUserDays, showStory = false, me, votes }: { c: Comment; story: { id: number; user_id: number; user_is_author: boolean }; newUserDays: number; showStory?: boolean; me?: Me | null; votes?: Map<number, { vote: number; reason: string }> }) {
+  const vote = votes?.get(c.id)?.vote ?? 0, gone = c.is_deleted || c.is_moderated, score = commentScore(c);
   const wasMerged = story.id !== c.story_id, edited = c.last_edited_at.getTime() - c.created_at.getTime() > 60_000;
   const isNew = c.user_created_at && c.user_created_at.getTime() > Date.now() - newUserDays * 864e5;
   const ucls = [c.user_id === story.user_id && story.user_is_author && "user_is_author", c.user_id === story.user_id && "user_is_submitter", (c.user_deleted_at || c.user_banned_at) && "inactive_user", isNew && "new_user"].filter(Boolean).join(" ");
   return (
     <>
       <input id={`comment_folder_${c.short_id}`} className="comment_folder_button" type="checkbox" defaultChecked={c.score <= COLLAPSE_SCORE} />
-      <div id={`c_${c.short_id}`} data-shortid={c.short_id} className={["comment", c.score < SCORE_RANGE_TO_HIDE[0] && "bad"].filter(Boolean).join(" ")}>
+      <div id={`c_${c.short_id}`} data-shortid={c.short_id} className={["comment", c.score < SCORE_RANGE_TO_HIDE[0] && "bad", vote === 1 && "upvoted", vote === -1 && "flagged"].filter(Boolean).join(" ")}>
         <div className="voters">
           <label htmlFor={`comment_folder_${c.short_id}`} className="comment_folder" />
-          {!gone && <a className="upvoter" href="/login" title={String(score)}>{upvoterScore(score)}</a>}
+          {!gone && <Upvoter base={`/c/${c.short_id}`} me={me ?? null} voted={vote === 1} score={upvoterScore(score)} own={me?.id === c.user_id} />}
         </div>
         <div className="details">
           <div className="byline">
@@ -60,7 +63,7 @@ export function CommentItem({ c, story, newUserDays, showStory = false, me }: { 
             <span className="flagger flagger_stub" />
             {showStory && c.story_title && <> | on: <a href={titlePath({ short_id: c.story_short_id!, title: c.story_title })}>{c.story_title}</a></>}
             <span className="reason" />
-            {me && <Tools c={c} me={me} />}
+            {me && <Tools c={c} me={me} vote={vote} />}
           </div>
           <div role="heading" aria-level={3} className="comment_text" {...(gone ? {} : { dangerouslySetInnerHTML: html(c.markeddown_comment) })}>
             {gone ? <p><span className="na">[{goneText(c)}]</span></p> : null}
