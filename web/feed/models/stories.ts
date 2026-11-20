@@ -29,14 +29,16 @@ const WHERE: Record<Kind, { where: string; order: string }> = {
 export type Query = { where: string; order: string; params?: unknown[] }; // `where` may use $3, $4... for params (1 and 2 are limit and offset)
 
 /** One page of stories for a logged-out visitor, plus whether another page follows (it fetches one extra row to know). */
-export async function listBy(q: Query, page = 1, viewerId?: number): Promise<{ stories: Story[]; more: boolean }> {
+export async function listBy(q: Query, page = 1, viewerId?: number, filtered = false): Promise<{ stories: Story[]; more: boolean }> {
   const params = q.params ?? [];
-  // a signed-in viewer doesn't see the stories they hid (last parameter)
-  const hidden = viewerId ? ` AND NOT EXISTS (SELECT 1 FROM feed.hidden_stories hs WHERE hs.story_id = s.id AND hs.user_id = $${3 + params.length})` : "";
-  const r = await (await conn()).query(`${SELECT} WHERE (${q.where})${hidden} ORDER BY ${q.order} LIMIT $1 OFFSET $2`, [STORIES_PER_PAGE + 1, (page - 1) * STORIES_PER_PAGE, ...params, ...(viewerId ? [viewerId] : [])]);
+  // a signed-in viewer doesn't see the stories they hid (last parameter), and with `filtered` none with a tag they filter (the front-page lists and top; not tag, domain or user pages)
+  const me = `$${3 + params.length}`;
+  const hidden = viewerId ? ` AND NOT EXISTS (SELECT 1 FROM feed.hidden_stories hs WHERE hs.story_id = s.id AND hs.user_id = ${me})` : "";
+  const hiddenTags = viewerId && filtered ? ` AND NOT EXISTS (SELECT 1 FROM feed.taggings tg JOIN feed.tag_filters f ON f.tag_id = tg.tag_id WHERE tg.story_id = s.id AND f.user_id = ${me})` : "";
+  const r = await (await conn()).query(`${SELECT} WHERE (${q.where})${hidden}${hiddenTags} ORDER BY ${q.order} LIMIT $1 OFFSET $2`, [STORIES_PER_PAGE + 1, (page - 1) * STORIES_PER_PAGE, ...params, ...(viewerId ? [viewerId] : [])]);
   return { stories: r.rows.slice(0, STORIES_PER_PAGE), more: r.rows.length > STORIES_PER_PAGE };
 }
-export const listStories = (kind: Kind, page = 1, viewerId?: number) => listBy(WHERE[kind], page, viewerId);
+export const listStories = (kind: Kind, page = 1, viewerId?: number) => listBy(WHERE[kind], page, viewerId, true);
 export const kindQuery = (kind: Kind): Query => WHERE[kind];
 
 const UNMERGED = `${VISIBLE} AND s.merged_story_id IS NULL`;
@@ -46,6 +48,13 @@ export const byTags = (tagIds: number[]): Query => ({ where: `${UNMERGED} AND s.
 export const byCategories = (ids: number[]): Query => ({ where: `${UNMERGED} AND s.score >= 0 AND ${tagged("tg.tag_id IN (SELECT id FROM feed.tags WHERE category_id = ANY($3::bigint[]))")}`, order: "s.created_at DESC, s.id DESC", params: [ids] });
 export const byDomain = (id: number): Query => ({ where: `${UNMERGED} AND s.domain_id = $3`, order: "s.id DESC", params: [id] });
 export const byOrigin = (id: number): Query => ({ where: `${UNMERGED} AND s.origin_id = $3`, order: "s.id DESC", params: [id] });
+// /hidden, /saved and /upvoted/stories for one viewer (story.rb scopes hidden, saved; user.upvoted_stories). Their own list, so pass no viewerId to listBy (it would drop the hidden ones).
+const mine = (tbl: string): Query => ({ where: `${UNMERGED} AND EXISTS (SELECT 1 FROM feed.${tbl} x WHERE x.story_id = s.id AND x.user_id = $3)`, order: "s.hotness, s.id", params: [] });
+export const hiddenBy = (userId: number): Query => ({ ...mine("hidden_stories"), params: [userId] });
+export const savedBy = (userId: number): Query => ({ ...mine("saved_stories"), params: [userId] });
+export const upvotedBy = (userId: number): Query => ({
+  where: `${VISIBLE} AND s.user_id <> $3 AND EXISTS (SELECT 1 FROM feed.votes v WHERE v.story_id = s.id AND v.user_id = $3 AND v.comment_id IS NULL AND v.vote = 1)`,
+  order: "(SELECT max(v.id) FROM feed.votes v WHERE v.story_id = s.id AND v.user_id = $3 AND v.comment_id IS NULL) DESC", params: [userId] });
 export const byUser = (id: number): Query => ({ where: `${VISIBLE} AND s.user_id = $3`, order: "s.id DESC", params: [id] }); // includes merged stories, as newest_by_user does
 /** `unit` must come from interval.ts (a fixed word), never from the request. */
 export const top = (n: number, unit: string): Query => ({ where: `${UNMERGED} AND s.created_at >= now() - ($3::int * ('1 ' || $4)::interval)`, order: "s.score DESC, s.id DESC", params: [n, unit] });

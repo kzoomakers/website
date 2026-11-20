@@ -13,7 +13,13 @@ const Nav = ({ href, children, path }: { href: string; children: ReactNode; path
 
 async function Notice() {
   const me = await currentFeedUser().catch(() => null), msg = me ? takeError(me.id) : null;
-  return msg ? <div className="flash-error" role="alert">{msg}</div> : null;
+  return msg ? <div className={msg.ok ? "flash-notice" : "flash-error"} role={msg.ok ? "status" : "alert"}>{msg.msg}</div> : null;
+}
+
+/** The color scheme and contrast stylesheet for the signed-in person's choices (system-system for everyone else). */
+async function Theme() {
+  const me = await currentFeedUser().catch(() => null), ok = (v: string | undefined, all: string[]) => (v && all.includes(v) ? v : "system");
+  return <link rel="stylesheet" href={`/feed/css/${ok(me?.prefs.scheme, ["system", "light", "dark"])}-${ok(me?.prefs.contrast, ["system", "normal", "high"])}.css`} precedence="feed" />;
 }
 
 export default function Shell({ title, path, subnav, children }: { title?: string; path: string; subnav?: ReactNode; children: ReactNode }) {
@@ -23,7 +29,7 @@ export default function Shell({ title, path, subnav, children }: { title?: strin
       <meta name="theme-color" content="#AC130D" />
       <meta name="robots" content="noai, noimageai" />
       <link rel="stylesheet" href="/feed/css/application.css" precedence="feed" />
-      <link rel="stylesheet" href="/feed/css/system-system.css" precedence="feed" />
+      <Theme />
       <script type="module" src="/feed/js/application.js" async />
       <header id="header">
         <div id="header-top">
@@ -48,6 +54,7 @@ export default function Shell({ title, path, subnav, children }: { title?: strin
           <a href="/tags">Tags</a>
           <a href="/filters">Filter</a>
           <a href="/moderations">Moderation Log</a>
+          <a href="/moderators">Moderators</a>
         </nav>
       </footer>
     </>

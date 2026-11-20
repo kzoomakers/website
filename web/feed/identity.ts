@@ -8,6 +8,7 @@ import { getMailCfg, mailReady, sendQueued } from "@/lib/mail";
 import { clientIp } from "@/lib/comments";
 import { STEP_SQL } from "@/lib/waiver";
 import { getFeedConfig, feedOrigin } from "./config";
+import { tattle } from "./models/mod-notes";
 import {
   DUMMY_DIGEST, EMAIL_OK, SESSION_COOKIE, checkPassword, csrfFor, hashPassword, passwordProblem, readSession, sessionValue, usernameProblem, type Handoff,
 } from "./auth";
@@ -21,11 +22,11 @@ export class Refused extends Error { code: string; constructor(code: string) { s
 const sha = (t: string) => createHash("sha256").update(t).digest("hex");
 const token = () => randomBytes(32).toString("base64url");
 
-export type Viewer = { id: number; username: string | null; kind: "admin" | "member" | "external"; email: string; isAdmin: boolean; isModerator: boolean; verified: boolean; csrf: string };
+export type Viewer = { id: number; username: string | null; kind: "admin" | "member" | "external"; email: string; isAdmin: boolean; isModerator: boolean; verified: boolean; csrf: string; prefs: { scheme: string; contrast: string } };
 
 // ---- Sessions
 /** Fresh cookie value for a user (their current session_version). */
-async function startSession(userId: number) {
+export async function startSession(userId: number) {
   const ver = (await (await conn()).query("SELECT session_version v FROM feed.users WHERE id = $1", [userId])).rows[0].v;
   return sessionValue(userId, ver);
 }
@@ -36,13 +37,13 @@ export async function viewerFor(cookie?: string): Promise<Viewer | null> {
   if (!s) return null;
   const c = await conn();
   const u = (await c.query(
-    `SELECT u.id, u.username, u.kind, u.email, u.is_admin, u.is_moderator, u.email_verified_at, u.site_user_id FROM feed.users u
+    `SELECT u.id, u.username, u.kind, u.email, u.is_admin, u.is_moderator, u.email_verified_at, u.site_user_id, u.settings->>'prefers_color_scheme' AS scheme, u.settings->>'prefers_contrast' AS contrast FROM feed.users u
      WHERE u.id = $1 AND u.session_version = $2 AND u.banned_at IS NULL AND u.deleted_at IS NULL`, [s.id, s.ver])).rows[0];
   if (!u) return null;
   // Standing on the main site is re-derived every time: losing it ends the session, and an admin who left the allow-list is no longer one.
   if (u.kind === "admin" && !isAdmin(u.email)) { await c.query("UPDATE feed.users SET is_admin = false, is_moderator = false, session_version = session_version + 1 WHERE id = $1", [u.id]); return null; }
   if (u.kind === "member" && !(await memberStanding(u.site_user_id, u.email))) return null;
-  return { id: u.id, username: u.username, kind: u.kind, email: u.email, isAdmin: u.is_admin, isModerator: u.is_moderator, verified: !!u.email_verified_at, csrf: csrfFor(cookie!) };
+  return { id: u.id, username: u.username, kind: u.kind, email: u.email, isAdmin: u.is_admin, isModerator: u.is_moderator, verified: !!u.email_verified_at, csrf: csrfFor(cookie!), prefs: { scheme: u.scheme ?? "system", contrast: u.contrast ?? "system" } };
 }
 
 /** The signed-in person for this request (looked up once per request). */
@@ -76,7 +77,7 @@ export async function loginFromHandoff(h: Handoff): Promise<string> {
   }
   const c = await conn(), staff = kind === "admin";
   const own = (await c.query("SELECT id, kind, banned_at, deleted_at FROM feed.users WHERE lower(email) = $1 FOR UPDATE", [email])).rows[0];
-  if (own?.banned_at || own?.deleted_at) throw new Refused("banned");
+  if (own?.banned_at || own?.deleted_at) { await tattle(own.id, own.banned_at ? "Attempted to log in while banned." : "Attempted to log in after deleting their account."); throw new Refused("banned"); }
   let id: number;
   if (!own) {
     id = (await c.query("INSERT INTO feed.users (email, token, kind, site_user_id, email_verified_at, is_admin, is_moderator, created_at) VALUES ($1,$2,$3,$4, now(), $5, $5, now()) RETURNING id",
@@ -97,8 +98,9 @@ export async function loginFromHandoff(h: Handoff): Promise<string> {
 export async function chooseUsername(userId: number, username: string) {
   const bad = usernameProblem(username);
   if (bad) throw new Refused("username_bad");
-  const r = await (await conn()).query("UPDATE feed.users SET username = $2 WHERE id = $1 AND username IS NULL AND NOT EXISTS (SELECT 1 FROM feed.users WHERE lower(username) = lower($2)) RETURNING id", [userId, username]);
-  if (!r.rowCount) throw new Refused("username_taken"); // also covers "already has one": names don't change here
+  const r = await (await conn()).query(`WITH u AS (UPDATE feed.users SET username = $2 WHERE id = $1 AND username IS NULL AND NOT EXISTS (SELECT 1 FROM feed.users WHERE lower(username) = lower($2)) RETURNING id)
+    INSERT INTO feed.usernames (username, user_id) SELECT $2, id FROM u RETURNING id`, [userId, username]); // the history row starts the once-a-year rename clock, as Lobsters' Username.create! does
+  if (!r.rowCount) throw new Refused("username_taken"); // also covers "already has one": renaming is done in /settings
 }
 
 // ---- External accounts
@@ -131,7 +133,7 @@ export async function register(req: Request, f: { email: string; password: strin
     await client.query("BEGIN");
     let inv: { id: number; user_id: number } | null = null;
     if (cfg.signup === "invite") { // a live, unused code; spent in the same step as the account
-      inv = f.code.trim() ? (await client.query("UPDATE feed.invitations SET used_at = now() WHERE code = $1 AND used_at IS NULL AND created_at > now() - make_interval(days => $2) RETURNING id, user_id", [f.code.trim().slice(0, 60), cfg.invites.expiryDays])).rows[0] ?? null : null;
+      inv = f.code.trim() ? (await client.query("UPDATE feed.invitations SET used_at = now() WHERE code = $1 AND used_at IS NULL AND created_at > now() - make_interval(days => $2) AND (email IS NULL OR lower(email) = $3) RETURNING id, user_id", [f.code.trim().slice(0, 60), cfg.invites.expiryDays, email])).rows[0] ?? null : null;
       if (!inv) throw new Refused("invite_bad");
     }
     const r = await client.query("INSERT INTO feed.users (email, password_digest, token, kind, invited_by_user_id, created_at) VALUES ($1,$2,$3,'external',$4, now()) ON CONFLICT DO NOTHING RETURNING id", [email, digest, token(), inv?.user_id ?? null]);
@@ -156,7 +158,7 @@ export async function passwordLogin(req: Request, emailIn: string, password: str
   const u = (await (await conn()).query("SELECT id, password_digest, banned_at, deleted_at FROM feed.users WHERE lower(email) = $1 AND kind = 'external'", [email])).rows[0];
   const ok = await checkPassword(password.slice(0, 200), u?.password_digest ?? DUMMY_DIGEST); // always run, whether or not the account exists
   if (!ok || !u?.password_digest) throw new Refused("login_bad");
-  if (u.banned_at || u.deleted_at) throw new Refused("banned");
+  if (u.banned_at || u.deleted_at) { await tattle(u.id, u.banned_at ? "Attempted to log in while banned." : "Attempted to log in after deleting their account."); throw new Refused("banned"); }
   return startSession(u.id);
 }
 
@@ -185,6 +187,12 @@ export async function setNewPassword(t: string, password: string) {
 
 export async function logoutEverywhere(userId: number) {
   await (await conn()).query("UPDATE feed.users SET session_version = session_version + 1 WHERE id = $1", [userId]);
+}
+
+/** Mails a fresh confirmation link to `email` for this user (after an address change). Limited like a resend. */
+export async function sendVerifyLink(userId: number, email: string) {
+  if (!(await hit("feed:verify:" + userId, 5, 3_600_000, true))) return;
+  await mailLink(email, "Confirm your email address", "Confirm your new email address:", "/login/verify", await newToken(userId, "verify", 48));
 }
 
 export async function resendVerification(req: Request, v: Viewer) {

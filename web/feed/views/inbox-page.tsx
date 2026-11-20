@@ -15,7 +15,7 @@ export default async function InboxPage({ which, page }: { which: "all" | "unrea
   const votes = await commentVotes(me.id, comments.map((c) => c.id));
   const title = which === "unread" ? "Unread Inbox" : "Inbox", path = `/inbox/${which}${page > 1 ? `/page/${page}` : ""}`;
   return (
-    <Shell title={title} path={path} subnav={<><li><a href="/inbox/unread" aria-current={which === "unread" ? "page" : undefined}>Unread</a></li><li><a href="/inbox/all" aria-current={which === "all" ? "page" : undefined}>All</a></li></>}>
+    <Shell title={title} path={path} subnav={<><li><a href="/inbox/unread" aria-current={which === "unread" ? "page" : undefined}>Unread</a></li><li><a href="/inbox/all" aria-current={which === "all" ? "page" : undefined}>All</a></li><li><a href="/mod_mails">Mod Mail</a></li></>}>
       <h1>{title}</h1>
       {comments.length === 0 && <p>{which === "unread" ? "Nothing unread." : "Nothing here yet."}</p>}
       <ol className="comments comments1">

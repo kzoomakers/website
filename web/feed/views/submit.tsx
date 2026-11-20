@@ -10,7 +10,7 @@ import { editable, recentSimilar, type Submission } from "../models/submit";
 import Shell from "./shell";
 
 /** stories/new.html.erb + edit.html.erb + _form.html.erb, trimmed to the fields the port supports. `edit` carries the story being edited. */
-async function StoryFormPage({ path, edit, start, notice }: { path: string; edit?: { shortId: string; input: Submission }; start?: Partial<Submission>; notice?: string }) {
+async function StoryFormPage({ path, edit, start, notice }: { path: string; edit?: { shortId: string; input: Submission; byModerator?: boolean }; start?: Partial<Submission>; notice?: string }) {
   const v = await currentFeedUser().catch(() => null);
   if (!v) redirect(`/login?return=${path}`);
   if (!v.username) redirect(`/login/username?return=${path}`);
@@ -45,6 +45,7 @@ async function StoryFormPage({ path, edit, start, notice }: { path: string; edit
               {tags.map((t) => <option key={t.tag} value={t.tag} title={t.description ?? undefined}>{t.tag}{t.description ? ` - ${t.description}` : ""}</option>)}
             </select>
           </div>
+          {edit?.byModerator && <div className="labelled_grid"><label htmlFor="reason">Reason</label><input id="reason" name="reason" type="text" maxLength={200} placeholder="for the moderation log" autoComplete="off" /></div>}
           <p>Leave the URL blank to post text only. Hold Ctrl or Cmd to choose several tags; at least one must not be a media tag.</p>
           <input type="submit" value={edit ? "Save" : "Submit"} />
         </form>
@@ -74,6 +75,7 @@ export async function EditStoryPage({ shortId }: { shortId: string }) {
   const s = (await (await conn()).query(
     `SELECT s.user_id, s.is_moderated, s.created_at, s.title, s.url, s.description, s.user_is_author, COALESCE((SELECT array_agg(t.tag) FROM feed.taggings tg JOIN feed.tags t ON t.id = tg.tag_id WHERE tg.story_id = s.id), '{}') tags
      FROM feed.stories s WHERE s.short_id = $1`, [shortId])).rows[0];
-  if (!s || !editable(s, v.id)) notFound();
-  return <StoryFormPage path={`/stories/${shortId}/edit`} edit={{ shortId, input: { title: s.title, url: s.url ?? "", description: s.description ?? "", tags: s.tags, userIsAuthor: s.user_is_author } }} />;
+  const byModerator = v.isModerator && s?.user_id !== v.id;
+  if (!s || !(byModerator || editable(s, v.id))) notFound();
+  return <StoryFormPage path={`/stories/${shortId}/edit`} edit={{ shortId, input: { title: s.title, url: s.url ?? "", description: s.description ?? "", tags: s.tags, userIsAuthor: s.user_is_author }, byModerator }} />;
 }

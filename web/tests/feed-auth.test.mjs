@@ -106,10 +106,11 @@ test("static checks: feed code never writes to site_users, never injects raw HTM
   const identity = files.filter((f) => /feed\/(auth|identity)\.ts$|views\/auth\.tsx$|app\/feed-(site\/(login|signup|auth)\/|sso\/)/.test(f));
   assert.ok(identity.length >= 12, "the identity files are found");
   for (const f of files) assert.doesNotMatch(fs.readFileSync(f, "utf8").replace(/\/\/.*$/gm, ""), /(INSERT\s+INTO|UPDATE|DELETE\s+FROM)\s+site_users/i, `${f} writes to site_users`);
+  // (tagPost and categoryPost run through formPost in feed/form-post.ts, which checks the origin)
   // (story and comment pages render sanitized markdown through one helper, views/comment.tsx; the account pages and routes render nothing but escaped text)
   for (const f of identity) assert.doesNotMatch(fs.readFileSync(f, "utf8").replace(/\/\/.*$/gm, ""), /dangerouslySetInnerHTML|innerHTML|eval\(|new Function/, `${f} injects raw HTML`);
   for (const f of files.filter((f) => /export\s+(async\s+)?function\s+(POST|PUT|PATCH|DELETE)/.test(fs.readFileSync(f, "utf8"))))
-    assert.match(fs.readFileSync(f, "utf8"), /originOk\(/, `${f} accepts a post without checking where it came from`);
+    assert.match(fs.readFileSync(f, "utf8"), /originOk\(|Post\(req/, `${f} accepts a post without checking where it came from`);
 });
 
 // ---- database: who ends up with which account
@@ -127,13 +128,13 @@ async function setup() {
 }
 
 test("handoff accounts: member and admin get a feed account, never a site_users row, and the role is decided here, not by the token", { skip }, async () => {
-  const { c, id, tag, site, claims } = await setup(), before = (await c.query("SELECT count(*)::int n FROM site_users")).rows[0].n;
-  const email = `m${tag}@example.org`, uid = await site(email), after = (await c.query("SELECT count(*)::int n FROM site_users")).rows[0].n;
+  const { c, id, tag, site, claims } = await setup();
+  const email = `m${tag}@example.org`, uid = await site(email);
+  const mine = () => c.query("SELECT count(*)::int n FROM site_users WHERE lower(email) = $1", [email]).then((r) => r.rows[0].n); // not a table-wide count: other test files insert rows concurrently
   const cookie = await id.loginFromHandoff(claims({ email, uid }));
   const v = await id.viewerFor(cookie);
   assert.deepEqual([v.kind, v.isAdmin, v.isModerator, v.username, v.verified], ["member", false, false, null, true], "no username until they pick one");
-  assert.equal((await c.query("SELECT count(*)::int n FROM site_users")).rows[0].n, after);
-  assert.ok(after >= before);
+  assert.equal(await mine(), 1, "login did not add a site_users row");
   await assert.rejects(id.loginFromHandoff(claims({ email, uid, role: "admin" })), { code: "not_allowed" }, "a member cannot claim admin");
   await assert.rejects(id.loginFromHandoff(claims({ email: "nobody@example.org", role: "admin" })), { code: "not_allowed" });
   await assert.rejects(id.loginFromHandoff(claims({ email: `z${tag}@example.org`, uid })), { code: "not_allowed" }, "email must match the member record");
@@ -160,6 +161,8 @@ test("banned feed users can't log in by any route, and a ban ends their session"
   await c.query("UPDATE feed.users SET banned_at = now() WHERE lower(email) = $1", [email]);
   assert.equal(await id.viewerFor(cookie), null);
   await assert.rejects(id.loginFromHandoff(claims({ email, uid })), { code: "banned" });
+  assert.equal((await c.query("SELECT count(*)::int n FROM feed.mod_notes WHERE note = 'Attempted to log in while banned.' AND user_id = (SELECT id FROM feed.users WHERE lower(email) = $1)", [email])).rows[0].n, 1, "the attempt is noted for moderators");
+  await c.query("DELETE FROM feed.mod_notes WHERE user_id = (SELECT id FROM feed.users WHERE lower(email) = $1)", [email]);
   await c.query("DELETE FROM feed.users WHERE lower(email) = $1", [email]); await c.query("DELETE FROM site_users WHERE id = $1", [uid]);
 });
 
@@ -198,9 +201,10 @@ test("usernames are chosen once and are unique ignoring case", { skip }, async (
   const a = await mk(`a${tag}@e.org`), b = await mk(`b${tag}@e.org`), name = `Maker${tag}`.slice(0, 24);
   await id.chooseUsername(a, name);
   await assert.rejects(id.chooseUsername(b, name.toLowerCase()), { code: "username_taken" });
-  await assert.rejects(id.chooseUsername(a, name + "x"), { code: "username_taken" }, "no renaming");
+  await assert.rejects(id.chooseUsername(a, name + "x"), { code: "username_taken" }, "no renaming here: that is /settings");
   await assert.rejects(id.chooseUsername(b, "<script>"), { code: "username_bad" });
-  await c.query("DELETE FROM feed.users WHERE id = ANY($1)", [[a, b]]);
+  assert.deepEqual((await c.query("SELECT username, renamed_away_at FROM feed.usernames WHERE user_id = $1", [a])).rows, [{ username: name, renamed_away_at: null }], "the choice starts the name history");
+  await c.query("DELETE FROM feed.usernames WHERE user_id = ANY($1)", [[a, b]]); await c.query("DELETE FROM feed.users WHERE id = ANY($1)", [[a, b]]);
 });
 
 test("reset links work once, expire, end other sessions, and external accounts only", { skip }, async () => {
@@ -245,11 +249,13 @@ test("external registration: refuses weak input and closed sign-up, needs a live
     await c.query("INSERT INTO feed.invitations (user_id, code, token) VALUES ($1, $2, $2)", [inviter, "code" + tag]);
     await c.query("INSERT INTO feed.invitations (user_id, code, token, created_at) VALUES ($1, $2, $2, now() - interval '400 days')", [inviter, "old" + tag]);
     await assert.rejects(id.register(ip(9), { email: `i${email}`, password: "a good password", code: "old" + tag }), { code: "invite_bad" }, "expired code");
+    await c.query("INSERT INTO feed.invitations (user_id, code, token, email) VALUES ($1, $2, $2, $3)", [inviter, "tied" + tag, `tied${email}`]);
+    await assert.rejects(id.register(ip(12), { email: `other${email}`, password: "a good password", code: "tied" + tag }), { code: "invite_bad" }, "a code sent to one address can't be used by another");
     await id.register(ip(10), { email: `i${email}`, password: "a good password", code: "code" + tag });
     await assert.rejects(id.register(ip(11), { email: `j${email}`, password: "a good password", code: "code" + tag }), { code: "invite_bad" }, "a code works once");
   } finally {
     await saveFeedConfig({ enabled: false }, "test");
-    await c.query("DELETE FROM feed.invitations WHERE code LIKE ANY($1)", [[`code${tag}`, `old${tag}`]]); await c.query("DELETE FROM feed.users WHERE email LIKE $1", [`%${tag}@example.org`]);
+    await c.query("DELETE FROM feed.invitations WHERE code LIKE ANY($1)", [[`code${tag}`, `old${tag}`, `tied${tag}`]]); await c.query("DELETE FROM feed.users WHERE email LIKE $1", [`%${tag}@example.org`]);
   }
 });
 
