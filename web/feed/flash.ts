@@ -20,3 +20,12 @@ export const putCommentFlash = (userId: number, f: CFlash) => {
   cparked.set(userId, { ...f, exp: now + 300_000 });
 };
 export const takeCommentFlash = (userId: number): CFlash | null => { const f = cparked.get(userId); cparked.delete(userId); return f && f.exp > Date.now() ? f : null; };
+
+// And for a refused vote, hide, save or moderator action: one message, shown once at the top of the next page.
+const eparked = new Map<number, { msg: string; exp: number }>();
+export const putError = (userId: number, msg: string) => {
+  const now = Date.now();
+  for (const [k, v] of eparked) if (v.exp < now) eparked.delete(k);
+  eparked.set(userId, { msg, exp: now + 300_000 });
+};
+export const takeError = (userId: number): string | null => { const f = eparked.get(userId); eparked.delete(userId); return f && f.exp > Date.now() ? f.msg : null; };

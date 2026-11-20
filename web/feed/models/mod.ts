@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import type { PoolClient } from "pg";
 import { updateCachedColumns } from "./cached";
-import { recalcComment } from "./comment-cache";
+import { lockCommentStory, recalcComment } from "./comment-cache";
 import { live, tx } from "./submit";
 
 // Moderator delete and undelete of stories and comments (stories#destroy/#undelete for moderators, mod/comments_controller, comment.rb delete_by_moderator, story.rb log_moderation).
@@ -16,13 +16,13 @@ const log = (c: PoolClient, mod: number, target: { story_id?: number; comment_id
 
 const mod = async (c: PoolClient, id: number) => { const u = await live(c, id); return u && u.is_moderator && !u.banned_at && !u.deleted_at ? u : null; };
 
-/** Delete or undelete any story. Deleting marks it moderated, so its author can't edit or undelete it; undeleting clears that. Acting on your own story is the ordinary author path and is not logged. */
+/** Delete or undelete any story. Any change to someone else's story marks it moderated and it stays that way (story.rb log_moderation), so its author can't edit or undelete it. Acting on your own story is the ordinary author path and is not logged. */
 export const modSetStoryDeleted = (moderator: { id: number }, shortId: string, deleted: boolean, reason = ""): Promise<ModResult> => tx(async (c) => {
   if (!(await mod(c, moderator.id))) return { ok: false, error: "not permitted" };
   const s = (await c.query("SELECT id, user_id, is_deleted FROM feed.stories WHERE short_id = $1 FOR UPDATE", [shortId])).rows[0];
   if (!s) return { ok: false, error: "Can't find story" };
   if (s.is_deleted === deleted) return { ok: true };
-  await c.query("UPDATE feed.stories SET is_deleted = $2, is_moderated = $3, updated_at = now() WHERE id = $1", [s.id, deleted, deleted || s.user_id === moderator.id]);
+  await c.query("UPDATE feed.stories SET is_deleted = $2, is_moderated = is_moderated OR $3, updated_at = now() WHERE id = $1", [s.id, deleted, s.user_id !== moderator.id]);
   await c.query("INSERT INTO feed.keystores (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = COALESCE(feed.keystores.value, 0) + $2", [`user:${s.user_id}:stories_deleted`, deleted ? 1 : -1]);
   if (s.user_id !== moderator.id) await log(c, moderator.id, { story_id: s.id }, deleted ? "deleted story" : "undeleted story", reason.slice(0, REASON_MAX));
   await updateCachedColumns(c, s.id);
@@ -32,6 +32,7 @@ export const modSetStoryDeleted = (moderator: { id: number }, shortId: string, d
 /** Delete or undelete any comment. Deleting costs its author 2 karma per vote it got (each upvote earned 1), as delete_by_moderator does, and undeleting does not give it back (as in Lobsters). */
 export const modSetCommentDeleted = (moderator: { id: number }, shortId: string, deleted: boolean, reason = ""): Promise<ModResult> => tx(async (c) => {
   if (!(await mod(c, moderator.id))) return { ok: false, error: "not permitted" };
+  await lockCommentStory(c, shortId);
   const m = (await c.query("SELECT id, user_id, is_deleted, is_moderated FROM feed.comments WHERE short_id = $1 FOR UPDATE", [shortId])).rows[0];
   if (!m) return { ok: false, error: "Can't find comment" };
   if (deleted) {

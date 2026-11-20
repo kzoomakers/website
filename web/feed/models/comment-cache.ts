@@ -12,3 +12,7 @@ export async function recalcComment(c: PoolClient, commentId: number): Promise<v
   await c.query("UPDATE feed.comments SET confidence = $2, confidence_order = $3 WHERE id = $1", [commentId, conf, confidenceOrder(conf, commentId)]);
   await updateCachedColumns(c, r.story_id);
 }
+
+/** Lock the story a comment belongs to before touching the comment. createComment takes story then parent comment, and recalcComment takes the story, so every writer of a comment must take them in that order or two of them can deadlock. */
+export const lockCommentStory = (c: PoolClient, shortId: string) =>
+  c.query("SELECT 1 FROM feed.stories WHERE id = (SELECT story_id FROM feed.comments WHERE short_id = $1) FOR UPDATE", [shortId]);
