@@ -47,3 +47,36 @@ test("deactivate: password and checkbox, cleanup, disown, sessions end", { skip 
   assert.ok((await D(bad)).ok);
   assert.equal((await c.query("SELECT email FROM feed.users WHERE id = $1", [bad.id])).rows[0].email, `bad${n}@talk.invalid`, "negative karma loses the address");
 });
+
+test("reactivate: a moderator undoes a self-deactivation, optionally with a new address", { skip }, async () => {
+  const { conn } = await import("../lib/db.ts"), { modReactivateUser } = await import("../feed/models/mod-users.ts");
+  const c = await conn(), n = Date.now().toString(36).slice(-8);
+  const mk = async (name, extra = "") => (await c.query(`INSERT INTO feed.users (username, email, token, kind, created_at${extra ? ", deleted_at" : ""}) VALUES ($1, $2, $3, 'external', now() - interval '200 days'${extra ? ", now()" : ""}) RETURNING id`, [name + n, `${name}${n}@talk.invalid`, `u${name}${n}`])).rows[0];
+  const mod = (await c.query(`INSERT INTO feed.users (username, email, token, kind, is_moderator, is_admin) VALUES ($1, $2, $3, 'admin', true, true) RETURNING id`, ["mod" + n, `mod${n}@example.org`, "umod" + n])).rows[0];
+  const gone = await mk("gone", "x"), active = await mk("active");
+  assert.match((await modReactivateUser(active, "gone" + n)).error, /not permitted/, "only moderators");
+  assert.match((await modReactivateUser(mod, "active" + n)).error, /isn't deactivated/);
+  assert.match((await modReactivateUser(mod, "gone" + n, "not an email")).error, /valid/);
+  assert.ok((await modReactivateUser(mod, "gone" + n, `back${n}@example.org`)).ok);
+  const u = (await c.query("SELECT deleted_at, email FROM feed.users WHERE id = $1", [gone.id])).rows[0];
+  assert.equal(u.deleted_at, null); assert.equal(u.email, `back${n}@example.org`);
+  assert.deepEqual((await c.query("SELECT action FROM feed.moderations WHERE user_id = $1", [gone.id])).rows, [{ action: "Reactivated" }]);
+});
+
+test("reply and mention emails go only to people who asked, once", { skip }, async () => {
+  const { conn } = await import("../lib/db.ts"), { tx } = await import("../feed/models/submit.ts");
+  const { notifyComment } = await import("../feed/models/notify.ts"), { createComment } = await import("../feed/models/comment-write.ts");
+  const c = await conn(), n = Date.now().toString(36).slice(-8);
+  const mk = async (name, settings) => (await c.query(`INSERT INTO feed.users (username, email, token, kind, settings, created_at) VALUES ($1, $2, $3, 'external', $4, now() - interval '200 days') RETURNING id`, [name + n, `${name}${n}@example.org`, `u${name}${n}`, settings])).rows[0];
+  const author = await mk("author", { email_replies: true }), writer = await mk("writer", {}), quiet = await mk("quiet", {}), pinged = await mk("pinged", { email_mentions: true });
+  const st = (await c.query("INSERT INTO feed.stories (user_id, title, short_id, token, last_edited_at, created_at, user_is_following) VALUES ($1, 'Mail story', $2, $3, now(), now(), true) RETURNING short_id", [author.id, n.slice(-6).padStart(6, "m"), "sm" + n])).rows[0];
+  const top = await createComment(writer, { storyShortId: st.short_id, comment: `hello @quiet and @pinged${n}` });
+  const id = (await c.query("SELECT id FROM feed.comments WHERE short_id = $1", [top.shortId])).rows[0].id;
+  const mails = await tx((x) => notifyComment(x, id));
+  assert.deepEqual(mails, [], "rows already exist, so nothing is re-sent");
+  await c.query("DELETE FROM feed.notifications WHERE notifiable_id = $1", [id]);
+  const again = await tx((x) => notifyComment(x, id));
+  assert.deepEqual(again.map((m) => m.to).sort(), [`author${n}@example.org`, `pinged${n}@example.org`], "the story author wants replies, @pinged wants mentions; @quiet (no @-match: wrong name) and the commenter get none");
+  assert.match(again[0].subject, /Reply from writer/);
+  assert.match(again.find((m) => m.to.startsWith("pinged")).subject, /Mention from writer/);
+});

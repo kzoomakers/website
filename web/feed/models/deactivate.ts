@@ -52,8 +52,20 @@ export const deactivate = (userId: number, i: { password: string; sure: boolean;
   const recent = (await c.query(
     `SELECT (SELECT count(*) FROM feed.comments WHERE user_id = $1 AND is_deleted AND created_at > now() - interval '30 days')
           + (SELECT count(*) FROM feed.stories WHERE user_id = $1 AND is_deleted AND is_moderated AND created_at > now() - interval '30 days') AS n`, [userId])).rows[0].n;
-  const rotate = u.karma < 0 || Number(recent) > 3;
+  const rotate = u.karma < 0 || Number(recent) > 3 || await flaggedCommenter(c, userId);
   await c.query("UPDATE feed.users SET deleted_at = now(), session_version = session_version + 1, email = CASE WHEN $2 THEN $3 ELSE email END WHERE id = $1", [userId, rotate, `${u.username}@talk.invalid`]);
   await c.query("INSERT INTO feed.moderations (moderator_user_id, user_id, action, token) VALUES (NULL, $1, $2, $3)", [userId, `deactivated${i.disown ? ", disowning their stories and comments" : ""}`, `moderation_${randomBytes(16).toString("hex")}`]);
   return { ok: true, disowned: i.disown };
 });
+
+/** flagged_commenters.rb check_list_for("90d"): is this person among the 30 most-flagged commenters of the last 90 days? Needs flags spread over 5+ comments and 2+ stories, 10+ flags, and over 10% of their comments flagged. */
+const flaggedCommenter = async (c: PoolClient, userId: number): Promise<boolean> => !!(await c.query(
+  `WITH per AS (SELECT c.user_id, sum(c.flags) AS flags FROM feed.comments c JOIN feed.users u ON u.id = c.user_id WHERE c.created_at >= now() - interval '90 days' AND u.banned_at IS NULL AND u.deleted_at IS NULL GROUP BY c.user_id),
+     agg AS (SELECT avg(flags) AS mean, stddev_samp(flags) AS sd FROM per),
+     top AS (SELECT c.user_id, (sum(c.flags) - agg.mean) / NULLIF(agg.sd, 0) AS sigma
+       FROM feed.comments c JOIN feed.users u ON u.id = c.user_id, agg WHERE c.created_at >= now() - interval '90 days' AND u.banned_at IS NULL AND u.deleted_at IS NULL
+       GROUP BY c.user_id, agg.mean, agg.sd
+       HAVING count(DISTINCT c.id) FILTER (WHERE c.flags > 0) > 4 AND count(DISTINCT c.story_id) FILTER (WHERE c.flags > 0) > 1 AND sum(c.flags) >= 10
+         AND count(DISTINCT c.id) FILTER (WHERE c.flags > 0) * 100.0 / count(DISTINCT c.id) > 10
+       ORDER BY sigma DESC NULLS LAST LIMIT 30)
+   SELECT 1 FROM top WHERE user_id = $1`, [userId])).rowCount;

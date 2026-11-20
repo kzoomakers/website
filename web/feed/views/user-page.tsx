@@ -63,6 +63,13 @@ export default async function UserPage({ u }: { u: Profile }) {
       )}
       {me?.username && me.id !== u.id && <p><a href={`/messages?to=${encodeURIComponent(u.username)}`}>Send a message</a></p>}
       {me?.isAdmin && me.id !== u.id && u.invited_by && <p><a href={`/mod/reparents/new?id=${encodeURIComponent(u.username)}`}>Reparent</a></p>}
+      {me?.isModerator && u.deleted_at && !u.banned_at && (
+        <form method="post" action={`/~${u.username}/reactivate`} className="story_mod_tools">
+          <input type="hidden" name="csrf" value={me.csrf} />
+          <input name="email" type="email" maxLength={200} placeholder="new email (optional)" aria-label="New email address, if theirs was replaced" />{" "}
+          <button type="submit">Reactivate account</button>
+        </form>
+      )}
       {me?.isModerator && me.id !== u.id && !u.is_moderator && (
         <form method="post" action={`/~${u.username}/${u.banned_at ? "unban" : "ban"}`} className="story_mod_tools">
           <input type="hidden" name="csrf" value={me.csrf} />

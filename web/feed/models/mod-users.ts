@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { EMAIL_OK } from "../auth";
 import { feedMail } from "../mail";
 import { SITE_NAME } from "../format";
 import { lockCommentStory, recalcComment } from "./comment-cache";
@@ -51,6 +52,21 @@ export const modUnbanUser = (moderator: { id: number }, username: string, reason
   if (!u.banned_at) return { ok: true };
   await c.query("UPDATE feed.users SET banned_at = NULL, banned_by_user_id = NULL, banned_reason = NULL, deleted_at = NULL WHERE id = $1", [u.id]);
   await c.query("INSERT INTO feed.moderations (moderator_user_id, user_id, action, reason, token) VALUES ($1, $2, 'Unbanned', $3, $4)", [moderator.id, u.id, reason.trim().slice(0, 4000) || null, `moderation_${randomBytes(16).toString("hex")}`]);
+  return { ok: true };
+});
+
+/** Reverses a self-deactivation (settings#deactivate): clears deleted_at, and optionally sets a new address (accounts that left badly had theirs replaced). Banned users go through unban. Lobsters does this with a password reset; here a moderator does it. */
+export const modReactivateUser = (moderator: { id: number }, username: string, email = ""): Promise<ModResult> => tx(async (c) => {
+  const m = await live(c, moderator.id);
+  if (!m?.is_moderator || m.banned_at || m.deleted_at) return { ok: false, error: "not permitted" };
+  const u = (await c.query("SELECT id, banned_at, deleted_at, kind FROM feed.users WHERE lower(username) = lower($1) FOR UPDATE", [username])).rows[0];
+  if (!u) return { ok: false, error: "Invalid user" };
+  if (u.banned_at || !u.deleted_at || u.kind !== "external") return { ok: false, error: "That account isn't deactivated" };
+  email = email.trim().toLowerCase();
+  if (email && !EMAIL_OK.test(email)) return { ok: false, error: "That email address isn't valid" };
+  if (email && (await c.query("SELECT 1 FROM feed.users WHERE lower(email) = $1 AND id <> $2", [email, u.id])).rowCount) return { ok: false, error: "That email address is already in use" };
+  await c.query("UPDATE feed.users SET deleted_at = NULL, email = COALESCE(NULLIF($2, ''), email) WHERE id = $1", [u.id, email]);
+  await c.query("INSERT INTO feed.moderations (moderator_user_id, user_id, action, token) VALUES ($1, $2, 'Reactivated', $3)", [moderator.id, u.id, `moderation_${randomBytes(16).toString("hex")}`]);
   return { ok: true };
 });
 

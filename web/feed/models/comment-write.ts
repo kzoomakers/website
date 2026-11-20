@@ -5,7 +5,8 @@ import { feedOrigin } from "../config";
 import { tattle } from "./mod-notes";
 import { COMMENTABLE_DAYS, MAX_DEPTH, commentProblems, isDeletable, isEditable, speedDelayMins } from "../comment-rules";
 import { lockCommentStory, recalcComment } from "./comment-cache";
-import { notifyComment } from "./notify";
+import { feedMail } from "../mail";
+import { notifyComment, type Mail } from "./notify";
 import { renderPost } from "./render";
 import { live, tx } from "./submit";
 
@@ -28,7 +29,9 @@ async function speedWait(c: PoolClient, userId: number, parent: { id: number; th
 }
 
 /** comments#create. Resubmitting the exact same comment (slow connections) quietly returns the existing one. */
-export const createComment = (user: { id: number }, o: { storyShortId: string; parentShortId?: string; comment: string; hat?: string }): Promise<CommentResult> => tx(async (c) => {
+export const createComment = async (user: { id: number }, o: { storyShortId: string; parentShortId?: string; comment: string; hat?: string }): Promise<CommentResult> => {
+  const mails: Mail[] = [];
+  const r = await tx<CommentResult>(async (c) => {
   const u = await live(c, user.id);
   if (banned(u)) return fail(["You can't comment."]);
   const s = (await c.query("SELECT s.id, s.short_id, s.created_at, (s.is_deleted OR (b.banned_at IS NOT NULL AND s.score < 0 AND NOT s.is_moderated)) AS gone FROM feed.stories s JOIN feed.users b ON b.id = s.user_id WHERE s.short_id = $1 FOR UPDATE OF s", [o.storyShortId])).rows[0];
@@ -68,9 +71,12 @@ export const createComment = (user: { id: number }, o: { storyShortId: string; p
   await c.query("UPDATE feed.stories SET last_comment_at = now(), updated_at = now() WHERE id = $1", [s.id]);
   await c.query("INSERT INTO feed.keystores (key, value) VALUES ($1, 1) ON CONFLICT (key) DO UPDATE SET value = COALESCE(feed.keystores.value, 0) + 1", [`user:${user.id}:comments_posted`]);
   await recalcComment(c, r.id);
-  await notifyComment(c, r.id);
+  mails.push(...(await notifyComment(c, r.id)));
   return { ok: true, shortId: sid, storyShortId: s.short_id } as CommentResult;
-});
+  });
+  if (r.ok) for (const x of mails) await feedMail(x.to, x.subject, x.text); // after the commit: a slow mail server never holds the comment open
+  return r;
+};
 
 /** comment.rb log_hat_use: using a hat marked for the moderation log leaves an entry, when a comment is created or its hat changes. */
 const logHatUse = async (c: PoolClient, commentId: number, userId: number, hat: number) => {
