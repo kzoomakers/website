@@ -1,5 +1,6 @@
-import type { Story } from "../models/stories";
+import { STORIES_PER_PAGE, type Story } from "../models/stories";
 import { ActionForm, Upvoter, type Me } from "./controls";
+import { thumbOf } from "../models/story-image";
 import { howLongAgo, negativityClass, titleAsSlug, truncate, zoned } from "../util";
 
 export const titlePath = (s: Pick<Story, "short_id" | "title">) => `/s/${s.short_id}/${titleAsSlug(s.title)}`;
@@ -26,15 +27,24 @@ export function UserLink({ s, newUserDays }: { s: Pick<Story, "username" | "user
   return <a className={cls || undefined} aria-label={newAria(s, newUserDays)} href={`/~${s.username}`}>{s.username}</a>;
 }
 
+const IMG_URL = /\.(jpe?g|png|gif|webp|avif)(\?.*)?$/i;
+
 /** stories/_listdetail.html.erb (logged-out). Hide/save/flag/edit controls come with accounts (phase 2/3). */
-export function StoryItem({ story: s, newUserDays, me = null, vote = 0, hidden = false }: { story: Story; newUserDays: number; me?: Me | null; vote?: number; hidden?: boolean }) {
+export function StoryItem({ story: s, newUserDays, me = null, vote = 0, hidden = false, rank }: { rank?: number; story: Story; newUserDays: number; me?: Me | null; vote?: number; hidden?: boolean }) {
   const href = s.url || titlePath(s);
   const referrer = s.merged_story_id == null && Date.now() - s.created_at.getTime() < 3600_000;
   const cls = ["story", negativityClass(s.score, s.flags), vote === 1 && "upvoted", vote === -1 && "flagged"].filter(Boolean).join(" ");
+  const pic = s.image || (s.url && IMG_URL.test(s.url) ? s.url : null); // an uploaded picture, or a link straight to one (only loaded when expanded)
   return (
     <li id={`story_${s.short_id}`} data-shortid={s.short_id} className={cls}>
       <div className="story_liner h-entry">
+        {rank != null && <span className="rank" aria-hidden="true">{rank}</span>}
         <div className="voters"><Upvoter base={`/stories/${s.short_id}`} me={me} voted={vote === 1} score={s.score} own={!!me && me.id === s.user_id} /></div>
+        {rank != null && (
+          <a className={`thumb ${s.image ? "thumb_img" : s.url ? "thumb_link" : "thumb_self"}`} href={href} tabIndex={-1} aria-hidden="true">
+            {s.image && <img src={thumbOf(s.image)} alt="" loading="lazy" width={70} height={70} />}
+          </a>
+        )}
         <div className="details">
           <h2 className="link h-cite u-repost-of"><a className="u-url" href={href} rel={`ugc ${referrer ? "" : "noreferrer"}`.trim()}>{s.title}</a></h2>
           {s.stories_count > 0 ? <span className="merge" role="img" aria-label={`${s.stories_count + 1} stories merged`}>{s.stories_count + 1}</span> : s.merged_story_id ? <span className="merge">merged</span> : null}
@@ -44,12 +54,14 @@ export function StoryItem({ story: s, newUserDays, me = null, vote = 0, hidden =
           </ul>
           {s.origin ? <a className="domain" href={`/origins/${s.origin}`}>{s.origin}</a> : s.domain ? <a className="domain" href={`/domains/${s.domain}`}>{s.domain}</a> : null}
           <div className="byline">
-            <span> {s.user_is_author ? "authored by" : "via"} </span>
+            {pic && <><input type="checkbox" id={`expand_${s.short_id}`} className="expando_toggle" /><label htmlFor={`expand_${s.short_id}`} className="expando_btn" title="Expand image"><span className="sr-only">Expand image</span></label></>}
+            <span> {s.user_is_author ? "authored by" : "submitted by"} </span>
             <UserLink s={s} newUserDays={newUserDays} /> <TimeLabel time={s.created_at} />
             {s.url && <><Divider /><Caches url={s.url} /></>}
             <span className="comments_label"><Divider /><a href={titlePath(s)}>{s.comments_count === 0 ? "no comments" : `${s.comments_count} comment${s.comments_count === 1 ? "" : "s"}`}</a></span>
             {me && <><Divider /><ActionForm path={`/stories/${s.short_id}/${hidden ? "unhide" : "hide"}`} me={me} label={hidden ? "unhide" : "hide"} /></>}
           </div>
+          {pic && <div className="expando_box"><a href={pic === s.image ? pic : titlePath(s)}><img src={pic} alt={s.title} loading="lazy" /></a></div>}
         </div>
       </div>
       <a href={titlePath(s)} className={`mobile_comments${s.comments_count === 0 ? " zero" : ""}`} style={{ display: "none" }}><span>{s.comments_count}</span></a>
@@ -63,7 +75,7 @@ export function StoryList({ stories, page, more, base, above, below, newUserDays
   return (
     <>
       {above}
-      <ol className="stories list">{stories.map((s) => <StoryItem key={s.id} story={s} newUserDays={newUserDays} me={me} vote={votes?.get(s.id) ?? 0} hidden={hidden} />)}</ol>
+      <ol className="stories list">{stories.map((s, i) => <StoryItem key={s.id} rank={(page - 1) * STORIES_PER_PAGE + i + 1} story={s} newUserDays={newUserDays} me={me} vote={votes?.get(s.id) ?? 0} hidden={hidden} />)}</ol>
       {below}
       <nav className="morelink">
         {page > 1 && <a href={link(page - 1)} rel="prev">{`Page ${page - 1}`}</a>}

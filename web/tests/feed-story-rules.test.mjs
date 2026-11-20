@@ -35,3 +35,9 @@ test("new user means under 70 days", () => {
   assert.ok(isNewUser(new Date("2026-04-01T00:00:00Z"), now)); assert.ok(!isNewUser(new Date("2026-03-01T00:00:00Z"), now)); assert.ok(isNewUser(null, now));
   assert.equal(cleanTitle("a b"), "a b");
 });
+
+test("a picture stands in for text when there is no link", () => {
+  const post = { ...ok, url: "", description: "" };
+  assert.equal(storyProblems(post).length, 1);
+  assert.deepEqual(storyProblems({ ...post, image: true }), []);
+});
