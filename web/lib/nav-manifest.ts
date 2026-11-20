@@ -74,14 +74,14 @@ export const NAV: Tab[] = [
 ];
 
 /** The top bar: six groups, each one or more of the sections above. Home has no section (it is the "needs attention" page). */
-export type Group = { label: string; href: string; sections: Section[] };
+export type Group = { label: string; sections: Section[]; href?: string };
 export const GROUPS: Group[] = [
-  { label: "Home", href: "/admin/landing", sections: [] },
-  { label: "Members", href: "/admin/people", sections: ["people", "tours", "makerfavor"] },
-  { label: "Communications", href: "/admin/messages", sections: ["messages", "email", "blog"] },
-  { label: "Website", href: "/admin/website", sections: ["website"] },
-  { label: "SignDocs", href: "/admin/signdocs", sections: ["signdocs"] },
-  { label: "System", href: "/admin/system", sections: ["system"] },
+  { label: "Home", sections: [], href: "/admin/landing" },
+  { label: "Members", sections: ["people", "tours", "makerfavor"] },
+  { label: "Communications", sections: ["messages", "email", "blog"] },
+  { label: "Website", sections: ["website"] },
+  { label: "SignDocs", sections: ["signdocs"] },
+  { label: "System", sections: ["system"] },
 ];
 
 /** Members side menu: [href, icon, label]. */

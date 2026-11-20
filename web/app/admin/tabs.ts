@@ -13,3 +13,10 @@ export const groupOf = (here: string) => {
   const tab = NAV.find((t) => t.href === tabOf(here));
   return GROUPS.find((g) => (tab ? g.sections.includes(tab.section) : false)) ?? GROUPS[0];
 };
+
+/** The groups to show in the top bar and where each opens: Home always, the others when you can open a section in them, on the first page you may use. `allowed` maps a section to that page ("" if none). */
+export const visibleGroups = (allowed: Record<string, string>) =>
+  GROUPS.flatMap((g) => {
+    const s = g.sections.find((x) => allowed[x] !== undefined);
+    return g.sections.length && s === undefined ? [] : [{ group: g, href: g.sections.map((x) => allowed[x]).find(Boolean) || g.href || NAV.find((t) => t.section === s)!.href }];
+  });

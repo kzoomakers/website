@@ -1,9 +1,9 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { groupOf } from "./tabs";
+import { groupOf, visibleGroups } from "./tabs";
 import { useAlerts } from "./alerts";
-import { GROUPS, NAV, flat } from "@/lib/nav-manifest";
+import { NAV, flat } from "@/lib/nav-manifest";
 
 // Top bar shared by every admin page: logo/name left, then the six groups. A group shows when you can open any section in it (Home always).
 // The badge on a group adds up what is waiting in its sections (reviews, comments, held messages, applicants, walk-ups, ID renewals).
@@ -15,9 +15,9 @@ export default function AdminBar({ allowed }: { allowed: Record<string, string> 
     <header className="adm-top">
       <Link href="/admin" className="adm-brand" aria-label="Kzoo Makers admin home"><img src="/images/favicon.png" alt="" width={24} height={24} />Kzoo Makers</Link>
       <nav aria-label="Admin sections">
-        {GROUPS.filter((g) => !g.sections.length || g.sections.some((s) => allowed[s] !== undefined)).map((g) => {
-          const n = waiting(g.sections), to = g.sections.map((s) => allowed[s]).find(Boolean) || g.href; // a group opens on the first page you may use
-          return <Link key={g.label} href={to} aria-current={cur === g ? "page" : undefined}>{g.label}{n > 0 && <span className="adm-n" title={`${n} waiting`}>{n}<span className="sr-only"> waiting</span></span>}</Link>;
+        {visibleGroups(allowed).map(({ group: g, href }) => {
+          const n = waiting(g.sections);
+          return <Link key={g.label} href={href} aria-current={cur === g ? "page" : undefined}>{g.label}{n > 0 && <span className="adm-n" title={`${n} waiting`}>{n}<span className="sr-only"> waiting</span></span>}</Link>;
         })}
       </nav>
     </header>

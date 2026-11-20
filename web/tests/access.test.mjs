@@ -143,3 +143,13 @@ test("every section is in exactly one top-bar group, and URLs find their group",
   assert.equal(g("/admin/landing"), "Home"); assert.equal(g("/admin/tours/walkups"), "Members"); assert.equal(g("/admin/makerfavor"), "Members"); assert.equal(g("/admin/blog/comments"), "Communications");
   assert.equal(g("/admin/email/queue"), "Communications"); assert.equal(g("/admin/system/privacy"), "Website"); assert.equal(g("/admin/system/seal"), "System"); assert.equal(g("/admin/signdocs/new"), "SignDocs");
 });
+
+test("the top bar shows Home plus the groups you can open, each opening on your first page", async () => {
+  const { visibleGroups } = await import("../app/admin/tabs.ts");
+  const show = (allowed) => visibleGroups(allowed).map((v) => `${v.group.label}:${v.href}`);
+  assert.deepEqual(show({ tours: "/admin/tours/walkups" }), ["Home:/admin/landing", "Members:/admin/tours/walkups"]);
+  assert.deepEqual(show({ makerfavor: "/admin/makerfavor", people: "/admin/people/approvals" }), ["Home:/admin/landing", "Members:/admin/people/approvals"]);
+  assert.deepEqual(show({ blog: "/admin/blog", system: "/admin/system" }), ["Home:/admin/landing", "Communications:/admin/blog", "System:/admin/system"]);
+  assert.deepEqual(show({ website: "" }), ["Home:/admin/landing", "Website:/admin/website"]); // a section with no page found still opens its front URL
+  assert.deepEqual(show({}), ["Home:/admin/landing"]);
+});
