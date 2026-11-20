@@ -2,6 +2,7 @@ import { cache } from "react";
 import { anyLevel, levelFor, pageOf, SECTIONS, type Level, type Perms, type Section } from "./access";
 import { redirect } from "next/navigation";
 import { auth, isAdmin } from "@/auth";
+import { mobileAdminEmail } from "./mobile";
 import { db } from "./db";
 import { currentMember } from "./readers";
 
@@ -15,7 +16,7 @@ const ROOT: Me["perms"] = { admin: "write" };
 /** Who is signed in: a Google account on ADMIN_EMAILS (full admin), or a site account with rows in user_perms. Local `npm run dev` with ALLOW_DEV_ADMIN=1 (never in production) is a full admin. */
 export const me = cache(async (): Promise<Me | null> => {
   if (process.env.ALLOW_DEV_ADMIN === "1" && process.env.NODE_ENV !== "production") return { email: "dev", name: "dev", perms: ROOT };
-  const g = (await auth())?.user;
+  const g = (await auth())?.user ?? (await mobileAdminEmail().then((email) => (email ? { email, name: email, image: null } : undefined)));
   if (g?.email && isAdmin(g.email)) return { email: g.email, name: g.name ?? g.email, image: g.image ?? undefined, perms: ROOT };
   const r = await currentMember().catch(() => null);
   const d = db();
@@ -64,6 +65,6 @@ export async function canSpecial(perm: "agreement.member" | "agreement.guest") {
 /** A hard-coded site admin (ADMIN_EMAILS, signed in with Google), not just someone granted a section. Some data, like who clicked which link in an email, is for these people only. */
 export async function siteAdmin() {
   if (process.env.ALLOW_DEV_ADMIN === "1" && process.env.NODE_ENV !== "production") return true;
-  const e = (await auth())?.user?.email;
+  const e = (await auth())?.user?.email ?? (await mobileAdminEmail());
   return !!e && isAdmin(e);
 }

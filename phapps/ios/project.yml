@@ -1,0 +1,12 @@
+name: Kzoo
+options: { bundleIdPrefix: org.kzoomakers, deploymentTarget: { iOS: "16.0" } }
+configFiles: { Debug: Config.xcconfig, Release: Config.xcconfig }
+packages:
+  GoogleSignIn: { url: https://github.com/google/GoogleSignIn-iOS, from: 8.0.0 }
+targets:
+  Kzoo:
+    type: application
+    platform: iOS
+    sources: [Kzoo]
+    dependencies: [{ package: GoogleSignIn, product: GoogleSignIn }]
+    settings: { base: { PRODUCT_BUNDLE_IDENTIFIER: org.kzoomakers.app, PRODUCT_NAME: Kzoomakers, GENERATE_INFOPLIST_FILE: YES, INFOPLIST_FILE: Kzoo/Info.plist, SWIFT_VERSION: "5.0", TARGETED_DEVICE_FAMILY: "1" } }

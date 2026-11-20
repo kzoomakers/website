@@ -1,0 +1,7 @@
+// Fill these in (Google Cloud console > Credentials). Never commit real secrets here: client IDs are not secret, but keep prod/dev URLs straight.
+API_HOST = kzoomakers.org
+// iOS OAuth client id (type "iOS", bundle id org.kzoomakers.app) and its reversed form for the URL scheme.
+GOOGLE_IOS_CLIENT_ID = REPLACE_ME.apps.googleusercontent.com
+GOOGLE_IOS_REVERSED = com.googleusercontent.apps.REPLACE_ME
+// The website's own web client id (the server's AUTH_GOOGLE_ID): the ID token must be issued for it.
+GOOGLE_WEB_CLIENT_ID = REPLACE_ME.apps.googleusercontent.com

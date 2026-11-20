@@ -3,6 +3,7 @@ import { getToken } from "next-auth/jwt";
 import { toRow, record } from "./httplog";
 import { staticPath, statusOf, webLike } from "./httplog-util";
 import { COOKIE_NAME, cookieUserId } from "./readers";
+import { logUser } from "./app-tokens";
 
 const GOOGLE = ["__Secure-authjs.session-token", "authjs.session-token"];
 const cookieOf = (header: string, name: string) => header.split(/;\s*/).map((c) => c.split("=")).find(([k]) => k === name)?.slice(1).join("=");
@@ -34,7 +35,7 @@ export function installHttpLog() {
           const row = toRow(w as unknown as Request);
           res.once("close", () => {
             row.status = statusOf(res.statusCode, res.writableFinished);
-            finish(row, String(req.headers.cookie ?? "")).catch(() => {});
+            finish(row, String(req.headers.cookie ?? ""), String(req.headers.authorization ?? ""), String(req.headers["x-admin-token"] ?? "")).catch(() => {});
           });
         }
       } catch { /* logging must never break a page */ }
@@ -43,10 +44,12 @@ export function installHttpLog() {
   } as typeof emit;
 }
 
-async function finish(row: ReturnType<typeof toRow>, cookie: string) {
+async function finish(row: ReturnType<typeof toRow>, cookie: string, authorization: string, adminToken: string) {
   try {
     const site = cookieUserId(cookieOf(cookie, COOKIE_NAME));
     if (site) row.user = `site:${site}`; // resolved to the account's email when the batch is written
+    const app = await logUser(authorization, adminToken); // the phone app sends tokens, not cookies
+    if (app) row.user = app;
     const secure = GOOGLE.find((n) => cookieOf(cookie, n));
     if (secure && process.env.AUTH_SECRET) {
       const email = await emailOf(cookie, secure);

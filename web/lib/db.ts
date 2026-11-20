@@ -111,6 +111,9 @@ async function migrate(pool: Pool) {
   await pool.query(`CREATE TABLE IF NOT EXISTS login_tokens (hash text PRIMARY KEY, user_id int NOT NULL REFERENCES site_users ON DELETE CASCADE, next text NOT NULL DEFAULT '/blog',
     expires_at timestamptz NOT NULL, created_at timestamptz NOT NULL DEFAULT now())`);
   await pool.query("ALTER TABLE login_tokens ADD COLUMN IF NOT EXISTS reset boolean NOT NULL DEFAULT false"); // an admin-sent password reset link
+  // Phone-app sign-ins: one row per device. Only the SHA-256 of the token is kept. Deleting the row signs that device out (Admin > Auth tokens).
+  await pool.query(`CREATE TABLE IF NOT EXISTS app_tokens (hash text PRIMARY KEY, kind text NOT NULL, user_id int REFERENCES site_users ON DELETE CASCADE, email text NOT NULL, ver int NOT NULL DEFAULT 0,
+    device text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now(), last_used_at timestamptz, expires_at timestamptz NOT NULL)`);
   // Sign-up approval. New accounts start 'pending' (existing ones are 'approved'); staff move them between pending / waiting (for the applicant's reply) / rejected / approved.
   // approval_events is the dialog thread: messages both ways, staff-only notes, and every state change with who did it.
   await pool.query("ALTER TABLE site_users ADD COLUMN IF NOT EXISTS approval text NOT NULL DEFAULT 'approved' CHECK (approval IN ('pending','waiting','rejected','approved'))");
