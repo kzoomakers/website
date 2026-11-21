@@ -81,7 +81,7 @@ async function settle(c: PoolClient, a: Row, r: Rev, answers: unknown) {
     [a.id, late ? "expired" : "submitted", JSON.stringify(given), JSON.stringify(s.per), s.points, s.max, s.pct, passed]);
   if (passed) {
     for (const t of (await c.query("SELECT tool_id FROM test_tools WHERE test_id = $1", [r.test_id])).rows) {
-      const cert = (await c.query(`INSERT INTO certifications (user_id, tool_id, revision_id, attempt_id, state) VALUES ($1,$2,$3,$4,'passed')
+      const cert = (await c.query(`INSERT INTO certifications (user_id, tool_id, revision_id, attempt_id, state, signoffs_required) VALUES ($1,$2,$3,$4,'passed', COALESCE((SELECT signoffs_required FROM tool_training WHERE tool_id = $2), 1))
         ON CONFLICT (user_id, tool_id) WHERE state IN ('passed','in_training','ready') DO NOTHING RETURNING id`, [a.user_id, t.tool_id, a.revision_id, a.id])).rows[0];
       if (cert) await c.query("INSERT INTO cert_events (cert_id, actor, kind, note, data) VALUES ($1,'system','attempt.passed','Passed the test',$2)", [cert.id, JSON.stringify({ attempt: a.id, pct: s.pct })]);
     }

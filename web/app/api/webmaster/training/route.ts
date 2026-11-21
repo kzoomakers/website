@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { errMsg } from "@/lib/errmsg";
-import { actor, canSpecial, editingAllowed } from "@/lib/guard";
+import { actor, canSpecial, editingAllowed, levelOf, me } from "@/lib/guard";
+import * as k from "@/lib/training/certs";
 import { logAudit } from "@/lib/store";
 import { saveTrainingCfg } from "@/lib/training/settings";
 import * as t from "@/lib/training/tests";
@@ -9,20 +10,33 @@ import * as t from "@/lib/training/tests";
 export const dynamic = "force-dynamic";
 const PAGE: Record<string, string> = {
   setEnabled: "settings",
+  queue: "queue", file: "queue", startTraining: "queue", markReady: "queue", note: "queue", reject: "queue", signOff: "queue",
+  trainers: "trainers", findMembers: "trainers", setTrainer: "trainers", saveToolTraining: "trainers",
   tests: "tests", toolsFree: "tests", test: "tests", revision: "tests", compare: "tests", export: "tests", preview: "tests", previewGrade: "tests", publishCheck: "tests",
   createTest: "tests", renameTest: "tests", archiveTest: "tests", deleteTest: "tests", newDraft: "tests", saveSettings: "tests", saveQuestion: "tests", deleteQuestion: "tests", reorder: "tests", discardDraft: "tests", import: "tests", publish: "tests",
 };
-const READS = new Set(["tests", "toolsFree", "test", "revision", "compare", "export", "preview", "previewGrade", "publishCheck"]);
+const READS = new Set(["tests", "toolsFree", "test", "revision", "compare", "export", "preview", "previewGrade", "publishCheck", "queue", "file", "trainers", "findMembers"]);
 const gone = () => new NextResponse("not found", { status: 404 });
 
 export async function POST(req: Request) {
   if (Number(req.headers.get("content-length") ?? 0) > 3_000_000) return new NextResponse("too large", { status: 413 });
   const a = await req.json().catch(() => null);
   if (!a?.op || !PAGE[a.op] || !(await editingAllowed("training", READS.has(a.op) ? "read" : "write", PAGE[a.op]))) return gone();
-  const who = await actor();
+  const who = await actor(), m = await me(), act = await k.actorFor(who, levelOf(m, "training") === "write", !!levelOf(m, "training")); // a queue-only grant sees just the tools they're a trainer for
   try {
     const res = await (async (): Promise<unknown> => { switch (a.op) {
       case "setEnabled": await saveTrainingCfg({ enabled: a.enabled === true }); await logAudit(who, "training.settings", `Training ${a.enabled === true ? "switched on" : "switched off"}`); return { ok: true };
+      case "queue": return k.queue(act);
+      case "file": return k.file(act, a.id);
+      case "startTraining": return k.startTraining(act, a.id);
+      case "markReady": return k.markReady(act, a.id);
+      case "note": return k.addNote(act, a.id, a.note, a.shared, a.session);
+      case "reject": return k.reject(act, a.id, a.reason);
+      case "signOff": return k.signOff(act, a.id, a.note);
+      case "trainers": return k.trainerMatrix();
+      case "findMembers": return k.findMembers(a.q);
+      case "setTrainer": await k.setTrainer(a.tool, a.user, a.on, who); return { ok: true };
+      case "saveToolTraining": await k.saveToolTraining(a.tool, a.settings, who); return { ok: true };
       case "tests": return t.listTests();
       case "toolsFree": return t.toolsWithoutTest();
       case "test": return (await t.getTest(a.id)) ?? gone();
