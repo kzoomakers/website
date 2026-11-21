@@ -139,6 +139,7 @@ export default function Library({ canEdit }: { canEdit: boolean }) {
         <label><input type="checkbox" checked={trash} onChange={(e) => setTrash(e.target.checked)} /> Recycle bin (30 days)</label>
         <label><input type="checkbox" checked={overdue} onChange={(e) => setOverdue(e.target.checked)} /> Review overdue</label>
         <label><input type="checkbox" checked={needs} onChange={(e) => setNeeds(e.target.checked)} /> Drafts only</label>
+        {canEdit && <a href="/admin/library/triage">Triage drafts</a>}
       </div>
       {canEdit && !trash && (
         <details><summary>Folders ({folders.length})</summary>

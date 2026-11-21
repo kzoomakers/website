@@ -15,3 +15,12 @@ export async function coursesSchema(pool: Pool) {
   await q("CREATE INDEX IF NOT EXISTS lesson_progress_lesson ON lesson_progress (lesson_id)");
   await q("ALTER TABLE tool_training ADD COLUMN IF NOT EXISTS require_course boolean NOT NULL DEFAULT false, ADD COLUMN IF NOT EXISTS require_ack boolean NOT NULL DEFAULT false");
 }
+
+/** Practice quizzes (moodlecourseware/03). Flags live beside the questions, keyed by qkey (which every revision of a question keeps), because published revisions are frozen and a tag change must not need a new revision.
+ *  Practice attempts never touch attempts, certifications or tool_auths. */
+export async function practiceSchema(pool: Pool) {
+  const q = (s: string) => pool.query(s);
+  await q("CREATE TABLE IF NOT EXISTS question_practice (qkey uuid PRIMARY KEY, tags text[] NOT NULL DEFAULT '{}', practice_ok boolean NOT NULL DEFAULT false)");
+  await q("CREATE TABLE IF NOT EXISTS practice_attempts (id serial PRIMARY KEY, user_id int NOT NULL REFERENCES site_users ON DELETE CASCADE, test_id int NOT NULL REFERENCES tests ON DELETE CASCADE, started_at timestamptz NOT NULL DEFAULT now(), finished_at timestamptz, state jsonb NOT NULL DEFAULT '{}')");
+  await q("CREATE INDEX IF NOT EXISTS practice_attempts_user ON practice_attempts (user_id, test_id, id DESC)");
+}

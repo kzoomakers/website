@@ -1,9 +1,10 @@
 import { gate } from "@/lib/guard";
+import Courses from "./courses";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Courses | Kzoo Makers admin" };
 
-// Placeholder until P3 builds the course editor; the page exists so access can be granted ahead of launch.
 export default async function CoursesPage() {
-  await gate("learning", "/admin/learning");
-  return <><h1>Courses</h1><p className="sub">The course editor arrives in a later phase.</p></>;
+  const level = await gate("learning", "/admin/learning");
+  return <Courses canEdit={level === "write"} />;
 }

@@ -7,6 +7,8 @@ import { attemptLabel } from "@/lib/training/attempt-label";
 import { discordView } from "@/lib/training/discord";
 import { classesOn } from "@/lib/features";
 import { trainingEnabled } from "@/lib/training/settings";
+import { learningForMember } from "@/lib/courses/tools";
+import { viewer } from "@/lib/library/viewer";
 import Announce from "./announce";
 import MembersShell from "../shell";
 
@@ -27,6 +29,7 @@ export default async function ToolsPage() {
           authsFor(u.id), upcomingClasses(u.id), on ? overview(u.id) : { cards: [] as any[], history: [] as any[] },
         ]);
         const dc = on && (await discordView()).enabled ? (await c.query("SELECT discord_announce FROM site_users WHERE id = $1", [u.id])).rows[0]?.discord_announce ?? "" : null;
+        const learn = await learningForMember(await viewer(), tools.map((t: any) => t.id));
         const mine = auths.filter((a) => !a.expired);
         const groups = new Map<string, typeof tools>();
         for (const t of tools) groups.set(t.category || "Other", [...(groups.get(t.category || "Other") ?? []), t]);
@@ -55,8 +58,10 @@ export default async function ToolsPage() {
                         {state === "lapsed" && <p>Your authorization lapsed because the test changed. Pass the new test to get it back.</p>}
                         {a?.expired && !card && <p>Your authorization expired {a.expires_on}. Ask a trainer.</p>}
                         {!state && !card && <p className="sub">{on ? "No online test for this tool. " : ""}Ask a trainer{withClasses && cls.length > 0 ? ", or take a class below" : " to sign you off"}.</p>}
-                        {card && ["not_started", "retake", "lapsed"].includes(card.state) && <Link className="btn" href={`/members/training/test/${card.test_id}`}>{card.state === "retake" ? "Retake the test" : "Take the test"}</Link>}
+                        {card && !learn.get(t.id)?.need.length && ["not_started", "retake", "lapsed"].includes(card.state) && <Link className="btn" href={`/members/training/test/${card.test_id}`}>{card.state === "retake" ? "Retake the test" : "Take the test"}</Link>}
                         {card?.state === "in_progress" && <Link className="btn" href={`/members/training/test/${card.test_id}`}>Resume{card.due_at ? ` (due ${new Date(card.due_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/Detroit" })})` : ""}</Link>}
+                        {(() => { const l = learn.get(t.id); return l && (l.docs.length > 0 || l.courses.length > 0) ? <div style={{ margin: "8px 0" }}><b>Learn</b><ul style={{ margin: "4px 0 0" }}>{l.courses.map((x) => <li key={x.slug}><Link href={`/members/courses/${x.slug}`}>🎓 {x.title}</Link> ({x.done} of {x.total} lessons)</li>)}{l.docs.map((x) => <li key={x.slug}><Link href={`/members/library/${x.slug}`}>📄 {x.title}</Link> <span className="sub">{x.role}</span></li>)}</ul></div> : null; })()}
+                        {learn.get(t.id)?.need.length ? <div role="status"><b>Before you take the test:</b><ul style={{ margin: "4px 0" }}>{learn.get(t.id)!.need.map((n) => <li key={n.href}><Link href={n.href}>{n.title}</Link></li>)}</ul></div> : null}
                         {cls.length > 0 && <div style={{ marginTop: 10 }}><b>Classes</b><ul style={{ margin: "4px 0 0" }}>{cls.map((k) => <li key={k.id}><Link href="/members/classes">{k.title}</Link>, {day(k.starts_at)}{k.mine ? " (you're signed up)" : ""}</li>)}</ul></div>}
                       </section>
                     );

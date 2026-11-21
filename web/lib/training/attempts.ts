@@ -1,4 +1,5 @@
 import type { PoolClient } from "pg";
+import { missingFor } from "../courses/tools";
 import { conn } from "../db";
 import { cleanHtml } from "../sanitize";
 import { drawQuestions, memberQuestion, scoreQuestions, describeQ, type Q } from "./questions";
@@ -49,6 +50,8 @@ export async function start(userId: number, testId: unknown) {
     const held = (await c.query(`SELECT 1 FROM certifications WHERE user_id = $1 AND state IN ('passed','in_training','ready') AND tool_id IN (SELECT tool_id FROM test_tools WHERE test_id = $2)
       UNION ALL SELECT 1 FROM tool_auths_effective WHERE user_id = $1 AND NOT expired AND retake_due_on IS NULL AND tool_id IN (SELECT tool_id FROM test_tools WHERE test_id = $2) LIMIT 1`, [userId, r.test_id])).rowCount;
     if (held) fail("You've already passed this one.");
+    const need = await missingFor({ id: userId, member: true, staff: false }, (await c.query("SELECT tool_id FROM test_tools WHERE test_id = $1", [r.test_id])).rows.map((x) => x.tool_id));
+    if (need.length) fail(`Before the test: ${need.map((n) => n.title.toLowerCase()).join("; ")}.`); // require_course / require_ack (off by default)
     if (!(await questionsOf(c, r.id)).length) fail("There's no test to take right now.");
     const seed = Math.floor(Math.random() * 2 ** 31);
     // Accommodations are copied onto the attempt: extra time scales the limit, and a later change never touches this attempt.
