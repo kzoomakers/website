@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { errMsg } from "@/lib/errmsg";
 import { actor, canSpecial, editingAllowed, levelOf, me } from "@/lib/guard";
 import * as k from "@/lib/training/certs";
+import * as rc from "@/lib/training/recert";
 import { logAudit } from "@/lib/store";
 import { saveTrainingCfg } from "@/lib/training/settings";
 import * as t from "@/lib/training/tests";
@@ -11,11 +12,12 @@ export const dynamic = "force-dynamic";
 const PAGE: Record<string, string> = {
   setEnabled: "settings",
   queue: "queue", file: "queue", startTraining: "queue", markReady: "queue", note: "queue", reject: "queue", signOff: "queue",
+  rolloutPreview: "tests", rollouts: "reports", rolloutMembers: "reports", extendRollout: "reports", undoRollout: "reports", confirmLapse: "reports", memberOverride: "reports",
   trainers: "trainers", findMembers: "trainers", setTrainer: "trainers", saveToolTraining: "trainers",
   tests: "tests", toolsFree: "tests", test: "tests", revision: "tests", compare: "tests", export: "tests", preview: "tests", previewGrade: "tests", publishCheck: "tests",
   createTest: "tests", renameTest: "tests", archiveTest: "tests", deleteTest: "tests", newDraft: "tests", saveSettings: "tests", saveQuestion: "tests", deleteQuestion: "tests", reorder: "tests", discardDraft: "tests", import: "tests", publish: "tests",
 };
-const READS = new Set(["tests", "toolsFree", "test", "revision", "compare", "export", "preview", "previewGrade", "publishCheck", "queue", "file", "trainers", "findMembers"]);
+const READS = new Set(["tests", "toolsFree", "test", "revision", "compare", "export", "preview", "previewGrade", "publishCheck", "queue", "file", "trainers", "findMembers", "rolloutPreview", "rollouts", "rolloutMembers"]);
 const gone = () => new NextResponse("not found", { status: 404 });
 
 export async function POST(req: Request) {
@@ -37,6 +39,16 @@ export async function POST(req: Request) {
       case "findMembers": return k.findMembers(a.q);
       case "setTrainer": await k.setTrainer(a.tool, a.user, a.on, who); return { ok: true };
       case "saveToolTraining": await k.saveToolTraining(a.tool, a.settings, who); return { ok: true };
+      case "rolloutPreview": return rc.preview(a.id);
+      case "rollouts": return rc.rollouts();
+      case "rolloutMembers": return rc.rolloutMembers(a.id);
+      case "extendRollout": case "undoRollout": case "confirmLapse":
+        if (!(await canSpecial("training.rollout"))) return new NextResponse("You don't have the special permission to change rollouts. Ask an administrator (Admin > Access > Special permissions).", { status: 403 });
+        if (a.op === "extendRollout") await rc.extendRollout(a.id, a.deadline, who); else if (a.op === "undoRollout") await rc.undoRollout(a.id, who); else await rc.confirmLapse(a.id, who);
+        return { ok: true };
+      case "memberOverride":
+        if (!(await canSpecial(a.how === "exempt" ? "training.override" : "training.rollout"))) return new NextResponse("You don't have the special permission for that. Ask an administrator (Admin > Access > Special permissions).", { status: 403 });
+        await rc.memberOverride(a.id, a.user, a.tool, a.how, a.date, a.reason, who); return { ok: true };
       case "tests": return t.listTests();
       case "toolsFree": return t.toolsWithoutTest();
       case "test": return (await t.getTest(a.id)) ?? gone();
@@ -59,6 +71,7 @@ export async function POST(req: Request) {
       case "import": return t.importIntoDraft(a.id, a.at, a.data);
       case "publish":
         if (!(await canSpecial("training.publish"))) return new NextResponse("You don't have the special permission to publish tests. Ask an administrator (Admin > Access > Special permissions).", { status: 403 });
+        if (a.deadline && !(await canSpecial("training.rollout"))) return new NextResponse("Starting a re-pass needs the special permission “Force a re-pass”. Ask an administrator (Admin > Access > Special permissions).", { status: 403 });
         return t.publish(a.id, a.at, a, who);
     } return new NextResponse("bad request", { status: 400 }); })();
     return res instanceof NextResponse ? res : NextResponse.json(res);

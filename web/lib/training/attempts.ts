@@ -2,6 +2,7 @@ import type { PoolClient } from "pg";
 import { conn } from "../db";
 import { drawQuestions, memberQuestion, scoreQuestions, describeQ, type Q } from "./questions";
 import { trainingEnabled } from "./settings";
+import { satisfyRollout } from "./recert";
 
 // A member taking a test. The server owns the clock, the draw and the grade; the browser only ever gets member-view questions (no key) and sends answers.
 const GRACE_MS = 30_000, MAX_ANSWERS_BYTES = 60_000;
@@ -81,6 +82,7 @@ async function settle(c: PoolClient, a: Row, r: Rev, answers: unknown) {
     [a.id, late ? "expired" : "submitted", JSON.stringify(given), JSON.stringify(s.per), s.points, s.max, s.pct, passed]);
   if (passed) {
     for (const t of (await c.query("SELECT tool_id FROM test_tools WHERE test_id = $1", [r.test_id])).rows) {
+      if (await satisfyRollout(c, a.user_id, t.tool_id, a.revision_id)) continue; // re-passing after a major revision keeps the authorization: no new sign-off
       const cert = (await c.query(`INSERT INTO certifications (user_id, tool_id, revision_id, attempt_id, state, signoffs_required) VALUES ($1,$2,$3,$4,'passed', COALESCE((SELECT signoffs_required FROM tool_training WHERE tool_id = $2), 1))
         ON CONFLICT (user_id, tool_id) WHERE state IN ('passed','in_training','ready') DO NOTHING RETURNING id`, [a.user_id, t.tool_id, a.revision_id, a.id])).rows[0];
       if (cert) await c.query("INSERT INTO cert_events (cert_id, actor, kind, note, data) VALUES ($1,'system','attempt.passed','Passed the test',$2)", [cert.id, JSON.stringify({ attempt: a.id, pct: s.pct })]);
@@ -125,13 +127,14 @@ export async function overview(userId: number) {
       (SELECT max(submitted_at) FROM attempts a WHERE a.user_id = $1 AND a.revision_id = r.id AND a.status IN ('submitted','expired') AND NOT a.preview) AS last_at,
       (SELECT state FROM certifications ce WHERE ce.user_id = $1 AND ce.tool_id = tl.id AND ce.state IN ('passed','in_training','ready') LIMIT 1) AS cert,
       (SELECT to_char(retake_due_on,'YYYY-MM-DD') FROM tool_auths_effective ae WHERE ae.user_id = $1 AND ae.tool_id = tl.id AND NOT ae.expired) AS retake_by,
-      EXISTS (SELECT 1 FROM tool_auths_effective ae WHERE ae.user_id = $1 AND ae.tool_id = tl.id AND NOT ae.expired) AS certified
+      EXISTS (SELECT 1 FROM tool_auths_effective ae WHERE ae.user_id = $1 AND ae.tool_id = tl.id AND NOT ae.expired) AS certified,
+      EXISTS (SELECT 1 FROM rollout_members rm JOIN rollouts ro ON ro.id = rm.rollout_id WHERE rm.user_id = $1 AND rm.tool_id = tl.id AND rm.status = 'lapsed' AND ro.undone_at IS NULL) AS lapsed
     FROM tests t JOIN test_tools tt ON tt.test_id = t.id JOIN tools tl ON tl.id = tt.tool_id JOIN test_revisions r ON r.test_id = t.id AND r.status = 'published'
     WHERE NOT t.archived AND tl.archived_at IS NULL ORDER BY lower(tl.category), lower(tl.name)`, [userId])).rows;
   const now = Date.now();
   const cards = rows.map((x) => {
     const wait = x.last_at && x.cooldown_hours ? new Date(x.last_at).getTime() + x.cooldown_hours * 3600_000 - now : 0;
-    const state = x.open_attempt ? "in_progress" : x.cert ? "awaiting_trainer" : x.certified && !x.retake_by ? "certified" : x.max_attempts && x.used >= x.max_attempts ? "locked" : wait > 0 ? "cooldown" : x.retake_by ? "retake" : "not_started";
+    const state = x.open_attempt ? "in_progress" : x.cert ? "awaiting_trainer" : x.certified && !x.retake_by ? "certified" : x.max_attempts && x.used >= x.max_attempts ? "locked" : wait > 0 ? "cooldown" : x.retake_by ? "retake" : x.lapsed ? "lapsed" : "not_started";
     return { test_id: x.test_id, title: x.title, tool: x.tool, category: x.category, state, attempt_id: x.open_attempt, due_at: x.open_due, retake_by: x.retake_by, wait_hours: wait > 0 ? Math.ceil(wait / 3600_000) : 0 };
   });
   const history = (await c.query(`SELECT a.id, tl.name AS tool, a.status, a.pct::float AS pct, a.passed, a.submitted_at FROM attempts a JOIN test_revisions r ON r.id = a.revision_id JOIN test_tools tt ON tt.test_id = r.test_id JOIN tools tl ON tl.id = tt.tool_id

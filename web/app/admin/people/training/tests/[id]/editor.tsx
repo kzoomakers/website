@@ -211,9 +211,11 @@ function History({ meta, onView }: { meta: Meta; onView: (id: number) => void })
 
 function Publish({ meta, rev, liveId, canPublish, onDone, at }: { meta: Meta; rev: Rev; liveId?: number; canPublish: boolean; onDone: (id: number) => void; at: () => string }) {
   const [problems, setProblems] = useState<string[] | null>(null), [diff, setDiff] = useState<Diff | null>(null), [kind, setKind] = useState<"major" | "minor">("major"), [note, setNote] = useState(""), [busy, setBusy] = useState(false);
+  const [force, setForce] = useState(false), [deadline, setDeadline] = useState(() => new Date(Date.now() + 30 * 86400_000).toISOString().slice(0, 10)), [who, setWho] = useState<Record<string, number>>({}), [inc, setInc] = useState<string[]>(["training"]);
   const first = rev.rev_no === 1;
   useEffect(() => {
     training<{ problems: string[] }>("publishCheck", { id: rev.id }).then((r) => setProblems(r.problems), (e) => alertDialog(e.message));
+    training("rolloutPreview", { id: meta.test.id }).then(setWho, () => {});
     if (liveId) training<Diff>("compare", { a: liveId, b: rev.id }).then((d) => { setDiff(d); setKind(d.suggest); }, () => {});
   }, [rev.id, liveId]);
   return (
@@ -224,16 +226,25 @@ function Publish({ meta, rev, liveId, canPublish, onDone, at }: { meta: Meta; re
       {!first && <>
         <fieldset style={{ border: 0, padding: 0 }}>
           <legend><b>Is this a major or a minor change?</b></legend>
-          <label style={{ display: "flex", gap: 8 }}><input type="radio" style={{ width: "auto", margin: 0 }} checked={kind === "major"} onChange={() => setKind("major")} /><span>Major: an answer, a question, or the pass mark changed. Members who already passed will have to pass this one{meta.affects ? ` (${meta.affects} member${meta.affects === 1 ? " holds" : "s hold"} an active authorization on this tool)` : ""}. The deadline and emails come with the next training phase.</span></label>
+          <label style={{ display: "flex", gap: 8 }}><input type="radio" style={{ width: "auto", margin: 0 }} checked={kind === "major"} onChange={() => setKind("major")} /><span>Major: an answer, a question, or the pass mark changed. Members who already passed will have to pass this one{meta.affects ? ` (${meta.affects} member${meta.affects === 1 ? " holds" : "s hold"} an active authorization on this tool)` : ""}. </span></label>
           <label style={{ display: "flex", gap: 8 }}><input type="radio" style={{ width: "auto", margin: 0 }} checked={kind === "minor"} onChange={() => setKind("minor")} /><span>Minor: wording, a typo, an explanation. Nobody has to retake it.</span></label>
           {diff && kind !== diff.suggest && <p className="qe-warn">The changes look {diff.suggest}. Check this is what you mean.</p>}
         </fieldset>
+        {kind === "major" && Object.values(who).some((n) => n > 0) && (
+          <fieldset style={{ border: 0, padding: 0 }}>
+            <label style={{ display: "flex", gap: 8 }}><input type="checkbox" style={{ width: "auto", margin: 0 }} checked={force} onChange={(e) => setForce(e.target.checked)} /><span>Make current holders re-pass by a deadline. Anyone who doesn't loses the authorization until they pass (you can extend or undo this later).</span></label>
+            {force && <>
+              <label>Deadline <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} /></label>
+              {(["training", "legacy", "manual", "override"] as const).filter((s) => who[s] > 0).map((s) => <label key={s} style={{ display: "flex", gap: 8 }}><input type="checkbox" style={{ width: "auto", margin: 0 }} checked={inc.includes(s)} onChange={(e) => setInc(e.target.checked ? [...inc, s] : inc.filter((x) => x !== s))} />{who[s]} {s === "training" ? "signed off through training" : s === "legacy" ? "authorized before training existed" : s === "manual" ? "granted by hand" : "overridden"}</label>)}
+            </>}
+          </fieldset>
+        )}
         <label>What changed? (members are told this for a major change)<textarea rows={3} maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} /></label>
       </>}
       {!canPublish && <p className="qe-warn">You need the special permission “Publish a training test revision” to publish. Ask an administrator.</p>}
       <div className="bar"><button className="pri" disabled={busy || !canPublish || !!problems?.length || problems === null} onClick={async () => {
         setBusy(true);
-        try { const r = await training<{ id: number }>("publish", { id: rev.id, at: at(), kind, note }); onDone(r.id); } catch (x: any) { alertDialog(x.message); } finally { setBusy(false); }
+        try { const r = await training<{ id: number }>("publish", { id: rev.id, at: at(), kind, note, ...(kind === "major" && force ? { deadline, sources: inc } : {}) }); onDone(r.id); } catch (x: any) { alertDialog(x.message); } finally { setBusy(false); }
       }}>Publish revision {rev.rev_no}</button></div>
     </div>
   );
