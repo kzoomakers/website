@@ -131,7 +131,7 @@ export async function purgeLearning() {
 
 // ---- Export, import, duplicate ----
 // A course as plain JSON: content only (no progress, no status, no tool links). Library documents and quizzes are referenced by id, so on another site those blocks show "not available" until relinked.
-export const MAX_IMPORT_BYTES = 2_000_000;
+export const MAX_IMPORT_BYTES = 2_000_000; // also the cap on any admin request body (a lesson is at most 1 MB)
 export async function exportCourse(id: number) {
   const c = await getCourse(id), ls = await lessonsOf(await conn(), id, "l.id, l.section_id, l.title, l.blocks, l.completion");
   return { format: "kzoo-course", version: 1, title: c.title, summary: c.summary, sequential: c.sequential,

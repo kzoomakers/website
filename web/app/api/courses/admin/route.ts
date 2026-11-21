@@ -6,6 +6,7 @@ import { learnFlags, saveLearnFlags } from "@/lib/learn-flags";
 import { practiceQuestions, practiceTests, setAllPractice, setPractice } from "@/lib/courses/practice";
 import { setToolLearning, toolLearning } from "@/lib/courses/tools";
 import { conn } from "@/lib/db";
+import { MAX_IMPORT_BYTES } from "@/lib/courses/courses";
 import { createQuiz, exportQuiz } from "@/lib/courses/quizzes";
 import { docChoices, addLesson, addSection, createCourse, deleteCourse, deleteLesson, deleteSection, duplicateCourse, editCourse, exportCourse, getCourse, importCourse, getLesson, listCourses, move, renameSection, restoreCourse, restoreLesson, saveLesson } from "@/lib/courses/courses";
 
@@ -47,6 +48,7 @@ const OPS: Record<string, { read?: boolean; noId?: boolean; lib?: "read" | "writ
 };
 
 export async function POST(req: Request) {
+  if (!(Number(req.headers.get("content-length")) <= MAX_IMPORT_BYTES + 100_000)) return new NextResponse("That request is too big.", { status: 413 }); // checked before the body is read; a missing length is refused too
   const a = await req.json().catch(() => null), op = typeof a?.op === "string" && Object.hasOwn(OPS, a.op) ? OPS[a.op] : null;
   if (!op || !(await editingAllowed("learning", op.read ? "read" : "write", "courses")) || (op.lib && !(await editingAllowed("library", op.lib, "documents")))) return new NextResponse("not found", { status: 404 });
   if (!op.noId && !Number.isInteger((a.id = Number(a.id)))) return new NextResponse("bad id", { status: 400 });

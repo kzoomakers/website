@@ -37,20 +37,26 @@ export async function notifyNewVersion(docId: number, version: number): Promise<
     const c = await conn(), d = (await c.query("SELECT d.title, d.slug, d.type, d.status, v.change_note, v.requires_reread FROM lib_docs d JOIN lib_versions v ON v.doc_id = d.id AND v.version = $2 WHERE d.id = $1 AND d.deleted_at IS NULL", [docId, version])).rows[0];
     if (!d || d.status !== "published" || !needsAck(d.type)) return 0;
     const { follow, trained } = await audience(docId, d.requires_reread), ids = [...new Set([...follow, ...trained.keys()])], base = await site(), link = `${base}/members/library/${d.slug}`;
+    // One query keeps only people who may still see the document; one more claims this version's send-markers (a marker already there means they were told).
+    const who = (await c.query(`SELECT u.id, u.email, u.name, u.first_name FROM site_users u WHERE u.id = ANY($1) AND EXISTS (SELECT 1 FROM lib_docs d WHERE d.id = $2 AND ${visibleSql({ id: 0, member: true, staff: false }, "u.id")})`, [ids, docId])).rows;
+    const fresh = new Set((await c.query("INSERT INTO training_mail_log (key) SELECT 'lib:' || $1::text || ':' || $2::text || ':' || x FROM unnest($3::int[]) AS x ON CONFLICT DO NOTHING RETURNING key", [docId, version, who.map((u) => u.id)])).rows.map((r) => r.key as string));
     let sent = 0;
-    for (const id of ids) {
-      if (!(await c.query(`SELECT 1 FROM lib_docs d WHERE d.id = $2 AND ${visibleSql({ id, member: true, staff: false }, "$1")}`, [id, docId])).rowCount) continue; // can't see it any more: say nothing about it
-      if (!(await c.query("INSERT INTO training_mail_log (key) VALUES ($1) ON CONFLICT DO NOTHING", [`lib:${docId}:${version}:${id}`])).rowCount) continue;
-      const u = (await c.query("SELECT email, name, first_name FROM site_users WHERE id = $1", [id])).rows[0];
-      if (!u) continue;
-      const tools = trained.get(id), why = tools ? `You're authorized on ${tools.join(", ")}, and this document is part of that tool's training.` : "You asked to be emailed when this document changes.";
-      const ask = d.requires_reread ? "Please read the new version and confirm it on the page." : "No need to read it again unless you want to.";
-      const note = d.change_note ? `What changed: ${d.change_note}` : "", subject = `${d.requires_reread ? "Please re-read" : "Updated"}: ${d.title}`;
-      const text = [`Hi ${u.first_name || u.name},`, `${d.title} has a new version (version ${version}).`, note, ask, `Open it: ${link}`, why, tools ? "" : "To stop these emails, open the document and turn off \"Email me when this changes\"."].filter(Boolean).join("\n\n");
-      const html = `<div style="font-family:sans-serif;font-size:16px;line-height:1.5"><p>Hi ${esc(u.first_name || u.name)},</p><p><b>${esc(d.title)}</b> has a new version (version ${version}).</p>${note ? `<p>${esc(note)}</p>` : ""}<p>${ask}</p><p><a href="${esc(link)}">Open the document</a></p><p style="color:#666">${esc(why)}${tools ? "" : " To stop these emails, open the document and turn off “Email me when this changes”."}</p></div>`;
-      await enqueueMail({ to: u.email, subject, text, html });
-      await notifyUser(id, { kind: "library", title: subject, body: note.slice(0, 200), url: `/members/library/${d.slug}` }).catch(() => {});
-      sent++;
+    for (const u of who) {
+      const key = `lib:${docId}:${version}:${u.id}`;
+      if (!fresh.has(key)) continue;
+      try { // one person's failure never stops the rest, and frees their marker so a later try can still reach them
+        const tools = trained.get(u.id), why = tools ? `You're authorized on ${tools.join(", ")}, and this document is part of that tool's training.` : "You asked to be emailed when this document changes.";
+        const ask = d.requires_reread ? "Please read the new version and confirm it on the page." : "No need to read it again unless you want to.";
+        const note = d.change_note ? `What changed: ${d.change_note}` : "", subject = `${d.requires_reread ? "Please re-read" : "Updated"}: ${d.title}`;
+        const text = [`Hi ${u.first_name || u.name},`, `${d.title} has a new version (version ${version}).`, note, ask, `Open it: ${link}`, why, tools ? "" : "To stop these emails, open the document and turn off \"Email me when this changes\"."].filter(Boolean).join("\n\n");
+        const html = `<div style="font-family:sans-serif;font-size:16px;line-height:1.5"><p>Hi ${esc(u.first_name || u.name)},</p><p><b>${esc(d.title)}</b> has a new version (version ${version}).</p>${note ? `<p>${esc(note)}</p>` : ""}<p>${ask}</p><p><a href="${esc(link)}">Open the document</a></p><p style="color:#666">${esc(why)}${tools ? "" : " To stop these emails, open the document and turn off “Email me when this changes”."}</p></div>`;
+        await enqueueMail({ to: u.email, subject, text, html });
+        await notifyUser(u.id, { kind: "library", title: subject, body: note.slice(0, 200), url: `/members/library/${d.slug}` }).catch(() => {}); // the email is queued; a missing bell notice must not cause a resend
+        sent++;
+      } catch (e) {
+        console.error("sop update notice failed for one person:", String((e as Error)?.message ?? e));
+        await c.query("DELETE FROM training_mail_log WHERE key = $1", [key]).catch(() => {});
+      }
     }
     return sent;
   } catch (e) { console.error("sop update notice failed:", String((e as Error)?.message ?? e)); return 0; }

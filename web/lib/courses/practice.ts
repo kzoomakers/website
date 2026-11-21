@@ -7,9 +7,15 @@ import { tx } from "./tx";
 // Practice quizzes on the real question bank (moodlecourseware/03). The grader is gradeQ, the same one real tests use. Questions go to the member without keys; the key and feedback come back
 // only in the reply to that question's answer. Nothing here reads or writes attempts, certifications or tool_auths.
 type Question = Q & { id: number; qkey: string; tags?: string[] };
-type State = { seed: number; ids: number[]; answers: Record<string, { frac: number }>; pct?: number };
+type State = { seed: number; ids: number[]; answers: Record<string, { frac: number }>; pct?: number; full?: boolean; lesson?: number }; // full: every question of the test; lesson: started from that lesson's quiz block (its filter applied)
 const scorePct = (qs: { id: number; points: number }[], answers: State["answers"]) => { const max = qs.reduce((t, q) => t + q.points, 0); return max ? Math.round((qs.reduce((t, q) => t + q.points * (answers[q.id]?.frac ?? 0), 0) / max) * 100) : 0; };
 export type Filter = { tags?: string[]; count?: number };
+/** The filter a lesson's quiz block sets, read from the saved block (never from the request) for a published course; null when that lesson has no such block. */
+async function blockFilter(lessonId: number, testId: number): Promise<Filter | null> {
+  const row = (await (await conn()).query("SELECT l.blocks FROM lessons l JOIN course_sections s ON s.id = l.section_id JOIN courses c ON c.id = s.course_id WHERE l.id = $1 AND l.deleted_at IS NULL AND c.deleted_at IS NULL AND c.status = 'published'", [lessonId])).rows[0];
+  const b = (row?.blocks ?? []).find((x: any) => x.type === "quiz" && x.testId === testId);
+  return b ? { tags: b.tags, count: b.count } : null;
+}
 const QCOLS = "q.id, q.qkey, q.position, q.type, q.prompt_html, q.points::float AS points, q.config, q.feedback_html, q.required_correct";
 
 /** A test's practice questions from its published revision. Tool tests offer only questions flagged practice_ok (so members can't memorise the real test); a test with no tool is a standalone quiz and offers all of them. */
@@ -34,9 +40,9 @@ const own = async (userId: number, id: number, c?: { query: (q: string, v: unkno
 };
 const byIds = async (ids: number[]) => (await (await conn()).query(`SELECT ${QCOLS} FROM rev_questions q WHERE q.id = ANY($1)`, [ids])).rows as Question[];
 
-/** Starts practice, or resumes the unfinished run. `f` narrows a new run to tagged questions and a count (a lesson quiz block sets these). `retryMissed` starts a new run with only the questions the last finished run got wrong. */
-export async function startPractice(userId: number, testId: number, retryMissed = false, f: Filter = {}) {
-  const p = await pool(testId), c = await conn();
+/** Starts practice, or resumes the unfinished run. `lessonId` applies that lesson's quiz block filter (tags, question count) and tags the run so only that lesson counts it. `retryMissed` starts a new run with only the questions the last finished run got wrong. */
+export async function startPractice(userId: number, testId: number, retryMissed = false, lessonId?: number) {
+  const p = await pool(testId), c = await conn(), bf = lessonId ? await blockFilter(lessonId, testId) : null, f: Filter = bf ?? {}, lesson = bf ? lessonId : undefined;
   if (!p || !p.qs.length) throw new Error("There is no practice quiz here yet.");
   const last = (await c.query("SELECT id, finished_at, state FROM practice_attempts WHERE user_id = $1 AND test_id = $2 ORDER BY id DESC LIMIT 1", [userId, testId])).rows[0] as { id: number; finished_at: Date | null; state: State } | undefined;
   if (last && !last.finished_at) return last.id;
@@ -44,7 +50,7 @@ export async function startPractice(userId: number, testId: number, retryMissed 
   const want = new Set((f.tags ?? []).map((t) => t.toLowerCase())), tagged = want.size ? p.qs.filter((q) => q.tags?.some((t) => want.has(t.toLowerCase()))) : p.qs; // a filter that matches nothing falls back to every question, so a mistyped tag never makes an empty quiz
   const base = retryMissed && missed.size ? p.qs.filter((q) => missed.has(q.id)) : tagged.length ? tagged : p.qs;
   const ids = drawQuestions(base, seed, f.count && f.count > 0 ? Math.min(f.count, base.length) : null, true).map((q) => q.id);
-  return (await c.query("INSERT INTO practice_attempts (user_id, test_id, state) VALUES ($1, $2, $3) RETURNING id", [userId, testId, JSON.stringify({ seed, ids, answers: {} } satisfies State)])).rows[0].id as number;
+  return (await c.query("INSERT INTO practice_attempts (user_id, test_id, state) VALUES ($1, $2, $3) RETURNING id", [userId, testId, JSON.stringify({ seed, ids, answers: {}, full: ids.length === p.qs.length, ...(lesson ? { lesson } : {}) } satisfies State)])).rows[0].id as number;
 }
 
 const strip = (h: string) => h.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();

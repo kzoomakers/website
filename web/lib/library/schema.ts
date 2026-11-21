@@ -19,6 +19,7 @@ export async function librarySchema(pool: Pool) {
   await q(`CREATE TABLE IF NOT EXISTS lib_shares (id serial PRIMARY KEY, doc_id int NOT NULL REFERENCES lib_docs ON DELETE CASCADE, token_hash text NOT NULL UNIQUE, allow_download boolean NOT NULL DEFAULT false,
     expires_at timestamptz, passcode_hash text, revoked_at timestamptz, created_by text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now(), opens int NOT NULL DEFAULT 0, last_open timestamptz)`);
   await q("CREATE TABLE IF NOT EXISTS lib_subs (user_id int NOT NULL REFERENCES site_users ON DELETE CASCADE, doc_id int NOT NULL REFERENCES lib_docs ON DELETE CASCADE, at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (user_id, doc_id))");
+  await q("CREATE INDEX IF NOT EXISTS lib_subs_doc ON lib_subs (doc_id)"); // "who follows this document" on every new version
   await q("CREATE TABLE IF NOT EXISTS lib_acks (user_id int NOT NULL REFERENCES site_users ON DELETE CASCADE, doc_id int NOT NULL REFERENCES lib_docs ON DELETE CASCADE, version int NOT NULL, at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (user_id, doc_id, version))");
   await q("CREATE TABLE IF NOT EXISTS lib_bookmarks (user_id int NOT NULL REFERENCES site_users ON DELETE CASCADE, doc_id int NOT NULL REFERENCES lib_docs ON DELETE CASCADE, PRIMARY KEY (user_id, doc_id))");
   await q("ALTER TABLE lib_docs ADD COLUMN IF NOT EXISTS owner text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS review_on date"); // A3: who looks after an SOP and when it is next checked

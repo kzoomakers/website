@@ -39,8 +39,7 @@ function Versions({ d, reload }: { d: Doc; reload: () => void }) {
     const fd = new FormData(); fd.append("file", file); fd.append("doc", String(d.id)); fd.append("note", note); fd.append("reread", reread ? "1" : "0");
     const r = await fetch("/api/library/version", { method: "POST", body: fd });
     if (!r.ok) return fail(new Error(await r.text()));
-    const { emailed } = await r.json().catch(() => ({ emailed: 0 }));
-    if (emailed) await alertDialog(`Saved. ${emailed} ${emailed === 1 ? "person was" : "people were"} emailed about the new version.`);
+    if (d.type === "sop" || d.type === "safety") await alertDialog(reread ? "Saved. Everyone who follows this document, and everyone authorized on a tool it is attached to, is being emailed." : "Saved. People who follow this document are being emailed.");
     reload();
   };
   return (

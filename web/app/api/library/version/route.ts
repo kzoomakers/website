@@ -21,7 +21,7 @@ export async function POST(req: Request) {
   try {
     const v = await addVersion(doc, { name: file.name, bytes: Buffer.from(await file.arrayBuffer()) }, { note: fd?.get("note"), reread: fd?.get("reread") === "1" }, who);
     await logAudit(who, "library.version", `document ${doc} v${v}`);
-    const emailed = await notifyNewVersion(doc, v); // after the version is safely saved; failures here never undo it
-    return NextResponse.json({ version: v, emailed });
+    void notifyNewVersion(doc, v); // after the version is safely saved, and not waited for: a few hundred emails must not hold the upload open (it logs its own failures)
+    return NextResponse.json({ version: v });
   } catch (e) { return new NextResponse(errMsg(e), { status: 400 }); }
 }

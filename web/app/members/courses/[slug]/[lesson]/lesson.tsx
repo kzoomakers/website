@@ -50,7 +50,7 @@ export default function Lesson({ slug, q, course, sequential, preview, lesson, d
               <li key={i}><label><input type="checkbox" checked={!!data.ticks?.[b.id]?.includes(i)} onChange={(e) => send({ action: "tick", block: b.id, idx: i, on: e.target.checked })} /> {t}</label></li>
             ))}</ul>);
           case "doc": { const dd = docs[b.docId]; return !dd ? <p key={b.id} className="sub">A document linked here isn't available to you.</p> : b.mode === "inline" ? <div key={b.id}><p><b>{dd.title}</b></p><Viewer src={`/api/library/file/${dd.slug}`} open /></div> : <p key={b.id}><a className="btn" href={`/members/library/${dd.slug}`} target="_blank" rel="noreferrer">📄 {dd.title}</a> <span className="sub">{dd.pages} pages</span></p>; }
-          case "quiz": return quizzes[b.testId] ? <p key={b.id}><Link className="btn" href={`/members/practice/${b.testId}${b.tags?.length || b.count ? `?${new URLSearchParams({ ...(b.tags?.length ? { tags: b.tags.join(",") } : {}), ...(b.count ? { n: String(b.count) } : {}) })}` : ""}`}>📝 Practise: {quizzes[b.testId]}{b.tags?.length ? ` (${b.tags.join(", ")})` : ""}{b.count ? `, ${b.count} questions` : ""}</Link> <span className="sub">Instant feedback; it never counts toward anything.</span></p> : null;
+          case "quiz": return quizzes[b.testId] ? <p key={b.id}><Link className="btn" href={`/members/practice/${b.testId}?lesson=${lesson.id}`}>📝 Practise: {quizzes[b.testId]}{b.tags?.length ? ` (${b.tags.join(", ")})` : ""}{b.count ? `, ${b.count} questions` : ""}</Link> <span className="sub">Instant feedback; it never counts toward anything.</span></p> : null;
           default: return <hr key={b.id} />;
         }
       })}

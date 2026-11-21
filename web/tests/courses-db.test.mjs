@@ -201,3 +201,22 @@ test("duplicate and import make a clean draft copy; bad files and bad blocks don
   assert.equal(r.dropped, 2);
   await assert.rejects(k.importCourse({ format: "other" }, "t"), /isn't a course export/);
 });
+
+test("a subset run only counts for the lesson whose quiz block set it, never for another lesson", { skip }, async () => {
+  const { pr, p, n, user, course } = await world(), u = await user(), Q = await import("../lib/courses/quizzes.ts");
+  const q = await Q.createQuiz(`Subset ${n}`, "One?\nA. Yes\nB. No\nANSWER: A\n\nTwo?\nA. Yes\nB. No\nANSWER: A", "t");
+  const one = await course([{ blocks: [{ type: "quiz", testId: q.id, count: 1 }], completion: { rule: "quiz", percent: 100 } }]);
+  const all = await course([{ blocks: [{ type: "quiz", testId: q.id }], completion: { rule: "quiz", percent: 100 } }]);
+  const answerAll = async (id, right) => { for (;;) { const v = await pr.practiceView(u.id, id); if (v.done) return; await pr.practiceAnswer(u.id, id, v.question.id, right ? 0 : 1); } };
+  const id = await pr.startPractice(u.id, q.id, false, one.lessons[0]);
+  assert.equal((await pr.practiceView(u.id, id)).total, 1, "the block's count comes from the saved block");
+  await answerAll(id, true);
+  assert.equal((await p.recordProgress(u.id, one.lessons[0], { action: "view" })).state, "done");
+  assert.equal((await p.recordProgress(u.id, all.lessons[0], { action: "view" })).state, "doing", "a one-question run does not pass the full-quiz lesson");
+  const bogus = await pr.startPractice(u.id, q.id, false, all.lessons[0] + 99999); // a lesson with no such block: no filter, no tag
+  assert.equal((await pr.practiceView(u.id, bogus)).total, 2);
+  await answerAll(bogus, false);
+  const retry = await pr.startPractice(u.id, q.id, true); // retry only the misses (both), then get them right
+  await answerAll(retry, true);
+  assert.equal((await p.recordProgress(u.id, all.lessons[0], { action: "view" })).state, "done", "a full run (here the retry covers every question) counts");
+});

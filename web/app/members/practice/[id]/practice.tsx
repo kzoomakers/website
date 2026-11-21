@@ -8,10 +8,10 @@ type Verdict = { correct: boolean; partial: boolean; answer: string; feedback_ht
 const call = async (body: object) => { const r = await fetch("/api/practice", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }); if (!r.ok) throw new Error(await r.text()); return r.json(); };
 
 // One question at a time. Practice never counts toward a tool authorization; the real test is a separate page.
-export default function Practice({ testId, tags = [], n }: { testId: number; tags?: string[]; n?: number }) {
+export default function Practice({ testId, lesson }: { testId: number; lesson?: number }) {
   const [v, setV] = useState<View>(), [answer, setAnswer] = useState<any>(), [verdict, setVerdict] = useState<Verdict>(), [err, setErr] = useState(""), [busy, setBusy] = useState(false);
   const run = (body: object) => { setBusy(true); call(body).then((x) => { setV(x); setAnswer(undefined); setVerdict(undefined); setErr(""); }, (e) => setErr(e.message)).finally(() => setBusy(false)); };
-  useEffect(() => { run({ op: "start", testId, tags, n }); }, [testId]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { run({ op: "start", testId, lesson }); }, [testId]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!v) return err ? <p role="alert">{err}</p> : <p className="sub">Loading…</p>;
   if (v.done) return (
     <div>
