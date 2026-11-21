@@ -33,6 +33,8 @@ export async function register() {
     job(7351941, 6 * 3600_000, trainingReminders); // training re-pass countdown notices
     const { pushWaiting } = await import("./lib/training/notify");
     job(7351942, 15 * 60_000, pushWaiting); // one staff push for however many passes arrived (Pushover channel "training")
+    const { drainDiscord } = await import("./lib/training/discord");
+    job(7351943, 60_000, drainDiscord); // training "newly certified" posts to Discord
     const { prune } = await import("./lib/retention");
     setTimeout(() => withLock(7351914, prune).catch(() => {}), 120_000); // not at the very start
     job(7351914, 6 * 3600_000, prune); // data past the 5-year limit (lib/retention.ts)

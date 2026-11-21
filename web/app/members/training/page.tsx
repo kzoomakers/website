@@ -2,6 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { overview } from "@/lib/training/attempts";
 import { trainingEnabled } from "@/lib/training/settings";
+import { conn } from "@/lib/db";
+import { discordView } from "@/lib/training/discord";
+import Announce from "./announce";
 import MembersShell from "../shell";
 
 export const dynamic = "force-dynamic";
@@ -16,8 +19,10 @@ export default async function TrainingPage() {
       {async (u) => {
         const { cards, history } = await overview(u.id);
         if (!cards.length) return <p className="sub">No tool tests are open yet. Ask a trainer about training on a tool.</p>;
+        const dc = (await discordView()).enabled ? (await (await conn()).query("SELECT discord_announce FROM site_users WHERE id = $1", [u.id])).rows[0]?.discord_announce ?? "" : null; // only offered while the club has announcements switched on
         return (
           <>
+            {dc !== null && <Announce mode={dc} />}
             <div className="card-grid">
               {cards.map((c) => (
                 <section key={c.test_id} className="card" style={{ padding: 16, marginBottom: 12 }}>
