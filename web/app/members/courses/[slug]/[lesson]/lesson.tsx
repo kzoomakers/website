@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Viewer from "../../../waiver/viewer";
 
 type Block = { id: string; type: string; [k: string]: any };
-type Data = { ticks?: Record<string, number[]> };
+type Data = { quiz?: number; ticks?: Record<string, number[]> };
 const CALLOUT: Record<string, [string, string]> = { danger: ["⛔", "DANGER"], warning: ["⚠️", "WARNING"], ppe: ["🥽", "PPE REQUIRED"], tip: ["💡", "TIP"] };
 const mmss = (t: number) => `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`;
 
@@ -43,18 +43,20 @@ export default function Lesson({ slug, q, course, sequential, preview, lesson, d
         switch (b.type) {
           case "text": return <div key={b.id} dangerouslySetInnerHTML={{ __html: b.html }} />; // cleaned on save (lib/courses/blocks.ts)
           case "video": return <Video key={b.id} b={b} />;
+          case "image": return <figure key={b.id} style={{ margin: "16px 0" }}><img src={b.src} alt={b.alt} style={{ maxWidth: "100%", height: "auto" }} />{b.caption && <figcaption className="sub">{b.caption}</figcaption>}</figure>;
           case "callout": { const [icon, label] = CALLOUT[b.kind]; return <div key={b.id} role="note" style={{ border: "3px solid currentColor", borderRadius: 8, padding: 12, margin: "16px 0", fontWeight: b.kind === "tip" ? undefined : 600 }}><b>{icon} {label}</b><div>{b.text}</div></div>; }
           case "checklist": return (
             <ul key={b.id} style={{ listStyle: "none", padding: 0 }}>{b.items.map((t: string, i: number) => (
               <li key={i}><label><input type="checkbox" checked={!!data.ticks?.[b.id]?.includes(i)} onChange={(e) => send({ action: "tick", block: b.id, idx: i, on: e.target.checked })} /> {t}</label></li>
             ))}</ul>);
           case "doc": { const dd = docs[b.docId]; return !dd ? <p key={b.id} className="sub">A document linked here isn't available to you.</p> : b.mode === "inline" ? <div key={b.id}><p><b>{dd.title}</b></p><Viewer src={`/api/library/file/${dd.slug}`} open /></div> : <p key={b.id}><a className="btn" href={`/members/library/${dd.slug}`} target="_blank" rel="noreferrer">📄 {dd.title}</a> <span className="sub">{dd.pages} pages</span></p>; }
-          case "quiz": return quizzes[b.testId] ? <p key={b.id}><Link className="btn" href={`/members/practice/${b.testId}`}>📝 Practise: {quizzes[b.testId]}</Link> <span className="sub">Instant feedback; it never counts toward anything.</span></p> : null;
+          case "quiz": return quizzes[b.testId] ? <p key={b.id}><Link className="btn" href={`/members/practice/${b.testId}?lesson=${lesson.id}`}>📝 Practise: {quizzes[b.testId]}{b.tags?.length ? ` (${b.tags.join(", ")})` : ""}{b.count ? `, ${b.count} questions` : ""}</Link> <span className="sub">Instant feedback; it never counts toward anything.</span></p> : null;
           default: return <hr key={b.id} />;
         }
       })}
       {rule === "done" && !complete && <p><button onClick={() => send({ action: "done" })} disabled={preview}>I've finished this lesson</button></p>}
       {rule === "video" && !complete && <p><button onClick={() => send({ action: "video" })} disabled={preview}>I watched the video</button></p>}
+      {rule === "quiz" && !complete && <p className="sub">Finish the practice quiz with at least {(lesson.completion as { percent?: number }).percent ?? 80}%{data.quiz !== undefined && ` (your best so far: ${data.quiz}%)`}, then come back to this page.</p>}
       {rule === "checklist" && !complete && <p className="sub">Tick every item to finish this lesson.</p>}
       {err && <p role="alert">{err}</p>}
       <nav className="bar" aria-label="Lesson navigation" style={{ position: "sticky", bottom: 0 }}>

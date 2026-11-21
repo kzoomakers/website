@@ -33,6 +33,8 @@ test("blocks are cleaned: scripts stripped, bad blocks dropped and counted", () 
 test("completion rules and problems", () => {
   assert.deepEqual(cleanCompletion({ rule: "weird" }), { rule: "viewed" });
   assert.deepEqual(cleanCompletion({ rule: "video", percent: 500 }), { rule: "video", percent: 80 });
+  assert.deepEqual(cleanCompletion({ rule: "quiz" }), { rule: "quiz", percent: 80 });
+  assert.equal(lessonProblems("T", [{ id: "a", type: "divider" }], { rule: "quiz", percent: 80 }).length, 1);
   assert.equal(lessonProblems("T", [], { rule: "viewed" }).length, 1);
   assert.equal(lessonProblems("T", [{ id: "a", type: "divider" }], { rule: "checklist" }).length, 1);
 });
@@ -40,4 +42,15 @@ test("completion rules and problems", () => {
 test("blocks past the limit are counted as dropped, not lost silently", () => {
   const { blocks, dropped } = cleanBlocks(Array.from({ length: 105 }, () => ({ type: "divider" })));
   assert.equal(blocks.length, 100); assert.equal(dropped, 5);
+});
+
+test("image blocks: own uploads only, alt required", () => {
+  const ok = { type: "image", src: "/uploads/abc.webp", alt: "A fence", caption: "c" };
+  assert.equal(cleanBlocks([ok]).blocks[0].src, "/uploads/abc.webp");
+  for (const bad of [{ ...ok, src: "https://evil.example/x.png" }, { ...ok, src: "/uploads/../etc/passwd" }, { ...ok, alt: " " }, { ...ok, src: "javascript:alert(1)" }]) assert.equal(cleanBlocks([bad]).blocks.length, 0);
+});
+
+test("quiz block keeps clean tags and a sane count", () => {
+  const b = cleanBlocks([{ type: "quiz", testId: 3, tags: [" saw ", "", "saw"], count: 500 }, { type: "quiz", testId: 3, count: 5 }]).blocks;
+  assert.deepEqual(b[0].tags, ["saw"]); assert.equal(b[0].count, undefined); assert.equal(b[1].count, 5);
 });

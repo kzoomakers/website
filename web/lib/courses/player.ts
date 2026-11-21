@@ -59,6 +59,11 @@ export async function recordProgress(userId: number, lessonId: number, a: Action
     if (!unlockedIds(order, new Set(states.filter((r) => r.state === "done").map((r) => r.lesson_id)), row.sequential).has(lessonId)) throw new Error("Finish the earlier lessons first.");
     const cur = states.find((r) => r.lesson_id === lessonId), data = applyAction(row.blocks, cur?.data ?? {}, a);
     if (!data) throw new Error("That doesn't apply to this lesson.");
+    if (row.completion.rule === "quiz") { // the best finished practice score on this lesson's quiz blocks: runs that covered every question, or were started from this lesson's block. A member-chosen subset never counts (and runs from before scores were stored don't)
+      const tests = row.blocks.flatMap((b: Block) => (b.type === "quiz" ? [b.testId] : []));
+      const best = (await c.query("SELECT max((state->>'pct')::int) AS pct FROM practice_attempts WHERE user_id = $1 AND test_id = ANY($2) AND finished_at IS NOT NULL AND (state->>'full' = 'true' OR state->>'lesson' = $3)", [userId, tests, String(lessonId)])).rows[0]?.pct;
+      if (best !== null && best !== undefined) data.quiz = Math.max(data.quiz ?? 0, best);
+    }
     const state = cur?.state === "done" || isComplete(row.completion, row.blocks, data) ? "done" : "doing"; // finished lessons stay finished, even if the checklist changes later
     await c.query("INSERT INTO lesson_progress (user_id, lesson_id, state, data) VALUES ($1, $2, $3, $4) ON CONFLICT (user_id, lesson_id) DO UPDATE SET state = $3, data = $4, updated_at = now()", [userId, lessonId, state, JSON.stringify(data)]);
     return { state, data };

@@ -5,6 +5,7 @@ import { uploadGate } from "@/lib/image";
 import { uploadLimitMb } from "@/lib/upload-cfg";
 import { logAudit } from "@/lib/store";
 import { addVersion } from "@/lib/library/upload";
+import { notifyNewVersion } from "@/lib/library/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,7 @@ export async function POST(req: Request) {
   try {
     const v = await addVersion(doc, { name: file.name, bytes: Buffer.from(await file.arrayBuffer()) }, { note: fd?.get("note"), reread: fd?.get("reread") === "1" }, who);
     await logAudit(who, "library.version", `document ${doc} v${v}`);
+    void notifyNewVersion(doc, v); // after the version is safely saved, and not waited for: a few hundred emails must not hold the upload open (it logs its own failures)
     return NextResponse.json({ version: v });
   } catch (e) { return new NextResponse(errMsg(e), { status: 400 }); }
 }

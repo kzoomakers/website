@@ -4,7 +4,9 @@ import { ackState } from "@/lib/library/acks";
 import { getDoc } from "@/lib/library/docs";
 import { viewer } from "@/lib/library/viewer";
 import { needsAck } from "@/lib/library/rules";
+import { isFollowing } from "@/lib/library/notify";
 import Ack from "./ack";
+import Follow from "./follow";
 import Viewer from "../../waiver/viewer";
 import MembersShell from "../../shell";
 
@@ -18,6 +20,7 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
   const d = await getDoc(v, slug);
   if (!d) notFound();
   const ack = v.id !== null && needsAck(d.type) ? await ackState(v.id, d.id) : undefined;
+  const follows = v.id !== null && needsAck(d.type) ? await isFollowing(v.id, d.id) : false;
   return (
     <MembersShell title={d.title} path={`/members/library/${slug}`}>
       {() => (
@@ -26,6 +29,7 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
           {v.id !== null && needsAck(d.type) && (ack && ack.version >= d.reread_from
             ? <p>✅ You read version {ack.version} on {new Date(ack.at).toLocaleDateString("en-US", { dateStyle: "medium", timeZone: "America/Detroit" })}.</p>
             : <><p className="sub">{ack ? `This document was updated since you read version ${ack.version}.` : "Please read this document, then confirm below."}</p><Ack slug={slug} version={d.current_version} /></>)}
+          {v.id !== null && needsAck(d.type) && <Follow slug={slug} on={follows} />}
           <p><a className="btn" href={`/api/library/file/${slug}?download=1`}>Download PDF</a> <a href={`/api/library/file/${slug}`} target="_blank" rel="noreferrer">Open in a new tab</a></p>
           <Viewer src={`/api/library/file/${slug}`} open />
         </>

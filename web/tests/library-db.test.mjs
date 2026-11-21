@@ -151,3 +151,31 @@ test("a document whose files can't be deleted stays in the bin", { skip }, async
   await D.purgeTrash(); // no storage in the test, so the files can't be removed
   assert.equal((await c.query("SELECT 1 FROM lib_docs WHERE id = $1", [d.id])).rowCount, 1);
 });
+
+test("new SOP versions: followers get every one, the trained only a re-read, once each, and never someone who can't see it", { skip }, async () => {
+  const { c, n, user, doc } = await world(), N = await import("../lib/library/notify.ts");
+  const follower = await user("fol"), trained = await user("trn"), bystander = await user("bys"), pending = await user("pnd", "pending"), d = await doc("notice", "members", { type: "sop" });
+  const tool = (await c.query("INSERT INTO tools (name) VALUES ($1) RETURNING id", [`Saw ${n}`])).rows[0].id;
+  await c.query("INSERT INTO tool_docs (tool_id, doc_id, role) VALUES ($1, $2, 'sop')", [tool, d.id]);
+  await c.query("INSERT INTO tool_auths (user_id, tool_id, granted_by) VALUES ($1, $2, 't')", [trained, tool]);
+  await N.setFollow({ id: follower, member: true, staff: false }, d.slug, true);
+  await N.setFollow({ id: pending, member: true, staff: false }, d.slug, true);
+  const sentTo = async () => (await c.query("SELECT msg::jsonb->>'to' AS t FROM mail_queue WHERE msg::text LIKE $1", [`%${d.slug}%`])).rows.map((r) => r.t).sort();
+  const version = async (v, reread) => { await c.query("INSERT INTO lib_versions (doc_id, version, s3_key, requires_reread, change_note) VALUES ($1,$2,$3,$4,'Blade guard now required')", [d.id, v, `k${v}`, reread]); await c.query("UPDATE lib_docs SET current_version = $2 WHERE id = $1", [d.id, v]); };
+  await version(2, false);
+  assert.equal(await N.notifyNewVersion(d.id, 2), 1, "a minor version emails the follower only");
+  assert.deepEqual(await sentTo(), [`fol${n}@x.test`]);
+  await version(3, true);
+  assert.equal(await N.notifyNewVersion(d.id, 3), 2, "a re-read emails the follower and the trained member");
+  assert.equal(await N.notifyNewVersion(d.id, 3), 0, "the same version is never sent twice");
+  assert.ok(!(await sentTo()).some((t) => t.startsWith("bys") || t.startsWith("pnd")), "not the bystander, not an unapproved member");
+  await N.setFollow({ id: follower, member: true, staff: false }, d.slug, false);
+  await version(4, false);
+  assert.equal(await N.notifyNewVersion(d.id, 4), 0, "unfollowed");
+  await c.query("UPDATE lib_docs SET status = 'draft' WHERE id = $1", [d.id]);
+  await version(5, true);
+  assert.equal(await N.notifyNewVersion(d.id, 5), 0, "a draft is never announced");
+  const manual = await doc("man2", "members", { type: "manual" });
+  await assert.rejects(N.setFollow({ id: follower, member: true, staff: false }, manual.slug, true), /can't be followed/);
+  void bystander;
+});

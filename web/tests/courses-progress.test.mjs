@@ -10,6 +10,10 @@ test("each completion rule", () => {
   assert.equal(isComplete({ rule: "done" }, [], { viewed: true }), false);
   assert.equal(isComplete({ rule: "done" }, [], { done: true }), true);
   assert.equal(isComplete({ rule: "video" }, [vid], { video: true }), true);
+  assert.equal(isComplete({ rule: "quiz", percent: 80 }, [], {}), false);
+  assert.equal(isComplete({ rule: "quiz", percent: 80 }, [], { quiz: 79 }), false);
+  assert.equal(isComplete({ rule: "quiz", percent: 80 }, [], { quiz: 80 }), true);
+  assert.equal(isComplete({ rule: "quiz", percent: 100 }, [], { quiz: 0 }), false);
 });
 
 test("checklist ticks: validated, toggled, all required", () => {
