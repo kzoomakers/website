@@ -1,4 +1,5 @@
 import type { PoolClient } from "pg";
+import { missingForTest } from "../courses/tools";
 import { conn } from "../db";
 import { cleanHtml } from "../sanitize";
 import { drawQuestions, memberQuestion, scoreQuestions, describeQ, type Q } from "./questions";
@@ -36,6 +37,7 @@ async function view(c: PoolClient | { query: PoolClient["query"] }, a: Row, r: R
 /** Starts an attempt on the test's published revision, or resumes the one already open (two tabs, two starts: the second resumes the first). */
 export async function start(userId: number, testId: unknown) {
   if (!(await trainingEnabled())) fail("Training isn't open yet.");
+  const need = Number.isInteger(testId) ? await missingForTest(userId, testId as number) : []; // looked up before the transaction below, which holds a connection
   return tx(async (c) => {
     await c.query("SELECT pg_advisory_xact_lock(hashtext($1))", [`train:${userId}`]); // one start at a time per member
     const r = (await c.query(`SELECT ${REV} FROM test_revisions r JOIN tests t ON t.id = r.test_id WHERE r.test_id = $1 AND r.status = 'published' AND NOT t.archived`, [Number.isInteger(testId) ? testId : 0])).rows[0] as Rev | undefined;
@@ -49,6 +51,7 @@ export async function start(userId: number, testId: unknown) {
     const held = (await c.query(`SELECT 1 FROM certifications WHERE user_id = $1 AND state IN ('passed','in_training','ready') AND tool_id IN (SELECT tool_id FROM test_tools WHERE test_id = $2)
       UNION ALL SELECT 1 FROM tool_auths_effective WHERE user_id = $1 AND NOT expired AND retake_due_on IS NULL AND tool_id IN (SELECT tool_id FROM test_tools WHERE test_id = $2) LIMIT 1`, [userId, r.test_id])).rowCount;
     if (held) fail("You've already passed this one.");
+    if (need.length) fail(`Before the test: ${need.map((n) => n.title).join("; ")}.`); // require_course / require_ack (off by default)
     if (!(await questionsOf(c, r.id)).length) fail("There's no test to take right now.");
     const seed = Math.floor(Math.random() * 2 ** 31);
     // Accommodations are copied onto the attempt: extra time scales the limit, and a later change never touches this attempt.

@@ -13,5 +13,18 @@ export async function coursesSchema(pool: Pool) {
   await q("CREATE TABLE IF NOT EXISTS course_tools (course_id int NOT NULL REFERENCES courses ON DELETE CASCADE, tool_id int NOT NULL REFERENCES tools ON DELETE CASCADE, PRIMARY KEY (course_id, tool_id))");
   await q("CREATE TABLE IF NOT EXISTS lesson_progress (user_id int NOT NULL REFERENCES site_users ON DELETE CASCADE, lesson_id int NOT NULL REFERENCES lessons ON DELETE CASCADE, state text NOT NULL DEFAULT 'todo' CHECK (state IN ('todo','doing','done')), data jsonb NOT NULL DEFAULT '{}', updated_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (user_id, lesson_id))");
   await q("CREATE INDEX IF NOT EXISTS lesson_progress_lesson ON lesson_progress (lesson_id)");
+  await q("CREATE INDEX IF NOT EXISTS course_sections_course ON course_sections (course_id, position)");
+  await q("CREATE INDEX IF NOT EXISTS lessons_section ON lessons (section_id, position)");
+  await q("CREATE INDEX IF NOT EXISTS lesson_revisions_lesson ON lesson_revisions (lesson_id, id DESC)");
+  await q("CREATE INDEX IF NOT EXISTS course_tools_tool ON course_tools (tool_id)");
   await q("ALTER TABLE tool_training ADD COLUMN IF NOT EXISTS require_course boolean NOT NULL DEFAULT false, ADD COLUMN IF NOT EXISTS require_ack boolean NOT NULL DEFAULT false");
+}
+
+/** Practice quizzes (moodlecourseware/03). Flags live beside the questions, keyed by qkey (which every revision of a question keeps), because published revisions are frozen and a tag change must not need a new revision.
+ *  Practice attempts never touch attempts, certifications or tool_auths. */
+export async function practiceSchema(pool: Pool) {
+  const q = (s: string) => pool.query(s);
+  await q("CREATE TABLE IF NOT EXISTS question_practice (qkey uuid PRIMARY KEY, tags text[] NOT NULL DEFAULT '{}', practice_ok boolean NOT NULL DEFAULT false)");
+  await q("CREATE TABLE IF NOT EXISTS practice_attempts (id serial PRIMARY KEY, user_id int NOT NULL REFERENCES site_users ON DELETE CASCADE, test_id int NOT NULL REFERENCES tests ON DELETE CASCADE, started_at timestamptz NOT NULL DEFAULT now(), finished_at timestamptz, state jsonb NOT NULL DEFAULT '{}')");
+  await q("CREATE INDEX IF NOT EXISTS practice_attempts_user ON practice_attempts (user_id, test_id, id DESC)");
 }
