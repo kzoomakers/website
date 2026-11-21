@@ -60,4 +60,5 @@ No open questions remain; P0 and P1 can start.
 | P1 still to do | Drag-reorder (the Folder picker is the non-drag path), remembered last page per member (the document page now uses the `@embedpdf` viewer, shared with the waiver page), DB tests (need a scratch Postgres). |
 | P2 so far | Done: share links (hashed token, 30/7/1 days, passcode always required, revoke, open counts, `/d/<token>`, own `shares` permission), acknowledgements ("I've read version N", who-has-read report), SOP owner and review date with an overdue filter. |
 | P2 versioning | Done: upload a new version with a change note and a re-read flag (an unflagged update keeps earlier acknowledgements), version history with staff-only access to old files. |
-| P2 still to do | QR code, review reminders, all-shares list page, triage mode. |
+| P2 QR | Done: printable QR sheet per document at `/admin/library/qr/<slug>` (opens the member page; tier rules still apply). |
+| P2 still to do | review reminders, all-shares list page, triage mode. |

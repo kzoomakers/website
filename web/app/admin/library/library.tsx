@@ -73,7 +73,7 @@ function Row({ d, canEdit, reload, folders, trash, picked, pick }: { d: Doc; can
   return (
     <div className="row" style={{ display: "block" }}>
       {canEdit && !trash && <input type="checkbox" aria-label={`Select ${d.title}`} checked={picked} onChange={pick} />} <b>{d.title}</b> <span className="tag">{d.status}</span> <span className="tag">{d.pages} p</span> {!d.has_text && <span className="tag" title="Scanned PDF: search can't see inside it">not searchable</span>}
-      {" "}<a href={`/api/library/file/${d.slug}`} target="_blank" rel="noreferrer">Open PDF</a>
+      {" "}<a href={`/api/library/file/${d.slug}`} target="_blank" rel="noreferrer">Open PDF</a> · <a href={`/admin/library/qr/${d.slug}`} target="_blank" rel="noreferrer">QR</a>
       {d.review_on && d.review_on < new Date().toISOString().slice(0, 10) && <span className="tag pri">review overdue</span>}
       {canEdit && !trash && <Shares d={d} />}
       {canEdit && !trash && <Versions d={d} reload={reload} />}
