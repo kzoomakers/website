@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { alertDialog, confirmDialog, promptDialog } from "@/components/dialog";
+import { Rich } from "@/components/training/question";
 import { training } from "../../rpc";
 
 const STATE: Record<string, string> = { passed: "Passed, waiting for a trainer", in_training: "In training", ready: "Ready for sign-off", certified: "Certified", rejected: "Sent back", lapsed: "Lapsed", revoked: "Revoked", waived: "Waived" };
@@ -37,7 +38,7 @@ export default function File({ id }: { id: number }) {
       <div className="card">{!d.questions.length ? <p className="sub">No stored answers.</p> : d.questions.map((q: any) => (
         <div className="row" key={q.id} style={{ display: "block" }}>
           <span className="tag" style={{ color: q.correct ? "#1b7a3a" : "#b00020" }}>{q.correct ? "Right" : "Missed"}</span>{q.critical && <span className="tag">Critical</span>} <span className="tag">{q.points}/{q.max}</span>
-          <div dangerouslySetInnerHTML={{ __html: q.prompt_html }} />
+          <Rich html={q.prompt_html} />
           <div className="sub" style={{ margin: 0 }}>Key: {q.key}</div>
           <div className="sub" style={{ margin: 0 }}>Their answer: <code>{JSON.stringify(q.given)}</code></div>
         </div>

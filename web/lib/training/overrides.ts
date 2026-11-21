@@ -18,7 +18,7 @@ const ev = (c: PoolClient, cert: number, who: string, how: string, why: string) 
 
 export async function override(a: Actor, b: { how?: unknown; user?: unknown; tool?: unknown; reason?: unknown; date?: unknown; attempt?: unknown }) {
   const how = String(b.how), why = typeof b.reason === "string" ? b.reason.trim().slice(0, 1000) : "";
-  if (!(how in HOWS)) fail("Choose what to do.");
+  if (!Object.hasOwn(HOWS, how)) fail("Choose what to do.");
   if (why.length < 10) fail("Give a reason of at least a sentence; it goes in the member's file and the audit log.");
   if (!a.id) fail("Sign in with a member account to do this; it's recorded under your name.");
   const c0 = await conn();

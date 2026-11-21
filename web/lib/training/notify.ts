@@ -16,7 +16,7 @@ const unmark = (key: string) => key ? conn().then((c) => c.query("DELETE FROM tr
 export async function emit(event: keyof typeof EVENTS & string, o: { userId: number; ref: string | number; vars?: Vars; replyTo?: string }) {
   let key = "";
   try {
-    const cfg = await trainingCfg(), ev = EVENTS[event];
+    const cfg = await trainingCfg(), ev = Object.hasOwn(EVENTS, event) ? EVENTS[event] : undefined;
     if (!ev || !cfg.enabled || cfg.events[event] === false) return;
     const c = await conn(), u = (await c.query("SELECT email, name, first_name FROM site_users WHERE id = $1", [o.userId])).rows[0];
     if (!u) return;
@@ -35,7 +35,7 @@ export async function emit(event: keyof typeof EVENTS & string, o: { userId: num
 export async function emitLeads(event: keyof typeof EVENTS & string, ref: string | number, vars: Vars) {
   let key = "";
   try {
-    const cfg = await trainingCfg(), ev = EVENTS[event];
+    const cfg = await trainingCfg(), ev = Object.hasOwn(EVENTS, event) ? EVENTS[event] : undefined;
     if (!ev || !cfg.enabled || cfg.events[event] === false) return;
     const c = await conn(), k = `${event}:lead:${ref}`;
     if (!(await c.query("INSERT INTO training_mail_log (key) VALUES ($1) ON CONFLICT DO NOTHING", [k])).rowCount) return;

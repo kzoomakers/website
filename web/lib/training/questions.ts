@@ -1,3 +1,4 @@
+import vm from "node:vm";
 import { cleanHtml } from "../sanitize";
 
 // Question types for training tests. Pure (no database, no React) so grading is unit-testable and the same code runs for preview and for real attempts.
@@ -110,14 +111,20 @@ const TYPE_DEFS: Record<QType, Def> = {
   },
   short_text: {
     clean: (c) => ({ accepted: list(c?.accepted, 20).map((x) => str(x, 100)), regex: str(c?.regex, 120) }),
-    // shortcut: a regex runs on the server with no timeout; authors are trusted, answers are cut to 200 chars and nested quantifiers are refused. Move to a timed worker if non-staff ever author tests.
-    validate: (c) => { let bad = false; if (c.regex) { if (/\([^)]*[+*][^)]*\)[+*{]/.test(c.regex)) bad = true; else try { new RegExp(c.regex, "i"); } catch { bad = true; } } return [...(!c.accepted.filter(Boolean).length && !c.regex ? ["Give at least one accepted answer."] : []), ...(bad ? ["That pattern isn't valid or is too complex."] : [])]; },
+    validate: (c) => {
+      let bad = false;
+      if (c.regex) {
+        if (/\([^)]*([+*]|\{\d+,\d*\}|\|)[^)]*\)[+*{]/.test(c.regex)) bad = true;
+        else try { new RegExp(c.regex, "i"); } catch { bad = true; }
+      }
+      return [...(!c.accepted.filter(Boolean).length && !c.regex ? ["Give at least one accepted answer."] : []), ...(bad ? ["That pattern isn't valid or is too complex."] : [])];
+    },
     toMember: () => ({}),
     grade: (c, a) => {
       if (typeof a !== "string") return 0;
       const s = norm(a.slice(0, 200));
       if (s && c.accepted.some((x: string) => x && norm(x) === s)) return 1;
-      if (s && c.regex) try { return new RegExp(c.regex, "i").test(s) ? 1 : 0; } catch { return 0; }
+      if (s && c.regex) try { return vm.runInNewContext("new RegExp(p, 'i').test(s)", { p: c.regex, s }, { timeout: 50 }) ? 1 : 0; } catch { return 0; }
       return 0;
     },
     key: (c) => ({ accepted: c.accepted.map(norm).sort(), regex: c.regex }),
