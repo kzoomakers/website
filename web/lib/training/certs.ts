@@ -1,7 +1,7 @@
 import type { PoolClient } from "pg";
 import { conn } from "../db";
 import { logAudit } from "../store";
-import { notifyUser } from "../notifications";
+import { emit, emitLeads } from "./notify";
 import { describeQ, type Q } from "./questions";
 
 // Certification: a member who passed the test waits in a trainer's queue; a trainer's sign-off is the only thing here that grants the tool authorization.
@@ -79,7 +79,9 @@ const event = (c: PoolClient, certId: number, a: Actor, kind: string, note = "",
 const move = async (c: PoolClient, id: number, from: string[], to: string) => { if (!(await c.query("UPDATE certifications SET state = $3, updated_at = now() WHERE id = $1 AND state = ANY($2)", [id, from, to])).rowCount) fail("That's already been dealt with."); };
 
 export async function startTraining(a: Actor, certId: unknown) {
-  await tx(async (c) => { const ce = await lock(c, a, certId); await move(c, ce.id, ["passed"], "in_training"); await event(c, ce.id, a, "start", "Started hands-on training"); await logAudit(a.email, "training.cert.open", `${ce.member_email}: ${ce.tool}`); });
+  const ce = await tx(async (c) => { const ce = await lock(c, a, certId); await move(c, ce.id, ["passed"], "in_training"); await event(c, ce.id, a, "start", "Started hands-on training"); await logAudit(a.email, "training.cert.open", `${ce.member_email}: ${ce.tool}`); return ce; });
+  const me = a.id ? (await (await conn()).query("SELECT name FROM site_users WHERE id = $1", [a.id])).rows[0]?.name : "";
+  await emit("cert.in_training", { userId: ce.user_id, ref: ce.id, vars: { tool: ce.tool, trainer: me || "A trainer" } });
   return { ok: true };
 }
 export async function markReady(a: Actor, certId: unknown) {
@@ -100,7 +102,7 @@ export async function reject(a: Actor, certId: unknown, reason: unknown) {
     const ce = await lock(c, a, certId); await move(c, ce.id, OPEN, "rejected"); await event(c, ce.id, a, "reject", why, true);
     await logAudit(a.email, "training.cert.reject", `${ce.member_email}: ${ce.tool}`); return ce;
   });
-  await notifyUser(who.user_id, { kind: "training", title: `More work needed on ${who.tool}`, body: why, url: "/members/training" }).catch(() => {});
+  await emit("cert.rejected", { userId: who.user_id, ref: who.id, vars: { tool: who.tool, reason: why } });
   return { ok: true };
 }
 
@@ -125,7 +127,7 @@ export async function signOff(a: Actor, certId: unknown, note: unknown) {
     await logAudit(a.email, "user.authorize", `${ce.member_email}: ${ce.tool}`); // the existing action, so older audit views still list the grant
     return { done: true, have, need: ce.signoffs_required, ce };
   });
-  if (out.done) await notifyUser(out.ce.user_id, { kind: "training", title: `You're authorized on ${out.ce.tool}`, body: "A trainer signed you off.", url: "/members/training" }).catch(() => {});
+  if (out.done) await emit("cert.certified", { userId: out.ce.user_id, ref: out.ce.id, vars: { tool: out.ce.tool } });
   return { ok: true, certified: out.done, have: out.have, need: out.need };
 }
 

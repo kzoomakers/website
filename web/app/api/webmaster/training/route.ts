@@ -4,20 +4,20 @@ import { actor, canSpecial, editingAllowed, levelOf, me } from "@/lib/guard";
 import * as k from "@/lib/training/certs";
 import * as rc from "@/lib/training/recert";
 import { logAudit } from "@/lib/store";
-import { saveTrainingCfg } from "@/lib/training/settings";
+import { cleanCfg, saveTrainingCfg, trainingCfg } from "@/lib/training/settings";
 import * as t from "@/lib/training/tests";
 
 // Training admin RPC: POST { op, ...args }. Each op is tied to the page (lib/access.ts) that unlocks it; reads need view access, everything else edit access.
 export const dynamic = "force-dynamic";
 const PAGE: Record<string, string> = {
-  setEnabled: "settings",
+  setEnabled: "settings", getCfg: "settings", saveCfg: "settings",
   queue: "queue", file: "queue", startTraining: "queue", markReady: "queue", note: "queue", reject: "queue", signOff: "queue",
   rolloutPreview: "tests", rollouts: "reports", rolloutMembers: "reports", extendRollout: "reports", undoRollout: "reports", confirmLapse: "reports", memberOverride: "reports",
   trainers: "trainers", findMembers: "trainers", setTrainer: "trainers", saveToolTraining: "trainers",
   tests: "tests", toolsFree: "tests", test: "tests", revision: "tests", compare: "tests", export: "tests", preview: "tests", previewGrade: "tests", publishCheck: "tests",
   createTest: "tests", renameTest: "tests", archiveTest: "tests", deleteTest: "tests", newDraft: "tests", saveSettings: "tests", saveQuestion: "tests", deleteQuestion: "tests", reorder: "tests", discardDraft: "tests", import: "tests", publish: "tests",
 };
-const READS = new Set(["tests", "toolsFree", "test", "revision", "compare", "export", "preview", "previewGrade", "publishCheck", "queue", "file", "trainers", "findMembers", "rolloutPreview", "rollouts", "rolloutMembers"]);
+const READS = new Set(["tests", "toolsFree", "test", "revision", "compare", "export", "preview", "previewGrade", "publishCheck", "getCfg", "queue", "file", "trainers", "findMembers", "rolloutPreview", "rollouts", "rolloutMembers"]);
 const gone = () => new NextResponse("not found", { status: 404 });
 
 export async function POST(req: Request) {
@@ -28,6 +28,8 @@ export async function POST(req: Request) {
   try {
     const res = await (async (): Promise<unknown> => { switch (a.op) {
       case "setEnabled": await saveTrainingCfg({ enabled: a.enabled === true }); await logAudit(who, "training.settings", `Training ${a.enabled === true ? "switched on" : "switched off"}`); return { ok: true };
+      case "getCfg": return trainingCfg();
+      case "saveCfg": await saveTrainingCfg(cleanCfg(a.cfg)); await logAudit(who, "training.settings", "Training notices changed"); return { ok: true };
       case "queue": return k.queue(act);
       case "file": return k.file(act, a.id);
       case "startTraining": return k.startTraining(act, a.id);

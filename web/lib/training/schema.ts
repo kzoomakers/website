@@ -71,6 +71,9 @@ export async function trainingSchema(pool: Pool) {
   await q("CREATE TABLE IF NOT EXISTS rollout_members (rollout_id int NOT NULL REFERENCES rollouts ON DELETE CASCADE, user_id int NOT NULL REFERENCES site_users ON DELETE CASCADE, tool_id int NOT NULL REFERENCES tools ON DELETE CASCADE, status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','satisfied','lapsed','exempt')), last_reminder_days int, notified_at timestamptz, PRIMARY KEY (rollout_id, user_id, tool_id))");
   // A rollout that would lapse more than half its people waits for a lead's confirmation (lapse_ok); guard_at is when the sweep last held it back.
   await q("ALTER TABLE rollouts ADD COLUMN IF NOT EXISTS lapse_ok boolean NOT NULL DEFAULT false, ADD COLUMN IF NOT EXISTS guard_at timestamptz, ADD COLUMN IF NOT EXISTS note text NOT NULL DEFAULT ''");
+  // One row per notice already sent (event + member + what it was about + day), so a retry or restart can't send it twice. pushed_at: when staff were told this pass is waiting.
+  await q("CREATE TABLE IF NOT EXISTS training_mail_log (key text PRIMARY KEY, at timestamptz NOT NULL DEFAULT now())");
+  await q("ALTER TABLE certifications ADD COLUMN IF NOT EXISTS pushed_at timestamptz");
   await q("CREATE TABLE IF NOT EXISTS outbox (id serial PRIMARY KEY, kind text NOT NULL CHECK (kind IN ('discord')), payload jsonb NOT NULL, tries int NOT NULL DEFAULT 0, next_at timestamptz NOT NULL DEFAULT now(), last_error text NOT NULL DEFAULT '', sent_at timestamptz, created_at timestamptz NOT NULL DEFAULT now())");
   // Settings (on/off flag, copy, Discord webhook) live in the shared `settings` table under key "training".
 

@@ -100,3 +100,14 @@ test("a second major revision supersedes the first rollout for the same people",
   assert.equal((await auth(holders[0])).due, p2.dl);
   assert.equal((await c.query("SELECT status FROM rollout_members WHERE rollout_id=$1", [p1.rollout.id])).rows[0].status, "exempt");
 });
+
+test("with Training switched off the deadline sweep pauses: nobody lapses until it's back on", { skip }, async () => {
+  const { c, R, holders, major, overdue, tool } = await setup(1);
+  const S = await import("../lib/training/settings.ts");
+  const p = await major(undefined);
+  await overdue(p.rollout.id); await c.query("UPDATE tool_auths SET retake_due_on = retake_due_on - 30 WHERE tool_id = $1", [tool]);
+  const st = async () => (await c.query("SELECT status FROM rollout_members WHERE user_id=$1", [holders[0]])).rows[0].status;
+  await S.saveTrainingCfg({ enabled: false });
+  try { assert.equal(await R.lapseSweep(), 0); assert.equal(await st(), "pending"); } finally { await S.saveTrainingCfg({ enabled: true }); }
+  await R.lapseSweep(); assert.equal(await st(), "lapsed");
+});

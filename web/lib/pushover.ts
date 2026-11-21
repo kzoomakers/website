@@ -11,6 +11,7 @@ export const CHANNELS = {
   walkup_taken: "A volunteer takes a walk-up request",
   walkup_stale: "A walk-up request is still untaken after a few days",
   ga: "Traffic spikes and drops from Google Analytics",
+  training: "Training: people ready for sign-off (batched every 15 minutes)",
   pii: "PII access alerts (bulk viewing, a non-admin opening a Gov ID)",
 } as const;
 export type Channel = keyof typeof CHANNELS;

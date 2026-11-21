@@ -3,6 +3,7 @@ import { conn } from "../db";
 import { drawQuestions, memberQuestion, scoreQuestions, describeQ, type Q } from "./questions";
 import { trainingEnabled } from "./settings";
 import { satisfyRollout } from "./recert";
+import { emit } from "./notify";
 
 // A member taking a test. The server owns the clock, the draw and the grade; the browser only ever gets member-view questions (no key) and sends answers.
 const GRACE_MS = 30_000, MAX_ANSWERS_BYTES = 60_000;
@@ -80,25 +81,36 @@ async function settle(c: PoolClient, a: Row, r: Rev, answers: unknown) {
   const given = late || answers === null ? a.answers : only(answers, qs.map((q) => q.id)), s = scoreQuestions(qs, given, r.pass_pct), passed = s.passed && !late;
   await c.query("UPDATE attempts SET status = $2, submitted_at = now(), answers = $3, per_question = $4, points = $5, max_points = $6, pct = $7, passed = $8 WHERE id = $1",
     [a.id, late ? "expired" : "submitted", JSON.stringify(given), JSON.stringify(s.per), s.points, s.max, s.pct, passed]);
+  const satisfied: number[] = [];
   if (passed) {
     for (const t of (await c.query("SELECT tool_id FROM test_tools WHERE test_id = $1", [r.test_id])).rows) {
-      if (await satisfyRollout(c, a.user_id, t.tool_id, a.revision_id)) continue; // re-passing after a major revision keeps the authorization: no new sign-off
+      if (await satisfyRollout(c, a.user_id, t.tool_id, a.revision_id)) { satisfied.push(t.tool_id); continue; } // re-passing after a major revision keeps the authorization: no new sign-off
       const cert = (await c.query(`INSERT INTO certifications (user_id, tool_id, revision_id, attempt_id, state, signoffs_required) VALUES ($1,$2,$3,$4,'passed', COALESCE((SELECT signoffs_required FROM tool_training WHERE tool_id = $2), 1))
         ON CONFLICT (user_id, tool_id) WHERE state IN ('passed','in_training','ready') DO NOTHING RETURNING id`, [a.user_id, t.tool_id, a.revision_id, a.id])).rows[0];
       if (cert) await c.query("INSERT INTO cert_events (cert_id, actor, kind, note, data) VALUES ($1,'system','attempt.passed','Passed the test',$2)", [cert.id, JSON.stringify({ attempt: a.id, pct: s.pct })]);
     }
   }
-  return { late, ...s, passed };
+  return { late, ...s, passed, satisfied };
 }
 
 /** Final submit. A second submit (double click, two tabs) finds the attempt finished and just returns its result. */
 export async function submit(userId: number, attemptId: unknown, answers: unknown) {
   const done = await tx(async (c) => {
     const { a, r } = await mine(c, userId, attemptId);
-    if (a.status === "in_progress") await settle(c, a, r, answers ?? null);
-    return a.id;
+    return { id: a.id, settled: a.status === "in_progress" ? await settle(c, a, r, answers ?? null) : null, r };
   });
-  return result(userId, done);
+  if (done.settled) await announce(userId, done.id, done.r, done.settled); // after the commit: a failing email can't undo the grade
+  return result(userId, done.id);
+}
+async function announce(userId: number, attemptId: number, r: Rev, s: { passed: boolean; satisfied: number[] }) {
+  const c = await conn(), tools = (await c.query("SELECT tl.id, tl.name FROM test_tools tt JOIN tools tl ON tl.id = tt.tool_id WHERE tt.test_id = $1", [r.test_id])).rows;
+  const tool = tools.map((t) => t.name).join(", ");
+  if (s.passed) {
+    for (const t of tools) await emit(s.satisfied.includes(t.id) ? "rollout.satisfied" : "attempt.passed", { userId, ref: `${attemptId}:${t.id}`, vars: { tool: t.name } });
+    return;
+  }
+  const used = (await c.query("SELECT count(*)::int AS n FROM attempts WHERE user_id = $1 AND revision_id = (SELECT revision_id FROM attempts WHERE id = $2) AND NOT preview AND status IN ('submitted','expired')", [userId, attemptId])).rows[0].n;
+  await emit(r.max_attempts && used >= r.max_attempts ? "attempts.exhausted" : "attempt.failed", { userId, ref: attemptId, vars: { tool } });
 }
 
 /** The result of a finished attempt, shaped by the test's review mode: score only, plus which were missed (default, no answers shown), or everything with the right answers. */
