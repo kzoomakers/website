@@ -1,4 +1,5 @@
 "use client";
+import { SOURCE_LABEL } from "@/lib/auth-source";
 import { useEffect, useRef, useState } from "react";
 import "./directory.css";
 import type { Listing } from "@/lib/crm";
@@ -46,7 +47,7 @@ export default function Directory({ initial, listed, facets }: { initial: Listin
               {f(m, "looking_for") && <div className="dr-line">🔎 <b>Looking for:</b> {f(m, "looking_for")}</div>}
               {m.bio && <><p className={"dr-bio" + (open === m.id ? " open" : "")} id={"bio-" + m.id}>{m.bio}</p>{m.bio.length > 140 && <button type="button" className="link" aria-expanded={open === m.id} aria-controls={"bio-" + m.id} onClick={() => setOpen(open === m.id ? null : m.id)} style={{ border: 0, background: "none", color: "var(--acc)", padding: 0 }}>{open === m.id ? "Show less" : "Read more"}</button>}</>}
               {(m.tools.length > 0 || m.skills.length > 0 || m.fields.interests || m.fields.machine || m.fields.open_to) && <div className="dr-chips">
-                {m.tools.slice(0, 4).map((t) => <span key={t.name} className="dr-chip" title="Authorized on this tool">✅ {t.name}</span>)}{m.tools.length > 4 && <a className="dr-chip" href={`/members/directory/${m.id}`}>+{m.tools.length - 4} more tools</a>}
+                {m.tools.slice(0, 4).map((t) => <span key={t.name} className="dr-chip" title={`${t.source === "training" ? "Certified" : "Authorized"} on ${new Date(t.at).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })}${SOURCE_LABEL[t.source] ? `: ${SOURCE_LABEL[t.source]}` : ""}`}>{t.source === "training" ? "🏅" : "✅"} {t.name}</span>)}{m.tools.length > 4 && <a className="dr-chip" href={`/members/directory/${m.id}`}>+{m.tools.length - 4} more tools</a>}
                 {m.fields.open_to?.map((v) => <span key={v} className="dr-chip open" title="Open to">🤝 {v}</span>)}
                 {m.fields.machine?.map((v) => <span key={v} className="dr-chip mach" title="Favorite machine or area">🛠️ {v}</span>)}
                 {m.skills.map((s) => <span key={s.name} className={"dr-chip" + (s.level === "teach" ? " teach" : "")} title={s.note || undefined}>{s.name} <small>{LEVEL[s.level]}</small></span>)}

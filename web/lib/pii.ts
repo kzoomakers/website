@@ -7,7 +7,7 @@ import { notify } from "./pushover";
 import { getMailCfg, mailReady, sendQueued } from "./mail";
 import { TZ } from "./guest-rules";
 import { GENESIS, chainHash, checkRows, type Row } from "./pii-chain";
-import { lastFullMonth } from "./pii-months";
+import { lastFullMonth, REPORT_TO } from "./pii-months";
 import { attemptEvidence, trainingRecord } from "./training/privacy";
 import { BULK_DEFAULT, PII_AUDIT_PERM, PII_KINDS, PII_PERM, PII_ROUTES, checkReason, type PiiKind, type Subject } from "./pii-shared";
 
@@ -239,7 +239,7 @@ export async function httpHits(unmatchedOnly = false, days = 30, month?: string)
 
 // ---- the monthly report
 const esc = (s: unknown) => String(s ?? "").replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]!);
-export const REPORT_TO = "board@kzoomakers.org";
+export { REPORT_TO };
 
 /** The report for one month (YYYY-MM). Counts and names only: never a phone number, address or ID. */
 export async function buildReport(month: string, base: string) {

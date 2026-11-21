@@ -176,9 +176,12 @@ export async function trainerMatrix() {
   const tools = (await c.query(`SELECT t.id, t.name, t.category, COALESCE(tt.signoffs_required, 1) AS signoffs_required, tt.validity_months, COALESCE(tt.manual_grant_allowed, true) AS manual_grant_allowed,
       (SELECT count(*)::int FROM certifications ce WHERE ce.tool_id = t.id AND ce.state IN ('passed','in_training','ready')) AS awaiting, (SELECT count(*)::int FROM tool_auths_effective a WHERE a.tool_id = t.id AND NOT a.expired) AS certified,
       (SELECT json_agg(json_build_object('id', u.id, 'name', u.name) ORDER BY u.name) FROM tool_trainers x JOIN site_users u ON u.id = x.user_id WHERE x.tool_id = t.id) AS trainers,
-      EXISTS (SELECT 1 FROM test_tools x JOIN tests s ON s.id = x.test_id JOIN test_revisions r ON r.test_id = s.id AND r.status = 'published' WHERE x.tool_id = t.id AND NOT s.archived) AS has_test
+      EXISTS (SELECT 1 FROM test_tools x JOIN tests s ON s.id = x.test_id JOIN test_revisions r ON r.test_id = s.id AND r.status = 'published' WHERE x.tool_id = t.id AND NOT s.archived) AS has_test,
+      (SELECT json_agg(json_build_object('id', g.id, 'name', g.name, 'n', g.n) ORDER BY g.n DESC) FROM (
+         SELECT u.id, u.name, count(*)::int AS n FROM tool_auths a JOIN site_users u ON lower(u.email) = lower(a.granted_by)
+         WHERE a.tool_id = t.id AND u.disabled_at IS NULL AND NOT EXISTS (SELECT 1 FROM tool_trainers x WHERE x.tool_id = t.id AND x.user_id = u.id) GROUP BY u.id, u.name ORDER BY count(*) DESC LIMIT 3) g) AS suggested
     FROM tools t LEFT JOIN tool_training tt ON tt.tool_id = t.id WHERE t.archived_at IS NULL ORDER BY lower(t.category), lower(t.name)`)).rows;
-  return tools.map((t) => ({ ...t, trainers: t.trainers ?? [] }));
+  return tools.map((t) => ({ ...t, trainers: t.trainers ?? [], suggested: t.suggested ?? [] })); // suggested: people who granted this tool before, for a lead to accept; never assigned automatically
 }
 export async function findMembers(q: unknown) {
   const s = clip(q, 80);

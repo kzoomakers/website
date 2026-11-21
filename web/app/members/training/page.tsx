@@ -11,6 +11,7 @@ import { learningForMember } from "@/lib/courses/tools";
 import { viewer } from "@/lib/library/viewer";
 import { trackSteps } from "@/lib/courses/track";
 import Announce from "./announce";
+import DigestOptOut from "./digest";
 import TrackRing from "./track-ring";
 import MembersShell from "../shell";
 
@@ -31,6 +32,7 @@ export default async function ToolsPage() {
           authsFor(u.id), upcomingClasses(u.id), on ? overview(u.id) : { cards: [] as any[], history: [] as any[] },
         ]);
         const dc = on && (await discordView()).enabled ? (await c.query("SELECT discord_announce FROM site_users WHERE id = $1", [u.id])).rows[0]?.discord_announce ?? "" : null;
+        const td = on ? (await c.query("SELECT trainer_digest FROM site_users WHERE id = $1 AND EXISTS (SELECT 1 FROM tool_trainers WHERE user_id = $1)", [u.id])).rows[0]?.trainer_digest ?? null : null; // only trainers see the switch
         const learn = await learningForMember(await viewer(), tools.map((t: any) => t.id));
         const mine = auths.filter((a) => !a.expired);
         const groups = new Map<string, typeof tools>();
@@ -40,6 +42,7 @@ export default async function ToolsPage() {
             <p className="sub">Browse the shop's tools. {on ? "Where a tool has a test, pass it and a trainer finishes your sign-off. " : ""}{withClasses ? "Classes are a good way to learn a tool, but only an authorization lets you use it on your own." : "Only an authorization lets you use a tool on your own."}</p>
             {mine.length > 0 && <p><b>You're authorized on {mine.length} tool{mine.length === 1 ? "" : "s"}:</b> {mine.map((a) => a.name).join(", ")}</p>}
             {dc !== null && <Announce mode={dc} />}
+            {td !== null && <DigestOptOut on={td} />}
             {[...groups].map(([cat, ts]) => (
               <section key={cat}>
                 <h2>{cat}</h2>
