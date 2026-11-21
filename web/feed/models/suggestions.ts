@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import type { PoolClient } from "pg";
 import { conn } from "@/lib/db";
 import { getFeedConfig } from "../config";
-import { TITLE_MAX, TITLE_MIN, cleanTitle, isNewUser, storyProblems } from "../story-rules";
+import { NEW_USER_DAYS, TITLE_MAX, TITLE_MIN, cleanTitle, isNewUser, storyProblems } from "../story-rules";
 import { updateCachedColumns } from "./cached";
 import { findTags } from "./stories";
 import { tx } from "./submit";
@@ -11,23 +11,23 @@ import { tx } from "./submit";
 
 export const TITLE_QUORUM = 2; // story.rb SUGGESTION_QUORUM
 export type SuggestResult = { ok: true; changed: boolean; applied: boolean } | { ok: false; errors: string[] };
-type Story = { id: number; user_id: number; title: string; is_moderated: boolean };
+export type Story = { id: number; user_id: number; title: string; is_moderated: boolean };
 
-/** story.rb can_have_suggestions_from_user?: not your own story, not a moderated one, none with a privileged tag; user.rb can_offer_suggestions?: past the new-user period and enough karma. */
-async function allowed(c: PoolClient | Awaited<ReturnType<typeof conn>>, userId: number, s: Story, minKarma: number): Promise<boolean> {
+/** story.rb can_have_suggestions_from_user?: not your own story, not a moderated one, none with a privileged tag; user.rb can_offer_suggestions?: past the new-user period and enough karma. One query, so the story page can call it on every view. */
+export async function canSuggest(userId: number, s: Story, minKarma: number, c: PoolClient | Awaited<ReturnType<typeof conn>> | null = null): Promise<boolean> {
   if (s.user_id === userId || s.is_moderated) return false;
-  const u = (await c.query("SELECT created_at, karma, banned_at, deleted_at, disabled_invite_at FROM feed.users WHERE id = $1", [userId])).rows[0];
-  if (!u || u.banned_at || u.deleted_at || u.disabled_invite_at || isNewUser(u.created_at) || u.karma < minKarma) return false;
-  return !(await c.query("SELECT 1 FROM feed.taggings tg JOIN feed.tags t ON t.id = tg.tag_id WHERE tg.story_id = $1 AND t.privileged LIMIT 1", [s.id])).rowCount;
+  return !!(await (c ?? await conn()).query(
+    `SELECT 1 FROM feed.users u WHERE u.id = $1 AND u.banned_at IS NULL AND u.deleted_at IS NULL AND u.disabled_invite_at IS NULL AND u.karma >= $2 AND u.created_at <= now() - make_interval(days => $3)
+       AND NOT EXISTS (SELECT 1 FROM feed.taggings tg JOIN feed.tags t ON t.id = tg.tag_id WHERE tg.story_id = $4 AND t.privileged)`, [userId, minKarma, NEW_USER_DAYS, s.id])).rowCount;
 }
 
 const storyRow = async (c: PoolClient | Awaited<ReturnType<typeof conn>>, shortId: string, lock = false) =>
   (await c.query(`SELECT id, user_id, title, is_moderated FROM feed.stories WHERE short_id = $1 AND NOT is_deleted AND merged_story_id IS NULL${lock ? " FOR UPDATE" : ""}`, [shortId])).rows[0] as Story | undefined;
 
-/** For the suggest page and link: null when this user may not suggest on the story, else the story's title and tags with the user's own earlier suggestion filled in. */
+/** The suggest page:  null when this user may not suggest on the story, else the story's title and tags with the user's own earlier suggestion filled in. */
 export async function suggestionForm(userId: number, shortId: string): Promise<{ title: string; tags: string[] } | null> {
   const c = await conn(), s = await storyRow(c, shortId);
-  if (!s || !(await allowed(c, userId, s, (await getFeedConfig()).minKarmaToSuggest))) return null;
+  if (!s || !(await canSuggest(userId, s, (await getFeedConfig()).minKarmaToSuggest))) return null;
   const mineTitle = (await c.query("SELECT title FROM feed.suggested_titles WHERE story_id = $1 AND user_id = $2", [s.id, userId])).rows[0]?.title;
   const tagRows = (await c.query(
     `SELECT t.tag FROM feed.suggested_taggings x JOIN feed.tags t ON t.id = x.tag_id WHERE x.story_id = $1 AND x.user_id = $2
@@ -38,7 +38,7 @@ export async function suggestionForm(userId: number, shortId: string): Promise<{
 /** suggestions#create. Records the user's suggested title and tag set (replacing their earlier ones) and applies whatever has reached quorum. */
 export const suggest = (user: { id: number }, shortId: string, input: { title: string; tags: string[] }): Promise<SuggestResult> => tx(async (c) => {
   const s = await storyRow(c, shortId, true);
-  if (!s || !(await allowed(c, user.id, s, (await getFeedConfig()).minKarmaToSuggest))) return { ok: false, errors: ["You are not allowed to offer suggestions on that story."] };
+  if (!s || !(await canSuggest(user.id, s, (await getFeedConfig()).minKarmaToSuggest, c))) return { ok: false, errors: ["You are not allowed to offer suggestions on that story."] };
   const title = cleanTitle(input.title.trim()), tags = await findTags(input.tags);
   if (!tags || tags.some((t) => !t.active)) return { ok: false, errors: ["Unknown tag."] };
   const author = (await c.query("SELECT created_at FROM feed.users WHERE id = $1", [s.user_id])).rows[0]?.created_at ?? null;
@@ -47,15 +47,13 @@ export const suggest = (user: { id: number }, shortId: string, input: { title: s
 
   const oldTags: string[] = (await c.query("SELECT t.tag FROM feed.taggings tg JOIN feed.tags t ON t.id = tg.tag_id WHERE tg.story_id = $1 ORDER BY t.tag", [s.id])).rows.map((r) => r.tag);
   const newTags = tags.map((t) => t.tag).sort();
-  let changed = false;
+  await c.query("DELETE FROM feed.suggested_titles WHERE story_id = $1 AND user_id = $2", [s.id, user.id]); // sending back the story's own title or tags withdraws the earlier suggestion
+  await c.query("DELETE FROM feed.suggested_taggings WHERE story_id = $1 AND user_id = $2", [s.id, user.id]);
+  const changed = title !== s.title || newTags.join() !== oldTags.join();
   if (title !== s.title) {
-    changed = true;
-    await c.query("DELETE FROM feed.suggested_titles WHERE story_id = $1 AND user_id = $2", [s.id, user.id]);
     await c.query("INSERT INTO feed.suggested_titles (story_id, user_id, title) VALUES ($1, $2, $3)", [s.id, user.id, title]);
   }
   if (newTags.join() !== oldTags.join()) {
-    changed = true;
-    await c.query("DELETE FROM feed.suggested_taggings WHERE story_id = $1 AND user_id = $2", [s.id, user.id]);
     for (const t of tags) await c.query("INSERT INTO feed.suggested_taggings (story_id, tag_id, user_id, created_at, updated_at) VALUES ($1, $2, $3, now(), now())", [s.id, t.id, user.id]);
   }
   if (!changed) return { ok: true, changed, applied: false };

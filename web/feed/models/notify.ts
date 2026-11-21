@@ -14,7 +14,7 @@ export async function notifyComment(c: PoolClient, commentId: number): Promise<O
   const mails: Mail[] = [], pushes: Push[] = [], out = { mails, pushes };
   const m = (await c.query(
     `SELECT c.id, c.user_id, c.story_id, c.comment, c.score, c.flags, c.is_deleted, c.is_moderated, c.parent_comment_id, c.short_id, cu.username, s.title AS story_title, s.short_id AS story_short_id,
-       s.user_id AS story_user_id, s.score AS story_score, s.flags AS story_flags,
+       s.user_id AS story_user_id, s.user_is_following, s.score AS story_score, s.flags AS story_flags,
        p.user_id AS parent_user_id, (SELECT username FROM feed.users WHERE id = p.user_id) AS parent_username, p.score AS parent_score, p.flags AS parent_flags, (p.is_deleted OR p.is_moderated) AS parent_gone
      FROM feed.comments c JOIN feed.users cu ON cu.id = c.user_id JOIN feed.stories s ON s.id = c.story_id LEFT JOIN feed.comments p ON p.id = c.parent_comment_id WHERE c.id = $1`, [commentId])).rows[0];
   if (!m) return out;
@@ -30,6 +30,7 @@ export async function notifyComment(c: PoolClient, commentId: number): Promise<O
     "In-Reply-To": ancestors.length ? mid("comment", ancestors[ancestors.length - 1].short_id) : mid("story", m.story_short_id) };
 
   const replies = new Set<number>();
+  if (m.story_user_id !== m.user_id && m.user_is_following) replies.add(Number(m.story_user_id));
   if (m.parent_user_id && m.parent_user_id !== m.user_id) replies.add(Number(m.parent_user_id));
   const live = replies.size ? new Set((await c.query("SELECT id FROM feed.users WHERE id = ANY($1::bigint[]) AND banned_at IS NULL AND deleted_at IS NULL", [[...replies]])).rows.map((r) => Number(r.id))) : new Set<number>();
 

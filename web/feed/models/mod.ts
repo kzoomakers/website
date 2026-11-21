@@ -39,7 +39,7 @@ export const modSetCommentDeleted = (moderator: { id: number }, shortId: string,
     if (m.is_moderated) return { ok: true };
     await c.query("UPDATE feed.comments SET is_deleted = true, is_moderated = true, updated_at = now() WHERE id = $1", [m.id]);
     await log(c, moderator.id, { comment_id: m.id }, "deleted comment", reason.slice(0, REASON_MAX));
-    const votes = (await c.query("SELECT count(*)::int n FROM feed.votes WHERE comment_id = $1 AND vote = 1", [m.id])).rows[0].n;
+    const votes = (await c.query("SELECT count(*)::int n FROM feed.votes WHERE comment_id = $1", [m.id])).rows[0].n;
     await c.query("UPDATE feed.users SET karma = karma - $2 WHERE id = $1", [m.user_id, votes * 2]);
   } else {
     if (!m.is_deleted && !m.is_moderated) return { ok: true };

@@ -15,7 +15,7 @@ export const DEFAULTS: FeedConfig = {
   enabled: false, signup: "invite",
   invites: { who: "members+trusted", requests: false, perUserLimit: 5, expiryDays: 14, tree: true },
   membersAutoCreate: true, membersTrusted: true,
-  newUserDays: 14, minKarmaToFlag: 10, minKarmaToSuggest: 3, minKarmaToSubmit: -4, minKarmaForInviteRequests: 10,
+  newUserDays: 14, minKarmaToFlag: 10, minKarmaToSuggest: 10, minKarmaToSubmit: -4, minKarmaForInviteRequests: 10,
 };
 
 const pick = <T extends string>(v: unknown, ok: readonly T[], d: T): T => (ok.includes(v as T) ? (v as T) : d);
