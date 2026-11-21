@@ -25,6 +25,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   try {
     if (action === "upvote" || action === "unvote" || action === "flag") {
       if (!(await hit(`feed:vote:${v.id}`, 300, 3_600_000, true))) return new NextResponse("too many votes", { status: 429 });
+      if (action === "flag" && !(await hit(`feed:flag:${v.id}`, 20, 3_600_000, true))) return new NextResponse("too many flags", { status: 429 }); // flag spam is the abuse votes alone don't catch
       const r = await castVote(v, "comment", id, action === "upvote" ? 1 : action === "flag" ? -1 : 0, String(f.get("reason") ?? "").slice(0, 1));
       if (!r.ok) putError(v.id, `Couldn't do that: ${r.error}.`);
       return to(`/c/${id}`);
