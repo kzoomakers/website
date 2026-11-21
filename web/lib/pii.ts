@@ -8,6 +8,7 @@ import { getMailCfg, mailReady, sendQueued } from "./mail";
 import { TZ } from "./guest-rules";
 import { GENESIS, chainHash, checkRows, type Row } from "./pii-chain";
 import { lastFullMonth } from "./pii-months";
+import { attemptEvidence, trainingRecord } from "./training/privacy";
 import { BULK_DEFAULT, PII_AUDIT_PERM, PII_KINDS, PII_PERM, PII_ROUTES, checkReason, type PiiKind, type Subject } from "./pii-shared";
 
 // Who may see a person's personal data, and the tamper-evident record of who did. Design: docs/pii-audit-access-system.md.
@@ -108,6 +109,17 @@ const LOAD: Record<PiiKind, (c: PoolClient, s: Subject) => Promise<Out>> = {
     s.type = r.guest_id ? "guest" : "member"; s.id = r.guest_id ?? r.user_id ?? 0; // the row says who the document belongs to, not the caller
     return { name: String(r.name).trim(), fields: ["signed_pdf"], data: { pdf: "data:application/pdf;base64," + open(r.pdf).toString("base64"), title: r.title } };
   },
+  async training(c, s) {
+    const r = s.type === "guest" ? null : await trainingRecord(c, s.id, false);
+    if (!r) throw missing();
+    return { name: r.name, fields: ["training_record"], data: r };
+  },
+  async training_attempt(c, s) {
+    const ev = await attemptEvidence(c, s.attempt ?? 0);
+    if (!ev) throw missing();
+    s.type = "member"; s.id = ev.userId; // the attempt says whose it is, not the caller
+    return { name: ev.name, fields: ["attempt_evidence"], data: ev.data };
+  },
 };
 
 const toRow = (v: Viewer | null, email: string, s: Subject, kind: PiiKind, o: Out, via: string, why: { reason: string; note: string }, req: Request): Row => ({
@@ -119,7 +131,7 @@ const toRow = (v: Viewer | null, email: string, s: Subject, kind: PiiKind, o: Ou
 export async function retrieve(req: Request, kindIn: unknown, subjectIn: any, reasonIn: unknown, noteIn: unknown) {
   const kind = String(kindIn) as PiiKind;
   if (!(kind in PII_KINDS)) throw new PiiError("Unknown kind of information.");
-  const s: Subject = { type: subjectIn?.type === "guest" ? "guest" : "member", id: Number(subjectIn?.id), renewal: Number(subjectIn?.renewal) || undefined, side: subjectIn?.side === "old" ? "old" : "new", doc: Number(subjectIn?.doc) || undefined };
+  const s: Subject = { type: subjectIn?.type === "guest" ? "guest" : "member", id: Number(subjectIn?.id), renewal: Number(subjectIn?.renewal) || undefined, side: subjectIn?.side === "old" ? "old" : "new", doc: Number(subjectIn?.doc) || undefined, attempt: Number(subjectIn?.attempt) || undefined };
   if (!Number.isInteger(s.id)) throw new PiiError("Unknown person.");
   const v = await viewer();
   if (!v) throw new PiiError("not found", 404);

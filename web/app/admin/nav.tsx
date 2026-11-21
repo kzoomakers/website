@@ -42,10 +42,10 @@ function Node({ item, here, all, n }: { item: Item; here: string; all: string[];
 }
 
 /** The left menu for whichever admin section you are in, plus the account menu at the bottom (same on every page). */
-export default function Nav({ admin, audit = false, perms, user }: { admin: boolean; audit?: boolean; perms: Perms; user: ReactNode }) {
+export default function Nav({ admin, audit = false, perms, user, off = [] }: { admin: boolean; audit?: boolean; perms: Perms; user: ReactNode; off?: string[] }) {
   const here = usePathname(), n = useAlerts(here);
   // Only the pages this person may open (a page-only grant must not show the rest of the section).
-  const may = (i: Item): boolean => { if ("items" in i) return i.items.some(may); const pg = pageOf(i.href); if (audit && pg?.key === "pii") return true; /* on the Audit PII special list */ return !pg || !!levelFor(perms, pg.section, pg.key); };
+  const may = (i: Item): boolean => { if ("items" in i) return i.items.some(may); if (off.includes(i.href)) return false; /* a workflow this space switched off */ const pg = pageOf(i.href); if (audit && pg?.key === "pii") return true; /* on the Audit PII special list */ return !pg || !!levelFor(perms, pg.section, pg.key); };
   const prune = (i: Item): Item => ("items" in i ? { ...i, items: i.items.filter(may) } : i);
   // The group you are in (Members, Communications, ...) can hold several sections; each section's links are cleaned up and then shown under shared zone headings.
   const parts = NAV.filter((t) => groupOf(here).sections.includes(t.section)).map((t) => ({ t, links: menuOf(t).filter((l) => (admin || !("href" in l && l.href.endsWith("/system"))) && may(l)).map(prune) })).filter((p) => p.links.length);

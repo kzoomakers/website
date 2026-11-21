@@ -45,6 +45,9 @@ This is a **re-implementation of the ideas** in Moodle's quiz module, not a port
 | Each revision is flagged **major** (forces re-pass) or **minor** (typo, no re-pass) | Otherwise fixing a typo would put everyone on a 30-day clock. |
 | Discord announcements are **opt-in per member** | A name in a public channel is personal data. |
 | Existing authorizations are **grandfathered** (`source = 'legacy'`), not forced through tests on day one | Otherwise launch day lapses every current authorization. Retake is only forced by a later major revision, and admins can choose to include legacy people. |
+| English only | The site has no i18n layer. All copy (UI, mail, Discord) is English and lives in `training_settings`. |
+| Disabled members (`site_users.disabled_at`) cannot start attempts; rollout deadlines keep running | A pause rule would need an end date. The lead extends a deadline per member instead (phase 4). |
+| Hands-on checklist is advisory in v1 | Hard gating needs a per-tool rule nobody has asked for yet. |
 
 ## Phase map
 
@@ -84,3 +87,5 @@ Each phase ships behind a flag (`training_enabled` setting) and is its own PR, l
 3. Can **guests** take tests? Recommendation: no, approved members only.
 4. How many sign-offs does a tool need (1, or 2 for dangerous equipment)? Recommendation: per-tool `signoffs_required`, default 1.
 5. Do authorizations currently **expire**? (`expires_on` exists.) Recommendation: keep it, and cert validity period becomes an optional per-tool default.
+
+**Working assumptions now written into the schema** (object to any and the docs change): (1) one test per tool, enforced by `UNIQUE (tool_id)` on `test_tools`; (2) `signoff_mode` lives in `tool_training`; (3) approved members only; (4) `signoffs_required` lives in `tool_training`; (5) `validity_months` lives in `tool_training`.

@@ -43,9 +43,10 @@ Admin screens use the existing `crm()` RPC pattern (`app/admin/people/rpc.ts`) w
 All created in `lib/training/schema.ts`, idempotent, wired from the same startup path as the others.
 
 ```sql
--- A test belongs to a tool. (test_tools join kept so one test can later cover several tools.)
+-- A test covers one or more tools via test_tools. v1: one tool per test in the UI, and UNIQUE (tool_id) means a tool has at most one test.
+-- Drop UNIQUE (tool_id) to allow several tests per tool later.
 tests            (id, title, created_by, created_at, archived bool)
-test_tools       (test_id, tool_id, PRIMARY KEY (test_id, tool_id))
+test_tools       (test_id, tool_id, PRIMARY KEY (test_id, tool_id), UNIQUE (tool_id))
 
 -- Immutable once published. Exactly one 'draft' per test at a time; any number 'published'/'retired'; at most one 'published' is current.
 test_revisions   (id, test_id, rev_no int, status text CHECK IN ('draft','published','retired'),
@@ -68,7 +69,8 @@ attempts         (id, user_id, revision_id, status text CHECK IN ('in_progress',
                   started_at, due_at, submitted_at, seed int,        -- seed fixes shuffle order so reload shows the same order
                   answers jsonb, per_question jsonb,                 -- per_question: points awarded + correct/incorrect flags
                   points numeric, max_points numeric, pct numeric, passed bool,
-                  accommodation text, ip inet, user_agent text, voided_by, voided_reason)
+                  time_multiplier numeric NOT NULL DEFAULT 1, read_aloud bool NOT NULL DEFAULT false,   -- snapshot at start; later accommodation changes never rewrite an attempt
+                  ip inet, user_agent text, voided_by, voided_reason)
 
 certifications   (id, user_id, tool_id, revision_id, attempt_id,
                   state text CHECK IN ('passed','in_training','ready','certified','rejected','waived','lapsed','revoked'),
@@ -82,6 +84,20 @@ cert_events      (id, cert_id, at, actor text, kind text, note text, data jsonb)
 cert_signoffs    (cert_id, trainer_id, at, note, UNIQUE (cert_id, trainer_id))    -- supports signoffs_required > 1
 
 tool_trainers    (tool_id, user_id, added_by, added_at, PRIMARY KEY (tool_id, user_id))   -- who may review/sign off which tool
+
+-- Per-tool training config. No row = defaults (see the rules section below). Created on first save; never seeded.
+tool_training    (tool_id PRIMARY KEY, signoff_mode text NOT NULL DEFAULT 'trainer' CHECK (signoff_mode IN ('trainer','auto')),
+                  signoffs_required int NOT NULL DEFAULT 1 CHECK (signoffs_required >= 1),
+                  validity_months int NULL,                          -- NULL = no expiry; sets certifications.valid_until
+                  manual_grant_allowed bool NOT NULL DEFAULT true,   -- false = only a test or an override can grant
+                  updated_by, updated_at)
+tool_checklist_items (id, tool_id, position int, label text, retired_at timestamptz NULL)   -- retired, never deleted, so old ticks keep a real label
+tool_prereqs     (tool_id, requires_tool_id, PRIMARY KEY (tool_id, requires_tool_id), CHECK (tool_id <> requires_tool_id))
+cert_checklist_ticks (cert_id, item_id, ticked_by, ticked_at, PRIMARY KEY (cert_id, item_id))
+
+-- Per-member accommodations, set by a trainer. Copied onto each attempt at start (see attempts).
+training_accommodations (user_id PRIMARY KEY, time_multiplier numeric NOT NULL DEFAULT 1 CHECK (time_multiplier >= 1 AND time_multiplier <= 3),
+                  read_aloud bool NOT NULL DEFAULT false, notes text NOT NULL DEFAULT '', set_by, set_at)
 
 rollouts         (id, revision_id, deadline date, created_by, created_at, undone_at NULL)  -- one row per "force re-pass"
 rollout_members  (rollout_id, user_id, tool_id, status text, notified_at, PRIMARY KEY (...))
@@ -101,6 +117,15 @@ ALTER TABLE tool_auths
 ```
 
 "Effective expiry" is `LEAST(expires_on, retake_due_on)`. Today `authsFor()` computes `expired` from `expires_on` alone, so that expression moves into **one** SQL fragment/view (`tool_auths_effective`) used by `authsFor`, the member profile, and anything door/tool-checkout related that reads authorizations. Grep every reader before changing it (phase 0 task).
+
+## Rules the new tables imply
+
+- **Tool config defaults.** No `tool_training` row means: `signoff_mode='trainer'`, `signoffs_required=1`, no expiry, manual grants allowed.
+- **Checklist is advisory in v1.** Sign-off is allowed with items unticked; the sign-off dialog shows the count. Items are retired, not deleted.
+- **Prerequisites.** A member meets a `tool_prereqs` row when they hold an effective (not expired) `tool_auths` row for the required tool. This is checked when an attempt starts. A later lapse of the prerequisite does not revoke the dependent authorization; it only blocks new attempts on the dependent tool.
+- **One test per tool, several tools per test.** A pass creates one certification per tool in `test_tools` (same `attempt_id` and `revision_id`), skipping any tool that already has an open certification. Each certification is signed off separately against its own `signoffs_required`. Replacing a test deletes its `test_tools` rows only; the old test and its revisions stay, because history is keyed by `revision_id`.
+- **Accommodations are snapshotted.** `due_at = started_at + time_limit × attempts.time_multiplier`. `read_aloud` is recorded on the attempt and shown to trainers; it does not change grading.
+- **Disabled members.** `site_users.disabled_at` (the existing "cannot sign in" flag) blocks starting an attempt. An attempt already open runs to its `due_at` and is graded as in phase 2. Rollout deadlines keep running. See `03`.
 
 ## State machines
 

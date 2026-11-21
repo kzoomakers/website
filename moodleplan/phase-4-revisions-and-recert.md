@@ -48,6 +48,7 @@ Default cadence **14, 7, 3, 1 days before** and on the day (setting). Each remin
 - Two major revisions in a row: second supersedes the first rollout; deadline is the later of the two or a fresh one (setting), stated in the dialog.
 - Member passes on the last day, in a different time zone than the server.
 - Rollout started when the flag is off; member erased mid-rollout; tool archived mid-rollout.
+- Member disabled (`site_users.disabled_at`) during a rollout: the deadline keeps running; the lead extends it per member if the gap was long (see 03).
 - Retake of a lapsed member whose auth row has `expires_on` in the past: re-pass restores via `grantFromCert()` and resets both dates.
 
 ## Done when

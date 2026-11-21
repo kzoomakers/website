@@ -35,7 +35,7 @@ Run the `owasp-security` and `security-review` skills over the whole feature bef
 
 - Existing `tool_auths` untouched (`source='legacy'`).
 - No back-filled certifications: legacy people simply have an authorization without a cert, shown as "Authorized (before training records)". Their member file offers "credit prior certification" to attach a date and trainer if the club knows it.
-- Seed `tool_training` rows (defaults) for every tool; seed trainers from whoever currently grants sign-offs, by reading `tool_auths.granted_by` frequency per tool as a **suggestion list** for the lead (not auto-assigned).
+- No seeding of `tool_training`: a missing row means the defaults in 01. Seed trainers from whoever currently grants sign-offs, by reading `tool_auths.granted_by` frequency per tool as a **suggestion list** for the lead (not auto-assigned).
 
 ## Documentation
 

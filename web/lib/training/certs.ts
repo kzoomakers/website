@@ -3,6 +3,8 @@ import { conn } from "../db";
 import { cleanHtml } from "../sanitize";
 import { logAudit } from "../store";
 import { queueAnnouncement } from "./discord";
+import { features } from "../features";
+import { getAccommodation } from "./accommodations";
 import { emit, emitLeads } from "./notify";
 import { describeQ, type Q } from "./questions";
 
@@ -44,7 +46,8 @@ export async function queue(a: Actor) {
     FROM certifications ce JOIN site_users u ON u.id = ce.user_id JOIN tools tl ON tl.id = ce.tool_id LEFT JOIN attempts at ON at.id = ce.attempt_id
     WHERE ($1::int[] IS NULL OR ce.tool_id = ANY($1)) AND (ce.state IN ('passed','in_training','ready') OR (ce.state = 'certified' AND ce.certified_at > now() - interval '90 days'))
     ORDER BY ce.created_at LIMIT 500`, [tools])).rows;
-  return { rows, trainer: !!a.id };
+  const mayAct = !!a.id && (a.all || tools !== null); // whole-section writers, or a trainer for the tools listed
+  return { rows: rows.map((r) => ({ ...r, can: mayAct && r.user_id !== a.id })), trainer: !!a.id };
 }
 /** How many are waiting for a first look, for the People badge. */
 export async function waitingCount(a: Actor) {
@@ -65,7 +68,8 @@ export async function file(a: Actor, certId: unknown) {
   const questions = att ? (att.per_question as { id: number; points: number; max: number; correct: boolean }[]).map((p) => ({ ...p, prompt_html: cleanHtml(qs.get(p.id)?.prompt_html ?? ""), key: qs.get(p.id) ? describeQ(qs.get(p.id)!) : "", given: att.answers?.[p.id] ?? null, critical: (qs.get(p.id) as any)?.required_correct === true })) : [];
   const events = (await c.query("SELECT id, at, actor, kind, note, shared, data FROM cert_events WHERE cert_id = $1 ORDER BY at, id", [ce.id])).rows;
   const signoffs = (await c.query("SELECT s.at, s.note, u.name FROM cert_signoffs s JOIN site_users u ON u.id = s.trainer_id WHERE s.cert_id = $1 ORDER BY s.at", [ce.id])).rows;
-  return { cert: ce, attempt: att && { pct: att.pct, points: att.points, max: att.max, submitted_at: att.submitted_at, started_at: att.started_at }, tries: tried, questions, events, signoffs, can: await canSignOff(a, ce.tool_id, c) && !!a.id && a.id !== ce.user_id, self: a.id === ce.user_id };
+  const trainers = (await c.query("SELECT x.name FROM tool_trainers tt JOIN site_users x ON x.id = tt.user_id WHERE tt.tool_id = $1 ORDER BY x.name", [ce.tool_id])).rows.map((r) => r.name as string);
+  return { signedIn: !!a.id, trainers, accommodation: await getAccommodation(ce.user_id), cert: ce, attempt: att && { pct: att.pct, points: att.points, max: att.max, submitted_at: att.submitted_at, started_at: att.started_at }, tries: tried, questions, events, signoffs, can: await canSignOff(a, ce.tool_id, c) && !!a.id && a.id !== ce.user_id, self: a.id === ce.user_id };
 }
 
 /** Loads the certification locked for update and checks the actor may act on it. Nobody acts on their own: there is no admin bypass. */
@@ -131,6 +135,39 @@ export async function signOff(a: Actor, certId: unknown, note: unknown) {
   });
   if (out.done) { await emit("cert.certified", { userId: out.ce.user_id, ref: out.ce.id, vars: { tool: out.ce.tool } }); await queueAnnouncement(out.ce.user_id, out.ce.id, out.ce.tool); }
   return { ok: true, certified: out.done, have: out.have, need: out.need };
+}
+
+// ---- hands-on training with no online test ---------------------------------------------------------------------------------------------
+/** A tool needs no test when online tests are switched off, or when it has no published one. Otherwise the test comes first (a lead can waive it). */
+const NO_TEST = (testsOn: boolean) => testsOn ? "NOT EXISTS (SELECT 1 FROM test_tools tt JOIN tests t ON t.id = tt.test_id JOIN test_revisions r ON r.test_id = t.id AND r.status = 'published' WHERE tt.tool_id = tl.id AND NOT t.archived)" : "true";
+/** The tools this person may start hands-on training for. */
+export async function handsOnTools(a: Actor) {
+  if (!a.id) return [];
+  return (await (await conn()).query(`SELECT tl.id, tl.name, tl.category FROM tools tl WHERE tl.archived_at IS NULL AND ${NO_TEST((await features()).tests)}
+    AND ($1::boolean OR EXISTS (SELECT 1 FROM tool_trainers x WHERE x.tool_id = tl.id AND x.user_id = $2)) ORDER BY lower(tl.category), lower(tl.name)`, [a.all, a.id])).rows;
+}
+/** A trainer starts hands-on training with a member, with no online test. It then follows the normal path (notes, ready, sign-off by as many trainers as the tool needs). */
+export async function beginHandsOn(a: Actor, userId: unknown, toolId: unknown) {
+  if (!Number.isInteger(userId) || !Number.isInteger(toolId)) fail("Choose a member and a tool.");
+  if (!a.id) fail("Sign in with a member account to do this; it's recorded under your name.");
+  if (a.id === userId) fail("You can't start your own training.");
+  if (!(await canSignOff(a, toolId as number))) fail("not found");
+  const c = await conn();
+  if (!(await handsOnTools(a)).some((t) => t.id === toolId)) fail("This tool has an online test, so they need to pass it first (or a lead can waive it).");
+  const m = (await c.query("SELECT u.name, u.email, tl.name AS tool FROM site_users u, tools tl WHERE u.id = $1 AND tl.id = $2 AND u.verified_at IS NOT NULL AND u.approval = 'approved' AND u.disabled_at IS NULL", [userId, toolId])).rows[0];
+  if (!m) fail("No such approved member.");
+  if ((await c.query("SELECT 1 FROM tool_auths_effective WHERE user_id = $1 AND tool_id = $2 AND NOT expired AND retake_due_on IS NULL", [userId, toolId])).rowCount) fail("They're already authorized on this tool.");
+  const id = await tx(async (c) => {
+    try {
+      const ce = (await c.query("INSERT INTO certifications (user_id, tool_id, state, source, signoffs_required) VALUES ($1,$2,'in_training','trainer', COALESCE((SELECT signoffs_required FROM tool_training WHERE tool_id = $2), 1)) RETURNING id", [userId, toolId])).rows[0].id as number;
+      await event(c, ce, a, "start", "Started hands-on training (no online test)");
+      await logAudit(a.email, "training.cert.open", `${m.email}: ${m.tool}: hands-on, no test`);
+      return ce;
+    } catch (e: any) { if (e?.code === "23505") fail("They already have training in progress for this tool."); throw e; }
+  });
+  const me = (await c.query("SELECT name FROM site_users WHERE id = $1", [a.id])).rows[0]?.name;
+  await emit("cert.in_training", { userId: userId as number, ref: id, vars: { tool: m.tool, trainer: me || "A trainer" } });
+  return { ok: true, id };
 }
 
 // ---- trainers and per-tool settings --------------------------------------------------------------------------------------------------

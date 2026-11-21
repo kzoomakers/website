@@ -44,18 +44,34 @@ export async function trainingSchema(pool: Pool) {
   await q(`CREATE TABLE IF NOT EXISTS attempts (id serial PRIMARY KEY, user_id int NOT NULL REFERENCES site_users ON DELETE CASCADE, revision_id int NOT NULL REFERENCES test_revisions,
     status text NOT NULL DEFAULT 'in_progress' CHECK (status IN ('in_progress','submitted','expired','void')), preview boolean NOT NULL DEFAULT false, started_at timestamptz NOT NULL DEFAULT now(), due_at timestamptz, submitted_at timestamptz,
     seed int NOT NULL DEFAULT 0, answers jsonb NOT NULL DEFAULT '{}', per_question jsonb NOT NULL DEFAULT '{}', points numeric, max_points numeric, pct numeric, passed boolean,
-    accommodation text NOT NULL DEFAULT '', ip text NOT NULL DEFAULT '', user_agent text NOT NULL DEFAULT '', voided_by text, voided_reason text)`);
+    time_multiplier numeric NOT NULL DEFAULT 1, read_aloud boolean NOT NULL DEFAULT false, ip text NOT NULL DEFAULT '', user_agent text NOT NULL DEFAULT '', voided_by text, voided_reason text)`);
   await q("ALTER TABLE attempts ADD COLUMN IF NOT EXISTS seq int NOT NULL DEFAULT 0");
+  // Accommodations are copied onto the attempt when it starts, so a later change never rewrites a finished attempt. (The old free-text column is dropped: nothing ever wrote to it.)
+  await q("ALTER TABLE attempts ADD COLUMN IF NOT EXISTS time_multiplier numeric NOT NULL DEFAULT 1, ADD COLUMN IF NOT EXISTS read_aloud boolean NOT NULL DEFAULT false, DROP COLUMN IF EXISTS accommodation");
+  await q(`CREATE TABLE IF NOT EXISTS training_accommodations (user_id int PRIMARY KEY REFERENCES site_users ON DELETE CASCADE, time_multiplier numeric NOT NULL DEFAULT 1 CHECK (time_multiplier >= 1 AND time_multiplier <= 3),
+    read_aloud boolean NOT NULL DEFAULT false, notes text NOT NULL DEFAULT '', set_by text NOT NULL DEFAULT '', set_at timestamptz NOT NULL DEFAULT now())`);
+  // A regrade applies a corrected key to the attempts on an earlier version. Each attempt whose outcome changes gets one item; a pass turned into a fail waits for a lead ('pending') and is never applied by the script.
+  await q("CREATE TABLE IF NOT EXISTS regrades (id serial PRIMARY KEY, from_rev int NOT NULL REFERENCES test_revisions, to_rev int NOT NULL REFERENCES test_revisions, applied_by text NOT NULL, applied_at timestamptz NOT NULL DEFAULT now(), UNIQUE (from_rev, to_rev))");
+  await q(`CREATE TABLE IF NOT EXISTS regrade_items (id serial PRIMARY KEY, regrade_id int NOT NULL REFERENCES regrades ON DELETE CASCADE, attempt_id int NOT NULL REFERENCES attempts ON DELETE CASCADE,
+    state text NOT NULL CHECK (state IN ('promoted','pending','kept','revoked')), old_passed boolean NOT NULL, old_pct numeric NOT NULL, new_passed boolean NOT NULL, new_pct numeric NOT NULL, new_points numeric NOT NULL, new_max numeric NOT NULL, new_per jsonb NOT NULL DEFAULT '[]',
+    decided_by text NOT NULL DEFAULT '', decided_at timestamptz, decision_note text NOT NULL DEFAULT '', UNIQUE (regrade_id, attempt_id))`);
+  await q("CREATE INDEX IF NOT EXISTS regrade_items_pending ON regrade_items (state) WHERE state = 'pending'");
+  // An admin reset: attempts submitted before `at` no longer count toward the test's attempt limit or cooldown for this member. Nothing is deleted.
+  await q("CREATE TABLE IF NOT EXISTS attempt_resets (id serial PRIMARY KEY, user_id int NOT NULL REFERENCES site_users ON DELETE CASCADE, test_id int NOT NULL REFERENCES tests ON DELETE CASCADE, at timestamptz NOT NULL DEFAULT now(), by text NOT NULL, reason text NOT NULL)");
+  await q("CREATE INDEX IF NOT EXISTS attempt_resets_user ON attempt_resets (user_id, test_id)");
   await q("CREATE INDEX IF NOT EXISTS attempts_user ON attempts (user_id, revision_id)");
   await q("CREATE UNIQUE INDEX IF NOT EXISTS attempts_one_open ON attempts (user_id, revision_id) WHERE status = 'in_progress' AND NOT preview");
   await q(`CREATE TABLE IF NOT EXISTS certifications (id serial PRIMARY KEY, user_id int NOT NULL REFERENCES site_users ON DELETE CASCADE, tool_id int NOT NULL REFERENCES tools,
     revision_id int REFERENCES test_revisions, attempt_id int REFERENCES attempts ON DELETE SET NULL,
     state text NOT NULL DEFAULT 'passed' CHECK (state IN ('passed','in_training','ready','certified','rejected','waived','lapsed','revoked')), signoffs_required int NOT NULL DEFAULT 1 CHECK (signoffs_required >= 1),
-    source text NOT NULL DEFAULT 'test' CHECK (source IN ('test','override','legacy')), certified_at timestamptz, certified_by text, valid_until date,
+    source text NOT NULL DEFAULT 'test' CHECK (source IN ('test','override','legacy','trainer')), certified_at timestamptz, certified_by text, valid_until date,
     created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now())`);
   await q("CREATE INDEX IF NOT EXISTS certifications_state ON certifications (state, tool_id)");
   await q("CREATE INDEX IF NOT EXISTS certifications_user ON certifications (user_id)");
   await q("CREATE UNIQUE INDEX IF NOT EXISTS certifications_one_open ON certifications (user_id, tool_id) WHERE state IN ('passed','in_training','ready')");
+  // A trainer can start hands-on training with no online test (source 'trainer'): widen the check on databases made before it existed.
+  await q("ALTER TABLE certifications DROP CONSTRAINT IF EXISTS certifications_source_check");
+  await q("ALTER TABLE certifications ADD CONSTRAINT certifications_source_check CHECK (source IN ('test','override','legacy','trainer'))");
   await q("CREATE TABLE IF NOT EXISTS cert_events (id serial PRIMARY KEY, cert_id int NOT NULL REFERENCES certifications ON DELETE CASCADE, at timestamptz NOT NULL DEFAULT now(), actor text NOT NULL, kind text NOT NULL, note text NOT NULL DEFAULT '', shared boolean NOT NULL DEFAULT false, data jsonb)");
   await q("CREATE INDEX IF NOT EXISTS cert_events_cert ON cert_events (cert_id, at)");
   // Append-only: a note is corrected by a new note. Deletion stays possible so erasing a member (cascade) works.

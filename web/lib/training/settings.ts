@@ -9,10 +9,10 @@ export async function trainingCfg(): Promise<TrainingCfg> {
   await d.ready;
   return { enabled: false, events: {}, copy: {}, reply_to: "", reminder_days: [14, 7, 3, 1, 0], ...(await d.pool.query("SELECT data FROM settings WHERE key = 'training'")).rows[0]?.data };
 }
-// Asked on every members page, so remembered for 30 seconds (another server may take that long to notice a change).
+// Asked on every members page, so remembered for 5 seconds (another server may take that long to notice a change).
 let seen: { at: number; on: boolean } | undefined;
 export async function trainingEnabled() {
-  if (seen && Date.now() - seen.at < 30_000) return seen.on;
+  if (seen && Date.now() - seen.at < 5_000) return seen.on;
   const on = (await trainingCfg()).enabled === true;
   seen = { at: Date.now(), on };
   return on;

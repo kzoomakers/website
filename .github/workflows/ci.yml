@@ -55,7 +55,7 @@ jobs:
           TEST_DATABASE_URL: postgres://postgres:test@localhost:5432/postgres
         run: |
           mkdir -p ctrf
-          node --import ./tests/resolve.mjs --test --experimental-test-coverage \
+          node --import ./tests/resolve.mjs --test --test-concurrency=1 --experimental-test-coverage \
             --test-reporter=spec --test-reporter-destination=stdout \
             --test-reporter=spec --test-reporter-destination=spec.txt \
             --test-reporter=junit --test-reporter-destination=junit.xml

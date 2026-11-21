@@ -1,3 +1,4 @@
+import { classesOn } from "./features";
 import { conn } from "./db";
 import { logAudit } from "./store";
 import { membershipClasses } from "./membership";
@@ -243,7 +244,7 @@ const CLASS_COLS = `c.id, c.title, c.description, c.starts_at, c.ends_at, c.loca
 
 /** Upcoming classes for a member, with their own status: first `capacity` sign-ups are confirmed, later ones wait and move up when someone cancels. */
 export const upcomingClasses = async (userId: number): Promise<Klass[]> =>
-  (await (await conn()).query(`SELECT ${CLASS_COLS} FROM classes c WHERE NOT c.cancelled AND c.starts_at > now() - interval '2 hours' ORDER BY c.starts_at`, [userId])).rows;
+  !(await classesOn()) ? [] : (await (await conn()).query(`SELECT ${CLASS_COLS} FROM classes c WHERE NOT c.cancelled AND c.starts_at > now() - interval '2 hours' ORDER BY c.starts_at`, [userId])).rows;
 export const allClasses = async (): Promise<Klass[]> =>
   (await (await conn()).query(`SELECT ${CLASS_COLS} FROM classes c ORDER BY c.starts_at DESC LIMIT 200`, [0])).rows;
 export async function signUp(userId: number, classId: number) {
@@ -357,6 +358,7 @@ export async function decideProposal(id: number, action: "approve" | "decline", 
 
 /** Emails every approved member a teaser of the class with a one-time sign-in link (valid 90 days) that opens the classes page. Returns how many were queued; the mail queue delivers them (with retries) within a minute or so. */
 async function announceClass(classId: number, image: string, base: string, who: string): Promise<number> {
+  if (!(await classesOn())) return 0; // classes are switched off: no announcement emails
   const c = await conn();
   const k = (await c.query("SELECT * FROM classes WHERE id = $1", [classId])).rows[0];
   const people = (await c.query("SELECT id, email, first_name, name FROM site_users WHERE approval = 'approved' AND verified_at IS NOT NULL AND disabled_at IS NULL")).rows;
