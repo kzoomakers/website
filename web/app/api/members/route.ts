@@ -3,6 +3,7 @@ import { errMsg } from "@/lib/errmsg";
 import { currentMember } from "@/lib/readers";
 import { baseUrl } from "@/lib/mail";
 import * as c from "@/lib/crm";
+import { classesOn } from "@/lib/features";
 
 // Member-facing endpoint: POST { op, ... } for the signed-in member only.
 export const dynamic = "force-dynamic";
@@ -11,6 +12,7 @@ export async function POST(req: Request) {
   const [u, a] = await Promise.all([currentMember().catch(() => null), req.json().catch(() => null)]);
   if (!u) return new NextResponse("Sign in first.", { status: 401 });
   if (!a?.op) return new NextResponse("bad request", { status: 400 });
+  if (["signup", "propose", "withdraw", "cancel"].includes(a.op) && !(await classesOn())) return new NextResponse("Classes aren't open right now.", { status: 404 });
   try {
     switch (a.op) {
       case "search": return NextResponse.json(await c.searchDirectory(String(a.q ?? ""), String(a.level ?? ""), a.filters ?? {}));

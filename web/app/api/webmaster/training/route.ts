@@ -8,6 +8,8 @@ import { override } from "@/lib/training/overrides";
 import { REPORTS, toCsv } from "@/lib/training/reports";
 import * as k from "@/lib/training/certs";
 import * as rc from "@/lib/training/recert";
+import { setAccommodation } from "@/lib/training/accommodations";
+import * as rg from "@/lib/training/regrade";
 import { logAudit } from "@/lib/store";
 import { cleanCfg, saveTrainingCfg, trainingCfg } from "@/lib/training/settings";
 import * as t from "@/lib/training/tests";
@@ -16,13 +18,13 @@ import * as t from "@/lib/training/tests";
 export const dynamic = "force-dynamic";
 const PAGE: Record<string, string> = {
   setEnabled: "settings", getCfg: "settings", saveCfg: "settings", discordGet: "settings", discordSave: "settings", discordTest: "settings",
-  queue: "queue", file: "queue", startTraining: "queue", markReady: "queue", note: "queue", reject: "queue", signOff: "queue",
-  rolloutPreview: "tests", rollouts: "reports", rolloutMembers: "reports", extendRollout: "reports", undoRollout: "reports", confirmLapse: "reports", memberOverride: "reports", override: "reports", reportTools: "reports", report: "reports", reportCsv: "reports",
+  queue: "queue", file: "queue", handsOnTools: "queue", memberSearch: "queue", beginHandsOn: "queue", setAccommodation: "queue", startTraining: "queue", markReady: "queue", note: "queue", reject: "queue", signOff: "queue",
+  rolloutPreview: "tests", rollouts: "reports", rolloutMembers: "reports", extendRollout: "reports", undoRollout: "reports", confirmLapse: "reports", memberOverride: "reports", override: "reports", reportTools: "reports", report: "reports", reportCsv: "reports", regradePreview: "reports", regradeList: "reports", regradeApply: "reports", regradeDecide: "reports",
   trainers: "trainers", findMembers: "trainers", setTrainer: "trainers", saveToolTraining: "trainers",
   tests: "tests", toolsFree: "tests", test: "tests", revision: "tests", compare: "tests", export: "tests", preview: "tests", previewGrade: "tests", publishCheck: "tests",
   createTest: "tests", renameTest: "tests", archiveTest: "tests", deleteTest: "tests", newDraft: "tests", saveSettings: "tests", saveQuestion: "tests", deleteQuestion: "tests", reorder: "tests", discardDraft: "tests", import: "tests", publish: "tests",
 };
-const READS = new Set(["tests", "toolsFree", "test", "revision", "compare", "export", "preview", "previewGrade", "publishCheck", "getCfg", "discordGet", "queue", "file", "trainers", "findMembers", "rolloutPreview", "rollouts", "rolloutMembers", "report", "reportCsv", "reportTools"]);
+const READS = new Set(["tests", "toolsFree", "test", "revision", "compare", "export", "preview", "previewGrade", "publishCheck", "getCfg", "discordGet", "queue", "file", "handsOnTools", "memberSearch", "trainers", "findMembers", "rolloutPreview", "rollouts", "rolloutMembers", "report", "reportCsv", "reportTools", "regradePreview", "regradeList"]);
 const gone = () => new NextResponse("not found", { status: 404 });
 
 export async function POST(req: Request) {
@@ -44,8 +46,12 @@ export async function POST(req: Request) {
         await dc.saveDiscord(a.cfg); await logAudit(who, "training.discord.config", "Discord announcements changed"); return { ok: true };
       case "queue": return k.queue(act);
       case "file": return k.file(act, a.id);
+      case "handsOnTools": return k.handsOnTools(act);
+      case "memberSearch": return act.id ? k.findMembers(a.q) : [];
+      case "beginHandsOn": return k.beginHandsOn(act, a.user, a.tool);
       case "startTraining": return k.startTraining(act, a.id);
       case "markReady": return k.markReady(act, a.id);
+      case "setAccommodation": return setAccommodation(act, a.user, a.settings);
       case "note": return k.addNote(act, a.id, a.note, a.shared, a.session);
       case "reject": return k.reject(act, a.id, a.reason);
       case "signOff": return k.signOff(act, a.id, a.note);
@@ -63,6 +69,14 @@ export async function POST(req: Request) {
       case "override":
         if (!(await canSpecial("training.override"))) return new NextResponse("You don't have the special permission for overrides. Ask an administrator (Admin > Access > Special permissions).", { status: 403 });
         return override(act, a);
+      case "regradePreview": return rg.preview(a.from, a.to);
+      case "regradeList": return rg.list(a.test);
+      case "regradeApply":
+        if (!(await canSpecial("training.override"))) return new NextResponse("You don't have the special permission for overrides, which a regrade needs. Ask an administrator (Admin > Access > Special permissions).", { status: 403 });
+        return rg.apply(act, a.from, a.to);
+      case "regradeDecide":
+        if (!(await canSpecial("training.override"))) return new NextResponse("You don't have the special permission for overrides, which a regrade decision needs. Ask an administrator (Admin > Access > Special permissions).", { status: 403 });
+        return rg.decide(act, a.item, a.decision, a.reason);
       case "reportTools": return listTools();
       case "report": return typeof a.name === "string" && Object.hasOwn(REPORTS, a.name) ? REPORTS[a.name]() : gone();
       case "reportCsv": return typeof a.name === "string" && Object.hasOwn(REPORTS, a.name) ? new NextResponse(toCsv(await REPORTS[a.name]()), { headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": `attachment; filename="training-${a.name}.csv"` } }) : gone();

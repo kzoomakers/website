@@ -32,6 +32,7 @@ All filterable by date range, tool, trainer; CSV export for each.
 5. **Rollout status**: per rollout, satisfied/pending/lapsed.
 6. **Overrides report**: every override with reason, for the board's review. A monthly summary can be emailed to the board list (the site already sends a monthly PII report; reuse that job pattern).
 7. **Audit view**: link into the existing audit log filtered by `training.%`.
+8. **Attempt evidence (disputes)**: one attempt exactly as stored: revision number and `content_hash`, the questions and keys as they were on that revision, the answers as submitted, `per_question` and totals, `started_at` / `due_at` / `submitted_at`, `ip`, `user_agent`, and any void. JSON plus a printable page. Needs `training:reports` read; every export writes an audit row (`training.attempt.evidence`). Limit: only the final saved answers are stored, not autosave history, so "what they typed when" can't be answered from this.
 
 ## Question analytics (the thing that finds bad questions)
 
@@ -47,7 +48,7 @@ Preset buttons for the role bundles in `02` (Trainer, Test author, Training lead
 
 ## Tests
 
-Override matrix (each action: needs permission, needs reason, notifies lead, badge shown, cannot target self). Report numbers against a fixture dataset. Regrade preview matches applied result. CSV is escaped (formula injection: prefix `=`, `+`, `-`, `@`).
+Override matrix (each action: needs permission, needs reason, notifies lead, badge shown, cannot target self). Report numbers against a fixture dataset. Regrade preview matches applied result. CSV is escaped (formula injection: prefix `=`, `+`, `-`, `@`). Evidence export matches the stored attempt row.
 
 ## Done when
 

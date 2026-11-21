@@ -10,6 +10,7 @@ import GenderSelect from "@/components/gender-select";
 import PronounSelect from "@/components/pronoun-select";
 import DisableButton from "../../../disable-button";
 import PiiButton from "@/components/pii-retrieve";
+import JsonDownload from "@/components/pii-json";
 import type { Profile } from "@/lib/profiles";
 import "./person.css";
 
@@ -82,6 +83,11 @@ export default function Member({ profile, canEdit, roster }: { profile: Profile;
           </fieldset>
 
           <Extras id={p.id} canEdit={canEdit} />
+
+          <h2>Training record</h2>
+          <div className="pp-sec">
+            <PiiButton kind="training" subject={{ type: "member", id: p.id }} label="Retrieve training record">{(d) => <JsonDownload data={d} name={`training-${p.id}.json`} label="Download training record (JSON)" />}</PiiButton>
+          </div>
 
           <h2>Emergency contacts</h2>
           <div className="pp-sec">

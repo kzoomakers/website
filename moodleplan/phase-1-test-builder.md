@@ -4,7 +4,7 @@ Admin > People > Training > Tests. Author drafts, preview, publish revisions. No
 
 ## Screens
 
-1. **Test library**: list per tool: title, current revision, status (draft pending / published), attempts, pass rate (blank until phase 2). "New test for tool…" picker (only tools without a test, unless adding a second test is allowed).
+1. **Test library**: list per tool: title, current revision, status (draft pending / published), attempts, pass rate (blank until phase 2). "New test for tool…" picker (only tools with no test yet; v1 is one test per tool, see 01).
 2. **Test editor** (one draft at a time):
    - Settings: intro (rich text, sanitized), pass %, time limit, max attempts, cooldown, shuffle questions/choices, review mode, grace days, question pool size ("draw N of M").
    - Question list with drag-to-reorder (keyboard reorder too), points, critical flag, duplicate, delete.
@@ -39,7 +39,7 @@ type QType = {
 
 ## Publish rules (server-enforced)
 
-- At least one question; every question valid; points > 0; pass % between 1 and 100; critical questions don't make passing impossible; pool size <= number of questions.
+- At least one question; every question valid; points > 0; pass % between 1 and 100; critical questions don't make passing impossible; pool size <= number of questions; exactly one tool on the test (v1 UI; the unique index in 01 enforces one test per tool).
 - Publishing: copies nothing (questions already belong to the draft revision), sets `status='published'`, computes `content_hash`, retires the previous published revision, creates the next draft lazily when someone edits (copy-on-write from the published one, new `rev_no`, same `qkey`s).
 - Once published, UPDATE/DELETE on that revision's rows is refused in code. Add a DB trigger that raises on UPDATE/DELETE of `rev_questions` or `test_revisions` rows whose revision is published, so a bug can't corrupt history.
 

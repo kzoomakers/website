@@ -10,21 +10,27 @@ import { emit } from "./notify";
 const GRACE_MS = 30_000, MAX_ANSWERS_BYTES = 60_000;
 const fail = (m: string): never => { throw new Error(m); };
 type Row = { id: number; user_id: number; revision_id: number; status: string; seed: number; due_at: Date | null; answers: Record<string, unknown>; seq: number };
-type Rev = { id: number; test_id: number; pass_pct: number; time_limit_min: number | null; max_attempts: number | null; cooldown_hours: number; shuffle_questions: boolean; shuffle_choices: boolean; pool_size: number | null; review_mode: string; intro_html: string };
-const REV = "r.id, r.test_id, r.pass_pct, r.time_limit_min, r.max_attempts, r.cooldown_hours, r.shuffle_questions, r.shuffle_choices, r.pool_size, r.review_mode, r.intro_html";
+export type Rev = { id: number; test_id: number; pass_pct: number; time_limit_min: number | null; max_attempts: number | null; cooldown_hours: number; shuffle_questions: boolean; shuffle_choices: boolean; pool_size: number | null; review_mode: string; intro_html: string };
+export const REV = "r.id, r.test_id, r.pass_pct, r.time_limit_min, r.max_attempts, r.cooldown_hours, r.shuffle_questions, r.shuffle_choices, r.pool_size, r.review_mode, r.intro_html";
+// Attempts count toward the limit only if submitted after the member's last reset on this test (an admin override; see overrides.ts). Alias `a` = attempts.
+const SINCE_RESET = "a.submitted_at > COALESCE((SELECT max(x.at) FROM attempt_resets x JOIN test_revisions rr ON rr.test_id = x.test_id WHERE x.user_id = a.user_id AND rr.id = a.revision_id), '-infinity')";
+/** Finished attempts that count toward the limit, and when the last one ended (for the cooldown). */
+const used = async (c: { query: PoolClient["query"] }, userId: number, revId: number) =>
+  (await c.query(`SELECT count(*)::int AS n, max(a.submitted_at) AS last FROM attempts a WHERE a.user_id = $1 AND a.revision_id = $2 AND NOT a.preview AND a.status IN ('submitted','expired') AND ${SINCE_RESET}`, [userId, revId])).rows[0] as { n: number; last: Date | null };
 const QCOLS = "id, qkey, position, type, prompt_html, points::float AS points, config, feedback_html, required_correct";
 
 async function tx<T>(fn: (c: PoolClient) => Promise<T>): Promise<T> {
   const c = await (await conn()).connect();
   try { await c.query("BEGIN"); const r = await fn(c); await c.query("COMMIT"); return r; } catch (e) { await c.query("ROLLBACK").catch(() => {}); throw e; } finally { c.release(); }
 }
-const questionsOf = async (c: { query: PoolClient["query"] }, revId: number) => (await c.query(`SELECT ${QCOLS} FROM rev_questions WHERE revision_id = $1 ORDER BY position, id`, [revId])).rows as (Q & { id: number; qkey: string })[];
-const drawn = (qs: (Q & { id: number })[], r: Rev, seed: number) => drawQuestions(qs, seed, r.pool_size, r.shuffle_questions);
+export const questionsOf = async (c: { query: PoolClient["query"] }, revId: number) => (await c.query(`SELECT ${QCOLS} FROM rev_questions WHERE revision_id = $1 ORDER BY position, id`, [revId])).rows as (Q & { id: number; qkey: string })[];
+export const drawn = (qs: (Q & { id: number })[], r: Rev, seed: number) => drawQuestions(qs, seed, r.pool_size, r.shuffle_questions);
 
 /** What the member's screen needs to take (or resume) an attempt: member-view questions only. */
 async function view(c: PoolClient | { query: PoolClient["query"] }, a: Row, r: Rev) {
   const qs = drawn(await questionsOf(c, a.revision_id), r, a.seed);
-  return { attemptId: a.id, intro_html: cleanHtml(r.intro_html), due_at: a.due_at, seq: a.seq, answers: a.answers, questions: qs.map((q) => memberQuestion(q, a.seed, r.shuffle_choices)) };
+  const accommodation = (await c.query("SELECT time_multiplier::float8 AS time_multiplier, read_aloud FROM attempts WHERE id = $1", [a.id])).rows[0];
+  return { attemptId: a.id, attempt_no: (await used(c, a.user_id, r.id)).n + 1, max_attempts: r.max_attempts, intro_html: cleanHtml(r.intro_html), due_at: a.due_at, seq: a.seq, answers: a.answers, accommodation, questions: qs.map((q) => memberQuestion(q, a.seed, r.shuffle_choices)) };
 }
 
 /** Starts an attempt on the test's published revision, or resumes the one already open (two tabs, two starts: the second resumes the first). */
@@ -37,7 +43,7 @@ export async function start(userId: number, testId: unknown) {
     const open = (await c.query("SELECT id, user_id, revision_id, status, seed, due_at, answers, seq FROM attempts WHERE user_id = $1 AND revision_id = $2 AND status = 'in_progress' AND NOT preview", [userId, r.id])).rows[0] as Row | undefined;
     if (open && (!open.due_at || open.due_at.getTime() + GRACE_MS > Date.now())) return view(c, open, r);
     if (open) await settle(c, open, r, null); // ran out of time while away: grade what was saved, then carry on with the checks below
-    const done = (await c.query("SELECT count(*)::int AS n, max(submitted_at) AS last FROM attempts WHERE user_id = $1 AND revision_id = $2 AND NOT preview AND status IN ('submitted','expired')", [userId, r.id])).rows[0];
+    const done = await used(c, userId, r.id);
     if (r.max_attempts && done.n >= r.max_attempts) fail("You've used all your attempts. Ask a trainer.");
     if (done.last && r.cooldown_hours && new Date(done.last).getTime() + r.cooldown_hours * 3600_000 > Date.now()) fail("Please wait a little before trying again.");
     const held = (await c.query(`SELECT 1 FROM certifications WHERE user_id = $1 AND state IN ('passed','in_training','ready') AND tool_id IN (SELECT tool_id FROM test_tools WHERE test_id = $2)
@@ -45,7 +51,9 @@ export async function start(userId: number, testId: unknown) {
     if (held) fail("You've already passed this one.");
     if (!(await questionsOf(c, r.id)).length) fail("There's no test to take right now.");
     const seed = Math.floor(Math.random() * 2 ** 31);
-    const a = (await c.query("INSERT INTO attempts (user_id, revision_id, seed, due_at) VALUES ($1,$2,$3, CASE WHEN $4::int IS NULL THEN NULL ELSE now() + make_interval(mins => $4::int) END) RETURNING id, user_id, revision_id, status, seed, due_at, answers, seq", [userId, r.id, seed, r.time_limit_min])).rows[0] as Row;
+    // Accommodations are copied onto the attempt: extra time scales the limit, and a later change never touches this attempt.
+    const acc = (await c.query("SELECT time_multiplier::float8 AS m, read_aloud FROM training_accommodations WHERE user_id = $1", [userId])).rows[0] ?? { m: 1, read_aloud: false };
+    const a = (await c.query("INSERT INTO attempts (user_id, revision_id, seed, due_at, time_multiplier, read_aloud) VALUES ($1,$2,$3, CASE WHEN $4::int IS NULL THEN NULL ELSE now() + make_interval(secs => $4::int * 60 * $5::float8) END, $5::float8, $6) RETURNING id, user_id, revision_id, status, seed, due_at, answers, seq", [userId, r.id, seed, r.time_limit_min, acc.m, acc.read_aloud])).rows[0] as Row;
     return view(c, a, r);
   });
 }
@@ -82,16 +90,20 @@ async function settle(c: PoolClient, a: Row, r: Rev, answers: unknown) {
   const given = late || answers === null ? a.answers : only(answers, qs.map((q) => q.id)), s = scoreQuestions(qs, given, r.pass_pct), passed = s.passed && !late;
   await c.query("UPDATE attempts SET status = $2, submitted_at = now(), answers = $3, per_question = $4, points = $5, max_points = $6, pct = $7, passed = $8 WHERE id = $1",
     [a.id, late ? "expired" : "submitted", JSON.stringify(given), JSON.stringify(s.per), s.points, s.max, s.pct, passed]);
-  const satisfied: number[] = [];
-  if (passed) {
-    for (const t of (await c.query("SELECT tool_id FROM test_tools WHERE test_id = $1", [r.test_id])).rows) {
-      if (await satisfyRollout(c, a.user_id, t.tool_id, a.revision_id)) { satisfied.push(t.tool_id); continue; } // re-passing after a major revision keeps the authorization: no new sign-off
-      const cert = (await c.query(`INSERT INTO certifications (user_id, tool_id, revision_id, attempt_id, state, signoffs_required) VALUES ($1,$2,$3,$4,'passed', COALESCE((SELECT signoffs_required FROM tool_training WHERE tool_id = $2), 1))
-        ON CONFLICT (user_id, tool_id) WHERE state IN ('passed','in_training','ready') DO NOTHING RETURNING id`, [a.user_id, t.tool_id, a.revision_id, a.id])).rows[0];
-      if (cert) await c.query("INSERT INTO cert_events (cert_id, actor, kind, note, data) VALUES ($1,'system','attempt.passed','Passed the test',$2)", [cert.id, JSON.stringify({ attempt: a.id, pct: s.pct })]);
-    }
-  }
+  const satisfied = passed ? await awardPass(c, a, r, s.pct) : [];
   return { late, ...s, passed, satisfied };
+}
+
+/** A pass on this attempt. A re-pass after a major revision satisfies its rollout (no new sign-off); anything else waits in the trainer's queue. Returns the tools a re-pass satisfied. Shared by a first pass and by a regrade that turns a fail into a pass. */
+export async function awardPass(c: PoolClient, a: { id: number; user_id: number; revision_id: number }, r: { test_id: number }, pct: number) {
+  const satisfied: number[] = [];
+  for (const t of (await c.query("SELECT tool_id FROM test_tools WHERE test_id = $1", [r.test_id])).rows) {
+    if (await satisfyRollout(c, a.user_id, t.tool_id, a.revision_id)) { satisfied.push(t.tool_id); continue; } // re-passing after a major revision keeps the authorization: no new sign-off
+    const cert = (await c.query(`INSERT INTO certifications (user_id, tool_id, revision_id, attempt_id, state, signoffs_required) VALUES ($1,$2,$3,$4,'passed', COALESCE((SELECT signoffs_required FROM tool_training WHERE tool_id = $2), 1))
+      ON CONFLICT (user_id, tool_id) WHERE state IN ('passed','in_training','ready') DO NOTHING RETURNING id`, [a.user_id, t.tool_id, a.revision_id, a.id])).rows[0];
+    if (cert) await c.query("INSERT INTO cert_events (cert_id, actor, kind, note, data) VALUES ($1,'system','attempt.passed','Passed the test',$2)", [cert.id, JSON.stringify({ attempt: a.id, pct })]);
+  }
+  return satisfied;
 }
 
 /** Final submit. A second submit (double click, two tabs) finds the attempt finished and just returns its result. */
@@ -103,15 +115,14 @@ export async function submit(userId: number, attemptId: unknown, answers: unknow
   if (done.settled) await announce(userId, done.id, done.r, done.settled); // after the commit: a failing email can't undo the grade
   return result(userId, done.id);
 }
-async function announce(userId: number, attemptId: number, r: Rev, s: { passed: boolean; satisfied: number[] }) {
+export async function announce(userId: number, attemptId: number, r: Rev, s: { passed: boolean; satisfied: number[] }) {
   const c = await conn(), tools = (await c.query("SELECT tl.id, tl.name FROM test_tools tt JOIN tools tl ON tl.id = tt.tool_id WHERE tt.test_id = $1", [r.test_id])).rows;
   const tool = tools.map((t) => t.name).join(", ");
   if (s.passed) {
     for (const t of tools) await emit(s.satisfied.includes(t.id) ? "rollout.satisfied" : "attempt.passed", { userId, ref: `${attemptId}:${t.id}`, vars: { tool: t.name } });
     return;
   }
-  const used = (await c.query("SELECT count(*)::int AS n FROM attempts WHERE user_id = $1 AND revision_id = (SELECT revision_id FROM attempts WHERE id = $2) AND NOT preview AND status IN ('submitted','expired')", [userId, attemptId])).rows[0].n;
-  await emit(r.max_attempts && used >= r.max_attempts ? "attempts.exhausted" : "attempt.failed", { userId, ref: attemptId, vars: { tool } });
+  await emit(r.max_attempts && (await used(c, userId, r.id)).n >= r.max_attempts ? "attempts.exhausted" : "attempt.failed", { userId, ref: attemptId, vars: { tool } });
 }
 
 /** The result of a finished attempt, shaped by the test's review mode: score only, plus which were missed (default, no answers shown), or everything with the right answers. */
@@ -119,8 +130,8 @@ export async function result(userId: number, attemptId: unknown) {
   const c = await conn(), a = (await c.query("SELECT id, revision_id, status, pct::float AS pct, passed, points::float AS points, max_points::float AS max, per_question, submitted_at FROM attempts WHERE id = $1 AND user_id = $2 AND NOT preview", [Number.isInteger(attemptId) ? attemptId : 0, userId])).rows[0];
   if (!a) return fail("not found");
   if (a.status === "in_progress") return fail("This attempt isn't finished.");
-  const r = (await c.query("SELECT pass_pct, review_mode FROM test_revisions WHERE id = $1", [a.revision_id])).rows[0];
-  const out: any = { attemptId: a.id, status: a.status, pct: a.pct, passed: a.passed === true, points: a.points, max: a.max, pass_pct: r.pass_pct, review: r.review_mode, submitted_at: a.submitted_at };
+  const r = (await c.query("SELECT pass_pct, review_mode, max_attempts FROM test_revisions WHERE id = $1", [a.revision_id])).rows[0];
+  const out: any = { attemptId: a.id, status: a.status, pct: a.pct, passed: a.passed === true, points: a.points, max: a.max, pass_pct: r.pass_pct, review: r.review_mode, submitted_at: a.submitted_at, max_attempts: r.max_attempts, attempts_used: (await used(c, userId, a.revision_id)).n };
   if (r.review_mode === "score") return out;
   const qs = new Map((await questionsOf(c, a.revision_id)).map((q) => [q.id, q]));
   out.questions = (a.per_question as { id: number; correct: boolean }[]).map((p) => {
@@ -136,8 +147,8 @@ export async function overview(userId: number) {
   const rows = (await c.query(`SELECT t.id AS test_id, t.title, tl.id AS tool_id, tl.name AS tool, tl.category, r.id AS rev_id, r.max_attempts, r.cooldown_hours,
       (SELECT id FROM attempts a WHERE a.user_id = $1 AND a.revision_id = r.id AND a.status = 'in_progress' AND NOT a.preview) AS open_attempt,
       (SELECT due_at FROM attempts a WHERE a.user_id = $1 AND a.revision_id = r.id AND a.status = 'in_progress' AND NOT a.preview) AS open_due,
-      (SELECT count(*)::int FROM attempts a WHERE a.user_id = $1 AND a.revision_id = r.id AND a.status IN ('submitted','expired') AND NOT a.preview) AS used,
-      (SELECT max(submitted_at) FROM attempts a WHERE a.user_id = $1 AND a.revision_id = r.id AND a.status IN ('submitted','expired') AND NOT a.preview) AS last_at,
+      (SELECT count(*)::int FROM attempts a WHERE a.user_id = $1 AND a.revision_id = r.id AND a.status IN ('submitted','expired') AND NOT a.preview AND ${SINCE_RESET}) AS used,
+      (SELECT max(submitted_at) FROM attempts a WHERE a.user_id = $1 AND a.revision_id = r.id AND a.status IN ('submitted','expired') AND NOT a.preview AND ${SINCE_RESET}) AS last_at,
       (SELECT state FROM certifications ce WHERE ce.user_id = $1 AND ce.tool_id = tl.id AND ce.state IN ('passed','in_training','ready') LIMIT 1) AS cert,
       (SELECT to_char(retake_due_on,'YYYY-MM-DD') FROM tool_auths_effective ae WHERE ae.user_id = $1 AND ae.tool_id = tl.id AND NOT ae.expired) AS retake_by,
       EXISTS (SELECT 1 FROM tool_auths_effective ae WHERE ae.user_id = $1 AND ae.tool_id = tl.id AND NOT ae.expired) AS certified,
@@ -148,7 +159,7 @@ export async function overview(userId: number) {
   const cards = rows.map((x) => {
     const wait = x.last_at && x.cooldown_hours ? new Date(x.last_at).getTime() + x.cooldown_hours * 3600_000 - now : 0;
     const state = x.open_attempt ? "in_progress" : x.cert ? "awaiting_trainer" : x.certified && !x.retake_by ? "certified" : x.max_attempts && x.used >= x.max_attempts ? "locked" : wait > 0 ? "cooldown" : x.retake_by ? "retake" : x.lapsed ? "lapsed" : "not_started";
-    return { test_id: x.test_id, tool_id: x.tool_id, title: x.title, tool: x.tool, category: x.category, state, attempt_id: x.open_attempt, due_at: x.open_due, retake_by: x.retake_by, wait_hours: wait > 0 ? Math.ceil(wait / 3600_000) : 0 };
+    return { test_id: x.test_id, tool_id: x.tool_id, title: x.title, tool: x.tool, category: x.category, state, attempt_id: x.open_attempt, due_at: x.open_due, used: x.used, max_attempts: x.max_attempts, retake_by: x.retake_by, wait_hours: wait > 0 ? Math.ceil(wait / 3600_000) : 0 };
   });
   const history = (await c.query(`SELECT a.id, tl.name AS tool, a.status, a.pct::float AS pct, a.passed, a.submitted_at FROM attempts a JOIN test_revisions r ON r.id = a.revision_id JOIN test_tools tt ON tt.test_id = r.test_id JOIN tools tl ON tl.id = tt.tool_id
     WHERE a.user_id = $1 AND NOT a.preview AND a.status IN ('submitted','expired') ORDER BY a.submitted_at DESC LIMIT 50`, [userId])).rows;

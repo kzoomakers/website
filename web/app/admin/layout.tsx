@@ -8,18 +8,21 @@ import { SECTIONS, hasAny, levelOf, me } from "@/lib/guard";
 import { entryPath } from "@/lib/access";
 import { s3Settings } from "@/lib/s3";
 import { mayAudit } from "@/lib/pii";
+import { features } from "@/lib/features";
 import "./website/webmaster.css";
 
 // Every admin page: top bar with the section tabs, the section's left menu with your account at the bottom, then the page.
 export default async function AdminRoot({ children }: { children: ReactNode }) {
   const m = await me();
   const noStorage = levelOf(m, "system") === "write" && !(await s3Settings().catch(() => 1)); // db errors are not "unset"
+  const f = await features().catch(() => ({ classes: true, tests: true })); // a workflow this space switched off loses its menu link (the page itself stays reachable, with a notice)
+  const off = [...(f.classes ? [] : ["/admin/people/classes"]), ...(f.tests ? [] : ["/admin/people/training/tests"])];
   const audit = !!m && levelOf(m, "system") !== "write" && (await mayAudit().catch(() => false)); // people on the Audit PII list get its menu link
   return (
     <div className="adm adm-root">
       <Frame /><AdminBar allowed={Object.fromEntries(SECTIONS.filter((s) => hasAny(m, s)).map((s) => [s, (m && entryPath(m.perms, s)) || ""]))} /><DocTitle />
       <div className="adm-body">
-        <aside className="adm-side"><Nav admin={levelOf(m, "system") === "write"} audit={audit} perms={m?.perms ?? {}} user={m && <UserMenu name={m.name} email={m.email} image={m.image} swap={{ href: "/members", label: "Member view" }} />} /></aside>
+        <aside className="adm-side"><Nav off={off} admin={levelOf(m, "system") === "write"} audit={audit} perms={m?.perms ?? {}} user={m && <UserMenu name={m.name} email={m.email} image={m.image} swap={{ href: "/members", label: "Member view" }} />} /></aside>
         <main className="adm-main">{noStorage && <p className="err">Image storage isn't set up, so uploads will fail. <a href="/admin/system">Set it up</a>.</p>}{children}</main>
       </div>
     </div>

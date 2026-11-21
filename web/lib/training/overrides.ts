@@ -8,7 +8,7 @@ import { emit, emitLeads } from "./notify";
 // The caller (the RPC route) has already checked the "training.override" special permission.
 const fail = (m: string): never => { throw new Error(m); };
 const TODAY = "(now() AT TIME ZONE 'America/Detroit')::date";
-export const HOWS = { waive_test: "Waive the test", skip_training: "Skip training, go to sign-off", certify_now: "Certify now", credit_prior: "Credit a prior certification", revoke: "Revoke", void_attempt: "Void a test attempt" } as const;
+export const HOWS = { waive_test: "Waive the test", skip_training: "Skip training, go to sign-off", certify_now: "Certify now", credit_prior: "Credit a prior certification", revoke: "Revoke", void_attempt: "Void a test attempt", reset_attempts: "Reset attempts (let them retake)" } as const;
 
 async function tx<T>(fn: (c: PoolClient) => Promise<T>): Promise<T> {
   const c = await (await conn()).connect();
@@ -34,6 +34,11 @@ export async function override(a: Actor, b: { how?: unknown; user?: unknown; too
     if (how === "void_attempt") {
       if (!(await c.query("UPDATE attempts SET status = 'void', voided_by = $2, voided_reason = $3 WHERE id = $1 AND status IN ('submitted','expired')", [b.attempt, a.email, why])).rowCount) fail("Only a finished attempt can be voided.");
       await logAudit(a.email, "training.attempt.void", `attempt #${b.attempt}: ${why}`);
+      return null;
+    }
+    if (how === "reset_attempts") { // every test for this tool: earlier attempts stay on record but stop counting toward the limit and the cooldown
+      if (!(await c.query("INSERT INTO attempt_resets (user_id, test_id, by, reason) SELECT $1, test_id, $3, $4 FROM test_tools WHERE tool_id = $2", [user, tool, a.email, why])).rowCount) fail("That tool has no test.");
+      await logAudit(a.email, "training.attempts.reset", `${m.email}: ${m.tool}: ${why}`);
       return null;
     }
     // The member's open certification, if any, is locked so two overrides can't race.

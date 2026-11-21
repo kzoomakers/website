@@ -14,7 +14,7 @@ Admin > People > **Training**. A trainer sees who is ready, reviews the test, re
 
 1. **Header**: member (link to their People page), tool, state, revision used, passed on.
 2. **Test result**: score, time taken, attempt count, critical questions, per-question outcome. A trainer can open **their answers** (the stored `answers` + `per_question`), side by side with the correct key (trainers see the key; members may not). Weak areas highlighted ("missed 3 of 4 lockout questions") so the hands-on session can target them.
-3. **Hands-on checklist** (per tool, configurable, from `03`): tick items as completed.
+3. **Hands-on checklist** (items from `tool_checklist_items`, see 01): each tick is a `cert_checklist_ticks` row. Advisory in v1: sign-off is allowed with items unticked, and the sign-off dialog shows how many.
 4. **Notes timeline**: add dated notes ("did 3 supervised cuts, needs work on feed rate"), each stored as a `cert_events` row with the author and a "share with member" toggle. Notes are append-only; corrections are new notes.
 5. **Additional training**: record sessions (date, duration, what was covered, who). A simple structured event type `training_session` is enough.
 6. **Actions**:
@@ -32,7 +32,7 @@ BEGIN
   SELECT cert FOR UPDATE; require state IN ('in_training','ready','passed') and actor != cert.user_id
   INSERT cert_signoffs (cert_id, trainer_id)   -- unique: same trainer can't count twice
   IF count(signoffs) >= signoffs_required:
-       UPDATE certifications SET state='certified', certified_at=now(), certified_by=actor, valid_until=...
+       UPDATE certifications SET state='certified', certified_at=now(), certified_by=actor, valid_until=(today + tool_training.validity_months, or NULL)
        grantFromCert()  -> upsert tool_auths (source='training', cert_id, revision_id, granted_by, expires_on, note, retake_due_on=NULL)
        logAudit(actor, "training.cert.signoff", "member: tool, rev N")
        also logAudit("user.authorize") so existing audit views still list it
@@ -45,7 +45,7 @@ If a member already has a `tool_auths` row (legacy or earlier cert), the upsert 
 
 ## Trainer assignment screen (`training:trainers`)
 
-Matrix of tools x trainers (add/remove), "no trainer assigned" warning list, and per-tool settings: `signoff_mode`, `signoffs_required`, validity period, hands-on checklist items, prerequisites. These tool-level settings live on a new `tool_training(tool_id, ...)` table, not the `tools` table, so the existing Tools page stays simple.
+Matrix of tools x trainers (add/remove), "no trainer assigned" warning list, and per-tool settings: `signoff_mode`, `signoffs_required`, `validity_months`, `manual_grant_allowed`, checklist items, prerequisites. These live in `tool_training`, `tool_checklist_items` and `tool_prereqs` (see 01), not the `tools` table, so the existing Tools page stays simple.
 
 ## Tools & sign-offs page changes
 

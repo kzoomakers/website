@@ -39,3 +39,23 @@
 .adm .qe-tabs button[aria-current=true]{border-bottom-color:var(--acc);font-weight:600}
 .qe-warn{color:var(--bad)}
 .qe-status{font-size:13px;color:var(--mut)}
+
+/* The timer sits under the sticky top bar (52px tall; 8px down on wide screens). */
+.tq-timer{position:sticky;top:64px;z-index:5;background:var(--bg);padding:6px 0;margin:0 0 8px}
+.tq-actions{margin-top:16px}
+/* Phones: 16px text stops iOS zooming in on focus, 44px targets are easy to tap, and Submit stays in reach at the bottom. */
+@media (max-width:720px){
+  .tq-timer{top:52px}
+  .adm .tq input[type=text],.adm .tq select,.adm .tq textarea,.adm .tq-bank button,.adm .tq-ord button{font-size:16px;min-height:44px}
+  .adm .tq-ord button{min-width:44px}
+  .adm .tq-opts label{padding:12px;min-height:44px;font-size:16px}
+  .adm .tq-opts label input{width:22px;height:22px;flex:none;margin:0}
+  .tq-ord li{flex-wrap:wrap}
+  .tq-ord li span{min-width:60%}
+  .tq-actions{position:sticky;bottom:0;z-index:5;display:flex;background:var(--bg);border-top:1px solid var(--line);padding:10px 0;margin-top:20px}
+  .tq-actions .btn{flex:1;min-height:48px;font-size:17px}
+  .tq-diagram{display:block}
+  .adm .tq .qe-grid label{display:grid;gap:4px}
+  .adm .tq .qe-grid select{width:100%}
+  .adm .tq-zone{font-size:11px}
+}
