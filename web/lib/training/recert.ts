@@ -1,6 +1,7 @@
 import type { PoolClient } from "pg";
 import { conn } from "../db";
 import { logAudit } from "../store";
+import type { Actor } from "./certs";
 import { emit, emitLeads } from "./notify";
 import { trainingCfg, trainingEnabled } from "./settings";
 
@@ -141,11 +142,16 @@ export async function confirmLapse(id: unknown, who: string) {
   await tx(async (c) => { await live(c, id); await c.query("UPDATE rollouts SET lapse_ok = true WHERE id = $1", [id]); });
   await logAudit(who, "training.rollout.confirm", `Rollout #${id}: large lapse confirmed`);
 }
-/** Gives one member more time, or (exempt) lets them off. Both need a reason and leave a note on their certification. */
-export async function memberOverride(id: unknown, user: unknown, tool: unknown, how: unknown, date: unknown, reason: unknown, who: string) {
+/** Gives one member more time, or (exempt) lets them off. Both need a reason and leave a note on their certification. Refuses self-override (no admin bypass). */
+export async function memberOverride(id: unknown, user: unknown, tool: unknown, how: unknown, date: unknown, reason: unknown, actor: string | Actor) {
+  const who = typeof actor === "string" ? actor : actor.email;
   const why = clip(reason, 500);
   if (why.length < 5) fail("Give a reason.");
   const u = Number.isInteger(user) ? (user as number) : 0, t = Number.isInteger(tool) ? (tool as number) : 0;
+  if (typeof actor !== "string") {
+    if (!actor.id) fail("Sign in with a member account to do this; it's recorded under your name.");
+    if (u === actor.id) fail("You can't override your own training.");
+  }
   await tx(async (c) => {
     await live(c, id);
     if (how === "exempt") {

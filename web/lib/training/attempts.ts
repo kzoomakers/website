@@ -1,5 +1,6 @@
 import type { PoolClient } from "pg";
 import { conn } from "../db";
+import { cleanHtml } from "../sanitize";
 import { drawQuestions, memberQuestion, scoreQuestions, describeQ, type Q } from "./questions";
 import { trainingEnabled } from "./settings";
 import { satisfyRollout } from "./recert";
@@ -23,7 +24,7 @@ const drawn = (qs: (Q & { id: number })[], r: Rev, seed: number) => drawQuestion
 /** What the member's screen needs to take (or resume) an attempt: member-view questions only. */
 async function view(c: PoolClient | { query: PoolClient["query"] }, a: Row, r: Rev) {
   const qs = drawn(await questionsOf(c, a.revision_id), r, a.seed);
-  return { attemptId: a.id, intro_html: r.intro_html, due_at: a.due_at, seq: a.seq, answers: a.answers, questions: qs.map((q) => memberQuestion(q, a.seed, r.shuffle_choices)) };
+  return { attemptId: a.id, intro_html: cleanHtml(r.intro_html), due_at: a.due_at, seq: a.seq, answers: a.answers, questions: qs.map((q) => memberQuestion(q, a.seed, r.shuffle_choices)) };
 }
 
 /** Starts an attempt on the test's published revision, or resumes the one already open (two tabs, two starts: the second resumes the first). */
@@ -124,7 +125,7 @@ export async function result(userId: number, attemptId: unknown) {
   const qs = new Map((await questionsOf(c, a.revision_id)).map((q) => [q.id, q]));
   out.questions = (a.per_question as { id: number; correct: boolean }[]).map((p) => {
     const q = qs.get(p.id)!;
-    return { id: p.id, correct: p.correct, prompt_html: q.prompt_html, ...(r.review_mode === "all" ? { answer: describeQ(q), feedback_html: q.feedback_html } : {}) };
+    return { id: p.id, correct: p.correct, prompt_html: cleanHtml(q.prompt_html), ...(r.review_mode === "all" ? { answer: describeQ(q), feedback_html: cleanHtml(q.feedback_html) } : {}) };
   }).filter((q) => r.review_mode === "all" || !q.correct);
   return out;
 }

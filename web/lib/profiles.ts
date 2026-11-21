@@ -84,6 +84,7 @@ export async function deleteUser(id: number, who: string) {
     if ((await c.query("SELECT 1 FROM user_perms WHERE user_id = $1 AND section = 'system' AND level = 'write'", [id])).rowCount
       && (await c.query("SELECT count(*)::int n FROM user_perms p JOIN site_users s ON s.id = p.user_id WHERE p.section = 'system' AND p.level = 'write' AND s.disabled_at IS NULL")).rows[0].n <= MIN_ADMINS)
       throw new Error(`At least ${MIN_ADMINS} administrators must remain. Make someone else an administrator first.`);
+    if ((await c.query("SELECT to_regclass('outbox') AS r")).rows[0]?.r) await c.query("DELETE FROM outbox WHERE kind = 'discord' AND payload->>'userId' = $1::text", [id]);
     await c.query("DELETE FROM site_users WHERE id = $1", [id]);
     return u;
   });

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { errMsg } from "@/lib/errmsg";
 import { actor, canSpecial, editingAllowed, levelOf, me } from "@/lib/guard";
+import { hit } from "@/lib/limit";
 import * as dc from "@/lib/training/discord";
 import { listTools } from "@/lib/tools";
 import { override } from "@/lib/training/overrides";
@@ -27,8 +28,10 @@ const gone = () => new NextResponse("not found", { status: 404 });
 export async function POST(req: Request) {
   if (Number(req.headers.get("content-length") ?? 0) > 3_000_000) return new NextResponse("too large", { status: 413 });
   const a = await req.json().catch(() => null);
-  if (!a?.op || !PAGE[a.op] || !(await editingAllowed("training", READS.has(a.op) ? "read" : "write", PAGE[a.op]))) return gone();
+  if (!a?.op || typeof a.op !== "string" || !Object.hasOwn(PAGE, a.op) || !(await editingAllowed("training", READS.has(a.op) ? "read" : "write", PAGE[a.op]))) return gone();
   const who = await actor(), m = await me(), act = await k.actorFor(who, levelOf(m, "training") === "write", !!levelOf(m, "training")); // a queue-only grant sees just the tools they're a trainer for
+  if ((a.op === "export" || a.op === "reportCsv") && !(await hit(`train-export:${who}`, 30, 600_000))) return new NextResponse("Too many exports. Try again in a few minutes.", { status: 429 });
+  if (a.op === "discordTest" && !(await hit(`train-discord-test:${who}`, 10, 600_000))) return new NextResponse("Slow down a little.", { status: 429 });
   try {
     const res = await (async (): Promise<unknown> => { switch (a.op) {
       case "setEnabled": await saveTrainingCfg({ enabled: a.enabled === true }); await logAudit(who, "training.settings", `Training ${a.enabled === true ? "switched on" : "switched off"}`); return { ok: true };
@@ -61,11 +64,11 @@ export async function POST(req: Request) {
         if (!(await canSpecial("training.override"))) return new NextResponse("You don't have the special permission for overrides. Ask an administrator (Admin > Access > Special permissions).", { status: 403 });
         return override(act, a);
       case "reportTools": return listTools();
-      case "report": return REPORTS[a.name]?.() ?? gone();
-      case "reportCsv": return REPORTS[a.name] ? new NextResponse(toCsv(await REPORTS[a.name]()), { headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": `attachment; filename="training-${a.name}.csv"` } }) : gone();
+      case "report": return typeof a.name === "string" && Object.hasOwn(REPORTS, a.name) ? REPORTS[a.name]() : gone();
+      case "reportCsv": return typeof a.name === "string" && Object.hasOwn(REPORTS, a.name) ? new NextResponse(toCsv(await REPORTS[a.name]()), { headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": `attachment; filename="training-${a.name}.csv"` } }) : gone();
       case "memberOverride":
         if (!(await canSpecial(a.how === "exempt" ? "training.override" : "training.rollout"))) return new NextResponse("You don't have the special permission for that. Ask an administrator (Admin > Access > Special permissions).", { status: 403 });
-        await rc.memberOverride(a.id, a.user, a.tool, a.how, a.date, a.reason, who); return { ok: true };
+        await rc.memberOverride(a.id, a.user, a.tool, a.how, a.date, a.reason, act); return { ok: true };
       case "tests": return t.listTests();
       case "toolsFree": return t.toolsWithoutTest();
       case "test": return (await t.getTest(a.id)) ?? gone();
@@ -76,7 +79,7 @@ export async function POST(req: Request) {
       case "previewGrade": return t.previewGrade(a.id, a.answers);
       case "publishCheck": return { problems: await t.publishProblems(a.id) };
       case "createTest": return { id: await t.createTest(a.tool, a.title, who) };
-      case "renameTest": await t.renameTest(a.id, a.title); return { ok: true };
+      case "renameTest": await t.renameTest(a.id, a.title, who); return { ok: true };
       case "archiveTest": await t.archiveTest(a.id, a.on, who); return { ok: true };
       case "deleteTest": await t.deleteTest(a.id, who); return { ok: true };
       case "newDraft": return { id: await t.newDraft(a.id, who) };
@@ -85,12 +88,12 @@ export async function POST(req: Request) {
       case "deleteQuestion": return t.deleteQuestion(a.id, a.at, a.qid);
       case "reorder": return t.reorderQuestions(a.id, a.at, a.ids);
       case "discardDraft": await t.discardDraft(a.id, who); return { ok: true };
-      case "import": return t.importIntoDraft(a.id, a.at, a.data);
+      case "import": return t.importIntoDraft(a.id, a.at, a.data, who);
       case "publish":
         if (!(await canSpecial("training.publish"))) return new NextResponse("You don't have the special permission to publish tests. Ask an administrator (Admin > Access > Special permissions).", { status: 403 });
         if (a.deadline && !(await canSpecial("training.rollout"))) return new NextResponse("Starting a re-pass needs the special permission “Force a re-pass”. Ask an administrator (Admin > Access > Special permissions).", { status: 403 });
         return t.publish(a.id, a.at, a, who);
     } return new NextResponse("bad request", { status: 400 }); })();
     return res instanceof NextResponse ? res : NextResponse.json(res);
-  } catch (e) { return new NextResponse(errMsg(e), { status: 400 }); }
+  } catch (e: any) { return e?.message === "not found" ? gone() : new NextResponse(errMsg(e), { status: 400 }); }
 }

@@ -1,5 +1,6 @@
 import type { PoolClient } from "pg";
 import { conn } from "../db";
+import { cleanHtml } from "../sanitize";
 import { logAudit } from "../store";
 import { queueAnnouncement } from "./discord";
 import { emit, emitLeads } from "./notify";
@@ -61,7 +62,7 @@ export async function file(a: Actor, certId: unknown) {
   const tried = (await c.query("SELECT count(*)::int AS n FROM attempts a JOIN test_revisions r ON r.id = a.revision_id JOIN test_tools tt ON tt.test_id = r.test_id WHERE a.user_id = $1 AND tt.tool_id = $2 AND NOT a.preview AND a.status IN ('submitted','expired')", [ce.user_id, ce.tool_id])).rows[0].n;
   const qs = new Map<number, Q & { id: number }>(att && ce.revision_id ? (await c.query("SELECT id, type, prompt_html, config FROM rev_questions WHERE revision_id = $1", [ce.revision_id])).rows.map((q) => [q.id, q]) : []);
   // The trainer sees the key; a member never does. `given` is the stored answer as-is (shortcut: raw JSON, not rendered per question type).
-  const questions = att ? (att.per_question as { id: number; points: number; max: number; correct: boolean }[]).map((p) => ({ ...p, prompt_html: qs.get(p.id)?.prompt_html ?? "", key: qs.get(p.id) ? describeQ(qs.get(p.id)!) : "", given: att.answers?.[p.id] ?? null, critical: (qs.get(p.id) as any)?.required_correct === true })) : [];
+  const questions = att ? (att.per_question as { id: number; points: number; max: number; correct: boolean }[]).map((p) => ({ ...p, prompt_html: cleanHtml(qs.get(p.id)?.prompt_html ?? ""), key: qs.get(p.id) ? describeQ(qs.get(p.id)!) : "", given: att.answers?.[p.id] ?? null, critical: (qs.get(p.id) as any)?.required_correct === true })) : [];
   const events = (await c.query("SELECT id, at, actor, kind, note, shared, data FROM cert_events WHERE cert_id = $1 ORDER BY at, id", [ce.id])).rows;
   const signoffs = (await c.query("SELECT s.at, s.note, u.name FROM cert_signoffs s JOIN site_users u ON u.id = s.trainer_id WHERE s.cert_id = $1 ORDER BY s.at", [ce.id])).rows;
   return { cert: ce, attempt: att && { pct: att.pct, points: att.points, max: att.max, submitted_at: att.submitted_at, started_at: att.started_at }, tries: tried, questions, events, signoffs, can: await canSignOff(a, ce.tool_id, c) && !!a.id && a.id !== ce.user_id, self: a.id === ce.user_id };
@@ -93,7 +94,7 @@ export async function markReady(a: Actor, certId: unknown) {
 export async function addNote(a: Actor, certId: unknown, note: unknown, shared: unknown, session: unknown) {
   const n = clip(note, 2000);
   if (!n) fail("Write the note first.");
-  await tx(async (c) => { const ce = await lock(c, a, certId); if (!OPEN.includes(ce.state)) fail("This one is closed."); await event(c, ce.id, a, session === true ? "training_session" : "note", n, shared === true); });
+  await tx(async (c) => { const ce = await lock(c, a, certId); if (!OPEN.includes(ce.state)) fail("This one is closed."); await event(c, ce.id, a, session === true ? "training_session" : "note", n, shared === true); await logAudit(a.email, "training.cert.note", `${ce.member_email}: ${ce.tool}`); });
   return { ok: true };
 }
 export async function reject(a: Actor, certId: unknown, reason: unknown) {

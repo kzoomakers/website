@@ -4,17 +4,18 @@ const MAX = 50_000; // longest string kept whole; a runaway body can't fill the 
 
 // Names that hold a credential: "authorization", "x-api-key", "access_token", "client_secret", "password", "set-cookie"…
 // "max_tokens" / "total_tokens" are counts, not credentials, so they stay (the name must END in the word).
-const SECRET_NAME = /(^|[_\-.])(api[_\-]?key|key|secret|password|passwd|pwd|authorization|token|credentials?|cookie|set-cookie|signature|sig)$/i;
+const SECRET_NAME = /(^|[_\-.])(api[_\-]?key|key|secret|password|passwd|pwd|authorization|token|credentials?|cookie|set-cookie|signature|sig|webhook)$/i;
 export const secretName = (k: string) => SECRET_NAME.test(k.replace(/([a-z])([A-Z])/g, "$1_$2"));
 
-/** Credentials that show up inside text: "Bearer abc…", "sk-…" style keys, and ?key=… style URL parameters. Known secrets are also removed wherever they appear verbatim. */
+/** Credentials that show up inside text: "Bearer abc…", "sk-…" style keys, Discord webhook tokens, and ?key=… style URL parameters. Known secrets are also removed wherever they appear verbatim. */
 export function scrubText(s: string, secrets: readonly string[] = []): string {
   let t = s;
   for (const k of secrets) if (k.length >= 6) t = t.split(k).join(MASK);
   t = t.replace(/\b(Bearer|Basic|Token)\s+[A-Za-z0-9._~+\/=\-]{6,}/gi, `$1 ${MASK}`)
     .replace(/\/private-[A-Za-z0-9]{8,}/g, `/private-${MASK}`) // Google's secret calendar links
+    .replace(/(\/api\/webhooks\/\d+\/)[\w-]+/gi, `$1${MASK}`) // Discord webhooks
     .replace(/\bsk-[A-Za-z0-9_\-]{8,}/g, MASK)
-    .replace(/([?&;](?:api[_-]?key|key|token|access_token|secret|password|sig|signature)=)[^&\s"']+/gi, `$1${MASK}`);
+    .replace(/([?&;](?:api[_-]?key|key|token|access_token|secret|password|sig|signature|webhook)=)[^&\s"']+/gi, `$1${MASK}`);
   return t.length > MAX ? t.slice(0, MAX) + `… (${t.length - MAX} more characters)` : t;
 }
 

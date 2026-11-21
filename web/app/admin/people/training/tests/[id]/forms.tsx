@@ -67,15 +67,19 @@ function Diagram({ q, set, disabled }: P) {
 }
 
 function Match({ q, set, disabled }: P) {
-  const c = q.config, pairs = c.left.map((l: any) => ({ l: l.text, r: c.right.find((r: any) => r.id === c.key[l.id])?.text ?? "" })), decoys = c.right.filter((r: any) => !Object.values(c.key).includes(r.id)).map((r: any) => r.text);
-  const build = (pp: { l: string; r: string }[], dd: string[]) => set({ config: { left: pp.map((p, i) => ({ id: "l" + i, text: p.l })), right: [...pp.map((p, i) => ({ id: "r" + i, text: p.r })), ...dd.map((t, i) => ({ id: "d" + i, text: t }))], key: Object.fromEntries(pp.map((_, i) => ["l" + i, "r" + i])) } });
+  const c = q.config;
+  const fresh = (id?: string) => (id && !/^[lrd]\d+$/.test(id) ? id : uid()); // opaque ids so member-facing HTML never leaks which left matches which right or which option is a decoy
+  const pairs = c.left.map((l: any) => { const r = c.right.find((x: any) => x.id === c.key[l.id]); return { lid: fresh(l.id), rid: fresh(r?.id), l: l.text, r: r?.text ?? "" }; });
+  const decoys = c.right.filter((r: any) => !Object.values(c.key).includes(r.id)).map((r: any) => ({ id: fresh(r.id), text: r.text }));
+  const build = (pp: { lid: string; rid: string; l: string; r: string }[], dd: { id: string; text: string }[]) =>
+    set({ config: { left: pp.map((p) => ({ id: p.lid, text: p.l })), right: [...pp.map((p) => ({ id: p.rid, text: p.r })), ...dd.map((d) => ({ id: d.id, text: d.text }))], key: Object.fromEntries(pp.map((p) => [p.lid, p.rid])) } });
   return (
     <div className="qe-grid">
       <p className="sub" style={{ margin: 0 }}>Each row is a pair. Members see the left side and choose its match from all the right sides (shuffled).</p>
-      {pairs.map((p: any, i: number) => <div className="qe-row" key={i}><input type="text" aria-label={`Item ${i + 1}`} maxLength={300} disabled={disabled} value={p.l} onChange={(e) => build(pairs.map((x: any, j: number) => (j === i ? { ...x, l: e.target.value } : x)), decoys)} /><span aria-hidden>=</span><input type="text" aria-label={`Match ${i + 1}`} maxLength={300} disabled={disabled} value={p.r} onChange={(e) => build(pairs.map((x: any, j: number) => (j === i ? { ...x, r: e.target.value } : x)), decoys)} /><button type="button" disabled={disabled} aria-label={`Remove pair ${i + 1}`} onClick={() => build(pairs.filter((_: any, j: number) => j !== i), decoys)}>✕</button></div>)}
-      <div><button type="button" disabled={disabled || pairs.length >= 12} onClick={() => build([...pairs, { l: "", r: "" }], decoys)}>+ Add pair</button></div>
+      {pairs.map((p: any, i: number) => <div className="qe-row" key={p.lid}><input type="text" aria-label={`Item ${i + 1}`} maxLength={300} disabled={disabled} value={p.l} onChange={(e) => build(pairs.map((x: any, j: number) => (j === i ? { ...x, l: e.target.value } : x)), decoys)} /><span aria-hidden>=</span><input type="text" aria-label={`Match ${i + 1}`} maxLength={300} disabled={disabled} value={p.r} onChange={(e) => build(pairs.map((x: any, j: number) => (j === i ? { ...x, r: e.target.value } : x)), decoys)} /><button type="button" disabled={disabled} aria-label={`Remove pair ${i + 1}`} onClick={() => build(pairs.filter((_: any, j: number) => j !== i), decoys)}>✕</button></div>)}
+      <div><button type="button" disabled={disabled || pairs.length >= 12} onClick={() => build([...pairs, { lid: uid(), rid: uid(), l: "", r: "" }], decoys)}>+ Add pair</button></div>
       <h3 style={{ margin: "8px 0 0", fontSize: 15 }}>Extra wrong answers (optional)</h3>
-      <Strings items={decoys} add="Wrong answer" disabled={disabled} onChange={(d) => build(pairs, d)} />
+      <Strings items={decoys.map((d: any) => d.text)} add="Wrong answer" disabled={disabled} onChange={(d) => build(pairs, d.map((text, i) => ({ id: decoys[i]?.id ?? uid(), text })))} />
     </div>
   );
 }

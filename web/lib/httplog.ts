@@ -8,21 +8,22 @@ const TABLE = "http_log";
 
 export type Row = { at: Date; ip: string; method: string; host: string; path: string; query: string; params: Record<string, string | string[]>; ua: string; referer: string; user?: string; status?: number };
 
-const SECRET_PARAM = /token|secret|password|passwd|code|key|sig|auth/i;
+const SECRET_PARAM = /token|secret|password|passwd|code|key|sig|auth|webhook/i;
+const scrubHook = (s: string) => s.replace(/(\/api\/webhooks\/\d+\/)[\w-]+/gi, "$1[redacted]");
 const cut = (s: string, n: number) => (s.length > n ? s.slice(0, n) : s);
 
-/** Builds a log row from a request. Headers are not stored (only the user agent and referrer); token-like query params are replaced by "[redacted]" so the log never holds a live sign-in token. */
+/** Builds a log row from a request. Headers are not stored (only the user agent and referrer); token-like query params and webhook secrets are replaced by "[redacted]" so the log never holds a live sign-in token or webhook secret. */
 export function toRow(req: Pick<Request, "url" | "method" | "headers">): Row {
   const u = new URL(req.url), h = req.headers;
   const params: Row["params"] = {}, clean = new URLSearchParams();
   for (const [k, v] of u.searchParams) {
-    const val = SECRET_PARAM.test(k) ? "[redacted]" : cut(v, 1000);
+    const val = SECRET_PARAM.test(k) ? "[redacted]" : cut(scrubHook(v), 1000);
     clean.append(k, val);
     const old = params[k];
     params[k] = old === undefined ? val : Array.isArray(old) ? [...old, val] : [old, val];
   }
   const ip = h.get("fly-client-ip") ?? h.get("x-forwarded-for")?.split(",").at(-1)?.trim() ?? h.get("x-real-ip") ?? "";
-  return { at: new Date(), ip: cut(ip, 100), method: req.method, host: cut(h.get("host") ?? u.host, 255), path: cut(u.pathname, 2000), query: cut(clean.toString(), 4000), params, ua: cut(h.get("user-agent") ?? "", 1000), referer: cut(h.get("referer") ?? "", 2000) };
+  return { at: new Date(), ip: cut(ip, 100), method: req.method, host: cut(h.get("host") ?? u.host, 255), path: cut(scrubHook(u.pathname), 2000), query: cut(clean.toString(), 4000), params, ua: cut(h.get("user-agent") ?? "", 1000), referer: cut(scrubHook(h.get("referer") ?? ""), 2000) };
 }
 
 const g = globalThis as unknown as { httplog?: { buf: Row[]; timer?: ReturnType<typeof setTimeout>; ready?: Promise<void>; day: string; sweptAt: number } };

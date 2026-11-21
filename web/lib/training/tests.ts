@@ -54,10 +54,11 @@ export async function createTest(toolId: unknown, title: unknown, who: string) {
   await logAudit(who, "training.test.create", `Test #${id} created`);
   return id;
 }
-export async function renameTest(id: unknown, title: unknown) {
+export async function renameTest(id: unknown, title: unknown, who = "") {
   const t = typeof title === "string" ? title.trim().slice(0, 120) : "";
   if (!t) fail("A test needs a title.");
   await (await conn()).query("UPDATE tests SET title = $2 WHERE id = $1", [id, t]);
+  if (who) await logAudit(who, "training.test.rename", `Test #${id} renamed to ${t}`);
 }
 export async function archiveTest(id: unknown, on: unknown, who: string) {
   await tx(async (c) => {
@@ -228,7 +229,7 @@ export async function exportRevision(revId: number) {
   return { format: "kzoo-training-test", version: 1, title, settings: Object.fromEntries(SETTINGS.map((k) => [k, k === "intro_html" ? g.rev.intro_html : (g.rev as any)[k]])), questions: g.questions.map(({ qkey, type, prompt_html, points, config, feedback_html, required_correct }) => ({ qkey, type, prompt_html, points, config, feedback_html, required_correct })) };
 }
 /** Replaces the draft's questions (and, if present, its settings) with an exported test. */
-export async function importIntoDraft(revId: unknown, at: unknown, data: any) {
+export async function importIntoDraft(revId: unknown, at: unknown, data: any, who = "") {
   if (data?.format !== "kzoo-training-test" || data?.version !== 1 || !Array.isArray(data.questions)) fail("That isn't a training test export.");
   if (data.questions.length > MAX_QUESTIONS) fail(`A test can have at most ${MAX_QUESTIONS} questions.`);
   const r = await tx(async (c) => {
@@ -239,8 +240,10 @@ export async function importIntoDraft(revId: unknown, at: unknown, data: any) {
     if (new Set(qs.map((q: any) => q.qkey)).size !== qs.length) fail("The export lists the same question twice.");
     await c.query("DELETE FROM rev_questions WHERE revision_id = $1", [d.id]);
     for (const [i, q] of qs.entries()) await c.query("INSERT INTO rev_questions (revision_id, qkey, position, type, prompt_html, points, config, feedback_html, required_correct) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)", [d.id, q.qkey, i, q.type, q.prompt_html, q.points, JSON.stringify(q.config), q.feedback_html, q.required_correct]);
-    return { at: await bump(c, d.id) };
+    return { at: await bump(c, d.id), testId: d.test_id, count: qs.length };
   });
   const st = data.settings && typeof data.settings === "object" ? Object.fromEntries(SETTINGS.filter((k) => k in data.settings).map((k) => [k, data.settings[k]])) : {};
-  return Object.keys(st).length ? saveSettings(revId, r.at, st) : r;
+  const out = Object.keys(st).length ? await saveSettings(revId, r.at, st) : { at: r.at };
+  if (who) await logAudit(who, "training.test.import", `Test #${r.testId}: imported ${r.count} question(s) into draft`);
+  return out;
 }

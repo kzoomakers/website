@@ -6,6 +6,7 @@ export const RETENTION_YEARS = 5;
 // [table, timestamp column]. Names are constants (never user input).
 const OLD: [string, string][] = [
   ["audit", "at"], ["page_revisions", "at"], ["tour_events", "at"], ["mail_clicks", "at"], ["contact_messages", "created_at"], ["notifications", "created_at"],
+  ["attempts", "started_at"], ["outbox", "created_at"],
 ];
 
 /** Deletes rows past the retention limit. Sent campaigns go too, and with them their per-recipient rows and clicks (cascade). Safe to run any time and as often as you like. */
