@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { fileBytes } from "@/lib/library/docs";
+import { fileBytes } from "@/lib/library/store";
 import { shareByToken, unlockValue } from "@/lib/library/shares";
 
 export const dynamic = "force-dynamic";

@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
-import { countOpen, shareByToken, unlockValue } from "@/lib/library/shares";
+import { shareByToken, unlockValue } from "@/lib/library/shares";
 import Viewer from "../../members/waiver/viewer";
 
 export const dynamic = "force-dynamic";
@@ -24,7 +24,6 @@ export default async function SharePage({ params, searchParams }: { params: Prom
       </main>
     );
   }
-  await countOpen(s.id);
   return (
     <main style={{ maxWidth: 900, margin: "4vh auto", padding: 16 }}>
       <h1>{s.title}</h1>

@@ -23,7 +23,9 @@ test("tier SQL: signed-out sees public only, members add members + authorized, s
   assert.match(out, /status = 'published'/); assert.match(out, /tier = 'public'/); assert.doesNotMatch(out, /members|authorized|staff/);
   const mem = visibleSql({ id: 5, member: true, staff: false }, "$1");
   assert.match(mem, /tier = 'members'/); assert.match(mem, /tier = 'authorized'/); assert.match(mem, /ta\.user_id = \$1/); assert.doesNotMatch(mem, /tier = 'staff'/);
-  assert.equal(visibleSql({ id: 5, member: true, staff: true }, "$1"), "d.deleted_at IS NULL");
+  assert.match(visibleSql({ id: 5, member: true, staff: true }, "$1"), /^d\.deleted_at IS NULL/); assert.doesNotMatch(visibleSql({ id: 5, member: true, staff: true }, "$1"), /tier/);
+  // Postgres rejects a parameter that never appears, so every branch must mention $1 (staff and signed-out viewers use none of the tier rules)
+  for (const v of [{ id: null, member: false, staff: false }, { id: 5, member: true, staff: false }, { id: null, member: true, staff: true }]) assert.match(visibleSql(v, "$1"), /\$1/, JSON.stringify(v));
   assert.doesNotMatch(visibleSql({ id: null, member: true, staff: false }, "$1"), /members/, "a member flag without an id is treated as signed out");
 });
 
@@ -66,4 +68,16 @@ test("only SOPs and safety guides are acknowledged; review dates are overdue the
   assert.equal(reviewOverdue("2026-01-09", "2026-01-10"), true);
   assert.equal(reviewOverdue("2026-01-10", "2026-01-10"), false);
   assert.equal(reviewOverdue(null, "2026-01-10"), false);
+});
+
+test("staff: library access, or write access to Courses or Training; read-only elsewhere is not enough", async () => {
+  const { isStaff } = await import("../lib/library/rules.ts");
+  assert.equal(isStaff({ library: "read" }), true);
+  assert.equal(isStaff({ "library:documents": "write" }), true);
+  assert.equal(isStaff({ "training:queue": "write" }), true, "a trainer");
+  assert.equal(isStaff({ training: "read" }), false);
+  assert.equal(isStaff({ "training:reports": "read" }), false);
+  assert.equal(isStaff({ learning: "read" }), false);
+  assert.equal(isStaff({ people: "write" }), false);
+  assert.equal(isStaff({ system: "write" }), true);
 });

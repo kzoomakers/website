@@ -53,7 +53,7 @@ No open questions remain; P0 and P1 can start.
 
 | Phase | State |
 |---|---|
-| P0 foundations | Done: `learning` and `library` permission sections, "Learn" top-bar group, `learnFlags()` switches (settings key `learning`, both off), course and library tables, `tool_training.require_course/require_ack`. CSP already allowed `youtube-nocookie.com`. |
+| P0 foundations | Done: `learning` and `library` permission sections, "Learn" top-bar group, `learnFlags()` switches (settings key `learning`, both off), library tables and indexes. The course tables and `tool_training.require_course/require_ack` are deferred to P3 (draft in `p3-schema-draft/`), so nothing unused is created before it is needed. CSP already allowed `youtube-nocookie.com`. |
 | P1 library core | First slice done: multi-PDF upload (magic bytes, upload limit, S3, page count + text by a sandboxed worker), drafts titled from the filename, tier-filtered list and full-text search, tags, pin, soft delete, admin page `/admin/library`, member browse and document page `/members/library`. |
 | P1 folders | Done: up to 3 levels, a document can sit in several folders, "Folder" picker per document (the non-drag "Move to…"), recycle-bin view with Restore, member folder browsing (empty folders hidden from non-staff). |
 | P1 polish | Done: bulk edit toolbar (tier, status, folder, add tags), tag rename and merge, page-1 thumbnails (worker, optional `@napi-rs/canvas`), 30-day recycle-bin purge in the retention job. |

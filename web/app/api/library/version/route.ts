@@ -4,7 +4,7 @@ import { actor, editingAllowed } from "@/lib/guard";
 import { uploadGate } from "@/lib/image";
 import { uploadLimitMb } from "@/lib/upload-cfg";
 import { logAudit } from "@/lib/store";
-import { addVersion } from "@/lib/library/docs";
+import { addVersion } from "@/lib/library/upload";
 
 export const dynamic = "force-dynamic";
 

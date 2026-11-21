@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { libraryOn } from "@/lib/learn-flags";
-import { ackState, getDoc } from "@/lib/library/docs";
+import { ackState } from "@/lib/library/acks";
+import { getDoc } from "@/lib/library/docs";
 import { viewer } from "@/lib/library/viewer";
 import { needsAck } from "@/lib/library/rules";
 import Ack from "./ack";

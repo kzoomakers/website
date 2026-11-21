@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import qrcode from "qrcode-generator";
 import { gate } from "@/lib/guard";
 import { getDoc } from "@/lib/library/docs";
+import { STAFF_VIEW } from "@/lib/library/rules";
 import PrintButton from "./print";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +12,7 @@ export const metadata = { title: "Print QR | Kzoo Makers admin" };
 // A printable sheet for sticking on a machine: the QR opens the document's member page (sign-in and tier rules still apply).
 export default async function QrPage({ params }: { params: Promise<{ slug: string }> }) {
   await gate("library", "/admin/library");
-  const { slug } = await params, d = await getDoc({ id: null, member: true, staff: true }, slug);
+  const { slug } = await params, d = await getDoc(STAFF_VIEW, slug);
   if (!d) notFound();
   const h = await headers(), host = h.get("x-forwarded-host") ?? h.get("host"), proto = h.get("x-forwarded-proto") ?? "https";
   const url = `${proto}://${host}/members/library/${slug}`, q = qrcode(0, "M");

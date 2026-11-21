@@ -7,7 +7,6 @@ import guestSeed from "@/data/guest-agreement-1.0.json";
 import { getConfig, pgConnection, type Cfg } from "./config";
 import { trainingSchema } from "./training/schema";
 import { librarySchema } from "./library/schema";
-import { coursesSchema } from "./courses/schema";
 
 /** Pages managed by their own admin screen: not listed, not editable in Puck. */
 export const LOCKED = ["index", "sitemap", "calendar", "board", "team", "history", "pricing", "handbook", "about", "contact", "other-makerspaces", "laser-shop", "wood-shop", "metal-shop", "3d-printing", "craft-room-kalamazoo", "meeting-space", "what_is_a_makerspace", "why-kzoo-makers", "how-to", "tools-we-are-seeking-donations-kalamazoo", "board-contact"];
@@ -90,7 +89,6 @@ async function migrate(pool: Pool) {
     granted_by text NOT NULL DEFAULT '', granted_at timestamptz NOT NULL DEFAULT now(), expires_on date, note text NOT NULL DEFAULT '', PRIMARY KEY (user_id, tool_id))`);
   await trainingSchema(pool); // tests, attempts, certifications; extends tool_auths
   await librarySchema(pool); // document library (moodlecourseware/04)
-  await coursesSchema(pool); // courses and lessons; extends tool_training
   await pool.query(`CREATE TABLE IF NOT EXISTS classes (id serial PRIMARY KEY, title text NOT NULL, description text NOT NULL DEFAULT '', starts_at timestamptz NOT NULL, ends_at timestamptz,
     location text NOT NULL DEFAULT '', instructor text NOT NULL DEFAULT '', capacity int NOT NULL DEFAULT 0, price text NOT NULL DEFAULT '', cancelled boolean NOT NULL DEFAULT false)`);
   await pool.query("ALTER TABLE classes ADD COLUMN IF NOT EXISTS image text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS level text NOT NULL DEFAULT 'all', ADD COLUMN IF NOT EXISTS prerequisites text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS materials text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS summary text NOT NULL DEFAULT ''");

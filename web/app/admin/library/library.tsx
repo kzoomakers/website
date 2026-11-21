@@ -91,7 +91,7 @@ function Row({ d, canEdit, reload, folders, trash, picked, pick }: { d: Doc; can
           <select aria-label="Folder" value={d.folders[0] ?? ""} onChange={(e) => rpc("place", { id: d.id, folders: e.target.value ? [e.target.value] : [] }).then(reload, fail)}>
             <option value="">No folder</option>{ordered(folders).map((x) => <option key={x.id} value={x.id}>{"\u00a0\u00a0".repeat(x.depth)}{x.title}</option>)}
           </select>
-          <button onClick={async () => (f.tier === "public" && d.tier !== "public" ? await confirmDialog("Anyone on the internet will be able to read this document. Do you have the right to publish it? (Manufacturer manuals are often copyrighted.)") : true) && save({ confirmed: true })}>Save</button>
+          <button onClick={async () => { const toPublic = f.tier === "public" && d.tier !== "public"; if (toPublic && !(await confirmDialog("Anyone on the internet will be able to read this document. Do you have the right to publish it? (Manufacturer manuals are often copyrighted.)"))) return; save(toPublic ? { confirmed: true } : {}); }}>Save</button>
           <button onClick={() => rpc("edit", { id: d.id, pinned: !d.pinned }).then(reload, fail)}>{d.pinned ? "Unpin" : "Pin"}</button>
           <button onClick={async () => (await confirmDialog(`Move "${d.title}" to the recycle bin?`)) && rpc("delete", { id: d.id }).then(reload, fail)}>Delete</button>
         </div>
@@ -101,24 +101,26 @@ function Row({ d, canEdit, reload, folders, trash, picked, pick }: { d: Doc; can
 }
 
 export default function Library({ canEdit }: { canEdit: boolean }) {
-  const [folders, setFolders] = useState<Folder[]>([]), [trash, setTrash] = useState(false), [overdue, setOverdue] = useState(false), [sel, setSel] = useState<number[]>([]), [bulk, setBulk] = useState({ tier: "", status: "", folder: "", addTags: "" }), [tags, setTags] = useState<{ id: number; name: string; n: number }[]>([]), [docs, setDocs] = useState<Doc[] | null>(null), [q, setQ] = useState(""), [needs, setNeeds] = useState(false), [on, setOn] = useState<boolean | null>(null), [busy, setBusy] = useState(false), [drag, setDrag] = useState(false);
+  const [folders, setFolders] = useState<Folder[]>([]), [trash, setTrash] = useState(false), [overdue, setOverdue] = useState(false), [sel, setSel] = useState<number[]>([]), [bulk, setBulk] = useState({ tier: "", status: "", folder: "", addTags: "" }), [tags, setTags] = useState<{ id: number; name: string; n: number }[]>([]), [docs, setDocs] = useState<Doc[] | null>(null), [q, setQ] = useState(""), [needs, setNeeds] = useState(false), [on, setOn] = useState<boolean | null>(null), [busy, setBusy] = useState(false), [progress, setProgress] = useState(""), [drag, setDrag] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const reload = useCallback(() => Promise.all([rpc(trash ? "trash" : "list", { q, needsDetails: needs, overdue }).then(setDocs), rpc("folders").then(setFolders), rpc("tags").then(setTags)]).catch(fail), [q, needs, trash, overdue]);
   useEffect(() => { reload(); }, [reload]);
   useEffect(() => { rpc("flags").then((f) => setOn(f.library), () => {}); }, []);
 
+  // One request per file: the size limit applies to each PDF, not to the whole batch, and a bad file doesn't stop the rest.
   async function upload(files: FileList | File[]) {
-    const fd = new FormData();
-    [...files].forEach((f) => fd.append("file", f));
+    const bad: string[] = [];
     setBusy(true);
-    try {
-      const r = await fetch("/api/library/upload", { method: "POST", body: fd });
-      if (!r.ok) throw new Error(await r.text());
-      const { done } = await r.json() as { done: { name: string; error?: string }[] };
-      const bad = done.filter((x) => x.error);
-      if (bad.length) await alertDialog(bad.map((x) => `${x.name}: ${x.error}`).join("\n"));
-      setNeeds(true); await reload();
-    } catch (e: any) { await fail(e); } finally { setBusy(false); }
+    for (const [i, f] of [...files].entries()) {
+      setProgress(`Uploading ${i + 1} of ${files.length}…`);
+      const fd = new FormData();
+      fd.append("file", f);
+      const r = await fetch("/api/library/upload", { method: "POST", body: fd }).catch(() => null);
+      if (!r?.ok) bad.push(`${f.name}: ${r ? await r.text() : "couldn't reach the server."}`);
+    }
+    setBusy(false); setProgress("");
+    if (bad.length) await alertDialog(bad.join("\n"));
+    setNeeds(true); await reload();
   }
 
   return (
@@ -129,7 +131,7 @@ export default function Library({ canEdit }: { canEdit: boolean }) {
       {canEdit && (
         <p>
           <input ref={input} type="file" accept="application/pdf,.pdf" multiple hidden onChange={(e) => e.target.files && upload(e.target.files)} />
-          <button disabled={busy} onClick={() => input.current?.click()}>{busy ? "Uploading…" : "Upload PDFs"}</button> <span className="sub">or drop files anywhere on this page.</span>
+          <button disabled={busy} onClick={() => input.current?.click()}>{busy ? progress || "Uploading…" : "Upload PDFs"}</button> <span className="sub">or drop files anywhere on this page.</span>
         </p>
       )}
       <div className="bar">
@@ -163,7 +165,7 @@ export default function Library({ canEdit }: { canEdit: boolean }) {
           <select aria-label="Set status" value={bulk.status} onChange={(e) => setBulk({ ...bulk, status: e.target.value })}><option value="">Keep status</option><option>draft</option><option>published</option><option>archived</option></select>
           <select aria-label="Add to folder" value={bulk.folder} onChange={(e) => setBulk({ ...bulk, folder: e.target.value })}><option value="">Keep folders</option>{ordered(folders).map((x) => <option key={x.id} value={x.id}>{"\u00a0\u00a0".repeat(x.depth)}{x.title}</option>)}</select>
           <input aria-label="Add tags, comma separated" placeholder="Add tags" value={bulk.addTags} onChange={(e) => setBulk({ ...bulk, addTags: e.target.value })} />
-          <button onClick={async () => { if (bulk.tier === "public" && !(await confirmDialog("Anyone on the internet will be able to read these documents. Do you have the right to publish them?"))) return; rpc("bulk", { ids: sel, ...bulk, addTags: bulk.addTags.split(","), confirmed: true }).then(() => { setSel([]); setBulk({ tier: "", status: "", folder: "", addTags: "" }); reload(); }, fail); }}>Apply</button>
+          <button onClick={async () => { if (bulk.tier === "public" && !(await confirmDialog("Anyone on the internet will be able to read these documents. Do you have the right to publish them?"))) return; rpc("bulk", { ids: sel, ...bulk, addTags: bulk.addTags.split(","), confirmed: bulk.tier === "public" }).then(() => { setSel([]); setBulk({ tier: "", status: "", folder: "", addTags: "" }); reload(); }, fail); }}>Apply</button>
           <button onClick={() => setSel([])}>Clear</button>
         </div>
       )}

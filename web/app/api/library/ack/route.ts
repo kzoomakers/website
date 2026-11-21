@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { currentMember } from "@/lib/readers";
 import { errMsg } from "@/lib/errmsg";
-import { acknowledge } from "@/lib/library/docs";
+import { acknowledge } from "@/lib/library/acks";
 import { viewer } from "@/lib/library/viewer";
 
 export const dynamic = "force-dynamic";

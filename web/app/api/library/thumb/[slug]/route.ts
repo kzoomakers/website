@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { libraryOn } from "@/lib/learn-flags";
-import { fileBytes, getDoc } from "@/lib/library/docs";
+import { getDoc } from "@/lib/library/docs";
+import { fileBytes } from "@/lib/library/store";
 import { viewer } from "@/lib/library/viewer";
 
 export const dynamic = "force-dynamic";

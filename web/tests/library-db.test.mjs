@@ -13,7 +13,7 @@ const world = async () => {
   const doc = async (title, tier, o = {}) => {
     const d = (await c.query("INSERT INTO lib_docs (slug, title, tier, status, type) VALUES ($1,$2,$3,$4,$5) RETURNING id, slug", [`${title}-${n}`, `${title} ${n}`, tier, o.status ?? "published", o.type ?? "manual"])).rows[0];
     await c.query("INSERT INTO lib_versions (doc_id, version, s3_key, pages, has_text, text_extract) VALUES ($1, 1, $2, 3, true, $3)", [d.id, `lib/t${n}/${title}/v1.pdf`, o.text ?? ""]);
-    await (await import("../lib/library/docs.ts")).reindex(d.id);
+    await (await import("../lib/library/search.ts")).reindex([d.id]);
     return d;
   };
   return { c, n, user, doc };
@@ -22,10 +22,10 @@ const titles = (rows) => rows.map((r) => r.title.replace(/ \d+$/, "")).sort();
 
 test("the library schema is created and can be created twice", { skip }, async () => {
   const { conn } = await import("../lib/db.ts");
-  const { librarySchema } = await import("../lib/library/schema.ts"), { coursesSchema } = await import("../lib/courses/schema.ts");
+  const { librarySchema } = await import("../lib/library/schema.ts");
   const c = await conn();
-  await librarySchema(c); await coursesSchema(c);
-  for (const t of ["lib_docs", "lib_versions", "lib_shares", "lib_acks", "courses", "lessons"]) assert.equal((await c.query("SELECT to_regclass($1) AS r", [t])).rows[0].r, t);
+  await librarySchema(c); await librarySchema(c);
+  for (const t of ["lib_docs", "lib_versions", "lib_shares", "lib_acks"]) assert.equal((await c.query("SELECT to_regclass($1) AS r", [t])).rows[0].r, t);
 });
 
 test("each viewer sees only the tiers they qualify for, in lists, search and single lookups", { skip }, async () => {
@@ -77,7 +77,7 @@ test("share links: only live, matching tokens open; revoke and expiry stop them"
 });
 
 test("acknowledgements: a re-read version asks again, a minor one doesn't", { skip }, async () => {
-  const { c, user, doc } = await world(), D = await import("../lib/library/docs.ts");
+  const { c, user, doc } = await world(), D = await import("../lib/library/acks.ts");
   const u = await user("ack"), other = await user("noack"), d = await doc("sop", "members", { type: "sop" });
   const v = { id: u, member: true, staff: false };
   await D.acknowledge(v, d.slug);
@@ -98,7 +98,7 @@ test("acknowledgements: a re-read version asks again, a minor one doesn't", { sk
   void other;
 });
 
-test("deleted documents leave every list; a 30-day-old one is purged", { skip }, async () => {
+test("deleted documents leave every list and come back on restore", { skip }, async () => {
   const { c, doc } = await world(), D = await import("../lib/library/docs.ts");
   const d = await doc("gone", "members"), staff = { id: 0, member: true, staff: true };
   await D.deleteDoc(d.id);
@@ -107,7 +107,47 @@ test("deleted documents leave every list; a 30-day-old one is purged", { skip },
   await D.restoreDoc(d.id);
   assert.equal((await D.listDocs(staff)).some((r) => r.id === d.id), true);
   await D.deleteDoc(d.id);
+  assert.equal((await D.listDocs(staff, { trash: true })).some((r) => r.id === d.id), true);
+});
+
+test("signed-out and staff viewers can list and look up documents (every branch of the visibility SQL binds its parameter)", { skip }, async () => {
+  const { doc } = await world(), D = await import("../lib/library/docs.ts");
+  const d = await doc("open", "public");
+  assert.ok((await D.listDocs({ id: null, member: false, staff: false })).some((r) => r.id === d.id));
+  assert.ok(await D.getDoc({ id: null, member: false, staff: false }, d.slug));
+  assert.ok(await D.getDoc({ id: null, member: true, staff: true }, d.slug));
+  assert.ok((await D.listDocs({ id: null, member: true, staff: true }, { trash: true })) !== undefined);
+});
+
+test("older versions are for staff only", { skip }, async () => {
+  const { c, user, doc } = await world(), D = await import("../lib/library/docs.ts");
+  const d = await doc("vers", "members"), m = { id: await user("vm"), member: true, staff: false }, staff = { id: null, member: true, staff: true };
+  await c.query("INSERT INTO lib_versions (doc_id, version, s3_key) VALUES ($1, 2, 'newer')", [d.id]);
+  await c.query("UPDATE lib_docs SET current_version = 2 WHERE id = $1", [d.id]);
+  assert.equal((await D.fileFor(m, d.slug, 1))?.key, "newer", "a member asking for v1 gets the current file");
+  assert.match((await D.fileFor(staff, d.slug, 1)).key, /\/v1\.pdf$/);
+  assert.equal(await D.fileFor(m, "no-such-slug"), undefined);
+});
+
+test("bulk edit is all or nothing, confirms making documents public, and adds tags without losing old ones", { skip }, async () => {
+  const { c, doc } = await world(), D = await import("../lib/library/docs.ts");
+  const a = await doc("ba", "staff"), b = await doc("bb", "staff");
+  await D.editDoc(a.id, { tags: ["alpha"] });
+  await assert.rejects(D.bulkEdit([a.id, b.id], { tier: "public" }), /Confirm/);
+  assert.equal((await c.query("SELECT count(*)::int AS n FROM lib_docs WHERE id = ANY($1) AND tier = 'public'", [[a.id, b.id]])).rows[0].n, 0, "nothing changed");
+  await D.bulkEdit([a.id, b.id], { tier: "members", status: "published", addTags: ["beta"] });
+  const tags = (await c.query("SELECT d.id, array_agg(t.name ORDER BY t.name) AS tags FROM lib_docs d JOIN lib_doc_tags x ON x.doc_id = d.id JOIN lib_tags t ON t.id = x.tag_id WHERE d.id = ANY($1) GROUP BY d.id ORDER BY d.id", [[a.id, b.id]])).rows;
+  assert.deepEqual(tags.map((r) => r.tags), [["alpha", "beta"], ["beta"]]);
+  await D.editDoc(a.id, { tier: "public", confirmed: true });
+  await D.editDoc(a.id, { tier: "public", title: "Renamed" }); // already public: no new confirmation needed
+  await assert.rejects(D.editDoc(b.id, { tier: "public" }), /Confirm/);
+});
+
+test("a document whose files can't be deleted stays in the bin", { skip }, async () => {
+  const { c, doc } = await world(), D = await import("../lib/library/docs.ts");
+  const d = await doc("stuck", "members");
+  await D.deleteDoc(d.id);
   await c.query("UPDATE lib_docs SET deleted_at = now() - interval '31 days' WHERE id = $1", [d.id]);
-  await D.purgeTrash();
-  assert.equal((await c.query("SELECT 1 FROM lib_docs WHERE id = $1", [d.id])).rowCount, 0);
+  await D.purgeTrash(); // no storage in the test, so the files can't be removed
+  assert.equal((await c.query("SELECT 1 FROM lib_docs WHERE id = $1", [d.id])).rowCount, 1);
 });
