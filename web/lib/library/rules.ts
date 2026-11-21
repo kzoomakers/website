@@ -31,3 +31,8 @@ export const DEFAULT_SHARE_DAYS = 30;
 export type ShareRow = { revoked_at: Date | null; expires_at: Date | null };
 /** Is a share link usable right now? Revoked and expired links stop at once. */
 export const shareLive = (s: ShareRow, now = new Date()) => !s.revoked_at && (!s.expires_at || s.expires_at > now);
+
+/** SOPs and safety guides are the documents members acknowledge ("I've read version N"). */
+export const needsAck = (type: string) => type === "sop" || type === "safety";
+/** A review date that has passed (today still counts as on time). `today` is a yyyy-mm-dd string. */
+export const reviewOverdue = (reviewOn: string | Date | null, today: string) => !!reviewOn && (typeof reviewOn === "string" ? reviewOn : reviewOn.toISOString()).slice(0, 10) < today;

@@ -58,3 +58,5 @@ No open questions remain; P0 and P1 can start.
 | P1 folders | Done: up to 3 levels, a document can sit in several folders, "Folder" picker per document (the non-drag "Move to…"), recycle-bin view with Restore, member folder browsing (empty folders hidden from non-staff). |
 | P1 polish | Done: bulk edit toolbar (tier, status, folder, add tags), tag rename and merge, page-1 thumbnails (worker, optional `@napi-rs/canvas`), 30-day recycle-bin purge in the retention job. |
 | P1 still to do | Drag-reorder (the Folder picker is the non-drag path), remembered last page per member (the document page now uses the `@embedpdf` viewer, shared with the waiver page), DB tests (need a scratch Postgres). |
+| P2 so far | Done: share links (hashed token, 30/7/1 days, passcode always required, revoke, open counts, `/d/<token>`, own `shares` permission), acknowledgements ("I've read version N", who-has-read report), SOP owner and review date with an overdue filter. |
+| P2 still to do | Versioning (upload a new file, change note, requires re-read), QR code, review reminders, all-shares list page, triage mode. |

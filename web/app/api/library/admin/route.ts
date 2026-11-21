@@ -4,22 +4,23 @@ import { actor, editingAllowed } from "@/lib/guard";
 import { logAudit } from "@/lib/store";
 import { createFolder, deleteFolder, listFolders, placeDoc, renameFolder } from "@/lib/library/folders";
 import { createShare, revokeShare, sharesFor } from "@/lib/library/shares";
+import { ackReport } from "@/lib/library/docs";
 import { allTags, bulkEdit, renameTag, deleteDoc, editDoc, listDocs, restoreDoc } from "@/lib/library/docs";
 import { saveLearnFlags, learnFlags } from "@/lib/learn-flags";
 
 export const dynamic = "force-dynamic";
 // Library admin RPC: POST { op, ...args }. list needs read access; the rest need write.
 const STAFF = { id: null, member: true, staff: true };
-const SHARE_OPS = new Set(["shares", "share", "revokeShare"]);
-const OPS = new Set(["list", "edit", "delete", "restore", "flags", "setFlags", "folders", "addFolder", "renameFolder", "deleteFolder", "place", "trash", "tags", "renameTag", "bulk", "shares", "share", "revokeShare"]);
+const SHARE_OPS = new Set(["shares", "share", "revokeShare", "acks"]);
+const OPS = new Set(["list", "edit", "delete", "restore", "flags", "setFlags", "folders", "addFolder", "renameFolder", "deleteFolder", "place", "trash", "tags", "renameTag", "bulk", "shares", "share", "revokeShare", "acks"]);
 
 export async function POST(req: Request) {
   const a = await req.json().catch(() => null);
-  if (!a || !OPS.has(a.op) || !(await editingAllowed("library", ["list", "flags", "folders", "trash", "tags", "shares"].includes(a.op) ? "read" : "write", SHARE_OPS.has(a.op) ? "shares" : "documents"))) return new NextResponse("not found", { status: 404 });
+  if (!a || !OPS.has(a.op) || !(await editingAllowed("library", ["list", "flags", "folders", "trash", "tags", "shares", "acks"].includes(a.op) ? "read" : "write", SHARE_OPS.has(a.op) ? "shares" : "documents"))) return new NextResponse("not found", { status: 404 });
   const who = await actor(), id = Number(a.id);
   try {
     switch (a.op) {
-      case "list": return NextResponse.json(await listDocs(STAFF, { q: typeof a.q === "string" ? a.q : "", needsDetails: a.needsDetails === true }));
+      case "list": return NextResponse.json(await listDocs(STAFF, { q: typeof a.q === "string" ? a.q : "", needsDetails: a.needsDetails === true, overdue: a.overdue === true }));
       case "trash": return NextResponse.json(await listDocs(STAFF, { trash: true }));
       case "folders": return NextResponse.json(await listFolders(STAFF));
       case "addFolder": await createFolder(a.parent == null ? null : Number(a.parent), String(a.title ?? "")); await logAudit(who, "library.folder", String(a.title)); return NextResponse.json({ ok: true });
@@ -30,6 +31,7 @@ export async function POST(req: Request) {
       case "setFlags": await saveLearnFlags({ library: a.library }); await logAudit(who, "library.settings", `Library ${a.library === true ? "switched on" : "switched off"}`); return NextResponse.json({ ok: true });
     }
     if (!Number.isInteger(id)) return new NextResponse("bad id", { status: 400 });
+    if (a.op === "acks") return NextResponse.json(await ackReport(id));
     if (a.op === "share") { const r = await createShare(id, a, who); await logAudit(who, "library.share", `document ${id}, ${r.days} days${a.allowDownload === true ? ", download" : ""}`); return NextResponse.json(r); }
     if (a.op === "revokeShare") { await revokeShare(id); await logAudit(who, "library.share.revoke", String(id)); return NextResponse.json({ ok: true }); }
     if (a.op === "renameTag") await renameTag(id, String(a.name ?? ""));

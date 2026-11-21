@@ -3,9 +3,9 @@ import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand } from "@aws-sd
 import { conn } from "../db";
 import { s3 } from "../s3";
 import { extractPdf } from "./extract";
-import { cleanTags, isPdf, safeName, slugify, titleFromFilename, TIERS, TYPES, visibleSql, type Viewer } from "./rules";
+import { cleanTags, isPdf, needsAck, safeName, slugify, titleFromFilename, TIERS, TYPES, visibleSql, type Viewer } from "./rules";
 
-export type DocRow = { id: number; slug: string; title: string; description: string; type: string; tier: string; status: string; pinned: boolean; current_version: number; pages: number; has_text: boolean; has_thumb: boolean; tags: string[]; folders: number[]; updated_at: Date };
+export type DocRow = { id: number; slug: string; title: string; description: string; type: string; tier: string; status: string; pinned: boolean; current_version: number; pages: number; has_text: boolean; has_thumb: boolean; owner: string; review_on: string | null; tags: string[]; folders: number[]; updated_at: Date };
 
 // tsv weights: title and tags outrank the description, which outranks the text pulled from the PDF.
 const TSV = `setweight(to_tsvector('english', d.title), 'A') || setweight(to_tsvector('english', coalesce((SELECT string_agg(t.name, ' ') FROM lib_doc_tags x JOIN lib_tags t ON t.id = x.tag_id WHERE x.doc_id = d.id), '')), 'A') || setweight(to_tsvector('english', d.description), 'B') || setweight(to_tsvector('english', left(coalesce((SELECT text_extract FROM lib_versions v WHERE v.doc_id = d.id AND v.version = d.current_version), ''), 500000)), 'C')`;
@@ -13,12 +13,12 @@ export async function reindex(id: number) {
   await (await conn()).query(`UPDATE lib_docs d SET tsv = ${TSV} WHERE d.id = $1`, [id]);
 }
 
-const COLS = `d.id, d.slug, d.title, d.description, d.type, d.tier, d.status, d.pinned, d.current_version, d.updated_at, v.pages, v.has_text, v.thumb_key IS NOT NULL AS has_thumb,
+const COLS = `d.id, d.slug, d.title, d.description, d.type, d.tier, d.status, d.pinned, d.current_version, d.updated_at, d.owner, to_char(d.review_on, 'YYYY-MM-DD') AS review_on, v.pages, v.has_text, v.thumb_key IS NOT NULL AS has_thumb,
   coalesce((SELECT array_agg(t.name ORDER BY t.name) FROM lib_doc_tags x JOIN lib_tags t ON t.id = x.tag_id WHERE x.doc_id = d.id), '{}') AS tags,
   coalesce((SELECT array_agg(p.folder_id) FROM lib_placements p WHERE p.doc_id = d.id), '{}') AS folders`;
 
 /** Documents the viewer may see, newest first (pinned first). `q` searches title, tags, description and PDF text; `tag` and `folder` narrow it. */
-export async function listDocs(v: Viewer, o: { q?: string; tag?: string; folder?: number[]; needsDetails?: boolean; trash?: boolean } = {}): Promise<(DocRow & { snippet?: string })[]> {
+export async function listDocs(v: Viewer, o: { q?: string; tag?: string; folder?: number[]; needsDetails?: boolean; trash?: boolean; overdue?: boolean } = {}): Promise<(DocRow & { snippet?: string })[]> {
   const args: unknown[] = [v.id], where = [visibleSql(v, "$1")];
   let rank = "0", snip = "NULL";
   const q = (o.q ?? "").trim().slice(0, 200);
@@ -31,6 +31,7 @@ export async function listDocs(v: Viewer, o: { q?: string; tag?: string; folder?
   if (o.tag) { args.push(o.tag); where.push(`EXISTS (SELECT 1 FROM lib_doc_tags x JOIN lib_tags t ON t.id = x.tag_id WHERE x.doc_id = d.id AND t.slug = $${args.length})`); }
   if (o.folder?.length) { args.push(o.folder); where.push(`EXISTS (SELECT 1 FROM lib_placements p WHERE p.doc_id = d.id AND p.folder_id = ANY($${args.length}))`); }
   if (o.needsDetails && v.staff) where.push("d.status = 'draft'");
+  if (o.overdue && v.staff) where.push("d.review_on < current_date AND d.status = 'published'");
   if (o.trash && v.staff) where[0] = "d.deleted_at IS NOT NULL AND d.deleted_at > now() - interval '30 days'"; // the recycle bin
   const r = await (await conn()).query(`SELECT ${COLS}, ${snip} AS snippet FROM lib_docs d JOIN lib_versions v ON v.doc_id = d.id AND v.version = d.current_version WHERE ${where.join(" AND ")} ORDER BY ${q ? rank + " DESC," : ""} d.pinned DESC, d.updated_at DESC LIMIT 200`, args);
   return r.rows;
@@ -70,7 +71,7 @@ export async function addUpload(file: { name: string; bytes: Buffer }, who: stri
   }
 }
 
-export type DocEdit = { title?: unknown; description?: unknown; type?: unknown; tier?: unknown; status?: unknown; pinned?: unknown; tags?: unknown; copyright_note?: unknown };
+export type DocEdit = { title?: unknown; description?: unknown; type?: unknown; tier?: unknown; status?: unknown; pinned?: unknown; tags?: unknown; copyright_note?: unknown; owner?: unknown; review_on?: unknown };
 /** Staff edit. Making a document public or listed needs `copyright_note` or an explicit `confirmed` so a manufacturer manual isn't published by accident. */
 export async function editDoc(id: number, b: DocEdit & { confirmed?: unknown }) {
   const c = await conn(), set: string[] = [], args: unknown[] = [id];
@@ -78,6 +79,9 @@ export async function editDoc(id: number, b: DocEdit & { confirmed?: unknown }) 
   if (typeof b.title === "string" && b.title.trim()) put("title", b.title.trim().slice(0, 200));
   if (typeof b.description === "string") put("description", b.description.slice(0, 2000));
   if (typeof b.copyright_note === "string") put("copyright_note", b.copyright_note.slice(0, 500));
+  if (typeof b.owner === "string") put("owner", b.owner.trim().slice(0, 100));
+  if (b.review_on === null || b.review_on === "") put("review_on", null);
+  else if (typeof b.review_on === "string" && /^\d{4}-\d{2}-\d{2}$/.test(b.review_on)) put("review_on", b.review_on);
   if (TYPES.includes(b.type as any)) put("type", b.type);
   if (TIERS.includes(b.tier as any)) {
     if (b.tier === "public" && b.confirmed !== true) throw new Error("Public documents can be read by anyone. Confirm you have the right to publish this one (manufacturer manuals are often copyrighted).");
@@ -143,4 +147,23 @@ export async function renameTag(id: number, name: string) {
     await c.query("DELETE FROM lib_tags WHERE id = $1", [id]);
   } else await c.query("UPDATE lib_tags SET name = $2, slug = $3 WHERE id = $1", [id, n, slugify(n)]);
   for (const d of docs) await reindex(d);
+}
+
+/** Records that a member read the current version. Only for documents they may see and only for SOP/safety types; repeating it changes nothing. */
+export async function acknowledge(v: Viewer, slug: string) {
+  const d = v.id === null ? null : await getDoc(v, slug);
+  if (!d || !needsAck(d.type)) throw new Error("That document doesn't need acknowledging.");
+  await (await conn()).query("INSERT INTO lib_acks (user_id, doc_id, version) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING", [v.id, d.id, d.current_version]);
+}
+export async function ackState(userId: number, docId: number) {
+  return (await (await conn()).query("SELECT version, at FROM lib_acks WHERE user_id = $1 AND doc_id = $2 ORDER BY version DESC LIMIT 1", [userId, docId])).rows[0] as { version: number; at: Date } | undefined;
+}
+
+/** Who has and hasn't read the current version of a document. "Should have read" = approved members who can see it (authorized tier: those authorized on a linked tool; staff tier: nobody). */
+export async function ackReport(docId: number) {
+  const c = await conn(), d = (await c.query("SELECT tier, current_version FROM lib_docs WHERE id = $1", [docId])).rows[0];
+  if (!d) throw new Error("That document doesn't exist.");
+  const who = d.tier === "staff" ? "false" : d.tier === "authorized" ? "EXISTS (SELECT 1 FROM tool_docs td JOIN tool_auths ta ON ta.tool_id = td.tool_id WHERE td.doc_id = $1 AND ta.user_id = u.id AND (ta.expires_on IS NULL OR ta.expires_on >= current_date))" : "true";
+  const r = await c.query(`SELECT u.id, u.name, a.at FROM site_users u LEFT JOIN lib_acks a ON a.user_id = u.id AND a.doc_id = $1 AND a.version = $2 WHERE u.approval = 'approved' AND u.disabled_at IS NULL AND ${who} ORDER BY lower(u.name) LIMIT 1000`, [docId, d.current_version]);
+  return { version: d.current_version, read: r.rows.filter((x) => x.at).map((x) => ({ name: x.name, at: x.at })), unread: r.rows.filter((x) => !x.at).map((x) => x.name) };
 }

@@ -59,3 +59,11 @@ test("share tokens: only 32 hex chars are looked up, and the unlock cookie depen
   const a = unlockValue({ token_hash: "t", passcode_hash: "p1" }), b = unlockValue({ token_hash: "t", passcode_hash: "p2" });
   assert.notEqual(a, b); assert.equal(a, unlockValue({ token_hash: "t", passcode_hash: "p1" }));
 });
+
+test("only SOPs and safety guides are acknowledged; review dates are overdue the day after", async () => {
+  const { needsAck, reviewOverdue } = await import("../lib/library/rules.ts");
+  assert.deepEqual(["sop", "safety", "manual", "form"].map(needsAck), [true, true, false, false]);
+  assert.equal(reviewOverdue("2026-01-09", "2026-01-10"), true);
+  assert.equal(reviewOverdue("2026-01-10", "2026-01-10"), false);
+  assert.equal(reviewOverdue(null, "2026-01-10"), false);
+});
