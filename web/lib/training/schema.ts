@@ -66,6 +66,7 @@ export async function trainingSchema(pool: Pool) {
     state text NOT NULL DEFAULT 'passed' CHECK (state IN ('passed','in_training','ready','certified','rejected','waived','lapsed','revoked')), signoffs_required int NOT NULL DEFAULT 1 CHECK (signoffs_required >= 1),
     source text NOT NULL DEFAULT 'test' CHECK (source IN ('test','override','legacy','trainer')), certified_at timestamptz, certified_by text, valid_until date,
     created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now())`);
+  await q("ALTER TABLE site_users ADD COLUMN IF NOT EXISTS trainer_digest boolean NOT NULL DEFAULT true"); // trainer opt-out of the Monday "who is waiting" email
   await q("CREATE INDEX IF NOT EXISTS certifications_state ON certifications (state, tool_id)");
   await q("CREATE INDEX IF NOT EXISTS certifications_user ON certifications (user_id)");
   await q("CREATE UNIQUE INDEX IF NOT EXISTS certifications_one_open ON certifications (user_id, tool_id) WHERE state IN ('passed','in_training','ready')");

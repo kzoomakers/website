@@ -28,13 +28,17 @@ export async function register() {
     const { reportJob, copyHttpHits } = await import("./lib/pii");
     job(7351931, 3600_000, reportJob); // monthly personal-information report to the board (last evening of the month; retries daily if it fails)
     job(7351932, 3600_000, copyHttpHits); // copies hits on PII routes out of the HTTP log so the evidence outlives its pruning
+    const { tracked, checkSweep } = await import("./lib/training/health");
+    job(7351945, 30 * 60_000, checkSweep); // push staff if the deadline sweep has stalled for 3 hours
     const { lapseSweep, sendReminders: trainingReminders } = await import("./lib/training/recert");
-    job(7351940, 3600_000, lapseSweep); // training re-pass deadlines that have passed
-    job(7351941, 6 * 3600_000, trainingReminders); // training re-pass countdown notices
+    job(7351940, 3600_000, tracked("sweep", lapseSweep)); // training re-pass deadlines that have passed
+    job(7351941, 6 * 3600_000, tracked("reminders", trainingReminders)); // training re-pass countdown notices
     const { pushWaiting } = await import("./lib/training/notify");
-    job(7351942, 15 * 60_000, pushWaiting); // one staff push for however many passes arrived (Pushover channel "training")
+    job(7351942, 15 * 60_000, tracked("push", pushWaiting)); // one staff push for however many passes arrived (Pushover channel "training")
+    job(7351944, 3600_000, tracked("digest", () => import("./lib/training/notify").then((m) => m.trainerDigest()))); // Monday email to each trainer: who is waiting on their tools
+    job(7351946, 3600_000, tracked("board", () => import("./lib/training/notify").then((m) => m.boardOverrides()))); // last month's overrides to the board
     const { drainDiscord } = await import("./lib/training/discord");
-    job(7351943, 60_000, drainDiscord); // training "newly certified" posts to Discord
+    job(7351943, 60_000, tracked("discord", drainDiscord)); // training "newly certified" posts to Discord
     const { prune } = await import("./lib/retention");
     setTimeout(() => withLock(7351914, prune).catch(() => {}), 120_000); // not at the very start
     job(7351914, 6 * 3600_000, prune); // data past the 5-year limit (lib/retention.ts)

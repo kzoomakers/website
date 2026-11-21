@@ -9,6 +9,13 @@ import { pagesOf, SECTIONS, SECTION_LABEL, type Level, type Perms, type Section 
 
 type Row = { id: number; email: string; name: string; perms: Perms; founder: boolean; disabled: boolean };
 const pagesFor = (s: Section) => pagesOf(s).filter((p) => !p.full); // the pages that can be given one at a time
+// Training roles from the plan: each is just ordinary grants. A trainer also needs tools assigned on the Trainers page.
+const ROLES: { label: string; hint: string; grants: [string, Level][] }[] = [
+  { label: "Trainer", hint: "Sign-off queue. Then assign their tools under Training > Trainers.", grants: [["training:queue", "write"]] },
+  { label: "Test author", hint: "Build and edit draft tests.", grants: [["training:tests", "write"]] },
+  { label: "Training lead", hint: "Everything in Training.", grants: [["training", "write"]] },
+  { label: "Auditor", hint: "View the queue and reports, change nothing.", grants: [["training:queue", "read"], ["training:reports", "read"]] },
+];
 const LEVEL: Record<Level, string> = { read: "View only", write: "Can edit" };
 
 /** What this person can open, in a few words: "Website (edit), Tours: Walk-ups, Availability (view)". */
@@ -19,6 +26,7 @@ const summary = (perms: Perms) => SECTIONS.flatMap((s) => {
 
 // Two lists, as in a role picker: what they could be given on the left, what they have on the right. Add a whole section to keep it simple, or open one and add single pages.
 function Editor({ u, locked, set }: { u: Row; locked: boolean; set: (key: string, level: Level | null) => void }) {
+  const [note, setNote] = useState("");
   const has = (k: string) => u.perms[k];
   const addable = SECTIONS.filter((s) => !has(s)), granted = SECTIONS.filter((s) => has(s) || pagesFor(s).some((p) => has(`${s}:${p.key}`)));
   const add = { padding: "2px 10px" } as const, item = { display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderTop: "1px solid var(--line)" } as const;
@@ -26,6 +34,8 @@ function Editor({ u, locked, set }: { u: Row; locked: boolean; set: (key: string
     <select aria-label={`${u.name}: ${label}`} disabled={locked} value={has(k)} onChange={(e) => set(k, e.target.value as Level)}>{(Object.keys(LEVEL) as Level[]).map((l) => <option key={l} value={l}>{LEVEL[l]}</option>)}</select>
   );
   return (
+    <>
+    {!locked && !has("training") && <div className="bar" style={{ paddingTop: 8 }}><b>Training roles:</b>{note && <span className="sub">{note}</span>}{ROLES.map((r) => <button key={r.label} type="button" title={r.hint} onClick={() => { const kept = r.grants.filter(([k, l]) => has(k) === "write" && l === "read").map(([k]) => k); setNote(kept.length ? `${r.label}: left ${kept.join(", ")} at edit, since the role only needs view.` : ""); r.grants.forEach(([k, l]) => (!has(k) || (l === "write" && has(k) === "read")) && set(k, l)); }}>{r.label}</button>)}</div>}
     <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", padding: "8px 0 14px" }}>
       <div><h3 style={{ margin: "0 0 6px" }}>Could add</h3>
         {addable.map((s) => (
@@ -53,6 +63,7 @@ function Editor({ u, locked, set }: { u: Row; locked: boolean; set: (key: string
         {!granted.length && <p className="sub">No access yet. Add a section on the left.</p>}
       </div>
     </div>
+    </>
   );
 }
 

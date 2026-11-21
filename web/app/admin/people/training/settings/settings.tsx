@@ -8,7 +8,9 @@ import Discord from "./discord";
 
 const SAMPLE = { name: "Sam", tool: "Table saw", deadline: "Dec 15", trainer: "Pat", reason: "the lockout steps changed", days: "3 days", link: "https://example.org/members/training" };
 
-export default function Settings({ cfg, canEdit, discord }: { cfg: TrainingCfg; canEdit: boolean; discord: React.ComponentProps<typeof Discord>["init"] | null }) {
+type Health = { jobs: { job: string; label: string; at: string | null; ok: boolean; error: string }[]; queues: { label: string; n: number }[] };
+
+export default function Settings({ cfg, canEdit, discord, health }: { cfg: TrainingCfg; canEdit: boolean; discord: React.ComponentProps<typeof Discord>["init"] | null; health: Health }) {
   const [on, setOn] = useState(cfg.enabled), [events, setEvents] = useState(cfg.events), [copy, setCopy] = useState(cfg.copy), [reply, setReply] = useState(cfg.reply_to), [days, setDays] = useState(cfg.reminder_days.join(", ")), [open, setOpen] = useState("");
   const save = () => training("saveCfg", { cfg: { events, copy, reply_to: reply, reminder_days: days.split(/[ ,]+/).filter(Boolean).map(Number) } }).then(() => alertDialog("Saved."), (x) => alertDialog(x.message));
   return (
@@ -17,6 +19,12 @@ export default function Settings({ cfg, canEdit, discord }: { cfg: TrainingCfg; 
       <p className="sub">Training is off until you switch it on. Switching it off hides the member Training page and stops training emails; it never removes anyone's tool authorization.</p>
       <div className="card" style={{ padding: 16 }}>
         <label><input type="checkbox" checked={on} disabled={!canEdit} onChange={(e) => { const v = e.target.checked; training("setEnabled", { enabled: v }).then(() => setOn(v), (x) => alertDialog(x.message)); }} /> Training is on</label>
+      </div>
+      <h2>Background jobs</h2>
+      <p className="sub">When each job last ran on any server. Staff get a Pushover alert if the deadline sweep stops for 3 hours. A job that hasn't run since a restart shows "not yet".</p>
+      <div className="card">
+        {health.jobs.map((j) => <div className="row" key={j.job}><span style={{ flex: 1 }}>{j.label}</span><span className={j.ok ? "sub" : "tag"} style={{ margin: 0 }}>{j.at ? new Date(j.at).toLocaleString() : "not yet"}{!j.ok && ` failed: ${j.error}`}</span></div>)}
+        {health.queues.map((x) => <div className="row" key={x.label}><span style={{ flex: 1 }}>{x.label}</span><b>{x.n}</b></div>)}
       </div>
       <h2>Emails and notices</h2>
       <p className="sub">Each one goes out as an email and a bell notice. Edit the wording; use {Object.keys(VARS).map((k) => `{{${k}}}`).join(" ")}. Plain text only; blank lines start a new paragraph.</p>

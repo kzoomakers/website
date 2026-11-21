@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { alertDialog } from "@/components/dialog";
 import { training } from "../rpc";
 
-type Tool = { id: number; name: string; category: string; signoffs_required: number; validity_months: number | null; manual_grant_allowed: boolean; awaiting: number; certified: number; trainers: { id: number; name: string }[]; has_test: boolean };
+type Tool = { id: number; name: string; category: string; signoffs_required: number; validity_months: number | null; manual_grant_allowed: boolean; awaiting: number; certified: number; trainers: { id: number; name: string }[]; suggested: { id: number; name: string; n: number }[]; has_test: boolean };
 
 function Row({ t, canEdit, reload }: { t: Tool; canEdit: boolean; reload: () => void }) {
   const [q, setQ] = useState(""), [hits, setHits] = useState<{ id: number; name: string; email: string }[]>([]);
@@ -13,6 +13,7 @@ function Row({ t, canEdit, reload }: { t: Tool; canEdit: boolean; reload: () => 
     <div className="row" style={{ display: "block" }}>
       <b>{t.name}</b> {t.category && <span className="tag">{t.category}</span>} <span className="tag">{t.has_test ? "Test live" : "No test yet"}</span> <span className="tag">{t.certified} authorized</span> {t.awaiting > 0 && <span className="tag pri">{t.awaiting} awaiting</span>}
       <div>{t.trainers.length ? t.trainers.map((x) => <span className="tag" key={x.id}>{x.name}{canEdit && <button aria-label={`Remove ${x.name}`} onClick={() => training("setTrainer", { tool: t.id, user: x.id, on: false }).then(reload, fail)}> ×</button>}</span>) : <span className="sub" style={{ margin: 0 }}>No trainer assigned: nobody can sign people off on this tool except administrators.</span>}</div>
+      {canEdit && t.suggested.length > 0 && <div className="bar"><span className="sub" style={{ margin: 0 }}>Granted this tool before:</span>{t.suggested.map((x) => <button key={x.id} title="Make a trainer" onClick={() => training("setTrainer", { tool: t.id, user: x.id, on: true }).then(reload, fail)}>＋ {x.name} ({x.n})</button>)}</div>}
       {canEdit && (
         <>
           <div className="bar">

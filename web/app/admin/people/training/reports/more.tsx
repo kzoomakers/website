@@ -4,7 +4,7 @@ import { alertDialog, confirmDialog } from "@/components/dialog";
 import { training } from "../rpc";
 
 const HOWS: Record<string, string> = { waive_test: "Waive the test", skip_training: "Skip training, go to sign-off", certify_now: "Certify now", credit_prior: "Credit a prior certification", revoke: "Revoke", void_attempt: "Void a test attempt", reset_attempts: "Reset attempts (let them retake)" };
-const REPORTS: Record<string, string> = { overrides: "Overrides (for the board)", pipeline: "Pipeline", coverage: "Tool coverage", questions: "Question analytics" };
+const REPORTS: Record<string, string> = { overrides: "Overrides (for the board)", pipeline: "Pipeline", coverage: "Tool coverage", questions: "Question analytics", trainers: "Trainer activity", rollouts: "Re-pass rollouts", audit: "Audit log (training)" };
 
 function Override() {
   const [q, setQ] = useState(""), [found, setFound] = useState<{ id: number; name: string; email: string }[]>([]), [who, setWho] = useState<{ id: number; name: string } | null>(null);

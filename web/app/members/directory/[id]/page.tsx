@@ -33,8 +33,8 @@ export default async function MemberPage({ params }: { params: Promise<{ id: str
             {m.bio && <p style={{ margin: 0, whiteSpace: "pre-line" }}>{m.bio}</p>}
             <section>
               <h3>Authorized tools</h3>
-              {m.tools.length ? <table style={{ width: "100%" }}><thead><tr><th style={{ textAlign: "left" }}>Tool</th><th style={{ textAlign: "left" }}>Since</th><th style={{ textAlign: "left" }}>How</th></tr></thead>
-                <tbody>{m.tools.map((t) => <tr key={t.name}><td>✅ {t.name}</td><td>{day(t.at)}</td><td>{SOURCE_LABEL[t.source] ?? t.source}</td></tr>)}</tbody></table> : <p className="sub">Not authorized on any tools yet.</p>}
+              {m.tools.length ? <table style={{ width: "100%" }}><thead><tr><th style={{ textAlign: "left" }}>Tool</th><th style={{ textAlign: "left" }}>Date</th><th style={{ textAlign: "left" }}>How</th></tr></thead>
+                <tbody>{m.tools.map((t) => <tr key={t.name}><td>{t.source === "training" ? "🏅" : "✅"} {t.name}</td><td>{t.source === "training" ? "Certified " : ""}{day(t.at)}</td><td>{SOURCE_LABEL[t.source] ?? t.source}</td></tr>)}</tbody></table> : <p className="sub">Not authorized on any tools yet.</p>}
             </section>
             {m.skills.length > 0 && <section><h3>Skills</h3><p>{m.skills.map((s) => <span key={s.name} className="dr-chip" style={{ marginRight: 6 }}>{s.name} <small>{LEVEL[s.level]}</small></span>)}</p></section>}
             {facts.length > 0 && <section><h3>About</h3><dl style={{ display: "grid", gridTemplateColumns: "max-content 1fr", gap: "4px 16px", margin: 0 }}>{facts.map(([k, v]) => <Fragment key={k}><dt className="sub">{k}</dt><dd style={{ margin: 0 }}>{v}</dd></Fragment>)}</dl></section>}
