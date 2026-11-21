@@ -8,7 +8,7 @@ import "./people.css";
 
 type Col = { key: string; label: string; sort?: string; on: boolean };
 const COLS: Col[] = [
-  { key: "name", label: "Name", sort: "name", on: true }, { key: "email", label: "Email", sort: "email", on: true }, { key: "levels", label: "Membership", on: true },
+  { key: "name", label: "Name", sort: "name", on: true }, { key: "email", label: "Email", sort: "email", on: true }, { key: "levels", label: "Membership", on: true }, { key: "tools", label: "Tools", on: true },
   { key: "approval", label: "Status", sort: "approval", on: true }, { key: "joined", label: "Joined", sort: "joined", on: true }, { key: "card", label: "Card", sort: "card", on: false },
   { key: "contacts", label: "Emergency contacts", sort: "contacts", on: false }, { key: "waiver", label: "Waiver", on: false }];
 const FLAGS: [string, string][] = [["", "Everyone"], ["no_contacts", "No emergency contact"], ["unverified", "Email not verified"], ["no_waiver", "Waiver not signed"], ["no_roster", "No roster photo"], ["no_membership", "No membership"], ["no_card", "No access card"]];
@@ -44,6 +44,7 @@ export default function People({ initial, levels, canEdit }: { initial: { rows: 
     joined: <span className="tag">{new Date(p.joined).toLocaleDateString([], { dateStyle: "medium" })}</span>,
     card: p.card || <span className="sub">–</span>,
     contacts: p.contacts || <span style={{ color: "var(--bad)" }}>none</span>,
+    tools: p.tools.length ? <span title={p.tools.join(", ")}>{p.tools.length === 1 ? p.tools[0] : `${p.tools.length} tools`}</span> : <span className="sub">–</span>,
     waiver: p.waiver ? "✓" : <span className="sub">–</span>,
   } as Record<string, React.ReactNode>)[k];
   return (

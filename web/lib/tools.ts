@@ -24,10 +24,10 @@ export async function deleteTool(id: number) {
   await c.query("DELETE FROM tools WHERE id = $1", [id]);
 }
 
-export type Auth = { tool_id: number; name: string; category: string; granted_by: string; granted_at: string; expires_on: string | null; note: string; expired: boolean; source: string; retake_due_on: string | null };
+export type Auth = { tool_id: number; name: string; category: string; granted_by: string; granted_at: string; expires_on: string | null; note: string; expired: boolean; source: string; retake_due_on: string | null; cert_id: number | null };
 // `expired` and the effective expiry come from the tool_auths_effective view (db schema): the earlier of expires_on and a re-pass deadline, in the shop's time zone.
 export const authsFor = async (userId: number): Promise<Auth[]> =>
-  (await (await conn()).query(`SELECT a.tool_id, t.name, t.category, a.granted_by, a.granted_at, to_char(a.expires_on, 'YYYY-MM-DD') AS expires_on, to_char(a.retake_due_on, 'YYYY-MM-DD') AS retake_due_on, a.note, a.source, a.expired
+  (await (await conn()).query(`SELECT a.tool_id, t.name, t.category, a.granted_by, a.granted_at, to_char(a.expires_on, 'YYYY-MM-DD') AS expires_on, to_char(a.retake_due_on, 'YYYY-MM-DD') AS retake_due_on, a.note, a.source, a.expired, a.cert_id
     FROM tool_auths_effective a JOIN tools t ON t.id = a.tool_id WHERE a.user_id = $1 ORDER BY lower(t.category), lower(t.name)`, [userId])).rows;
 /** A person-to-person grant (the Grant button). A re-grant replaces whatever was there, including a training record and a re-pass deadline: a human decided. */
 export async function grantAuth(userId: number, toolId: number, expires: unknown, note: unknown, who: string) {

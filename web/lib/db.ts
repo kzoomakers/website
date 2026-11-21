@@ -90,6 +90,8 @@ async function migrate(pool: Pool) {
   await pool.query(`CREATE TABLE IF NOT EXISTS classes (id serial PRIMARY KEY, title text NOT NULL, description text NOT NULL DEFAULT '', starts_at timestamptz NOT NULL, ends_at timestamptz,
     location text NOT NULL DEFAULT '', instructor text NOT NULL DEFAULT '', capacity int NOT NULL DEFAULT 0, price text NOT NULL DEFAULT '', cancelled boolean NOT NULL DEFAULT false)`);
   await pool.query("ALTER TABLE classes ADD COLUMN IF NOT EXISTS image text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS level text NOT NULL DEFAULT 'all', ADD COLUMN IF NOT EXISTS prerequisites text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS materials text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS summary text NOT NULL DEFAULT ''");
+  // A class can be about one tool (informational: it shows on that tool's page; it never grants an authorization).
+  await pool.query("ALTER TABLE classes ADD COLUMN IF NOT EXISTS tool_id int REFERENCES tools ON DELETE SET NULL");
   // A member's pitch to teach a class; a CRM admin approves it (which creates the class) or declines it with a reason.
   await pool.query(`CREATE TABLE IF NOT EXISTS class_proposals (id serial PRIMARY KEY, user_id int NOT NULL REFERENCES site_users ON DELETE CASCADE, title text NOT NULL, summary text NOT NULL DEFAULT '',
     description text NOT NULL DEFAULT '', level text NOT NULL DEFAULT 'all', duration_min int NOT NULL DEFAULT 120, capacity int NOT NULL DEFAULT 0, price text NOT NULL DEFAULT '', materials text NOT NULL DEFAULT '',

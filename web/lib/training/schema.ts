@@ -75,6 +75,8 @@ export async function trainingSchema(pool: Pool) {
   await q("CREATE TABLE IF NOT EXISTS training_mail_log (key text PRIMARY KEY, at timestamptz NOT NULL DEFAULT now())");
   await q("ALTER TABLE certifications ADD COLUMN IF NOT EXISTS pushed_at timestamptz");
   await q("CREATE TABLE IF NOT EXISTS outbox (id serial PRIMARY KEY, kind text NOT NULL CHECK (kind IN ('discord')), payload jsonb NOT NULL, tries int NOT NULL DEFAULT 0, next_at timestamptz NOT NULL DEFAULT now(), last_error text NOT NULL DEFAULT '', sent_at timestamptz, created_at timestamptz NOT NULL DEFAULT now())");
+  // Member consent for Discord announcements: '' = no (default), 'first' = first name, 'full' = first name and Discord username.
+  await q("ALTER TABLE site_users ADD COLUMN IF NOT EXISTS discord_announce text NOT NULL DEFAULT '' CHECK (discord_announce IN ('','first','full'))");
   // Settings (on/off flag, copy, Discord webhook) live in the shared `settings` table under key "training".
 
   // tool_auths gains where a grant came from and the re-pass deadline. Rows that already exist were granted by hand before training: 'legacy'.

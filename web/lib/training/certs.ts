@@ -1,6 +1,7 @@
 import type { PoolClient } from "pg";
 import { conn } from "../db";
 import { logAudit } from "../store";
+import { queueAnnouncement } from "./discord";
 import { emit, emitLeads } from "./notify";
 import { describeQ, type Q } from "./questions";
 
@@ -127,7 +128,7 @@ export async function signOff(a: Actor, certId: unknown, note: unknown) {
     await logAudit(a.email, "user.authorize", `${ce.member_email}: ${ce.tool}`); // the existing action, so older audit views still list the grant
     return { done: true, have, need: ce.signoffs_required, ce };
   });
-  if (out.done) await emit("cert.certified", { userId: out.ce.user_id, ref: out.ce.id, vars: { tool: out.ce.tool } });
+  if (out.done) { await emit("cert.certified", { userId: out.ce.user_id, ref: out.ce.id, vars: { tool: out.ce.tool } }); await queueAnnouncement(out.ce.user_id, out.ce.id, out.ce.tool); }
   return { ok: true, certified: out.done, have: out.have, need: out.need };
 }
 

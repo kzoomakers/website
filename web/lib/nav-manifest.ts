@@ -87,7 +87,7 @@ export const GROUPS: Group[] = [
 ];
 
 /** Members side menu: [href, icon, label]. */
-export const MEMBER_MENU = [["/members", "🏠", "Home"], ["/members/waiver", "📝", "Membership agreement"], ["/members/handbook", "📖", "Handbook"], ["/members/directory", "🔎", "Member directory"], ["/members/classes", "🎓", "Classes"], ["/members/training", "🏅", "Training"], ["/members/makerfavor", "🧹", "MakerFavor™"], ["/members/id", "🪪", "Gov ID"], ["/members/profile", "👤", "My profile"], ["/members/inbox", "✉️", "Messages"], ["/account", "⚙️", "My account"]] as const;
+export const MEMBER_MENU = [["/members", "🏠", "Home"], ["/members/waiver", "📝", "Membership agreement"], ["/members/handbook", "📖", "Handbook"], ["/members/directory", "🔎", "Member directory"], ["/members/classes", "🎓", "Classes"], ["/members/training", "🏅", "Tool authorizations"], ["/members/makerfavor", "🧹", "MakerFavor™"], ["/members/id", "🪪", "Gov ID"], ["/members/profile", "👤", "My profile"], ["/members/inbox", "✉️", "Messages"], ["/account", "⚙️", "My account"]] as const;
 
 /** Every link in an item list, groups flattened. */
 export const flat = (xs: Item[]): Entry[] => xs.flatMap((i) => ("items" in i ? flat(i.items) : [i]));

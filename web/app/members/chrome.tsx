@@ -24,11 +24,11 @@ export function Bar({ signedIn }: { signedIn: boolean }) {
 }
 
 // `limited`: not approved yet, so only Home and Account.
-export function Side({ user, limited, training }: { user: ReactNode; limited?: boolean; training?: boolean }) {
+export function Side({ user, limited }: { user: ReactNode; limited?: boolean }) {
   const here = usePathname();
   return (
     <aside className="adm-side"><Collapse>
-      {MENU.filter(([href]) => (training || href !== "/members/training") && (!limited || href === "/members" || href === "/account")).map(([href, icon, label]) => {
+      {MENU.filter(([href]) => (!limited || href === "/members" || href === "/account")).map(([href, icon, label]) => {
         const on = href === "/members" ? here === href : here === href || here.startsWith(href + "/");
         return <Link key={href} href={href} className="adm-link" aria-current={on ? "page" : undefined}><span aria-hidden>{icon}</span>{label}</Link>;
       })}

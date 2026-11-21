@@ -15,7 +15,9 @@ export const EVENTS: Record<string, Ev> = {
   "rollout.satisfied": { label: "Member passes the re-pass", to: "member", subject: "You're current on {{tool}}", body: "Hi {{name}},\n\nThanks for retaking the {{tool}} test. Your authorization is current.\n\n{{link}}" },
   "cert.lapsed": { label: "Authorization lapses", to: "member", subject: "Your {{tool}} authorization has lapsed", body: "Hi {{name}},\n\nYou didn't retake the {{tool}} test by the deadline, so your authorization has lapsed. Pass the new test to get it back, or ask a trainer for help.\n\n{{link}}" },
   "cert.override": { label: "A step is waived for a member", to: "member", subject: "{{tool}}: a training step was waived", body: "Hi {{name}},\n\nA lead waived a training step for you on {{tool}}: {{reason}}\n\n{{link}}" },
-  "lead.override": { label: "Lead notice: a step was waived", to: "lead", subject: "Training override: {{name}}, {{tool}}", body: "{{name}} was let off a training step on {{tool}} by {{trainer}}.\n\nReason: {{reason}}" },
+  "cert.revoked": { label: "Authorization revoked", to: "member", subject: "Your {{tool}} authorization was removed", body: "Hi {{name}},\n\nA lead removed your {{tool}} authorization: {{reason}}\n\nTalk to a trainer about getting it back.\n\n{{link}}" },
+  "lead.override": { label: "Lead notice: a step was waived", to: "lead", subject: "Training override: {{name}}, {{tool}}", body: "{{trainer}} used a manual override for {{name}} on {{tool}}.\n\nReason: {{reason}}" },
+  "lead.discord_revoked": { label: "Lead notice: Discord webhook stopped working", to: "lead", subject: "Training Discord announcements switched off", body: "Discord rejected the webhook for training announcements (it was probably deleted), so announcements are switched off. Add a new webhook under Training > Settings." },
 };
 export const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 const fill = (t: string, v: Vars, f: (s: string) => string) => t.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, k) => f(String((v as Record<string, string>)[k] ?? "")));

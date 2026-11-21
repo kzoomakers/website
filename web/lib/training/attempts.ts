@@ -147,7 +147,7 @@ export async function overview(userId: number) {
   const cards = rows.map((x) => {
     const wait = x.last_at && x.cooldown_hours ? new Date(x.last_at).getTime() + x.cooldown_hours * 3600_000 - now : 0;
     const state = x.open_attempt ? "in_progress" : x.cert ? "awaiting_trainer" : x.certified && !x.retake_by ? "certified" : x.max_attempts && x.used >= x.max_attempts ? "locked" : wait > 0 ? "cooldown" : x.retake_by ? "retake" : x.lapsed ? "lapsed" : "not_started";
-    return { test_id: x.test_id, title: x.title, tool: x.tool, category: x.category, state, attempt_id: x.open_attempt, due_at: x.open_due, retake_by: x.retake_by, wait_hours: wait > 0 ? Math.ceil(wait / 3600_000) : 0 };
+    return { test_id: x.test_id, tool_id: x.tool_id, title: x.title, tool: x.tool, category: x.category, state, attempt_id: x.open_attempt, due_at: x.open_due, retake_by: x.retake_by, wait_hours: wait > 0 ? Math.ceil(wait / 3600_000) : 0 };
   });
   const history = (await c.query(`SELECT a.id, tl.name AS tool, a.status, a.pct::float AS pct, a.passed, a.submitted_at FROM attempts a JOIN test_revisions r ON r.id = a.revision_id JOIN test_tools tt ON tt.test_id = r.test_id JOIN tools tl ON tl.id = tt.tool_id
     WHERE a.user_id = $1 AND NOT a.preview AND a.status IN ('submitted','expired') ORDER BY a.submitted_at DESC LIMIT 50`, [userId])).rows;
