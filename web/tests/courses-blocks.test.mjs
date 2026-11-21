@@ -36,3 +36,8 @@ test("completion rules and problems", () => {
   assert.equal(lessonProblems("T", [], { rule: "viewed" }).length, 1);
   assert.equal(lessonProblems("T", [{ id: "a", type: "divider" }], { rule: "checklist" }).length, 1);
 });
+
+test("blocks past the limit are counted as dropped, not lost silently", () => {
+  const { blocks, dropped } = cleanBlocks(Array.from({ length: 105 }, () => ({ type: "divider" })));
+  assert.equal(blocks.length, 100); assert.equal(dropped, 5);
+});

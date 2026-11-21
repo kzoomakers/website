@@ -66,14 +66,14 @@ export function cleanBlock(b: any): Block | null {
 
 /** Cleans the whole list; `dropped` counts blocks that were unusable (a bad video link, an empty callout). */
 export function cleanBlocks(xs: unknown): { blocks: Block[]; dropped: number } {
-  const list = Array.isArray(xs) ? xs.slice(0, MAX_BLOCKS) : [], seen = new Set<string>(), blocks: Block[] = [];
+  const all = Array.isArray(xs) ? xs : [], list = all.slice(0, MAX_BLOCKS), seen = new Set<string>(), blocks: Block[] = [];
   for (const x of list) {
     const b = cleanBlock(x);
     if (!b) continue;
     if (seen.has(b.id)) b.id = randomUUID().slice(0, 8);
     seen.add(b.id); blocks.push(b);
   }
-  return { blocks, dropped: list.length - blocks.length };
+  return { blocks, dropped: all.length - blocks.length }; // blocks past the limit count as dropped too
 }
 
 export function cleanCompletion(c: any): Completion {

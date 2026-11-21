@@ -19,11 +19,16 @@ export async function trainingRecord(c: { query: PoolClient["query"] }, userId: 
     FROM attempts a JOIN test_revisions r ON r.id = a.revision_id JOIN tests t ON t.id = r.test_id WHERE a.user_id = $1 ORDER BY a.started_at`, [userId])).rows;
   const authorizations = (await c.query(`SELECT tl.name AS tool, ae.source, ae.granted_at, ae.expires_on, ae.retake_due_on, ae.expired FROM tool_auths_effective ae JOIN tools tl ON tl.id = ae.tool_id WHERE ae.user_id = $1 ORDER BY tl.name`, [userId])).rows;
   const rollouts = (await c.query(`SELECT tl.name AS tool, rm.status, to_char(ro.deadline, 'YYYY-MM-DD') AS deadline FROM rollout_members rm JOIN rollouts ro ON ro.id = rm.rollout_id JOIN tools tl ON tl.id = rm.tool_id WHERE rm.user_id = $1 ORDER BY ro.deadline`, [userId])).rows;
+  const learning = {
+    lessons: (await c.query(`SELECT co.title AS course, l.title AS lesson, p.state, p.updated_at FROM lesson_progress p JOIN lessons l ON l.id = p.lesson_id JOIN course_sections s ON s.id = l.section_id JOIN courses co ON co.id = s.course_id WHERE p.user_id = $1 ORDER BY p.updated_at`, [userId])).rows,
+    practice: (await c.query(`SELECT t.title AS test, a.started_at, a.finished_at, (SELECT count(*)::int FROM jsonb_each(a.state->'answers')) AS answered,
+      (SELECT count(*)::int FROM jsonb_each(a.state->'answers') e WHERE (e.value->>'frac')::float = 1) AS correct FROM practice_attempts a JOIN tests t ON t.id = a.test_id WHERE a.user_id = $1 ORDER BY a.started_at`, [userId])).rows,
+  };
   return {
     name: String(u.name).trim(),
     email: u.email,
     accommodation: acc && (own ? { time_multiplier: acc.time_multiplier, read_aloud: acc.read_aloud } : acc),
-    certifications, events, signoffs, attempts, authorizations, rollouts,
+    certifications, events, signoffs, attempts, authorizations, rollouts, learning, // learning: course progress and practice runs (practice never counts toward authorization)
   };
 }
 

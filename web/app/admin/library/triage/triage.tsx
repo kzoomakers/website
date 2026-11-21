@@ -1,24 +1,20 @@
 "use client";
 import { useEffect, useState } from "react";
 import { alertDialog, confirmDialog } from "@/components/dialog";
+import { makeRpc } from "@/app/admin/rpc";
+import { ordered, TIERS, TYPES, type Folder } from "../shared";
+
+const rpc = makeRpc("/api/library/admin");
 import Viewer from "@/app/members/waiver/viewer";
 
 type Doc = { id: number; slug: string; title: string; type: string; tier: string; tags: string[]; folders: number[]; pages: number };
-type Folder = { id: number; parent_id: number | null; title: string };
-const TYPES = ["manual", "safety", "sop", "spec", "form", "other"], TIERS = [["staff", "Staff only"], ["authorized", "Authorized members"], ["members", "All members"], ["public", "Public"]];
-const rpc = async (op: string, args: Record<string, unknown> = {}) => {
-  const r = await fetch("/api/library/admin", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ op, ...args }) });
-  if (!r.ok) throw new Error(await r.text());
-  return r.json();
-};
-const ordered = (fs: Folder[], parent: number | null = null, depth = 0): (Folder & { depth: number })[] => fs.filter((f) => f.parent_id === parent).flatMap((f) => [{ ...f, depth }, ...ordered(fs, f.id, depth + 1)]);
 
-// One draft at a time: PDF on the left, fields on the right. Enter saves and publishes, then the next draft appears.
+// One draft at a time: PDF on the left, fields on the right. Enter saves and publishes, then the next draft appears. Who can see it stays as set (new uploads are staff only): change it here if members should see it.
 export default function Triage() {
-  const [queue, setQueue] = useState<Doc[] | null>(null), [folders, setFolders] = useState<Folder[]>([]), [f, setF] = useState({ title: "", type: "manual", tier: "members", tags: "", folder: "" }), [done, setDone] = useState(0), [busy, setBusy] = useState(false);
+  const [queue, setQueue] = useState<Doc[] | null>(null), [folders, setFolders] = useState<Folder[]>([]), [f, setF] = useState({ title: "", type: "manual", tier: "staff", tags: "", folder: "" }), [done, setDone] = useState(0), [busy, setBusy] = useState(false);
   const d = queue?.[0];
   useEffect(() => { Promise.all([rpc("list", { needsDetails: true }).then(setQueue), rpc("folders").then(setFolders)]).catch((e) => alertDialog(e.message)); }, []);
-  useEffect(() => { if (d) setF({ title: d.title, type: d.type, tier: d.tier === "staff" ? "members" : d.tier, tags: d.tags.join(", "), folder: String(d.folders[0] ?? "") }); }, [d?.id]);
+  useEffect(() => { if (d) setF({ title: d.title, type: d.type, tier: d.tier, tags: d.tags.join(", "), folder: String(d.folders[0] ?? "") }); }, [d?.id]);
   const next = () => setQueue((q) => q!.slice(1));
   async function save() {
     if (!d || busy) return;

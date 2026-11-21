@@ -4,9 +4,10 @@ import { confirmDialog, promptDialog } from "@/components/dialog";
 import { fail, rpc } from "../rpc";
 
 type Block = { id: string; type: string; [k: string]: any };
-type Lesson = { id: number; section_id: number; title: string; blocks: Block[]; completion: { rule: string; percent?: number }; problems: string[] };
+type Lesson = { id: number; section_id: number; title: string; problems: string[] };
+type Full = { id: number; title: string; blocks: Block[]; completion: { rule: string; percent?: number } };
 type Section = { id: number; title: string; lessons: Lesson[] };
-type Course = { id: number; slug: string; title: string; summary: string; status: string; sequential: boolean; change_note: string; sections: Section[] };
+type Course = { id: number; slug: string; title: string; summary: string; status: string; sequential: boolean; change_note: string; sections: Section[]; trashed: { id: number; title: string }[] };
 
 const KINDS = ["danger", "warning", "ppe", "tip"];
 const newBlock = (type: string): Block => ({ id: Math.random().toString(36).slice(2, 10), type, ...({ text: { html: "" }, video: { yt: "", caption: "", transcript: "", chapters: [] }, doc: { docId: 0, mode: "card" }, callout: { kind: "warning", text: "" }, checklist: { items: [""] }, quiz: { testId: 0 }, divider: {} } as any)[type] });
@@ -39,8 +40,8 @@ function BlockEditor({ b, set, docs, tests }: { b: Block; set: (b: Block) => voi
   }
 }
 
-function LessonEditor({ lesson, docs, tests, reload }: { lesson: Lesson; docs: { id: number; title: string }[]; tests: { id: number; title: string }[]; reload: () => void }) {
-  const [l, setL] = useState(lesson), [sig, setSig] = useState(false), [state, setState] = useState<"saved" | "saving" | "dirty">("saved"), [problems, setProblems] = useState(lesson.problems), timer = useRef<any>(undefined);
+function LessonEditor({ lesson, docs, tests, onSaved }: { lesson: Full & { problems: string[] }; docs: { id: number; title: string }[]; tests: { id: number; title: string }[]; onSaved: (id: number, title: string, problems: string[]) => void }) {
+  const [l, setL] = useState<Full>(lesson), [sig, setSig] = useState(false), [state, setState] = useState<"saved" | "saving" | "dirty">("saved"), [problems, setProblems] = useState(lesson.problems), timer = useRef<any>(undefined);
   const latest = useRef({ l, sig }); latest.current = { l, sig };
   const save = useCallback(async () => {
     clearTimeout(timer.current); setState("saving");
@@ -48,10 +49,10 @@ function LessonEditor({ lesson, docs, tests, reload }: { lesson: Lesson; docs: {
     try {
       const r = await rpc("saveLesson", { id: l.id, title: l.title, blocks: l.blocks, completion: l.completion, significant: sig });
       setProblems(r.problems); setState(latest.current.l === l ? "saved" : "dirty"); if (r.dropped) fail(new Error(`${r.dropped} block(s) were left out: a video link that isn't YouTube, or an empty callout or checklist.`));
-      setSig(false); reload();
+      setSig(false); onSaved(l.id, r.title, r.problems);
     } catch (e) { setState("dirty"); fail(e); }
-  }, [reload]);
-  const edit = (n: Lesson) => { setL(n); setState("dirty"); clearTimeout(timer.current); timer.current = setTimeout(save, 2000); };
+  }, [onSaved]);
+  const edit = (n: Full) => { setL(n); setState("dirty"); clearTimeout(timer.current); timer.current = setTimeout(save, 2000); };
   useEffect(() => () => clearTimeout(timer.current), []);
   const blocks = l.blocks, put = (bs: Block[]) => edit({ ...l, blocks: bs });
   const swap = (i: number, j: number) => { if (j < 0 || j >= blocks.length) return; const c = [...blocks]; [c[i], c[j]] = [c[j], c[i]]; put(c); };
@@ -76,12 +77,14 @@ function LessonEditor({ lesson, docs, tests, reload }: { lesson: Lesson; docs: {
 }
 
 export default function Editor({ id, canEdit }: { id: number; canEdit: boolean }) {
-  const [c, setC] = useState<Course | null>(null), [open, setOpen] = useState<number | null>(null), [docs, setDocs] = useState<{ id: number; title: string }[]>([]), [tests, setTests] = useState<{ id: number; title: string }[]>([]), [meta, setMeta] = useState({ title: "", summary: "", change_note: "" });
+  const [c, setC] = useState<Course | null>(null), [open, setOpen] = useState<number | null>(null), [full, setFull] = useState<(Full & { problems: string[] }) | null>(null), [docs, setDocs] = useState<{ id: number; title: string }[]>([]), [tests, setTests] = useState<{ id: number; title: string }[]>([]), [meta, setMeta] = useState({ title: "", summary: "", change_note: "" });
   const first = useRef(true);
   const reload = useCallback(() => rpc("get", { id }).then((r: Course) => { if (first.current) { first.current = false; setMeta({ title: r.title, summary: r.summary, change_note: r.change_note }); } setC(r); }, fail), [id]);
   useEffect(() => { reload(); rpc("docs").then(setDocs, () => {}); rpc("practiceTests").then(setTests, () => {}); }, [reload]);
+  // One lesson's blocks load when it is opened; saving it only updates its title and warnings in the outline, so typing never reloads the whole course.
+  useEffect(() => { setFull(null); if (open) rpc("lesson", { id: open }).then((l: Full) => setFull({ ...l, problems: [] }), fail); }, [open]);
+  const onSaved = useCallback((lid: number, title: string, problems: string[]) => setC((x) => x && { ...x, sections: x.sections.map((s) => ({ ...s, lessons: s.lessons.map((l) => (l.id === lid ? { ...l, title, problems } : l)) })) }), []);
   if (!c) return <p>Loading…</p>;
-  const lesson = c.sections.flatMap((s) => s.lessons).find((x) => x.id === open);
   const act = (op: string, args: object) => rpc(op, { id, ...args }).then(reload, fail);
   const ask = async (q: string, def = "") => (await promptDialog(q, def))?.trim();
   return (
@@ -104,7 +107,7 @@ export default function Editor({ id, canEdit }: { id: number; canEdit: boolean }
               <b>{s.title}</b>{" "}
               {canEdit && <><button aria-label="Move section up" onClick={() => rpc("move", { kind: "section", id: s.id, dir: "up" }).then(reload, fail)}>↑</button><button aria-label="Move section down" onClick={() => rpc("move", { kind: "section", id: s.id, dir: "down" }).then(reload, fail)}>↓</button>
                 <button onClick={async () => { const t = await ask("Rename section", s.title); if (t) rpc("renameSection", { id: s.id, title: t }).then(reload, fail); }}>Rename</button>
-                <button onClick={() => rpc("deleteSection", { id: s.id }).then(reload, fail)}>Delete</button></>}
+                <button onClick={async () => (await confirmDialog(`Delete the section "${s.title}"? Lessons from it that are already in the recycle bin are removed for good.`)) && rpc("deleteSection", { id: s.id }).then(reload, fail)}>Delete</button></>}
               {s.lessons.map((x) => (
                 <div key={x.id}>
                   <button style={{ fontWeight: x.id === open ? "bold" : undefined }} onClick={() => setOpen(x.id)}>{x.title || "(untitled)"}{x.problems.length ? " ⚠️" : ""}</button>
@@ -115,9 +118,10 @@ export default function Editor({ id, canEdit }: { id: number; canEdit: boolean }
               {canEdit && <button onClick={async () => { const t = await ask("Lesson title"); if (t) rpc("addLesson", { id: s.id, title: t }).then(reload, fail); }}>+ Lesson</button>}
             </div>
           ))}
+          {canEdit && c.trashed.length > 0 && <details><summary>Deleted lessons ({c.trashed.length})</summary>{c.trashed.map((t) => <div key={t.id}>{t.title} <button onClick={() => rpc("restoreLesson", { id: t.id }).then(reload, fail)}>Restore</button></div>)}<span className="sub">Kept for 30 days.</span></details>}
           {canEdit && <button onClick={async () => { const t = await ask("Section title"); if (t) act("addSection", { title: t }); }}>+ Section</button>}
         </nav>
-        <div style={{ flex: "3 1 420px" }}>{lesson ? <LessonEditor key={lesson.id} lesson={lesson} docs={docs} tests={tests} reload={reload} /> : <p className="sub">Pick a lesson to edit it.</p>}</div>
+        <div style={{ flex: "3 1 420px" }}>{full ? <LessonEditor key={full.id} lesson={full} docs={docs} tests={tests} onSaved={onSaved} /> : open ? <p className="sub">Loading…</p> : <p className="sub">Pick a lesson to edit it.</p>}</div>
       </div>
     </div>
   );

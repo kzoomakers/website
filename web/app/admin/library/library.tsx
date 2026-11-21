@@ -1,19 +1,13 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { alertDialog, confirmDialog, promptDialog } from "@/components/dialog";
+import { fail, makeRpc } from "@/app/admin/rpc";
+import { ordered, TIERS, TYPES, type Folder } from "./shared";
+
+const rpc = makeRpc("/api/library/admin");
 
 type Doc = { id: number; slug: string; title: string; description: string; type: string; tier: string; status: string; pinned: boolean; owner: string; review_on: string | null; folders: number[]; pages: number; has_text: boolean; tags: string[] };
-const TYPES = ["manual", "safety", "sop", "spec", "form", "other"], TIERS = [["staff", "Staff only"], ["authorized", "Authorized members"], ["members", "All members"], ["public", "Public"]];
-const rpc = async (op: string, args: Record<string, unknown> = {}) => {
-  const r = await fetch("/api/library/admin", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ op, ...args }) });
-  if (!r.ok) throw new Error(await r.text());
-  return r.json();
-};
-const fail = (e: any) => alertDialog(e.message);
 
-type Folder = { id: number; parent_id: number | null; title: string };
-// Folders as an indented list, children under parents.
-const ordered = (fs: Folder[], parent: number | null = null, depth = 0): (Folder & { depth: number })[] => fs.filter((f) => f.parent_id === parent).flatMap((f) => [{ ...f, depth }, ...ordered(fs, f.id, depth + 1)]);
 
 type Share = { id: number; allow_download: boolean; expires_at: string; revoked_at: string | null; created_by: string; opens: number; last_open: string | null };
 // Share links for one document: create (passcode is always required, shown once) and revoke.

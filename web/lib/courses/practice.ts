@@ -2,6 +2,7 @@ import { randomInt } from "node:crypto";
 import { conn } from "../db";
 import { describeQ, drawQuestions, gradeQ, memberQuestion, type Q } from "../training/questions";
 import { cleanTags } from "../library/rules";
+import { tx } from "./tx";
 
 // Practice quizzes on the real question bank (moodlecourseware/03). The grader is gradeQ, the same one real tests use. Questions go to the member without keys; the key and feedback come back
 // only in the reply to that question's answer. Nothing here reads or writes attempts, certifications or tool_auths.
@@ -16,15 +17,16 @@ async function pool(testId: number) {
   const qs = (await c.query(`SELECT ${QCOLS} FROM rev_questions q LEFT JOIN question_practice p ON p.qkey = q.qkey WHERE q.revision_id = $1 ${t.tool ? "AND p.practice_ok" : ""} ORDER BY q.position, q.id`, [t.rev])).rows as Question[];
   return { title: t.title as string, tool: t.tool as boolean, qs };
 }
-/** Tests with practice questions available, for lesson quiz blocks. */
+/** Titles of the tests (by id) that have practice questions available, for lesson quiz blocks: one query, no question rows loaded. */
 export async function practiceTitles(ids: number[]) {
-  const out: Record<number, string> = {};
-  for (const id of ids) { const p = await pool(id); if (p?.qs.length) out[id] = p.title; }
-  return out;
+  if (!ids.length) return {};
+  const r = await (await conn()).query(`SELECT t.id, t.title FROM tests t JOIN test_revisions r ON r.test_id = t.id AND r.status = 'published' WHERE t.id = ANY($1) AND NOT t.archived
+    AND EXISTS (SELECT 1 FROM rev_questions q LEFT JOIN question_practice p ON p.qkey = q.qkey WHERE q.revision_id = r.id AND (p.practice_ok OR NOT EXISTS (SELECT 1 FROM test_tools tt WHERE tt.test_id = t.id)))`, [ids]);
+  return Object.fromEntries(r.rows.map((x) => [x.id as number, x.title as string])) as Record<number, string>;
 }
 
-const own = async (userId: number, id: number) => {
-  const r = (await (await conn()).query("SELECT id, test_id, finished_at, state FROM practice_attempts WHERE id = $1 AND user_id = $2", [id, userId])).rows[0];
+const own = async (userId: number, id: number, c?: { query: (q: string, v: unknown[]) => Promise<{ rows: any[] }> }, lock = false) => {
+  const r = (await (c ?? (await conn())).query(`SELECT id, test_id, finished_at, state FROM practice_attempts WHERE id = $1 AND user_id = $2${lock ? " FOR UPDATE" : ""}`, [id, userId])).rows[0];
   if (!r) throw new Error("That practice run doesn't exist.");
   return r as { id: number; test_id: number; finished_at: Date | null; state: State };
 };
@@ -57,13 +59,15 @@ export async function practiceView(userId: number, id: number) {
 
 /** Grades one answer, remembers it, and (only now) returns the right answer and the author's feedback. Each question is answered once per run. */
 export async function practiceAnswer(userId: number, id: number, qid: number, answer: unknown) {
-  const a = await own(userId, id);
-  if (a.finished_at || !a.state.ids.includes(qid) || a.state.answers[qid]) throw new Error("That question was already answered.");
-  const q = (await byIds([qid]))[0], frac = gradeQ(q, answer);
-  a.state.answers[qid] = { frac };
-  const done = a.state.ids.every((i) => a.state.answers[i]);
-  await (await conn()).query(`UPDATE practice_attempts SET state = $2, finished_at = ${done ? "now()" : "NULL"} WHERE id = $1`, [id, JSON.stringify(a.state)]);
-  return { correct: frac === 1, partial: frac > 0 && frac < 1, answer: describeQ(q), feedback_html: q.feedback_html };
+  return tx(async (c) => { // the run's row is locked, so two answers sent at once can't overwrite each other
+    const a = await own(userId, id, c, true);
+    if (a.finished_at || !a.state.ids.includes(qid) || a.state.answers[qid]) throw new Error("That question was already answered.");
+    const q = (await byIds([qid]))[0], frac = gradeQ(q, answer);
+    a.state.answers[qid] = { frac };
+    const done = a.state.ids.every((i) => a.state.answers[i]);
+    await c.query(`UPDATE practice_attempts SET state = $2, finished_at = ${done ? "now()" : "NULL"} WHERE id = $1`, [id, JSON.stringify(a.state)]);
+    return { correct: frac === 1, partial: frac > 0 && frac < 1, answer: describeQ(q), feedback_html: q.feedback_html };
+  });
 }
 
 // ---- Author side: tags and the practice_ok switch (learning permission) ----
@@ -75,7 +79,7 @@ export async function practiceQuestions(testId: number) {
   const r = (await (await conn()).query(`SELECT q.qkey, q.type, q.prompt_html, coalesce(p.tags, '{}') AS tags, coalesce(p.practice_ok, false) AS practice_ok, r.status
     FROM test_revisions r JOIN rev_questions q ON q.revision_id = r.id LEFT JOIN question_practice p ON p.qkey = q.qkey
     WHERE r.id = (SELECT id FROM test_revisions WHERE test_id = $1 AND status IN ('published', 'draft') ORDER BY (status = 'published') DESC LIMIT 1) ORDER BY q.position, q.id`, [testId])).rows;
-  return r.map((x) => ({ ...x, prompt: strip(x.prompt_html).slice(0, 200), prompt_html: undefined }));
+  return r.map(({ prompt_html, ...x }) => ({ ...x, prompt: strip(prompt_html).slice(0, 200) }));
 }
 export async function setPractice(qkey: unknown, b: { tags?: unknown; practice_ok?: unknown }) {
   if (typeof qkey !== "string" || !/^[0-9a-f-]{36}$/.test(qkey)) throw new Error("Unknown question.");

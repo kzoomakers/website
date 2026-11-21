@@ -1,6 +1,6 @@
 import { conn } from "../db";
 import { learnFlags } from "../learn-flags";
-import { needsAck, rereadFrom, visibleSql, type Viewer } from "../library/rules";
+import { rereadFrom, visibleSql, type Viewer } from "../library/rules";
 
 // The tool is the hub (moodlecourseware/05): a tool links to library documents and courses, and may require the course and/or the SOP acknowledgements before its real test can start.
 export const ROLES = ["manual", "sop", "safety"] as const;
@@ -51,7 +51,6 @@ export async function missingFor(v: Viewer, toolIds: number[]): Promise<Need[]> 
   }
   return out;
 }
-export { needsAck };
 
 /** For the member's tool cards: each tool's documents and courses they may open, and what is still required. */
 export async function learningForMember(v: Viewer, toolIds: number[]) {
@@ -65,4 +64,10 @@ export async function learningForMember(v: Viewer, toolIds: number[]) {
   ]);
   for (const id of toolIds) out.set(id, { docs: docs.rows.filter((d) => d.tool_id === id), courses: courses.rows.filter((x) => x.tool_id === id), need: await missingFor(v, [id]) });
   return out;
+}
+
+/** The same, for the tools a test covers. Called by start() before it opens its transaction, so it never holds one connection while waiting for another. */
+export async function missingForTest(userId: number, testId: number) {
+  const tools = (await (await conn()).query("SELECT tool_id FROM test_tools WHERE test_id = $1", [testId])).rows.map((r) => r.tool_id as number);
+  return missingFor({ id: userId, member: true, staff: false }, tools);
 }

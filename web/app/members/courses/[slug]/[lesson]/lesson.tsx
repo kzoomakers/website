@@ -28,9 +28,11 @@ export default function Lesson({ slug, q, course, sequential, preview, lesson, d
   const [data, setData] = useState(d0), [complete, setComplete] = useState(c0), [err, setErr] = useState("");
   const send = async (body: object) => {
     if (preview) return;
-    const r = await fetch("/api/courses/progress", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ lesson: lesson.id, ...body }) });
-    if (!r.ok) return setErr(await r.text());
-    const j = await r.json(); setErr(""); setData(j.data); setComplete(j.state === "done");
+    try {
+      const r = await fetch("/api/courses/progress", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ lesson: lesson.id, ...body }) });
+      if (!r.ok) return setErr(await r.text());
+      const j = await r.json(); setErr(""); setData(j.data); setComplete(j.state === "done");
+    } catch { setErr("Couldn't save your progress. Check your connection and try again."); }
   };
   useEffect(() => { send({ action: "view" }); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const rule = lesson.completion.rule, base = `/members/courses/${slug}`, canNext = preview || complete || !sequential;

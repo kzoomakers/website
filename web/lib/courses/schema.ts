@@ -13,6 +13,10 @@ export async function coursesSchema(pool: Pool) {
   await q("CREATE TABLE IF NOT EXISTS course_tools (course_id int NOT NULL REFERENCES courses ON DELETE CASCADE, tool_id int NOT NULL REFERENCES tools ON DELETE CASCADE, PRIMARY KEY (course_id, tool_id))");
   await q("CREATE TABLE IF NOT EXISTS lesson_progress (user_id int NOT NULL REFERENCES site_users ON DELETE CASCADE, lesson_id int NOT NULL REFERENCES lessons ON DELETE CASCADE, state text NOT NULL DEFAULT 'todo' CHECK (state IN ('todo','doing','done')), data jsonb NOT NULL DEFAULT '{}', updated_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (user_id, lesson_id))");
   await q("CREATE INDEX IF NOT EXISTS lesson_progress_lesson ON lesson_progress (lesson_id)");
+  await q("CREATE INDEX IF NOT EXISTS course_sections_course ON course_sections (course_id, position)");
+  await q("CREATE INDEX IF NOT EXISTS lessons_section ON lessons (section_id, position)");
+  await q("CREATE INDEX IF NOT EXISTS lesson_revisions_lesson ON lesson_revisions (lesson_id, id DESC)");
+  await q("CREATE INDEX IF NOT EXISTS course_tools_tool ON course_tools (tool_id)");
   await q("ALTER TABLE tool_training ADD COLUMN IF NOT EXISTS require_course boolean NOT NULL DEFAULT false, ADD COLUMN IF NOT EXISTS require_ack boolean NOT NULL DEFAULT false");
 }
 
