@@ -14,13 +14,13 @@ export type ListedComment = Comment & { parent_short_id: string | null };
 
 /** /comments: the newest comments a visitor may see (comments.active, on stories that are not deleted). */
 export async function newestComments(page = 1): Promise<{ comments: ListedComment[]; more: boolean }> {
-  const r = await (await conn()).query(`${SELECT} WHERE NOT c.is_deleted AND NOT c.is_moderated AND NOT s.is_deleted ORDER BY c.id DESC LIMIT $1 OFFSET $2`, [COMMENTS_PER_PAGE + 1, (page - 1) * COMMENTS_PER_PAGE]);
+  const r = await (await conn()).query(`${SELECT} WHERE NOT c.is_deleted AND NOT c.is_moderated AND NOT s.is_deleted AND u.banned_at IS NULL AND u.deleted_at IS NULL ORDER BY c.id DESC LIMIT $1 OFFSET $2`, [COMMENTS_PER_PAGE + 1, (page - 1) * COMMENTS_PER_PAGE]);
   return { comments: r.rows.slice(0, COMMENTS_PER_PAGE), more: r.rows.length > COMMENTS_PER_PAGE };
 }
 
 /** /upvoted/comments: comments the viewer upvoted, newest vote target first, not their own and not on deleted stories. */
 export async function upvotedComments(userId: number, page = 1): Promise<{ comments: ListedComment[]; more: boolean }> {
-  const r = await (await conn()).query(`${SELECT} WHERE c.user_id <> $3 AND NOT c.is_deleted AND NOT c.is_moderated AND NOT s.is_deleted
+  const r = await (await conn()).query(`${SELECT} WHERE c.user_id <> $3 AND NOT c.is_deleted AND NOT c.is_moderated AND NOT s.is_deleted AND u.banned_at IS NULL AND u.deleted_at IS NULL
     AND EXISTS (SELECT 1 FROM feed.votes v WHERE v.comment_id = c.id AND v.user_id = $3 AND v.vote = 1) ORDER BY c.id DESC LIMIT $1 OFFSET $2`, [COMMENTS_PER_PAGE + 1, (page - 1) * COMMENTS_PER_PAGE, userId]);
   return { comments: r.rows.slice(0, COMMENTS_PER_PAGE), more: r.rows.length > COMMENTS_PER_PAGE };
 }
@@ -51,4 +51,13 @@ export async function inboxFor(userId: number, unreadOnly: boolean, page = 1): P
   const unread = rows.filter((x) => !x.read_at).map((x) => x.notification_id);
   if (unread.length) await c.query("UPDATE feed.notifications SET read_at = now(), updated_at = now() WHERE id = ANY($1::bigint[]) AND user_id = $2", [unread, userId]);
   return { comments: rows, more: r.rows.length > INBOX_PER_PAGE };
+}
+
+/** comment.rb recent_threads: every comment of the user's 20 most recent threads (on stories that are not deleted), thread by thread, each in tree order. */
+export async function recentThreads(userId: number): Promise<ListedComment[]> {
+  return (await (await conn()).query(
+    `WITH RECURSIVE ids AS (SELECT thread_id FROM feed.comments WHERE user_id = $1 AND thread_id IS NOT NULL GROUP BY thread_id ORDER BY thread_id DESC LIMIT 20),
+     t AS (SELECT c.id, c.thread_id, ARRAY[c.confidence_order] AS path FROM feed.comments c WHERE c.thread_id IN (SELECT thread_id FROM ids) AND c.parent_comment_id IS NULL
+       UNION ALL SELECT c.id, c.thread_id, t.path || c.confidence_order FROM feed.comments c JOIN t ON c.parent_comment_id = t.id)
+     SELECT x.* FROM (${SELECT} WHERE c.id IN (SELECT id FROM t) AND NOT s.is_deleted) x JOIN t ON t.id = x.id ORDER BY t.thread_id DESC, t.path`, [userId])).rows;
 }

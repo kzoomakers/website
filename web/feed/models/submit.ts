@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import type { PoolClient } from "pg";
 import { conn } from "@/lib/db";
 import { cleanUrl, hotness } from "../logic";
-import { MAX_EDIT_MINS, RECENT_DAYS, cleanTitle, isNewUser, storyProblems } from "../story-rules";
+import { DELETE_DAYS, MAX_EDIT_MINS, RECENT_DAYS, cleanTitle, isNewUser, storyProblems } from "../story-rules";
 import { updateCachedColumns } from "./cached";
 import { tattle } from "./mod-notes";
 import { renderPost } from "./render";
@@ -11,7 +11,7 @@ import { findTags } from "./stories";
 // Submitting a story (stories_controller#create + story.rb callbacks). Everything runs in one transaction so a failure leaves nothing half-made.
 // Tested against a scratch Postgres in tests/feed-submit-db.test.mjs (run with TEST_DATABASE_URL).
 
-export type Submission = { title: string; url: string; description: string; tags: string[]; userIsAuthor: boolean; image?: string };
+export type Submission = { title: string; url: string; description: string; tags: string[]; userIsAuthor: boolean; userIsFollowing?: boolean; image?: string }; // userIsFollowing undefined = the form had no follow box, leave the story as it is
 export type SubmitResult = { ok: true; shortId: string } | { ok: false; errors: string[]; similar?: { short_id: string; title: string }[] };
 
 const token = (kind: string) => `${kind}_${randomBytes(16).toString("hex")}`;
@@ -29,7 +29,7 @@ function originIdentifier(d: { selector: string | null; replacement: string | nu
   } catch { return d.domain.toLowerCase(); } // a bad selector in the database must not stop submissions
 }
 
-export type Prep = { title: string; description: string; html: string; cu: ReturnType<typeof cleanUrl> | { url: ""; normalized: ""; domain: null }; tags: Awaited<ReturnType<typeof findTags>> & {}; domainId: number | null; originId: number | null; isAuthor: boolean };
+export type Prep = { title: string; description: string; html: string; cu: ReturnType<typeof cleanUrl> | { url: ""; normalized: ""; domain: null }; tags: Awaited<ReturnType<typeof findTags>> & {}; domainId: number | null; originId: number | null; isAuthor: boolean; isFollowing: boolean | null };
 const fail = (errors: string[], similar?: { short_id: string; title: string }[]): SubmitResult => ({ ok: false, errors, similar });
 
 /** mod_note.rb tattle_on_story_domain!/_origin!: what a refused story looked like, so moderators can spot someone testing a banned site. */
@@ -69,7 +69,7 @@ export async function prepare(c: PoolClient, u: { id?: number; is_moderator: boo
       originId = o.id;
     }
   }
-  return { title, description, html: await renderPost(c, description), cu, tags, domainId, originId, isAuthor: !cu.url || input.userIsAuthor }; // a text post is always by its submitter
+  return { title, description, html: await renderPost(c, description), cu, tags, domainId, originId, isAuthor: !cu.url || input.userIsAuthor, isFollowing: input.userIsFollowing ?? null }; // a text post is always by its submitter
 }
 
 export const isFail = (p: Prep | SubmitResult): p is SubmitResult => "ok" in p;
@@ -97,9 +97,9 @@ export const createStory = (user: { id: number }, input: Submission): Promise<Su
     if (i === 10) throw new Error("too many short id collisions");
     sid = shortId();
     s = (await c.query(
-      `INSERT INTO feed.stories (user_id, url, normalized_url, title, description, markeddown_description, short_id, user_is_author, domain_id, origin_id, created_at, last_edited_at, token, image)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$11,$12,$13) ON CONFLICT (short_id) DO NOTHING RETURNING id`,
-      [user.id, p.cu.url, p.cu.normalized || null, p.title, p.description, p.html, sid, p.isAuthor, p.domainId, p.originId, now, token("story"), input.image || null])).rows[0];
+      `INSERT INTO feed.stories (user_id, url, normalized_url, title, description, markeddown_description, short_id, user_is_author, domain_id, origin_id, created_at, last_edited_at, token, image, user_is_following)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$11,$12,$13,$14) ON CONFLICT (short_id) DO NOTHING RETURNING id`,
+      [user.id, p.cu.url, p.cu.normalized || null, p.title, p.description, p.html, sid, p.isAuthor, p.domainId, p.originId, now, token("story"), input.image || null, !!p.isFollowing])).rows[0];
   }
   for (const t of p.tags) await c.query("INSERT INTO feed.taggings (story_id, tag_id) VALUES ($1, $2)", [s.id, t.id]);
   await c.query("INSERT INTO feed.votes (user_id, story_id, vote) VALUES ($1, $2, 1)", [user.id, s.id]); // the submitter's own upvote: score already starts at 1 and own votes earn no karma
@@ -114,16 +114,20 @@ export const createStory = (user: { id: number }, input: Submission): Promise<Su
 export const editable = (s: { user_id: number; is_moderated: boolean; created_at: Date }, userId: number, now = Date.now()) =>
   s.user_id === userId && !s.is_moderated && new Date(s.created_at).getTime() > now - MAX_EDIT_MINS * 60_000;
 
-const owned = async (c: PoolClient, shortId: string, userId: number) => {
+/** Delete/undelete window: the submitter, until a moderator touches it or 28 days pass. */
+export const deletable = (s: { user_id: number; is_moderated: boolean; created_at: Date }, userId: number, now = Date.now()) =>
+  s.user_id === userId && !s.is_moderated && new Date(s.created_at).getTime() > now - DELETE_DAYS * 864e5;
+
+const owned = async (c: PoolClient, shortId: string, userId: number, ok = editable) => {
   const s = (await c.query("SELECT * FROM feed.stories WHERE short_id = $1 FOR UPDATE", [shortId])).rows[0];
-  return s && editable(s, userId) ? s : null;
+  return s && ok(s, userId) ? s : null;
 };
 
 /** Writes an edited story: fields, tags and the domain/origin counter caches. `undelete` is true for the submitter (editing undeletes, as in Lobsters); a moderator's edit leaves the deleted state alone. */
 export async function writeStory(c: PoolClient, s: { id: number; domain_id: number | null; origin_id: number | null }, p: Prep, undelete: boolean) {
   await c.query(
-    `UPDATE feed.stories SET url = $2, normalized_url = $3, title = $4, description = $5, markeddown_description = $6, user_is_author = $7, domain_id = $8, origin_id = $9, is_deleted = ${undelete ? "false" : "is_deleted"}, last_edited_at = now(), updated_at = now() WHERE id = $1`,
-    [s.id, p.cu.url, p.cu.normalized || null, p.title, p.description, p.html, p.isAuthor, p.domainId, p.originId]);
+    `UPDATE feed.stories SET url = $2, normalized_url = $3, title = $4, description = $5, markeddown_description = $6, user_is_author = $7, domain_id = $8, origin_id = $9, user_is_following = COALESCE($10, user_is_following), is_deleted = ${undelete ? "false" : "is_deleted"}, last_edited_at = now(), updated_at = now() WHERE id = $1`,
+    [s.id, p.cu.url, p.cu.normalized || null, p.title, p.description, p.html, p.isAuthor, p.domainId, p.originId, p.isFollowing]);
   await c.query("DELETE FROM feed.taggings WHERE story_id = $1", [s.id]);
   for (const t of p.tags) await c.query("INSERT INTO feed.taggings (story_id, tag_id) VALUES ($1, $2)", [s.id, t.id]);
   if (s.domain_id !== p.domainId) { // Rails counter caches
@@ -147,10 +151,10 @@ export const updateStory = (user: { id: number }, shortId: string, input: Submis
   return { ok: true, shortId } as SubmitResult;
 });
 
-/** stories#destroy (delete = true) and #undelete. Same window as editing. */
+/** stories#destroy (delete = true) and #undelete. 28-day window (editing is 6 hours). */
 export const setStoryDeleted = (user: { id: number }, shortId: string, deleted: boolean): Promise<SubmitResult> => tx(async (c) => {
-  const u = await live(c, user.id), s = u && !u.banned_at && !u.deleted_at && await owned(c, shortId, user.id);
-  if (!s) return fail(["You cannot edit that story."]);
+  const u = await live(c, user.id), s = u && !u.banned_at && !u.deleted_at && await owned(c, shortId, user.id, deletable);
+  if (!s) return fail(["You cannot delete that story."]);
   if (s.is_deleted !== deleted) {
     await c.query("UPDATE feed.stories SET is_deleted = $2, updated_at = now() WHERE id = $1", [s.id, deleted]);
     await c.query("INSERT INTO feed.keystores (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = COALESCE(feed.keystores.value, 0) + $2", [`user:${user.id}:stories_deleted`, deleted ? 1 : -1]);

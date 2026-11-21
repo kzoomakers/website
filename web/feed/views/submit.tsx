@@ -53,6 +53,7 @@ async function StoryFormPage({ path, edit, start, notice }: { path: string; edit
               <label htmlFor="description">Text</label>
               <textarea id="description" name="description" rows={8} maxLength={65535} defaultValue={f?.description} placeholder="Markdown is supported." />
               <label className="check"><input id="user_is_author" name="user_is_author" type="checkbox" defaultChecked={f?.userIsAuthor} /> I'm the author of the story at this link.</label>
+              {!edit?.byModerator && <label className="check"><input type="hidden" name="follow_shown" value="1" /><input id="user_is_following" name="user_is_following" type="checkbox" defaultChecked={f?.userIsFollowing} /> Follow this story to get replies by e-mail and Pushover.</label>}
             </section>
             {!edit && (
               <section className="card dropzone_card">
@@ -114,9 +115,9 @@ export async function EditStoryPage({ shortId }: { shortId: string }) {
   const v = await currentFeedUser().catch(() => null);
   if (!v) redirect(`/login?return=/stories/${shortId}/edit`);
   const s = (await (await conn()).query(
-    `SELECT s.user_id, s.is_moderated, s.created_at, s.title, s.url, s.description, s.user_is_author, COALESCE((SELECT array_agg(t.tag) FROM feed.taggings tg JOIN feed.tags t ON t.id = tg.tag_id WHERE tg.story_id = s.id), '{}') tags
+    `SELECT s.user_id, s.is_moderated, s.created_at, s.title, s.url, s.description, s.user_is_author, s.user_is_following, COALESCE((SELECT array_agg(t.tag) FROM feed.taggings tg JOIN feed.tags t ON t.id = tg.tag_id WHERE tg.story_id = s.id), '{}') tags
      FROM feed.stories s WHERE s.short_id = $1`, [shortId])).rows[0];
   const byModerator = v.isModerator && s?.user_id !== v.id;
   if (!s || !(byModerator || editable(s, v.id))) notFound();
-  return <StoryFormPage path={`/stories/${shortId}/edit`} edit={{ shortId, input: { title: s.title, url: s.url ?? "", description: s.description ?? "", tags: s.tags, userIsAuthor: s.user_is_author }, byModerator }} />;
+  return <StoryFormPage path={`/stories/${shortId}/edit`} edit={{ shortId, input: { title: s.title, url: s.url ?? "", description: s.description ?? "", tags: s.tags, userIsAuthor: s.user_is_author, userIsFollowing: s.user_is_following }, byModerator }} />;
 }
