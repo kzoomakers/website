@@ -35,6 +35,27 @@ function Shares({ d }: { d: Doc }) {
   );
 }
 
+// Version history and "upload a new version".
+function Versions({ d, reload }: { d: Doc; reload: () => void }) {
+  const [list, setList] = useState<{ version: number; pages: number; change_note: string; requires_reread: boolean; uploaded_by: string; at: string }[] | null>(null);
+  const pick = useRef<HTMLInputElement>(null);
+  const send = async (file: File) => {
+    const note = await promptDialog("What changed in this version?", ""); if (note === null) return;
+    const reread = (d.type === "sop" || d.type === "safety") ? await confirmDialog("Ask everyone to acknowledge this version again?", { ok: "Yes, re-read" }) : false;
+    const fd = new FormData(); fd.append("file", file); fd.append("doc", String(d.id)); fd.append("note", note); fd.append("reread", reread ? "1" : "0");
+    const r = await fetch("/api/library/version", { method: "POST", body: fd });
+    if (!r.ok) return fail(new Error(await r.text()));
+    reload();
+  };
+  return (
+    <details onToggle={(e) => e.currentTarget.open && rpc("versions", { id: d.id }).then(setList, fail)}><summary>Versions</summary>
+      <input ref={pick} type="file" accept="application/pdf,.pdf" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) send(f); }} />
+      <button onClick={() => pick.current?.click()}>Upload a new version</button>
+      {list?.map((x) => <div key={x.version}>v{x.version} · {x.pages} p · {new Date(x.at).toLocaleDateString()} · {x.uploaded_by}{x.change_note && ` · ${x.change_note}`}{x.requires_reread && " · re-read"} <a href={`/api/library/file/${d.slug}?v=${x.version}`} target="_blank" rel="noreferrer">open</a></div>)}
+    </details>
+  );
+}
+
 // Who has read the current version (SOPs and safety guides).
 function Reads({ d }: { d: Doc }) {
   const [r, setR] = useState<{ version: number; read: { name: string }[]; unread: string[] } | null>(null);
@@ -55,6 +76,7 @@ function Row({ d, canEdit, reload, folders, trash, picked, pick }: { d: Doc; can
       {" "}<a href={`/api/library/file/${d.slug}`} target="_blank" rel="noreferrer">Open PDF</a>
       {d.review_on && d.review_on < new Date().toISOString().slice(0, 10) && <span className="tag pri">review overdue</span>}
       {canEdit && !trash && <Shares d={d} />}
+      {canEdit && !trash && <Versions d={d} reload={reload} />}
       {!trash && (d.type === "sop" || d.type === "safety") && <Reads d={d} />}
       {canEdit && trash && <button onClick={() => rpc("restore", { id: d.id }).then(reload, fail)}>Restore</button>}
       {canEdit && !trash && (

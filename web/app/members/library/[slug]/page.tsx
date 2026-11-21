@@ -22,9 +22,9 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
       {() => (
         <>
           <p className="sub">{d.type} · {d.pages} page{d.pages === 1 ? "" : "s"}{d.description ? ` · ${d.description}` : ""}</p>
-          {v.id !== null && needsAck(d.type) && (ack?.version === d.current_version
+          {v.id !== null && needsAck(d.type) && (ack && ack.version >= d.reread_from
             ? <p>✅ You read version {ack.version} on {new Date(ack.at).toLocaleDateString("en-US", { dateStyle: "medium", timeZone: "America/Detroit" })}.</p>
-            : <><p className="sub">{ack ? `This document changed since you read version ${ack.version}.` : "Please read this document, then confirm below."}</p><Ack slug={slug} version={d.current_version} /></>)}
+            : <><p className="sub">{ack ? `This document was updated since you read version ${ack.version}.` : "Please read this document, then confirm below."}</p><Ack slug={slug} version={d.current_version} /></>)}
           <p><a className="btn" href={`/api/library/file/${slug}?download=1`}>Download PDF</a> <a href={`/api/library/file/${slug}`} target="_blank" rel="noreferrer">Open in a new tab</a></p>
           <Viewer src={`/api/library/file/${slug}`} open />
         </>

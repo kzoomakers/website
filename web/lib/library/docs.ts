@@ -39,8 +39,8 @@ export async function listDocs(v: Viewer, o: { q?: string; tag?: string; folder?
 
 /** One document by slug if the viewer may see it, else null (the same answer for "missing" and "not yours"). */
 export async function getDoc(v: Viewer, slug: string) {
-  const r = await (await conn()).query(`SELECT ${COLS}, v.s3_key, v.thumb_key, v.filename, v.size, d.copyright_note FROM lib_docs d JOIN lib_versions v ON v.doc_id = d.id AND v.version = d.current_version WHERE d.slug = $2 AND ${visibleSql(v, "$1")}`, [v.id, slug]);
-  return r.rows[0] as (DocRow & { s3_key: string; thumb_key: string | null; filename: string; size: number; copyright_note: string }) | undefined;
+  const r = await (await conn()).query(`SELECT ${COLS}, v.s3_key, v.thumb_key, v.filename, v.size, d.copyright_note, (SELECT coalesce(max(r.version), 1) FROM lib_versions r WHERE r.doc_id = d.id AND r.requires_reread) AS reread_from FROM lib_docs d JOIN lib_versions v ON v.doc_id = d.id AND v.version = d.current_version WHERE d.slug = $2 AND ${visibleSql(v, "$1")}`, [v.id, slug]);
+  return r.rows[0] as (DocRow & { reread_from: number; s3_key: string; thumb_key: string | null; filename: string; size: number; copyright_note: string }) | undefined;
 }
 
 export async function tagList(v: Viewer) {
@@ -161,9 +161,40 @@ export async function ackState(userId: number, docId: number) {
 
 /** Who has and hasn't read the current version of a document. "Should have read" = approved members who can see it (authorized tier: those authorized on a linked tool; staff tier: nobody). */
 export async function ackReport(docId: number) {
-  const c = await conn(), d = (await c.query("SELECT tier, current_version FROM lib_docs WHERE id = $1", [docId])).rows[0];
+  const c = await conn(), d = (await c.query("SELECT tier, current_version, (SELECT coalesce(max(r.version), 1) FROM lib_versions r WHERE r.doc_id = lib_docs.id AND r.requires_reread) AS reread_from FROM lib_docs WHERE id = $1", [docId])).rows[0];
   if (!d) throw new Error("That document doesn't exist.");
   const who = d.tier === "staff" ? "false" : d.tier === "authorized" ? "EXISTS (SELECT 1 FROM tool_docs td JOIN tool_auths ta ON ta.tool_id = td.tool_id WHERE td.doc_id = $1 AND ta.user_id = u.id AND (ta.expires_on IS NULL OR ta.expires_on >= current_date))" : "true";
-  const r = await c.query(`SELECT u.id, u.name, a.at FROM site_users u LEFT JOIN lib_acks a ON a.user_id = u.id AND a.doc_id = $1 AND a.version = $2 WHERE u.approval = 'approved' AND u.disabled_at IS NULL AND ${who} ORDER BY lower(u.name) LIMIT 1000`, [docId, d.current_version]);
+  const r = await c.query(`SELECT u.id, u.name, (SELECT max(a.at) FROM lib_acks a WHERE a.user_id = u.id AND a.doc_id = $1 AND a.version >= $2) AS at FROM site_users u WHERE u.approval = 'approved' AND u.disabled_at IS NULL AND ${who} ORDER BY lower(u.name) LIMIT 1000`, [docId, d.reread_from]);
   return { version: d.current_version, read: r.rows.filter((x) => x.at).map((x) => ({ name: x.name, at: x.at })), unread: r.rows.filter((x) => !x.at).map((x) => x.name) };
 }
+
+/** Adds a new file to a document as its next version. Old versions are kept (staff can open them). A version flagged `reread` asks everyone to acknowledge again; one that isn't carries earlier acknowledgements forward. */
+export async function addVersion(docId: number, file: { name: string; bytes: Buffer }, o: { note?: unknown; reread?: unknown }, who: string): Promise<number> {
+  if (!isPdf(file.bytes)) throw new Error(`${file.name}: only PDF files are accepted.`);
+  const store = await s3(), c = await conn();
+  if (!store) throw new Error("File storage isn't set up.");
+  const cur = (await c.query("SELECT v.s3_key FROM lib_docs d JOIN lib_versions v ON v.doc_id = d.id AND v.version = d.current_version WHERE d.id = $1 AND d.deleted_at IS NULL", [docId])).rows[0];
+  if (!cur) throw new Error("That document doesn't exist.");
+  const info = await extractPdf(file.bytes).catch((e) => { throw new Error(`${file.name}: ${e.message}`); });
+  const dir = cur.s3_key.replace(/\/v\d+\.pdf$/, ""), tx = await c.connect();
+  let version = 0, key = "";
+  try {
+    await tx.query("BEGIN");
+    await tx.query("SELECT 1 FROM lib_docs WHERE id = $1 FOR UPDATE", [docId]); // two uploads at once take turns
+    version = (await tx.query("SELECT max(version) + 1 AS n FROM lib_versions WHERE doc_id = $1", [docId])).rows[0].n;
+    key = `${dir}/v${version}.pdf`;
+    const thumb = info.thumb ? `${dir}/thumb-v${version}.webp` : null, text = info.text.trim();
+    await store.client.send(new PutObjectCommand({ Bucket: store.bucket, Key: key, Body: file.bytes, ContentType: "application/pdf" }));
+    if (thumb) await store.client.send(new PutObjectCommand({ Bucket: store.bucket, Key: thumb, Body: Buffer.from(info.thumb, "base64"), ContentType: "image/webp" }));
+    await tx.query("INSERT INTO lib_versions (doc_id, version, s3_key, filename, size, pages, has_text, text_extract, thumb_key, change_note, requires_reread, uploaded_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)",
+      [docId, version, key, safeName(file.name), file.bytes.length, info.pages, text.length > 20, text, thumb, typeof o.note === "string" ? o.note.slice(0, 500) : "", o.reread === true, who]);
+    await tx.query("UPDATE lib_docs SET current_version = $2, updated_at = now() WHERE id = $1", [docId, version]);
+    await tx.query("COMMIT");
+  } catch (e) { await tx.query("ROLLBACK").catch(() => {}); throw e; } finally { tx.release(); }
+  await reindex(docId);
+  return version;
+}
+
+export const versionsOf = async (docId: number) => (await (await conn()).query("SELECT version, filename, size, pages, change_note, requires_reread, uploaded_by, at FROM lib_versions WHERE doc_id = $1 ORDER BY version DESC", [docId])).rows;
+/** s3 key of one stored version (staff only; the caller checks). */
+export const versionKey = async (docId: number, version: number) => (await (await conn()).query("SELECT s3_key FROM lib_versions WHERE doc_id = $1 AND version = $2", [docId, version])).rows[0]?.s3_key as string | undefined;
