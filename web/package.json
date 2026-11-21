@@ -6,7 +6,7 @@
     "build": "next build",
     "start": "next start",
     "test": "node --import ./tests/resolve.mjs --test",
-    "test:db": "node --import ./tests/resolve.mjs --test --test-concurrency=1 tests/training-*.test.mjs tests/pii*.test.mjs tests/features-db.test.mjs"
+    "test:db": "node --import ./tests/resolve.mjs --test --test-concurrency=1 tests/training-*.test.mjs tests/pii*.test.mjs tests/features-db.test.mjs tests/library-db.test.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1167.0",
