@@ -28,7 +28,8 @@ export default async function TrainingPage() {
                   {c.state === "cooldown" && <p>You can try again in about {c.wait_hours} hour{c.wait_hours === 1 ? "" : "s"}.</p>}
                   {c.state === "locked" && <p>You've used all your attempts. Ask a trainer to help.</p>}
                   {c.state === "retake" && <p>Retake by {c.retake_by} to keep your authorization.</p>}
-                  {["not_started", "retake"].includes(c.state) && <Link className="btn" href={`/members/training/test/${c.test_id}`}>Take the test</Link>}
+                  {c.state === "lapsed" && <p>Your authorization lapsed because the test changed. Pass the new test to get it back.</p>}
+                  {["not_started", "retake", "lapsed"].includes(c.state) && <Link className="btn" href={`/members/training/test/${c.test_id}`}>Take the test</Link>}
                   {c.state === "in_progress" && <Link className="btn" href={`/members/training/test/${c.test_id}`}>Resume{c.due_at ? ` (due ${new Date(c.due_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/Detroit" })})` : ""}</Link>}
                 </section>
               ))}

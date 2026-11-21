@@ -2,7 +2,7 @@
 // To add a page, add a line here. `key` makes an entry a permission page (section:key); entries without one belong to the page above them in the URL.
 import type { Section } from "./access";
 
-export type AlertKey = "reviews" | "comments" | "forms" | "applicants" | "walkups" | "renewals";
+export type AlertKey = "reviews" | "comments" | "forms" | "applicants" | "walkups" | "renewals" | "training";
 export type Entry = {
   href: string; icon: string; label: string; exact?: boolean;
   key?: string; pageLabel?: string; // permission page key, and its name when it differs from the menu label
@@ -51,7 +51,7 @@ export const NAV: Tab[] = [
     E("/admin/people", "👥", "People", "people", { zone: "Records", exact: true }), E("/admin/people/guests", "🧑‍🤝‍🧑", "Guests", "guests", { zone: "Records" }), E("/admin/people/approvals", "✅", "New members", "approvals", { alert: "applicants" }), E("/admin/people/classes", "🎓", "Classes", "classes", { zone: "Records" }),
     E("/admin/people/tools", "🔧", "Tools & sign-offs", "tools", { zone: "Settings" }), E("/admin/people/skills", "🛠️", "Skills", "skills", { zone: "Settings" }), E("/admin/people/values", "🏷️", "Profile options", "values", { zone: "Settings" }),
     E("/admin/people/membership-classes", "💳", "Membership classes", "membership-classes", { section: "system", zone: "Settings" }),
-    E("/admin/people/training", "🏅", "Training", "queue", { section: "training", pageLabel: "Sign-off queue", zone: "Work" }), E("/admin/people/training/reports", "📊", "Training reports", "reports", { section: "training", zone: "Records" }),
+    E("/admin/people/training", "🏅", "Training", "queue", { section: "training", pageLabel: "Sign-off queue", zone: "Work", alert: "training" }), E("/admin/people/training/reports", "📊", "Training reports", "reports", { section: "training", zone: "Records" }),
     E("/admin/people/training/tests", "📝", "Training tests", "tests", { section: "training", zone: "Work" }), E("/admin/people/training/trainers", "🧑‍🏫", "Trainers", "trainers", { section: "training", zone: "Settings" }), E("/admin/people/training/settings", "⚙️", "Training settings", "settings", { section: "training", zone: "Settings" }),
     E("/admin/people/waiver", "📜", "Membership agreement", "waiver", { zone: "Settings" }), E("/admin/people/guest-agreement", "🪪", "Guest agreement", "guest-agreement", { zone: "Settings" }), E("/admin/people/id-renewals", "🪪", "ID renewals", "id-renewals", { alert: "renewals" }),
   ] },

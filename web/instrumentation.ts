@@ -28,6 +28,11 @@ export async function register() {
     const { reportJob, copyHttpHits } = await import("./lib/pii");
     job(7351931, 3600_000, reportJob); // monthly personal-information report to the board (last evening of the month; retries daily if it fails)
     job(7351932, 3600_000, copyHttpHits); // copies hits on PII routes out of the HTTP log so the evidence outlives its pruning
+    const { lapseSweep, sendReminders: trainingReminders } = await import("./lib/training/recert");
+    job(7351940, 3600_000, lapseSweep); // training re-pass deadlines that have passed
+    job(7351941, 6 * 3600_000, trainingReminders); // training re-pass countdown notices
+    const { pushWaiting } = await import("./lib/training/notify");
+    job(7351942, 15 * 60_000, pushWaiting); // one staff push for however many passes arrived (Pushover channel "training")
     const { prune } = await import("./lib/retention");
     setTimeout(() => withLock(7351914, prune).catch(() => {}), 120_000); // not at the very start
     job(7351914, 6 * 3600_000, prune); // data past the 5-year limit (lib/retention.ts)

@@ -5,7 +5,7 @@ import { useAlerts } from "../alerts";
 // What is waiting for you, as links straight to each queue (the server only counts the kinds you can open).
 export default function Needs() {
   const a = useAlerts("/admin/landing");
-  const items = a ? ([[a.applicants, "new member", "/admin/people/approvals", "waiting for approval"], [a.reviews, "review", "/admin/website/reviews", "waiting for approval"], [a.comments, "comment", "/admin/blog/comments", "waiting for moderation"], [a.walkups, "walk-up", "/admin/tours/walkups", "waiting for tour times"], [a.renewals, "ID renewal", "/admin/people/id-renewals", "waiting for review"], [a.forms, "held message", "/admin/messages", "caught by the spam filter"]] as const).filter(([n]) => n > 0) : [];
+  const items = a ? ([[a.applicants, "new member", "/admin/people/approvals", "waiting for approval"], [a.reviews, "review", "/admin/website/reviews", "waiting for approval"], [a.comments, "comment", "/admin/blog/comments", "waiting for moderation"], [a.walkups, "walk-up", "/admin/tours/walkups", "waiting for tour times"], [a.renewals, "ID renewal", "/admin/people/id-renewals", "waiting for review"], [a.training, "training sign-off", "/admin/people/training", "waiting for a trainer"], [a.forms, "held message", "/admin/messages", "caught by the spam filter"]] as const).filter(([n]) => n > 0) : [];
   return (
     <section aria-labelledby="needs-h">
       <h2 id="needs-h">Needs your attention</h2>

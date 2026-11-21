@@ -4,6 +4,7 @@ import { conn } from "../db";
 import { logAudit } from "../store";
 import { cleanHtml } from "../sanitize";
 import { cleanQuestion, memberQuestion, problems, scoreQuestions, describeQ, type Q } from "./questions";
+import { createRollout, tellRollout } from "./recert";
 import { diffRevisions, revisionHash, SETTINGS, type RevData } from "./diff";
 
 // Tests, drafts, revisions. A test belongs to a tool (v1: one live test per tool). Editing happens only on the one draft; publishing freezes it as a revision (the database refuses later edits).
@@ -181,7 +182,7 @@ export async function publishProblems(revId: number): Promise<string[]> {
   questions.forEach((q, i) => problems(q).forEach((p) => out.push(`Question ${i + 1}: ${p}`)));
   return out;
 }
-export async function publish(revId: unknown, at: unknown, b: { kind?: unknown; note?: unknown }, who: string) {
+export async function publish(revId: unknown, at: unknown, b: { kind?: unknown; note?: unknown; deadline?: unknown; sources?: unknown }, who: string) {
   const out = await tx(async (c) => {
     const r = await lockDraft(c, revId, at), bad = await publishProblems(r.id);
     if (bad.length) return fail("Can't publish yet:\n" + bad.join("\n"));
@@ -190,9 +191,12 @@ export async function publish(revId: unknown, at: unknown, b: { kind?: unknown; 
     const hash = revisionHash(dataOf(r, await questionsOf(c, r.id)));
     await c.query("UPDATE test_revisions SET status = 'retired' WHERE test_id = $1 AND status = 'published'", [r.test_id]);
     await c.query("UPDATE test_revisions SET status = 'published', change_kind = $2, change_note = $3, content_hash = $4, published_by = $5, published_at = now(), updated_at = clock_timestamp() WHERE id = $1", [r.id, kind, note || "First version.", hash, who]);
-    return { testId: r.test_id, revNo: r.rev_no, kind };
+    // A major change can put current holders on a re-pass clock, in the same transaction as the publish.
+    const clock = kind === "major" && !first && typeof b.deadline === "string" && b.deadline ? await createRollout(c, r.id, r.test_id, b.deadline, b.sources, who, note) : null;
+    return { testId: r.test_id, revNo: r.rev_no, kind, rollout: clock };
   });
-  await logAudit(who, "training.test.publish", `Test #${out.testId}: revision ${out.revNo} published (${out.kind})`);
+  await logAudit(who, "training.test.publish", `Test #${out.testId}: revision ${out.revNo} published (${out.kind})${out.rollout ? `, re-pass by ${out.rollout.deadline} for ${out.rollout.members} member(s)` : ""}`);
+  if (out.rollout) await tellRollout(out.rollout, typeof b.note === "string" ? b.note.trim().slice(0, 200) : "");
   return { id: revId as number, ...out };
 }
 

@@ -34,6 +34,7 @@ export async function grantAuth(userId: number, toolId: number, expires: unknown
   const exp = typeof expires === "string" && /^\d{4}-\d{2}-\d{2}$/.test(expires) ? expires : null, c = await conn();
   const t = (await c.query("SELECT name FROM tools WHERE id = $1", [toolId])).rows[0], u = (await c.query("SELECT email FROM site_users WHERE id = $1", [userId])).rows[0];
   if (!t || !u) throw new Error("No such tool or member.");
+  if ((await c.query("SELECT 1 FROM tool_training WHERE tool_id = $1 AND NOT manual_grant_allowed", [toolId])).rowCount) throw new Error("This tool is signed off through training. Use the Training queue.");
   await c.query(`INSERT INTO tool_auths (user_id, tool_id, granted_by, granted_at, expires_on, note, source) VALUES ($1,$2,$3, now(), $4, $5, 'manual')
     ON CONFLICT (user_id, tool_id) DO UPDATE SET granted_by = EXCLUDED.granted_by, granted_at = now(), expires_on = EXCLUDED.expires_on, note = EXCLUDED.note, source = 'manual', cert_id = NULL, revision_id = NULL, retake_due_on = NULL`, [userId, toolId, who, exp, clip(note, 200)]);
   await logAudit(who, "user.authorize", `${u.email}: ${t.name}${exp ? " until " + exp : ""}`);
