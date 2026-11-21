@@ -62,3 +62,11 @@ test("outbox: consent, retries, revoked webhook", { skip: !url && "set TEST_DATA
   assert.equal((await D.discordView()).enabled, false, "revoked: integration switches itself off");
   assert.ok(!JSON.stringify(await D.discordView()).includes("abcdefgh"), "the URL never comes back");
 });
+
+test("a class keeps its tool; a missing tool is refused", { skip: !url && "set TEST_DATABASE_URL" }, async () => {
+  const { conn } = await import("../lib/db.ts"), C = await import("../lib/crm.ts"), c = await conn();
+  const tool = (await c.query("INSERT INTO tools (name) VALUES ($1) RETURNING id", [`Kiln ${Date.now()}`])).rows[0].id;
+  const id = await C.saveClass({ title: "Kiln basics", starts_at: new Date(Date.now() + 864e5).toISOString(), tool_id: tool });
+  assert.equal((await C.allClasses()).find((k) => k.id === id).tool_id, tool);
+  await assert.rejects(C.saveClass({ title: "x", starts_at: new Date().toISOString(), tool_id: 2147483000 }), /no longer exists/);
+});

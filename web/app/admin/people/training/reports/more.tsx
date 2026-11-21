@@ -9,7 +9,7 @@ const REPORTS: Record<string, string> = { overrides: "Overrides (for the board)"
 function Override() {
   const [q, setQ] = useState(""), [found, setFound] = useState<{ id: number; name: string; email: string }[]>([]), [who, setWho] = useState<{ id: number; name: string } | null>(null);
   const [tools, setTools] = useState<{ id: number; name: string }[]>([]), [tool, setTool] = useState(0), [how, setHow] = useState("waive_test"), [why, setWhy] = useState(""), [date, setDate] = useState(""), [attempt, setAttempt] = useState("");
-  useEffect(() => { training("trainers").then((t) => setTools(t), () => {}); }, []);
+  useEffect(() => { training("reportTools").then(setTools, () => {}); }, []);
   useEffect(() => { if (q.trim().length < 2 || who) { setFound([]); return; } const t = setTimeout(() => training("findMembers", { q }).then(setFound, () => {}), 250); return () => clearTimeout(t); }, [q, who]);
   const go = async () => {
     if (!(await confirmDialog(`${HOWS[how]}${who ? ` for ${who.name}` : ""}? This is recorded, and the leads and the member are told.`, { ok: "Do it", danger: true } as any))) return;

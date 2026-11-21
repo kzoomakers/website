@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { errMsg } from "@/lib/errmsg";
 import { actor, canSpecial, editingAllowed, levelOf, me } from "@/lib/guard";
 import * as dc from "@/lib/training/discord";
+import { listTools } from "@/lib/tools";
 import { override } from "@/lib/training/overrides";
 import { REPORTS, toCsv } from "@/lib/training/reports";
 import * as k from "@/lib/training/certs";
@@ -15,12 +16,12 @@ export const dynamic = "force-dynamic";
 const PAGE: Record<string, string> = {
   setEnabled: "settings", getCfg: "settings", saveCfg: "settings", discordGet: "settings", discordSave: "settings", discordTest: "settings",
   queue: "queue", file: "queue", startTraining: "queue", markReady: "queue", note: "queue", reject: "queue", signOff: "queue",
-  rolloutPreview: "tests", rollouts: "reports", rolloutMembers: "reports", extendRollout: "reports", undoRollout: "reports", confirmLapse: "reports", memberOverride: "reports", override: "reports", report: "reports", reportCsv: "reports",
+  rolloutPreview: "tests", rollouts: "reports", rolloutMembers: "reports", extendRollout: "reports", undoRollout: "reports", confirmLapse: "reports", memberOverride: "reports", override: "reports", reportTools: "reports", report: "reports", reportCsv: "reports",
   trainers: "trainers", findMembers: "trainers", setTrainer: "trainers", saveToolTraining: "trainers",
   tests: "tests", toolsFree: "tests", test: "tests", revision: "tests", compare: "tests", export: "tests", preview: "tests", previewGrade: "tests", publishCheck: "tests",
   createTest: "tests", renameTest: "tests", archiveTest: "tests", deleteTest: "tests", newDraft: "tests", saveSettings: "tests", saveQuestion: "tests", deleteQuestion: "tests", reorder: "tests", discardDraft: "tests", import: "tests", publish: "tests",
 };
-const READS = new Set(["tests", "toolsFree", "test", "revision", "compare", "export", "preview", "previewGrade", "publishCheck", "getCfg", "discordGet", "queue", "file", "trainers", "findMembers", "rolloutPreview", "rollouts", "rolloutMembers", "report", "reportCsv"]);
+const READS = new Set(["tests", "toolsFree", "test", "revision", "compare", "export", "preview", "previewGrade", "publishCheck", "getCfg", "discordGet", "queue", "file", "trainers", "findMembers", "rolloutPreview", "rollouts", "rolloutMembers", "report", "reportCsv", "reportTools"]);
 const gone = () => new NextResponse("not found", { status: 404 });
 
 export async function POST(req: Request) {
@@ -59,6 +60,7 @@ export async function POST(req: Request) {
       case "override":
         if (!(await canSpecial("training.override"))) return new NextResponse("You don't have the special permission for overrides. Ask an administrator (Admin > Access > Special permissions).", { status: 403 });
         return override(act, a);
+      case "reportTools": return listTools();
       case "report": return REPORTS[a.name]?.() ?? gone();
       case "reportCsv": return REPORTS[a.name] ? new NextResponse(toCsv(await REPORTS[a.name]()), { headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": `attachment; filename="training-${a.name}.csv"` } }) : gone();
       case "memberOverride":

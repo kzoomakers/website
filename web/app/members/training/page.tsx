@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { authsFor, upcomingClasses } from "@/lib/crm";
+import { SOURCE_LABEL } from "@/lib/auth-source";
 import { conn } from "@/lib/db";
 import { overview } from "@/lib/training/attempts";
 import { discordView } from "@/lib/training/discord";
@@ -11,7 +12,6 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Tool authorizations | Kzoo Makers", robots: { index: false } };
 
 const day = (d: Date | string | null) => (d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "America/Detroit" }) : "");
-const HOW: Record<string, string> = { training: "test and sign-off", legacy: "before online training", manual: "by an administrator", override: "by exception" };
 
 // Every tool the shop has, with where the member stands on it. The test and the classes appear only when the tool has them; the authorization is what counts.
 export default async function ToolsPage() {
@@ -44,7 +44,7 @@ export default async function ToolsPage() {
                       <section key={t.id} className="card" style={{ padding: 16, marginBottom: 12 }}>
                         <h3 style={{ margin: "0 0 4px" }}>{t.name}</h3>
                         {t.description && <p className="sub" style={{ margin: "0 0 10px" }}>{t.description}</p>}
-                        {state === "certified" && <p>✅ Authorized since {day(a!.granted_at)} ({HOW[a!.source] ?? a!.source}){a!.expires_on ? `, until ${a!.expires_on}` : ""}.{a!.retake_due_on ? ` Retake the test by ${a!.retake_due_on} to keep it.` : ""}</p>}
+                        {state === "certified" && <p>✅ Authorized since {day(a!.granted_at)} ({(SOURCE_LABEL[a!.source] ?? a!.source).toLowerCase()}){a!.expires_on ? `, until ${a!.expires_on}` : ""}.{a!.retake_due_on ? ` Retake the test by ${a!.retake_due_on} to keep it.` : ""}</p>}
                         {state === "awaiting_trainer" && <p>✅ You passed. A trainer still needs to sign you off before you can use the tool.</p>}
                         {state === "cooldown" && <p>You can try again in about {card.wait_hours} hour{card.wait_hours === 1 ? "" : "s"}.</p>}
                         {state === "locked" && <p>You've used all your attempts. Ask a trainer to help.</p>}

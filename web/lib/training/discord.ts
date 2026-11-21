@@ -1,4 +1,4 @@
-import { conn, db } from "../db";
+import { conn, db, withTx } from "../db";
 import { openText, sealText } from "../vault";
 import { emitLeads } from "./notify";
 
@@ -64,8 +64,11 @@ export async function queueAnnouncement(userId: number, certId: number, tool: st
     if (!c.enabled || !c.webhook) return;
     const pool = await conn();
     if (!(await pool.query("SELECT 1 FROM site_users WHERE id = $1 AND discord_announce <> ''", [userId])).rowCount) return;
-    if (!(await pool.query("INSERT INTO training_mail_log (key) VALUES ($1) ON CONFLICT DO NOTHING", [`discord:${certId}`])).rowCount) return; // one post per sign-off
-    await pool.query("INSERT INTO outbox (kind, payload, next_at) VALUES ('discord', $1, now() + $2 * interval '1 second')", [JSON.stringify({ userId, certId, tool }), Math.floor(Math.random() * 60)]);
+    // The marker and the outbox row go in together, so a failed insert can't leave a marker that blocks every retry.
+    await withTx(async (c) => {
+      if ((await c.query("INSERT INTO training_mail_log (key) VALUES ($1) ON CONFLICT DO NOTHING", [`discord:${certId}`])).rowCount) // one post per sign-off
+        await c.query("INSERT INTO outbox (kind, payload, next_at) VALUES ('discord', $1, now() + $2 * interval '1 second')", [JSON.stringify({ userId, certId, tool }), Math.floor(Math.random() * 60)]);
+    });
   } catch (e) { console.error("discord queue failed:", String((e as Error)?.message ?? e)); }
 }
 

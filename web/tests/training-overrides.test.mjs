@@ -18,7 +18,7 @@ test("overrides: reason, self, effects", { skip: !url && "set TEST_DATABASE_URL"
   const user = async (t) => (await c.query("INSERT INTO site_users (email, name, verified_at) VALUES ($1,$2, now()) RETURNING id", [`${t}${n}@x.test`, t])).rows[0].id;
   const tool = (await c.query("INSERT INTO tools (name) VALUES ($1) RETURNING id", [`Press ${n}`])).rows[0].id;
   const lead = await user("lead"), m = await user("member"), A = { id: lead, email: `lead${n}@x.test`, all: true, view: true };
-  const why = "Transferred from another makerspace";
+  const why = `Transferred from another makerspace ${n}`;
   await assert.rejects(O.override(A, { how: "certify_now", user: m, tool, reason: "short" }), /reason/);
   await assert.rejects(O.override(A, { how: "certify_now", user: lead, tool, reason: why }), /own/);
   await O.override(A, { how: "certify_now", user: m, tool, reason: why });

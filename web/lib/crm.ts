@@ -256,6 +256,7 @@ const artUrl = (v: unknown) => (typeof v === "string" && /^\/uploads\/class-art\
 export async function saveClass(b: any): Promise<number | void> {
   const title = clip(b?.title, 120), starts = new Date(b?.starts_at), ends = b?.ends_at ? new Date(b.ends_at) : null;
   if (!title) throw new Error("A class needs a title.");
+  if (Number.isInteger(b?.tool_id) && !(await (await conn()).query("SELECT 1 FROM tools WHERE id = $1", [b.tool_id])).rowCount) throw new Error("That tool no longer exists.");
   if (isNaN(+starts) || (ends && (isNaN(+ends) || ends < starts))) throw new Error("Check the start and end times.");
   const cap = Math.max(0, Math.min(500, Math.floor(Number(b?.capacity) || 0)));
   const v = [title, clip(b?.description, 2000), starts.toISOString(), ends?.toISOString() ?? null, clip(b?.location, 120), clip(b?.instructor, 120), cap, clip(b?.price, 60), !!b?.cancelled, artUrl(b?.image), LEVELS.includes(b?.level) ? b.level : "all", clip(b?.summary, 160), clip(b?.prerequisites, 300), clip(b?.materials, 300), Number.isInteger(b?.tool_id) ? b.tool_id : null], c = await conn();

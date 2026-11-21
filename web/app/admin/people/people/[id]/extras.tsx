@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { alertDialog } from "@/components/dialog";
 import { crm } from "../../rpc";
 import type { Auth } from "@/lib/crm";
+import { SOURCE_LABEL } from "@/lib/auth-source";
 
 type D = { levels: { level: string }[]; auths: Auth[]; skills: { optin: boolean; bio: string; skills: { name: string; level: string }[] }; classes: { id: number; title: string; starts_at: string }[]; tools: { id: number; name: string; category: string }[]; plans: string[] };
 
@@ -29,7 +30,7 @@ export default function Extras({ id, canEdit }: { id: number; canEdit: boolean }
           <div className="row" key={a.tool_id}>
             <span className="grow"><b>{a.name}</b>{a.category && <span className="sub" style={{ margin: "0 0 0 8px" }}>{a.category}</span>}</span>
             <span className="tag">certified {new Date(a.granted_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "America/Detroit" })}</span>
-            <span className="tag">{({ training: "test + sign-off", legacy: "before online training", manual: "granted by hand", override: "by exception" } as Record<string, string>)[a.source] ?? a.source}</span>
+            <span className="tag">{SOURCE_LABEL[a.source] ?? a.source}</span>
             {a.expires_on && <span className="tag" style={a.expired ? { color: "var(--bad)" } : undefined}>{a.expired ? "expired" : "until"} {a.expires_on}</span>}
             {a.retake_due_on && <span className="tag">retake by {a.retake_due_on}</span>}
             {a.note && <span className="tag">{a.note}</span>}<span className="tag">by {a.granted_by}</span>

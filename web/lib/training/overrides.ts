@@ -52,7 +52,7 @@ export async function override(a: Actor, b: { how?: unknown; user?: unknown; too
     } else { // certify_now, credit_prior
       if (how === "credit_prior" && (!date || date > (await c.query(`SELECT ${TODAY}::text AS d`)).rows[0].d)) fail("Give the date they were certified (not in the future).");
       if (!ce) ce = await fresh("certified");
-      await c.query(`UPDATE certifications SET state = 'certified', source = 'override', certified_at = COALESCE($2::date, now()), certified_by = $3, updated_at = now(),
+      await c.query(`UPDATE certifications SET state = 'certified', source = 'override', certified_at = CASE WHEN $2::date IS NULL THEN now() ELSE ($2::date + time '12:00') AT TIME ZONE 'America/Detroit' END, certified_by = $3, updated_at = now(),
         valid_until = CASE WHEN $4::int IS NULL THEN NULL ELSE COALESCE($2::date, ${TODAY}) + make_interval(months => $4::int) END WHERE id = $1`, [ce.id, how === "credit_prior" ? date : null, a.email, months?.validity_months ?? null]);
       await c.query(`INSERT INTO tool_auths (user_id, tool_id, granted_by, granted_at, expires_on, note, source, cert_id, retake_due_on)
         SELECT user_id, tool_id, $2, COALESCE(certified_at, now()), valid_until, $3, 'override', id, NULL FROM certifications WHERE id = $1

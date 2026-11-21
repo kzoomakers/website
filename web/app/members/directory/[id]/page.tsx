@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { Fragment } from "react";
 import { notFound } from "next/navigation";
 import { directoryMember } from "@/lib/crm";
+import { SOURCE_LABEL } from "@/lib/auth-source";
 import { FIELDS, SOCIALS, socialHref } from "@/lib/fields";
 import MembersShell from "../../shell";
 import Message from "./message";
@@ -9,7 +11,6 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Member | Kzoo Makers", robots: { index: false } };
 
 const day = (d: string) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "America/Detroit" });
-const HOW: Record<string, string> = { training: "Test and trainer sign-off", legacy: "Before online training", manual: "Granted by an administrator", override: "By exception" };
 const LEVEL: Record<string, string> = { learning: "learning", competent: "knows it", teach: "teaches" };
 
 // One listed member, laid out as a page: who they are, what they can use in the shop and since when, what they know, and how to reach them.
@@ -33,10 +34,10 @@ export default async function MemberPage({ params }: { params: Promise<{ id: str
             <section>
               <h3>Authorized tools</h3>
               {m.tools.length ? <table style={{ width: "100%" }}><thead><tr><th style={{ textAlign: "left" }}>Tool</th><th style={{ textAlign: "left" }}>Since</th><th style={{ textAlign: "left" }}>How</th></tr></thead>
-                <tbody>{m.tools.map((t) => <tr key={t.name}><td>✅ {t.name}</td><td>{day(t.at)}</td><td>{HOW[t.source] ?? t.source}</td></tr>)}</tbody></table> : <p className="sub">Not authorized on any tools yet.</p>}
+                <tbody>{m.tools.map((t) => <tr key={t.name}><td>✅ {t.name}</td><td>{day(t.at)}</td><td>{SOURCE_LABEL[t.source] ?? t.source}</td></tr>)}</tbody></table> : <p className="sub">Not authorized on any tools yet.</p>}
             </section>
             {m.skills.length > 0 && <section><h3>Skills</h3><p>{m.skills.map((s) => <span key={s.name} className="dr-chip" style={{ marginRight: 6 }}>{s.name} <small>{LEVEL[s.level]}</small></span>)}</p></section>}
-            {facts.length > 0 && <section><h3>About</h3><dl style={{ display: "grid", gridTemplateColumns: "max-content 1fr", gap: "4px 16px", margin: 0 }}>{facts.map(([k, v]) => <><dt key={k} className="sub">{k}</dt><dd key={k + "v"} style={{ margin: 0 }}>{v}</dd></>)}</dl></section>}
+            {facts.length > 0 && <section><h3>About</h3><dl style={{ display: "grid", gridTemplateColumns: "max-content 1fr", gap: "4px 16px", margin: 0 }}>{facts.map(([k, v]) => <Fragment key={k}><dt className="sub">{k}</dt><dd style={{ margin: 0 }}>{v}</dd></Fragment>)}</dl></section>}
             <section>
               <h3>Contact</h3>
               <p>{m.phone && <a href={`tel:${m.phone}`}>{m.phone} </a>}{m.email && <a href={`mailto:${m.email}`}>{m.email} </a>}{m.discord && <span>Discord: {m.discord} </span>}
