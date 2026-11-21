@@ -15,7 +15,7 @@ export const CAL_DEFAULT = "https://calendar.google.com/calendar/ical/kzoomakers
 
 export const poolFor = (c: Pick<Cfg, "databaseUrl" | "databaseCa">) => {
   // statement_timeout / idle_in_transaction_session_timeout: a stuck query or a leaked open transaction can't hold locks or a connection forever.
-  const pool = new Pool({ ...pgConnection(c), connectionTimeoutMillis: 5000, idleTimeoutMillis: 30_000, statement_timeout: 60_000, idle_in_transaction_session_timeout: 120_000 });
+  const pool = new Pool({ ...pgConnection(c), connectionTimeoutMillis: 5000, idleTimeoutMillis: 30_000, allowExitOnIdle: true /* idle pool must not hold a script/test process open for 30s: cost ~30s per DB test file in CI */, statement_timeout: 60_000, idle_in_transaction_session_timeout: 120_000 });
   // An idle connection dropped by a database restart or failover emits 'error'; with no listener Node crashes the whole process.
   pool.on("error", (e) => console.error("postgres pool:", e.message));
   return pool;

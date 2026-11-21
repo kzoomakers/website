@@ -58,5 +58,7 @@ test("submitting a story creates the story, tags, domain, origin, vote and count
   assert.equal((await c.query("SELECT value FROM feed.keystores WHERE key = $1", [`user:${old.id}:stories_deleted`])).rows[0].value, "0");
   await c.query("UPDATE feed.stories SET created_at = now() - interval '7 hours' WHERE short_id = $1", [text.shortId]);
   assert.ok(!(await updateStory(old, text.shortId, { title: "Too late to edit", url: "", description: "x", tags: ["tg" + n], userIsAuthor: true })).ok, "edit window closed");
-  assert.ok(!(await setStoryDeleted(old, text.shortId, true)).ok, "delete window closed");
+  assert.ok((await setStoryDeleted(old, text.shortId, true)).ok, "delete window is 28 days, still open at 7 hours");
+  await c.query("UPDATE feed.stories SET created_at = now() - interval '29 days' WHERE short_id = $1", [text.shortId]);
+  assert.ok(!(await setStoryDeleted(old, text.shortId, false)).ok, "delete window closed");
 });
