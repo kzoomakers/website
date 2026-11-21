@@ -15,4 +15,5 @@ export async function prune() {
   const run = (sql: string, what: string) => c.query(sql, [RETENTION_YEARS]).catch((e) => { if (e.code !== "42P01") console.error("retention:", what, e.message); }); // 42P01: that module's table isn't created yet
   for (const [t, col] of OLD) await run(`DELETE FROM ${t} WHERE ${col} < now() - make_interval(years => $1)`, t);
   await run("DELETE FROM mail_campaigns WHERE status = 'sent' AND sent_at < now() - make_interval(years => $1)", "mail_campaigns");
+  await import("./library/docs").then((m) => m.purgeTrash()).catch((e) => { if (e.code !== "42P01") console.error("retention: library", e.message); });
 }

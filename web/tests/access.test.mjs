@@ -138,7 +138,7 @@ test("every section is in exactly one top-bar group, and URLs find their group",
   const { GROUPS, NAV } = await import("../lib/nav-manifest.ts");
   const { groupOf } = await import("../app/admin/tabs.ts");
   for (const t of NAV) assert.equal(GROUPS.filter((g) => g.sections.includes(t.section)).length, 1, t.section);
-  assert.deepEqual(GROUPS.map((g) => g.label), ["Home", "Members", "Communications", "Website", "SignDocs", "System"]);
+  assert.deepEqual(GROUPS.map((g) => g.label), ["Home", "Members", "Learn", "Communications", "Website", "SignDocs", "System"]);
   const g = (u) => groupOf(u).label;
   assert.equal(g("/admin/landing"), "Home"); assert.equal(g("/admin/tours/walkups"), "Members"); assert.equal(g("/admin/makerfavor"), "Members"); assert.equal(g("/admin/blog/comments"), "Communications");
   assert.equal(g("/admin/email/queue"), "Communications"); assert.equal(g("/admin/system/privacy"), "Website"); assert.equal(g("/admin/system/seal"), "System"); assert.equal(g("/admin/signdocs/new"), "SignDocs");
