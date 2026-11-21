@@ -69,7 +69,7 @@ export const NAV: Tab[] = [
     E("/admin/learning", "🎓", "Courses", "courses", { exact: true, hidden: true }), // P3 builds the editor; the permission page exists now so access can be granted ahead of launch
   ] },
   { href: "/admin/library", label: "Library", section: "library", zones: ["Work", "Records", "Settings"], items: [
-    E("/admin/library", "📚", "Documents", "documents", { exact: true }),
+    E("/admin/library", "📚", "Documents", "documents", { exact: true }), E("/admin/library/shares", "🔗", "Share links", "shares", { hidden: true }), // creating links is its own permission: a shared link leaves the building
   ] },
   { href: "/admin/system", label: "System", section: "system", zones: ["Access", "Connections", "Rules", "Logs", "Health"], items: [
     E("/admin/system/access", "🔑", "Access", "users", { zone: "Access", exact: true, full: true }), E("/admin/system/access/special", "⭐", "Special permissions", "special", { zone: "Access", full: true }),

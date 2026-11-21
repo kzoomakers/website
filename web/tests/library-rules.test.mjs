@@ -42,3 +42,20 @@ test("browsing a folder includes its sub-folders", async () => {
   assert.deepEqual(withDescendants(fs, 1), [1, 2, 3]);
   assert.deepEqual(withDescendants(fs, 4), [4]);
 });
+
+test("share links stop at once when revoked or expired", async () => {
+  const { shareLive, SHARE_DAYS, DEFAULT_SHARE_DAYS } = await import("../lib/library/rules.ts");
+  const now = new Date("2026-01-10"), day = 86400_000;
+  assert.equal(shareLive({ revoked_at: null, expires_at: new Date(+now + day) }, now), true);
+  assert.equal(shareLive({ revoked_at: null, expires_at: new Date(+now - 1) }, now), false);
+  assert.equal(shareLive({ revoked_at: new Date(+now - 1), expires_at: new Date(+now + day) }, now), false);
+  assert.deepEqual([...SHARE_DAYS], [1, 7, 30]); assert.equal(DEFAULT_SHARE_DAYS, 30);
+});
+
+test("share tokens: only 32 hex chars are looked up, and the unlock cookie depends on the secret passcode hash", async () => {
+  const { unlockValue, shareByToken } = await import("../lib/library/shares.ts");
+  assert.equal(await shareByToken("../../etc/passwd"), null);
+  assert.equal(await shareByToken("A".repeat(32)), null);
+  const a = unlockValue({ token_hash: "t", passcode_hash: "p1" }), b = unlockValue({ token_hash: "t", passcode_hash: "p2" });
+  assert.notEqual(a, b); assert.equal(a, unlockValue({ token_hash: "t", passcode_hash: "p1" }));
+});

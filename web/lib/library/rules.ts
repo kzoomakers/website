@@ -25,3 +25,9 @@ export function visibleSql(v: Viewer, uid: string): string {
   }
   return `d.deleted_at IS NULL AND d.status = 'published' AND (${tiers.join(" OR ")})`;
 }
+
+export const SHARE_DAYS = [1, 7, 30] as const; // "never" is deliberately not offered: links are for passing a document on, a stable QR/permalink is for members
+export const DEFAULT_SHARE_DAYS = 30;
+export type ShareRow = { revoked_at: Date | null; expires_at: Date | null };
+/** Is a share link usable right now? Revoked and expired links stop at once. */
+export const shareLive = (s: ShareRow, now = new Date()) => !s.revoked_at && (!s.expires_at || s.expires_at > now);

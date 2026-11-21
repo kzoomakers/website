@@ -15,6 +15,26 @@ type Folder = { id: number; parent_id: number | null; title: string };
 // Folders as an indented list, children under parents.
 const ordered = (fs: Folder[], parent: number | null = null, depth = 0): (Folder & { depth: number })[] => fs.filter((f) => f.parent_id === parent).flatMap((f) => [{ ...f, depth }, ...ordered(fs, f.id, depth + 1)]);
 
+type Share = { id: number; allow_download: boolean; expires_at: string; revoked_at: string | null; created_by: string; opens: number; last_open: string | null };
+// Share links for one document: create (passcode is always required, shown once) and revoke.
+function Shares({ d }: { d: Doc }) {
+  const [list, setList] = useState<Share[] | null>(null);
+  const load = () => rpc("shares", { id: d.id }).then(setList, () => setList([]));
+  const add = async () => {
+    const days = await promptDialog("Link lasts how many days? (1, 7 or 30)", "30"); if (!days) return;
+    const dl = await confirmDialog("Let people with the link download the PDF? (View-only still lets the viewer fetch the file, so only share what you'd be fine with them keeping.)", { ok: "Allow download" });
+    rpc("share", { id: d.id, days: Number(days), allowDownload: dl }).then(async (r) => { await alertDialog(`Link: ${location.origin}/d/${r.token}\nPasscode: ${r.passcode}\nExpires in ${r.days} days.\n\nThis is the only time the link and passcode are shown. Send the passcode separately.`); load(); }, fail);
+  };
+  return (
+    <details onToggle={(e) => e.currentTarget.open && load()}><summary>Share links</summary>
+      <button onClick={add}>New share link</button>
+      {list?.map((x) => { const dead = x.revoked_at || new Date(x.expires_at) < new Date(); return (
+        <div key={x.id}>{dead ? <s>link #{x.id}</s> : <>link #{x.id}</>} · {x.revoked_at ? "revoked" : dead ? "expired" : `expires ${new Date(x.expires_at).toLocaleDateString()}`} · {x.allow_download ? "download" : "view only"} · opened {x.opens}× · by {x.created_by}{" "}
+          {!dead && <button onClick={async () => (await confirmDialog("Revoke this link? It stops working at once.")) && rpc("revokeShare", { id: x.id }).then(load, fail)}>Revoke</button>}</div>); })}
+    </details>
+  );
+}
+
 function Row({ d, canEdit, reload, folders, trash, picked, pick }: { d: Doc; canEdit: boolean; reload: () => void; folders: Folder[]; trash: boolean; picked: boolean; pick: () => void }) {
   const [f, setF] = useState({ title: d.title, description: d.description, type: d.type, tier: d.tier, status: d.status, tags: d.tags.join(", ") });
   const save = (extra: object = {}) => rpc("edit", { id: d.id, ...f, tags: f.tags.split(","), ...extra }).then(reload, fail);
@@ -23,6 +43,7 @@ function Row({ d, canEdit, reload, folders, trash, picked, pick }: { d: Doc; can
     <div className="row" style={{ display: "block" }}>
       {canEdit && !trash && <input type="checkbox" aria-label={`Select ${d.title}`} checked={picked} onChange={pick} />} <b>{d.title}</b> <span className="tag">{d.status}</span> <span className="tag">{d.pages} p</span> {!d.has_text && <span className="tag" title="Scanned PDF: search can't see inside it">not searchable</span>}
       {" "}<a href={`/api/library/file/${d.slug}`} target="_blank" rel="noreferrer">Open PDF</a>
+      {canEdit && !trash && <Shares d={d} />}
       {canEdit && trash && <button onClick={() => rpc("restore", { id: d.id }).then(reload, fail)}>Restore</button>}
       {canEdit && !trash && (
         <div className="bar" style={{ flexWrap: "wrap" }}>
