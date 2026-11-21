@@ -59,10 +59,10 @@ function Proposals({ canEdit, onChange }: { canEdit: boolean; onChange: () => vo
 }
 
 export default function Classes({ canEdit }: { canEdit: boolean }) {
-  const [rows, setRows] = useState<Klass[]>([]), [f, setF] = useState<F | null>(null), [roster, setRoster] = useState<{ id: number; rows: any[] } | null>(null);
+  const [rows, setRows] = useState<Klass[]>([]), [f, setF] = useState<F | null>(null), [roster, setRoster] = useState<{ id: number; rows: any[] } | null>(null), [tools, setTools] = useState<{ id: number; name: string; category: string }[]>([]);
   useDirtyGuard(f, f ? (f as any).id ?? "new" : "closed");
   const load = useCallback(() => crm<Klass[]>("classes").then(setRows, (e) => alertDialog(e.message)), []);
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(); crm<typeof tools>("tools").then(setTools, () => {}); }, [load]);
   const when = (s: string) => new Date(s).toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
   return (
     <>
@@ -85,6 +85,7 @@ export default function Classes({ canEdit }: { canEdit: boolean }) {
             <label>Capacity (0 = unlimited)<input type="number" min={0} max={500} value={f.capacity ?? 0} onChange={(e) => setF({ ...f, capacity: Number(e.target.value) })} style={{ width: "100%" }} /></label>
             <label>Price<input maxLength={60} placeholder="e.g. $25 or Free" value={f.price ?? ""} onChange={(e) => setF({ ...f, price: e.target.value })} style={{ width: "100%" }} /></label>
           </div>
+          <label>About a tool (optional; shows on that tool's page. It doesn't authorize anyone.)<select value={f.tool_id ?? ""} onChange={(e) => setF({ ...f, tool_id: e.target.value ? Number(e.target.value) : null })} style={{ width: "100%" }}><option value="">No tool</option>{tools.map((t) => <option key={t.id} value={t.id}>{t.category ? `${t.category}: ` : ""}{t.name}</option>)}</select></label>
           <label>Description<textarea rows={4} maxLength={2000} value={f.description ?? ""} onChange={(e) => setF({ ...f, description: e.target.value })} style={{ width: "100%" }} /></label>
           <label><input type="checkbox" checked={!!f.cancelled} onChange={(e) => setF({ ...f, cancelled: e.target.checked })} /> Cancelled (hidden from members)</label>
           <div className="bar"><button className="pri">Save</button><button type="button" onClick={() => setF(null)}>Cancel</button></div>
@@ -94,7 +95,7 @@ export default function Classes({ canEdit }: { canEdit: boolean }) {
         {rows.map((c) => (
           <div key={c.id}>
             <div className="row">
-              <span className="grow">{c.title}</span>{c.cancelled && <span className="tag" style={{ color: "var(--bad)" }}>cancelled</span>}
+              <span className="grow">{c.title}</span>{c.tool && <span className="tag">🔧 {c.tool}</span>}{c.cancelled && <span className="tag" style={{ color: "var(--bad)" }}>cancelled</span>}
               <span className="tag">{when(c.starts_at)}</span><span className="tag">{c.signed}{c.capacity ? ` / ${c.capacity}` : ""} signed up</span>
               <button onClick={async () => setRoster(roster?.id === c.id ? null : { id: c.id, rows: await crm("roster", { id: c.id }) })}>Roster</button>
               {canEdit && <>

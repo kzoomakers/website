@@ -92,7 +92,7 @@ export async function deleteUser(id: number, who: string) {
   return true;
 }
 
-export type Person = { id: number; name: string; email: string; verified: boolean; contacts: number; card: string; disabled: boolean; approval: string; joined: string; levels: string[]; roster: boolean; waiver: boolean };
+export type Person = { id: number; name: string; email: string; verified: boolean; contacts: number; card: string; disabled: boolean; approval: string; joined: string; levels: string[]; roster: boolean; waiver: boolean; tools: string[] };
 export type PeopleQuery = { q?: string; sort?: string; dir?: string; status?: string; approval?: string; level?: string; flag?: string; offset?: number; limit?: number };
 const SORTS: Record<string, string> = { name: "lower(u.name)", email: "lower(u.email)", joined: "u.created_at", card: "u.access_card_number", contacts: "contacts", approval: "u.approval", status: "u.disabled_at IS NOT NULL" };
 const FLAGS: Record<string, string> = {
@@ -118,6 +118,7 @@ export async function listPeople(o: PeopleQuery = {}): Promise<{ rows: Person[];
     c.query(`SELECT u.id, u.name, u.email, u.verified_at IS NOT NULL AS verified, u.access_card_number AS card, u.disabled_at IS NOT NULL AS disabled, u.approval, u.created_at AS joined,
         (SELECT count(*)::int FROM emergency_contacts e WHERE e.user_id = u.id) AS contacts,
         COALESCE((SELECT array_agg(m.level ORDER BY m.level) FROM memberships m WHERE m.user_id = u.id), '{}') AS levels,
+        COALESCE((SELECT array_agg(t.name ORDER BY lower(t.name)) FROM tool_auths_effective a JOIN tools t ON t.id = a.tool_id WHERE a.user_id = u.id AND NOT a.expired), '{}') AS tools,
         EXISTS (SELECT 1 FROM roster_photos r WHERE r.user_id = u.id) AS roster,
         EXISTS (SELECT 1 FROM sign_docs d WHERE d.user_id = u.id AND d.kind = 'waiver' AND d.status = 'complete') AS waiver
       FROM site_users u ${W} ORDER BY ${order} LIMIT ${lim} OFFSET ${off}`, ps),

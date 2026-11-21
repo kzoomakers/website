@@ -97,14 +97,14 @@ export async function setMySkills(userId: number, b: { optin?: unknown; show_pho
 
 export const skillNames = async (): Promise<string[]> => (await (await conn()).query("SELECT name FROM skills ORDER BY lower(name) LIMIT 1000")).rows.map((r) => r.name);
 
-export type Listing = { id: number; name: string; bio: string; photo: string; phone: string; email: string; discord: string; socials: Record<string, string>; since: string; skills: MySkill[]; fields: Fields };
+export type Listing = { id: number; name: string; bio: string; photo: string; phone: string; email: string; discord: string; socials: Record<string, string>; since: string; skills: MySkill[]; fields: Fields; tools: { name: string; at: string; source: string }[] };
 const LISTED = "u.directory_optin AND u.disabled_at IS NULL AND u.verified_at IS NOT NULL";
 
 /** Members who opted in. Only first name + last initial, bio, skills and profile facts are shown (plus phone/email if that member ticked them); contact goes through a message relay.
  *  `level`: help = competent or teach, teach = teach only. `filters`: exact match on a FIELDS key. Free text searches names, bio, skills and every fact. */
-export async function searchDirectory(q: string, level: string, filters: Record<string, unknown> = {}): Promise<Listing[]> {
+export async function searchDirectory(q: string, level: string, filters: Record<string, unknown> = {}, onlyId: number | null = null): Promise<Listing[]> {
   const like = "%" + q.trim().replace(/[\\%_]/g, "\\$&") + "%", min = level === "teach" ? ["teach"] : level === "help" ? ["competent", "teach"] : level ? ["learning", "competent", "teach"] : null;
-  const args: unknown[] = [q.trim(), min, like], where: string[] = [];
+  const args: unknown[] = [q.trim(), min, like, onlyId], where: string[] = [];
   for (const k of Object.keys(FIELDS)) {
     const v = clip(filters[k], 60);
     if (v) { args.push(k, v); where.push(`EXISTS (SELECT 1 FROM member_fields f WHERE f.user_id = u.id AND f.field = $${args.length - 1} AND lower(f.value) = lower($${args.length}))`); }
@@ -113,9 +113,10 @@ export async function searchDirectory(q: string, level: string, filters: Record<
     `SELECT u.id, btrim(u.first_name || ' ' || left(u.last_name, 1) || CASE WHEN u.last_name = '' THEN '' ELSE '.' END) AS name, u.bio, u.photo,
        CASE WHEN u.show_phone THEN u.phone ELSE '' END AS phone, CASE WHEN u.show_email THEN u.email ELSE '' END AS email, CASE WHEN u.show_discord THEN u.discord ELSE '' END AS discord, CASE WHEN u.show_socials THEN u.socials ELSE '{}'::jsonb END AS socials, u.created_at AS since,
        COALESCE((SELECT json_agg(json_build_object('name', s.name, 'level', m.level, 'note', m.note) ORDER BY lower(s.name)) FROM member_skills m JOIN skills s ON s.id = m.skill_id WHERE m.user_id = u.id), '[]') AS skills,
-       COALESCE((SELECT json_object_agg(field, vals) FROM (SELECT field, json_agg(value ORDER BY lower(value)) AS vals FROM member_fields WHERE user_id = u.id GROUP BY field) x), '{}') AS fields
+       COALESCE((SELECT json_object_agg(field, vals) FROM (SELECT field, json_agg(value ORDER BY lower(value)) AS vals FROM member_fields WHERE user_id = u.id GROUP BY field) x), '{}') AS fields,
+       COALESCE((SELECT json_agg(json_build_object('name', t.name, 'at', a.granted_at, 'source', a.source) ORDER BY lower(t.name)) FROM tool_auths_effective a JOIN tools t ON t.id = a.tool_id WHERE a.user_id = u.id AND NOT a.expired), '[]') AS tools
      FROM site_users u
-     WHERE ${LISTED}
+     WHERE ${LISTED} AND ($4::int IS NULL OR u.id = $4)
        AND ($2::text[] IS NULL OR EXISTS (SELECT 1 FROM member_skills m WHERE m.user_id = u.id AND m.level = ANY($2)))
        AND ($1 = '' OR u.first_name ILIKE $3 OR u.bio ILIKE $3
             OR EXISTS (SELECT 1 FROM member_skills m JOIN skills s ON s.id = m.skill_id WHERE m.user_id = u.id AND (s.name ILIKE $3 OR m.note ILIKE $3))
@@ -123,6 +124,9 @@ export async function searchDirectory(q: string, level: string, filters: Record<
        ${where.map((w) => "AND " + w).join(" ")}
      ORDER BY lower(u.first_name) LIMIT 60`, args)).rows;
 }
+
+/** One listed member's full card, or null when they aren't in the directory. */
+export const directoryMember = async (id: number) => (Number.isInteger(id) ? (await searchDirectory("", "", {}, id))[0] ?? null : null);
 
 /** Which search dimensions have anything to filter on among listed members; the directory only shows those. */
 export async function directoryFacets() {
@@ -231,8 +235,8 @@ export async function mergeSkills(id: number, into: number) {
 export * from "./tools";
 
 // ---- Classes -------------------------------------------------------------------------------------------------------------------------
-export type Klass = { id: number; title: string; description: string; starts_at: string; ends_at: string | null; location: string; instructor: string; capacity: number; price: string; cancelled: boolean; image: string; level: string; summary: string; prerequisites: string; materials: string; signed: number; mine: "confirmed" | "waitlist" | null };
-const CLASS_COLS = `c.id, c.title, c.description, c.starts_at, c.ends_at, c.location, c.instructor, c.capacity, c.price, c.cancelled, c.image, c.level, c.summary, c.prerequisites, c.materials,
+export type Klass = { id: number; title: string; description: string; starts_at: string; ends_at: string | null; location: string; instructor: string; capacity: number; price: string; cancelled: boolean; image: string; level: string; summary: string; prerequisites: string; materials: string; tool_id: number | null; tool: string | null; signed: number; mine: "confirmed" | "waitlist" | null };
+const CLASS_COLS = `c.id, c.title, c.description, c.starts_at, c.ends_at, c.location, c.instructor, c.capacity, c.price, c.cancelled, c.image, c.level, c.summary, c.prerequisites, c.materials, c.tool_id, (SELECT name FROM tools WHERE id = c.tool_id) AS tool,
   (SELECT count(*)::int FROM class_signups s WHERE s.class_id = c.id) AS signed,
   (SELECT CASE WHEN c.capacity = 0 OR x.rn <= c.capacity THEN 'confirmed' ELSE 'waitlist' END
    FROM (SELECT user_id, row_number() OVER (ORDER BY created_at, user_id) rn FROM class_signups WHERE class_id = c.id) x WHERE x.user_id = $1) AS mine`;
@@ -254,9 +258,9 @@ export async function saveClass(b: any): Promise<number | void> {
   if (!title) throw new Error("A class needs a title.");
   if (isNaN(+starts) || (ends && (isNaN(+ends) || ends < starts))) throw new Error("Check the start and end times.");
   const cap = Math.max(0, Math.min(500, Math.floor(Number(b?.capacity) || 0)));
-  const v = [title, clip(b?.description, 2000), starts.toISOString(), ends?.toISOString() ?? null, clip(b?.location, 120), clip(b?.instructor, 120), cap, clip(b?.price, 60), !!b?.cancelled, artUrl(b?.image), LEVELS.includes(b?.level) ? b.level : "all", clip(b?.summary, 160), clip(b?.prerequisites, 300), clip(b?.materials, 300)], c = await conn();
-  if (Number.isInteger(b?.id)) await c.query("UPDATE classes SET title=$2, description=$3, starts_at=$4, ends_at=$5, location=$6, instructor=$7, capacity=$8, price=$9, cancelled=$10, image=$11, level=$12, summary=$13, prerequisites=$14, materials=$15 WHERE id = $1", [b.id, ...v]);
-  else return (await c.query("INSERT INTO classes (title, description, starts_at, ends_at, location, instructor, capacity, price, cancelled, image, level, summary, prerequisites, materials) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING id", v)).rows[0].id as number;
+  const v = [title, clip(b?.description, 2000), starts.toISOString(), ends?.toISOString() ?? null, clip(b?.location, 120), clip(b?.instructor, 120), cap, clip(b?.price, 60), !!b?.cancelled, artUrl(b?.image), LEVELS.includes(b?.level) ? b.level : "all", clip(b?.summary, 160), clip(b?.prerequisites, 300), clip(b?.materials, 300), Number.isInteger(b?.tool_id) ? b.tool_id : null], c = await conn();
+  if (Number.isInteger(b?.id)) await c.query("UPDATE classes SET title=$2, description=$3, starts_at=$4, ends_at=$5, location=$6, instructor=$7, capacity=$8, price=$9, cancelled=$10, image=$11, level=$12, summary=$13, prerequisites=$14, materials=$15, tool_id=$16 WHERE id = $1", [b.id, ...v]);
+  else return (await c.query("INSERT INTO classes (title, description, starts_at, ends_at, location, instructor, capacity, price, cancelled, image, level, summary, prerequisites, materials, tool_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING id", v)).rows[0].id as number;
 }
 export const deleteClass = async (id: number) => void (await (await conn()).query("DELETE FROM classes WHERE id = $1", [id]));
 export const roster = async (classId: number) =>

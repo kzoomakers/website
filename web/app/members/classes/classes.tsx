@@ -12,7 +12,7 @@ const local = (ms: number) => new Date(ms - new Date(ms).getTimezoneOffset() * 6
 const day = (s: string) => new Date(s).toLocaleDateString([], { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 const time = (s: string) => new Date(s).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
-type View = Pick<Klass, "title" | "summary" | "description" | "starts_at" | "location" | "instructor" | "capacity" | "price" | "image" | "level" | "prerequisites" | "materials"> & { signed?: number };
+type View = Pick<Klass, "title" | "summary" | "description" | "starts_at" | "location" | "instructor" | "capacity" | "price" | "image" | "level" | "prerequisites" | "materials"> & { signed?: number; tool?: string | null };
 
 /** One class as a poster card; used for the live listing and for the preview while proposing. */
 function Card({ c, children }: { c: View; children?: React.ReactNode }) {
@@ -26,6 +26,7 @@ function Card({ c, children }: { c: View; children?: React.ReactNode }) {
       <div className="cl-body">
         <span className="cl-lv" style={{ ["--lv" as any]: `var(--lv-${lv[0]})` }}>{lv[1]}</span>
         <h3>{c.title || "Your class title"}</h3>
+        {c.tool && <p className="cl-meta">🔧 About the {c.tool}. <a href="/members/training">Tool authorizations</a></p>}
         {ok && <p className="cl-meta">{day(c.starts_at)} · {time(c.starts_at)}{c.location && <> · {c.location}</>}</p>}
         <p className="cl-meta">{c.instructor ? `with ${c.instructor}` : ""}{c.instructor && c.price ? " · " : ""}{c.price}</p>
         {(c.summary || c.description) && <p className="cl-sum">{c.summary || c.description.slice(0, 140)}</p>}
