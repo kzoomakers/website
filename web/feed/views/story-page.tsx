@@ -6,6 +6,7 @@ import { CommentItem, html } from "./comment";
 import { takeCommentFlash } from "../flash";
 import { currentFeedUser } from "../identity";
 import { deletable, editable } from "../models/submit";
+import { suggestionForm } from "../models/suggestions";
 import { ActionForm, Flagger, ModDelete, Upvoter, type Me } from "./controls";
 import { viewerState, type ViewerState } from "../models/viewer-state";
 import { wearableHats } from "../models/hats";
@@ -64,7 +65,7 @@ function Detail({ all, newUserDays, me, st }: { all: StoryFull[]; newUserDays: n
 /** stories/show.html.erb for a visitor. `all` is the story first, then the stories merged into it. */
 export default async function StoryPage({ all, comments }: { all: StoryFull[]; comments: Comment[] }) {
   const story = all[0], cfg = await getFeedConfig(), merged = story.stories_count > 0, path = titlePath(story);
-  const me = await currentFeedUser().catch(() => null), mine = !!me && editable(story, me.id), canDelete = !!me && deletable(story, me.id);
+  const me = await currentFeedUser().catch(() => null), mine = !!me && editable(story, me.id), canDelete = !!me && deletable(story, me.id), canSuggest = !!me && !!(await suggestionForm(me.id, story.short_id));
   const hats = me?.username ? await wearableHats(me.id) : [];
   const st = me ? await viewerState(me.id, all.map((a) => a.id), comments.map((c) => c.id)) : null;
   const own = me?.id === story.user_id, base = `/stories/${story.short_id}`;
@@ -79,6 +80,7 @@ export default async function StoryPage({ all, comments }: { all: StoryFull[]; c
           </form>}
         </p>
       )}
+      {canSuggest && <p className="story_suggest"><a className="suggester" href={`/stories/${story.short_id}/suggest`}>suggest</a></p>}
       {me && st && !isGone(story) && (
         <p className="story_actions">
           <ActionForm path={`${base}/${st.hidden ? "unhide" : "hide"}`} me={me} label={st.hidden ? "unhide" : "hide"} />{" "}
