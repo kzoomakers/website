@@ -17,6 +17,7 @@ export default function Courses({ canEdit }: { canEdit: boolean }) {
       {canEdit && on !== null && <label><input type="checkbox" checked={on} onChange={(e) => rpc("setFlags", { courses: e.target.checked }).then(() => setOn(e.target.checked), fail)} /> Courses are open to members</label>}
       <div className="bar">
         {canEdit && <button onClick={async () => { const t = await promptDialog("Course title"); if (t) rpc("create", { title: t }).then((r) => (location.href = `/admin/learning/${r.id}`), fail); }}>New course</button>}
+        {canEdit && <label>Import a course <input type="file" accept="application/json,.json" onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ""; if (!f) return; if (f.size > 2_000_000) return fail(new Error("That file is too big.")); try { const r = await rpc("import", { data: JSON.parse(await f.text()) }); location.href = `/admin/learning/${r.id}`; } catch (x) { fail(x instanceof SyntaxError ? new Error("That isn't a course export file.") : x); } }} /></label>}
         <a href="/admin/learning/practice">Practice quizzes</a> <a href="/admin/learning/tools">Tools</a>
         <label><input type="checkbox" checked={trash} onChange={(e) => setTrash(e.target.checked)} /> Recycle bin (30 days)</label>
       </div>

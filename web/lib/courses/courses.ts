@@ -2,6 +2,7 @@ import { conn } from "../db";
 import { slugify } from "../library/rules";
 import { cleanBlocks, cleanCompletion, lessonProblems } from "./blocks";
 import { lessonsOf } from "./order";
+import { tx } from "./tx";
 
 // Course, section and lesson editing (admin side). Courses and lessons delete softly (30 days, then the retention job removes them). Positions are renumbered 1..n, and "move" swaps neighbours (the non-drag path).
 const clean = (s: unknown, max: number) => (typeof s === "string" ? s.trim().slice(0, max) : "");
@@ -127,3 +128,42 @@ export async function purgeLearning() {
   await c.query("DELETE FROM lessons WHERE deleted_at < now() - interval '30 days'");
   await c.query("DELETE FROM practice_attempts WHERE started_at < now() - interval '12 months'");
 }
+
+// ---- Export, import, duplicate ----
+// A course as plain JSON: content only (no progress, no status, no tool links). Library documents and quizzes are referenced by id, so on another site those blocks show "not available" until relinked.
+export const MAX_IMPORT_BYTES = 2_000_000;
+export async function exportCourse(id: number) {
+  const c = await getCourse(id), ls = await lessonsOf(await conn(), id, "l.id, l.section_id, l.title, l.blocks, l.completion");
+  return { format: "kzoo-course", version: 1, title: c.title, summary: c.summary, sequential: c.sequential,
+    sections: c.sections.map((s: any) => ({ title: s.title, lessons: ls.filter((l) => l.section_id === s.id).map((l) => ({ title: l.title, blocks: l.blocks, completion: l.completion })) })) };
+}
+
+/** Creates a draft course from exported JSON. Every block goes through the same cleaning as a save; the counts are capped like the editor's. Returns the new id and how many blocks were left out. */
+export async function importCourse(data: any, who: string, titleOverride?: string) {
+  if (data?.format !== "kzoo-course" || data.version !== 1 || !Array.isArray(data.sections)) throw new Error("That isn't a course export file.");
+  const title = clean(titleOverride ?? data.title, 120);
+  if (!title) throw new Error("The course needs a title.");
+  if (data.sections.length > MAX_SECTIONS) throw new Error(`A course can have at most ${MAX_SECTIONS} sections.`);
+  let dropped = 0;
+  const sections = data.sections.map((s: any) => {
+    const lessons = Array.isArray(s?.lessons) ? s.lessons : [];
+    if (lessons.length > MAX_LESSONS) throw new Error(`A section can have at most ${MAX_LESSONS} lessons.`);
+    return { title: clean(s?.title, 120) || "Section", lessons: lessons.map((l: any) => {
+      const { blocks, dropped: d } = cleanBlocks(l?.blocks); dropped += d;
+      if (JSON.stringify(blocks).length > MAX_LESSON_BYTES) throw new Error("A lesson in this file is too big.");
+      return { title: clean(l?.title, 120) || "Lesson", blocks, completion: cleanCompletion(l?.completion) };
+    }) };
+  });
+  const id = await tx(async (c) => {
+    const base = slugify(title), taken = new Set((await c.query("SELECT slug FROM courses WHERE slug = $1 OR slug LIKE $2", [base, `${base}-%`])).rows.map((r) => r.slug as string));
+    let slug = base; for (let i = 2; taken.has(slug); i++) slug = `${base}-${i}`;
+    const cid = (await c.query("INSERT INTO courses (slug, title, summary, sequential, created_by) VALUES ($1,$2,$3,$4,$5) RETURNING id", [slug, title, clean(data.summary, 1000), data.sequential !== false, who])).rows[0].id as number;
+    for (const [i, s] of (sections.length ? sections : [{ title: "Getting started", lessons: [] }]).entries()) {
+      const sid = (await c.query("INSERT INTO course_sections (course_id, position, title) VALUES ($1,$2,$3) RETURNING id", [cid, i + 1, s.title])).rows[0].id as number;
+      for (const [j, l] of s.lessons.entries()) await c.query("INSERT INTO lessons (section_id, position, title, blocks, completion) VALUES ($1,$2,$3,$4,$5)", [sid, j + 1, l.title, JSON.stringify(l.blocks), JSON.stringify(l.completion)]);
+    }
+    return cid;
+  });
+  return { id, dropped };
+}
+export const duplicateCourse = async (id: number, who: string) => { const x = await exportCourse(id); return importCourse(x, who, `Copy of ${x.title}`.slice(0, 120)); };

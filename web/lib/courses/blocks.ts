@@ -1,18 +1,20 @@
 import { randomUUID } from "node:crypto";
 import { cleanHtml } from "../sanitize";
+import { cleanTags } from "../library/rules";
 
 // Pure lesson rules (no database): every block is cleaned here on save, so nothing unsanitized is ever stored. Tested in tests/courses-blocks.test.mjs.
 export type Chapter = { time: number; label: string };
 export type Block =
   | { id: string; type: "text"; html: string }
   | { id: string; type: "video"; yt: string; start?: number; end?: number; caption: string; transcript: string; chapters: Chapter[] }
+  | { id: string; type: "image"; src: string; alt: string; caption: string }
   | { id: string; type: "doc"; docId: number; mode: "inline" | "card" }
   | { id: string; type: "callout"; kind: "danger" | "warning" | "ppe" | "tip"; text: string }
   | { id: string; type: "checklist"; items: string[] }
-  | { id: string; type: "quiz"; testId: number }
+  | { id: string; type: "quiz"; testId: number; tags?: string[]; count?: number }
   | { id: string; type: "divider" };
-export type Completion = { rule: "viewed" | "done" | "video" | "checklist"; percent?: number };
-export const RULES = ["viewed", "done", "video", "checklist"] as const;
+export type Completion = { rule: "viewed" | "done" | "video" | "checklist" | "quiz"; percent?: number };
+export const RULES = ["viewed", "done", "video", "checklist", "quiz"] as const;
 export const KINDS = ["danger", "warning", "ppe", "tip"] as const;
 export const MAX_BLOCKS = 100;
 
@@ -49,6 +51,10 @@ export function cleanBlock(b: any): Block | null {
       const chapters = (Array.isArray(b.chapters) ? b.chapters : []).slice(0, 50).map((c: any) => ({ time: secs(c?.time) ?? 0, label: str(c?.label, 80) })).filter((c: Chapter) => c.label);
       return { id, type: "video", yt, ...(start ? { start } : {}), ...(end && end > (start ?? 0) ? { end } : {}), caption: str(b.caption, 300), transcript: str(b.transcript, 50_000), chapters };
     }
+    case "image": { // only our own uploads, and an alt text is required (members who can't see the picture still need the point)
+      const src = str(b.src, 300), alt = str(b.alt, 300);
+      return /^\/uploads\/[\w\-./]+$/.test(src) && !src.includes("..") && alt ? { id, type: "image", src, alt, caption: str(b.caption, 300) } : null;
+    }
     case "doc": {
       const docId = Number(b.docId);
       return Number.isInteger(docId) && docId > 0 ? { id, type: "doc", docId, mode: b.mode === "inline" ? "inline" : "card" } : null;
@@ -58,7 +64,10 @@ export function cleanBlock(b: any): Block | null {
       const items = (Array.isArray(b.items) ? b.items : []).map((i: unknown) => str(i, 200)).filter(Boolean).slice(0, 30);
       return items.length ? { id, type: "checklist", items } : null;
     }
-    case "quiz": { const testId = Number(b.testId); return Number.isInteger(testId) && testId > 0 ? { id, type: "quiz", testId } : null; }
+    case "quiz": {
+      const testId = Number(b.testId), tags = cleanTags(b.tags), count = Math.floor(Number(b.count));
+      return Number.isInteger(testId) && testId > 0 ? { id, type: "quiz", testId, ...(tags.length ? { tags } : {}), ...(count >= 1 && count <= 100 ? { count } : {}) } : null;
+    }
     case "divider": return { id, type: "divider" };
     default: return null;
   }
@@ -79,7 +88,7 @@ export function cleanBlocks(xs: unknown): { blocks: Block[]; dropped: number } {
 export function cleanCompletion(c: any): Completion {
   const rule = (RULES as readonly string[]).includes(c?.rule) ? c.rule : "viewed";
   const percent = Math.floor(Number(c?.percent));
-  return rule === "video" ? { rule, percent: percent >= 1 && percent <= 100 ? percent : 80 } : { rule };
+  return rule === "video" || rule === "quiz" ? { rule, percent: percent >= 1 && percent <= 100 ? percent : 80 } : { rule };
 }
 
 /** Things an author should fix before publishing (shown in the editor; they don't block saving a draft). */
@@ -88,6 +97,7 @@ export function lessonProblems(title: string, blocks: Block[], completion: Compl
   if (!blocks.length) p.push("This lesson is empty.");
   if (completion.rule === "video" && !blocks.some((b) => b.type === "video")) p.push("Completion needs a video, but there is none.");
   if (completion.rule === "checklist" && !blocks.some((b) => b.type === "checklist")) p.push("Completion needs a checklist, but there is none.");
+  if (completion.rule === "quiz" && !blocks.some((b) => b.type === "quiz")) p.push("Completion needs a quiz block, but there is none.");
   if (!title.trim()) p.push("The lesson needs a title.");
   return p;
 }

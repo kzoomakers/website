@@ -9,7 +9,9 @@ import { classesOn } from "@/lib/features";
 import { trainingEnabled } from "@/lib/training/settings";
 import { learningForMember } from "@/lib/courses/tools";
 import { viewer } from "@/lib/library/viewer";
+import { trackSteps } from "@/lib/courses/track";
 import Announce from "./announce";
+import TrackRing from "./track-ring";
 import MembersShell from "../shell";
 
 export const dynamic = "force-dynamic";
@@ -49,6 +51,12 @@ export default async function ToolsPage() {
                       <section key={t.id} className="card" style={{ padding: 16, marginBottom: 12 }}>
                         <h3 style={{ margin: "0 0 4px" }}>{t.name}</h3>
                         {t.description && <p className="sub" style={{ margin: "0 0 10px" }}>{t.description}</p>}
+                        {(() => {
+                          const l = learn.get(t.id), ack = l?.docs.filter((d) => d.type === "sop" || d.type === "safety") ?? [], cs = l?.courses ?? [];
+                          if (!l || (!l.docs.length && !l.courses.length && l.practised === null)) return null; // tools with no learning keep the page as it was
+                          return <TrackRing steps={trackSteps({ read: ack.length ? { total: ack.length, acked: ack.filter((d) => d.acked).length } : null, course: cs.length ? { done: cs.reduce((n, x) => n + x.done, 0), total: cs.reduce((n, x) => n + x.total, 0) } : null,
+                            practised: l?.practised ?? null, hasTest: !!card, state, blocked: !!l?.need.length })} />;
+                        })()}
                         {state === "certified" && <p>✅ Authorized since {day(a!.granted_at)} ({(SOURCE_LABEL[a!.source] ?? a!.source).toLowerCase()}){a!.expires_on ? `, until ${a!.expires_on}` : ""}.{a!.retake_due_on ? ` Retake the test by ${a!.retake_due_on} to keep it.` : ""}</p>}
                         {state === "awaiting_trainer" && <p>✅ You passed. A trainer still needs to sign you off before you can use the tool.</p>}
                         {state === "cooldown" && <p>You can try again in about {card.wait_hours} hour{card.wait_hours === 1 ? "" : "s"}.</p>}

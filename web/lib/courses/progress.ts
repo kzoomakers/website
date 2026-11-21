@@ -1,7 +1,7 @@
 import type { Block, Completion } from "./blocks";
 
 // Pure progress rules (no database). A lesson's progress `data` is { viewed?, done?, video?, ticks?: { [blockId]: number[] } }. Tested in tests/courses-progress.test.mjs.
-export type Data = { viewed?: boolean; done?: boolean; video?: boolean; ticks?: Record<string, number[]> };
+export type Data = { viewed?: boolean; done?: boolean; video?: boolean; quiz?: number; ticks?: Record<string, number[]> };
 export type Action = { action: "view" } | { action: "done" } | { action: "video" } | { action: "tick"; block: string; idx: number; on: boolean };
 
 /** Has the member met the lesson's completion rule? */
@@ -9,6 +9,7 @@ export function isComplete(c: Completion, blocks: Block[], d: Data): boolean {
   switch (c.rule) {
     case "done": return !!d.done;
     case "video": return !!d.video; // watch-percent needs the YouTube script; until then "I watched it" is the rule (moodlecourseware/02)
+    case "quiz": return (d.quiz ?? -1) >= (c.percent ?? 80); // d.quiz is the best finished practice score, copied in by recordProgress
     case "checklist": return blocks.every((b) => b.type !== "checklist" || b.items.every((_, i) => d.ticks?.[b.id]?.includes(i)));
     default: return !!d.viewed;
   }

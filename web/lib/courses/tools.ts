@@ -54,15 +54,18 @@ export async function missingFor(v: Viewer, toolIds: number[]): Promise<Need[]> 
 
 /** For the member's tool cards: each tool's documents and courses they may open, and what is still required. */
 export async function learningForMember(v: Viewer, toolIds: number[]) {
-  const out = new Map<number, { docs: { slug: string; title: string; role: string }[]; courses: { slug: string; title: string; done: number; total: number }[]; need: Need[] }>();
+  const out = new Map<number, { practised: boolean | null; docs: { slug: string; title: string; role: string; type: string; acked: boolean }[]; courses: { slug: string; title: string; done: number; total: number }[]; need: Need[] }>();
   if (v.id === null || !toolIds.length) return out;
   const c = await conn(), f = await learnFlags();
-  const [docs, courses] = await Promise.all([
-    f.library || v.staff ? c.query(`SELECT td.tool_id, d.slug, d.title, td.role FROM tool_docs td JOIN lib_docs d ON d.id = td.doc_id WHERE td.tool_id = ANY($2) AND ${visibleSql(v, "$1")} ORDER BY lower(d.title)`, [v.id, toolIds]) : { rows: [] },
+  const [docs, courses, practice] = await Promise.all([
+    f.library || v.staff ? c.query(`SELECT td.tool_id, d.slug, d.title, d.type, td.role, EXISTS (SELECT 1 FROM lib_acks a WHERE a.user_id = $1 AND a.doc_id = d.id AND a.version >= ${rereadFrom("d")}) AS acked FROM tool_docs td JOIN lib_docs d ON d.id = td.doc_id WHERE td.tool_id = ANY($2) AND ${visibleSql(v, "$1")} ORDER BY lower(d.title)`, [v.id, toolIds]) : { rows: [] },
     f.courses || v.staff ? c.query(`SELECT ct.tool_id, c.slug, c.title, count(l.id)::int AS total, count(p.lesson_id)::int AS done FROM course_tools ct JOIN courses c ON c.id = ct.course_id AND c.deleted_at IS NULL AND c.status = 'published'
       JOIN course_sections s ON s.course_id = c.id JOIN lessons l ON l.section_id = s.id AND l.deleted_at IS NULL LEFT JOIN lesson_progress p ON p.lesson_id = l.id AND p.user_id = $1 AND p.state = 'done' WHERE ct.tool_id = ANY($2) GROUP BY ct.tool_id, c.id`, [v.id, toolIds]) : { rows: [] },
+    f.courses || v.staff ? c.query(`SELECT tt.tool_id, EXISTS (SELECT 1 FROM practice_attempts pa WHERE pa.user_id = $1 AND pa.test_id = tt.test_id AND pa.finished_at IS NOT NULL) AS practised
+      FROM test_tools tt JOIN tests t ON t.id = tt.test_id AND NOT t.archived JOIN test_revisions r ON r.test_id = t.id AND r.status = 'published'
+      WHERE tt.tool_id = ANY($2) AND EXISTS (SELECT 1 FROM rev_questions q JOIN question_practice p ON p.qkey = q.qkey AND p.practice_ok WHERE q.revision_id = r.id)`, [v.id, toolIds]) : { rows: [] },
   ]);
-  for (const id of toolIds) out.set(id, { docs: docs.rows.filter((d) => d.tool_id === id), courses: courses.rows.filter((x) => x.tool_id === id), need: await missingFor(v, [id]) });
+  for (const id of toolIds) out.set(id, { practised: practice.rows.find((p) => p.tool_id === id)?.practised ?? null, docs: docs.rows.filter((d) => d.tool_id === id), courses: courses.rows.filter((x) => x.tool_id === id), need: await missingFor(v, [id]) });
   return out;
 }
 

@@ -7,7 +7,7 @@ import { s3 } from "@/lib/s3";
 import { ImageError, imageFail, processImage, uploadGate } from "@/lib/image";
 
 export async function POST(req: Request) {
-  if (!(await editingAllowed("website", "write", "*")) && !(await editingAllowed("blog", "write", ["posts", "media"])) && !(await editingAllowed("email", "write", "emails"))) return new NextResponse("not found", { status: 404 });
+  if (!(await editingAllowed("website", "write", "*")) && !(await editingAllowed("blog", "write", ["posts", "media"])) && !(await editingAllowed("email", "write", "emails")) && !(await editingAllowed("learning", "write", "courses"))) return new NextResponse("not found", { status: 404 });
   const no = await uploadGate(req, await actor(), 300); // admins upload in batches
   if (no) return no;
   const form = await req.formData().catch(() => null), file = form?.get("file");

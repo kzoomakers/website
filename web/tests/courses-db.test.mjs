@@ -160,3 +160,44 @@ test("practice: flagged questions only, key revealed after answering, never touc
   await (await import("../lib/courses/courses.ts")).purgeLearning();
   assert.equal((await c.query("SELECT 1 FROM practice_attempts WHERE id = $1", [id])).rowCount, 0);
 });
+
+test("a quiz lesson finishes at the pass mark, using the best finished practice score", { skip }, async () => {
+  const { pr, p, c, k, n, user, course } = await world(), u = await user(), Q = await import("../lib/courses/quizzes.ts");
+  const q = await Q.createQuiz(`Score ${n}`, "One?\nA. Yes\nB. No\nANSWER: A\n\nTwo?\nA. Yes\nB. No\nANSWER: A", "t");
+  const x = await course([{ blocks: [{ type: "quiz", testId: q.id }], completion: { rule: "quiz", percent: 100 } }]);
+  assert.deepEqual((await p.recordProgress(u.id, x.lessons[0], { action: "view" })).state, "doing");
+  const run = async (answers) => { const id = await pr.startPractice(u.id, q.id); for (const a of answers) { const v = await pr.practiceView(u.id, id); await pr.practiceAnswer(u.id, id, v.question.id, a); } return id; };
+  await run([0, 1]); // 50%: not enough, and an unfinished run counts for nothing
+  let r = await p.recordProgress(u.id, x.lessons[0], { action: "view" });
+  assert.equal(r.state, "doing"); assert.equal(r.data.quiz, 50);
+  await run([0, 0]);
+  r = await p.recordProgress(u.id, x.lessons[0], { action: "view" });
+  assert.equal(r.state, "done"); assert.equal(r.data.quiz, 100);
+  void c; void k;
+});
+
+test("quizzes from text: created and published, tags kept, round-trips, and a bad question creates nothing", { skip }, async () => {
+  const { pr, c, n } = await world(), Q = await import("../lib/courses/quizzes.ts");
+  const text = "Which?\nA. a\nB. b\nANSWER: B\nFEEDBACK: because\nTAGS: saw\n\nTrue?\nANSWER: True";
+  const q = await Q.createQuiz(`Text ${n}`, text, "t");
+  assert.equal(q.count, 2);
+  assert.equal((await c.query("SELECT count(*)::int AS n FROM test_tools WHERE test_id = $1", [q.id])).rows[0].n, 0, "standalone: no tool");
+  assert.equal((await pr.practiceTitles([q.id]))[q.id], `Text ${n}`);
+  const out = await Q.exportQuiz(q.id);
+  assert.equal(out.skipped, 0); assert.match(out.text, /ANSWER: B/); assert.match(out.text, /TAGS: saw/);
+  const before = (await c.query("SELECT count(*)::int AS n FROM tests")).rows[0].n;
+  await assert.rejects(Q.createQuiz("Bad", "Q?\nA. a\nB. b", "t"), /Question 1/);
+  assert.equal((await c.query("SELECT count(*)::int AS n FROM tests")).rows[0].n, before);
+});
+
+test("duplicate and import make a clean draft copy; bad files and bad blocks don't get in", { skip }, async () => {
+  const { k, course } = await world(), x = await course([{ blocks: [text("Hi"), { type: "image", src: "/uploads/a.webp", alt: "A fence" }], completion: { rule: "viewed" } }]);
+  const d = await k.duplicateCourse(x.id, "t"), copy = await k.getCourse(d.id);
+  assert.equal(copy.status, "draft"); assert.match(copy.title, /^Copy of /); assert.equal(copy.sections[0].lessons.length, 1);
+  assert.equal((await k.getLesson(copy.sections[0].lessons[0].id)).blocks.length, 2);
+  const file = await k.exportCourse(x.id);
+  file.sections[0].lessons[0].blocks.push({ type: "image", src: "https://evil.example/x.png", alt: "x" }, { type: "video", yt: "nope" });
+  const r = await k.importCourse(file, "t");
+  assert.equal(r.dropped, 2);
+  await assert.rejects(k.importCourse({ format: "other" }, "t"), /isn't a course export/);
+});

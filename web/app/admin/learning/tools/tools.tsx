@@ -17,10 +17,11 @@ export default function ToolsAdmin({ canEdit }: { canEdit: boolean }) {
   return (
     <div>
       <h1>Tool learning</h1>
-      <p className="sub">Link a tool to its manuals, SOPs and courses. Members see them on the tool's card. You can also make the course and/or the SOP read-and-confirm a requirement before the test starts.</p>
+      <p className="sub">Link a tool to its manuals, SOPs and courses. Members see them on the tool's card. When a new version of a linked SOP or safety guide asks for a re-read, everyone currently authorized on this tool is emailed (through the normal mail queue). You can also make the course and/or the SOP read-and-confirm a requirement before the test starts.</p>
       <label>Tool <select value={id} onChange={(e) => pick(Number(e.target.value))}><option value={0}>Choose…</option>{tools.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
       {l && (
         <div>
+          <p><a href={`/admin/library/qr/tool/${id}`} target="_blank" rel="noreferrer">Print a QR code for this machine</a> <span className="sub">(opens /library/tool/{id}: safety documents first, then the manual and course)</span></p>
           <h2>Documents</h2>
           {l.docs.map((d, i) => <div key={d.id}>{d.title} <select aria-label="Role" disabled={!canEdit} value={d.role} onChange={(e) => setL({ ...l, docs: l.docs.map((x, k) => (k === i ? { ...x, role: e.target.value } : x)) })}>{ROLES.map((r) => <option key={r}>{r}</option>)}</select> {canEdit && <button onClick={() => setL({ ...l, docs: l.docs.filter((_, k) => k !== i) })}>Remove</button>}</div>)}
           {canEdit && <div className="bar"><select aria-label="Add a document" value={add} onChange={(e) => setAdd(Number(e.target.value))}><option value={0}>Add a document…</option>{docs.filter((d) => !l.docs.some((x) => x.id === d.id)).map((d) => <option key={d.id} value={d.id}>{d.title}</option>)}</select><button disabled={!add} onClick={() => { const d = docs.find((x) => x.id === add)!; setL({ ...l, docs: [...l.docs, { id: d.id, title: d.title, role: "manual", tier: "members", type: "manual" }] }); setAdd(0); }}>Add</button></div>}
