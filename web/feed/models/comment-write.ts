@@ -42,7 +42,7 @@ export const createComment = async (user: { id: number }, o: { storyShortId: str
     if (!parent) return fail(["Invalid parent comment."]);
   }
   const text = o.comment.replace(/\s+$/, "");
-  const again = (await c.query("SELECT short_id FROM feed.comments WHERE user_id = $1 AND story_id = $2 AND parent_comment_id IS NOT DISTINCT FROM $3 AND comment = $4 LIMIT 1", [user.id, s.id, parent?.id ?? null, text])).rows[0];
+  const again = (await c.query("SELECT short_id FROM feed.comments WHERE user_id = $1 AND story_id = $2 AND parent_comment_id IS NOT DISTINCT FROM $3 AND comment = $4 AND NOT is_deleted LIMIT 1", [user.id, s.id, parent?.id ?? null, text])).rows[0];
   if (again) return { ok: true, shortId: again.short_id, storyShortId: s.short_id };
 
   const errors = commentProblems(o.comment);

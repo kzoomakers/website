@@ -5,7 +5,7 @@ import { negativityClass } from "../util";
 import { CommentItem, html } from "./comment";
 import { takeCommentFlash } from "../flash";
 import { currentFeedUser } from "../identity";
-import { editable } from "../models/submit";
+import { deletable, editable } from "../models/submit";
 import { ActionForm, Flagger, ModDelete, Upvoter, type Me } from "./controls";
 import { viewerState, type ViewerState } from "../models/viewer-state";
 import { wearableHats } from "../models/hats";
@@ -64,19 +64,19 @@ function Detail({ all, newUserDays, me, st }: { all: StoryFull[]; newUserDays: n
 /** stories/show.html.erb for a visitor. `all` is the story first, then the stories merged into it. */
 export default async function StoryPage({ all, comments }: { all: StoryFull[]; comments: Comment[] }) {
   const story = all[0], cfg = await getFeedConfig(), merged = story.stories_count > 0, path = titlePath(story);
-  const me = await currentFeedUser().catch(() => null), mine = !!me && editable(story, me.id);
+  const me = await currentFeedUser().catch(() => null), mine = !!me && editable(story, me.id), canDelete = !!me && deletable(story, me.id);
   const hats = me?.username ? await wearableHats(me.id) : [];
   const st = me ? await viewerState(me.id, all.map((a) => a.id), comments.map((c) => c.id)) : null;
   const own = me?.id === story.user_id, base = `/stories/${story.short_id}`;
   return (
     <Shell title={story.title} path={path}>
       <ol className="stories"><Detail all={all} newUserDays={cfg.newUserDays} me={me} st={st} /></ol>
-      {mine && me && (
+      {me && (mine || canDelete) && (
         <p className="story_owner_tools">
-          <a href={`/stories/${story.short_id}/edit`}>Edit</a>{" "}
-          <form method="post" action={`/stories/${story.short_id}/${story.is_deleted ? "undelete" : "delete"}`} style={{ display: "inline" }}>
+          {mine && <><a href={`/stories/${story.short_id}/edit`}>Edit</a>{" "}</>}
+          {canDelete && <form method="post" action={`/stories/${story.short_id}/${story.is_deleted ? "undelete" : "delete"}`} style={{ display: "inline" }}>
             <input type="hidden" name="csrf" value={me.csrf} /><button type="submit">{story.is_deleted ? "Undelete" : "Delete"}</button>
-          </form>
+          </form>}
         </p>
       )}
       {me && st && !isGone(story) && (

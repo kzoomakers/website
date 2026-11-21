@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import type { PoolClient } from "pg";
 import { conn } from "@/lib/db";
 import { cleanUrl, hotness } from "../logic";
-import { MAX_EDIT_MINS, RECENT_DAYS, cleanTitle, isNewUser, storyProblems } from "../story-rules";
+import { DELETE_DAYS, MAX_EDIT_MINS, RECENT_DAYS, cleanTitle, isNewUser, storyProblems } from "../story-rules";
 import { updateCachedColumns } from "./cached";
 import { tattle } from "./mod-notes";
 import { renderPost } from "./render";
@@ -114,9 +114,13 @@ export const createStory = (user: { id: number }, input: Submission): Promise<Su
 export const editable = (s: { user_id: number; is_moderated: boolean; created_at: Date }, userId: number, now = Date.now()) =>
   s.user_id === userId && !s.is_moderated && new Date(s.created_at).getTime() > now - MAX_EDIT_MINS * 60_000;
 
-const owned = async (c: PoolClient, shortId: string, userId: number) => {
+/** Delete/undelete window: the submitter, until a moderator touches it or 28 days pass. */
+export const deletable = (s: { user_id: number; is_moderated: boolean; created_at: Date }, userId: number, now = Date.now()) =>
+  s.user_id === userId && !s.is_moderated && new Date(s.created_at).getTime() > now - DELETE_DAYS * 864e5;
+
+const owned = async (c: PoolClient, shortId: string, userId: number, ok = editable) => {
   const s = (await c.query("SELECT * FROM feed.stories WHERE short_id = $1 FOR UPDATE", [shortId])).rows[0];
-  return s && editable(s, userId) ? s : null;
+  return s && ok(s, userId) ? s : null;
 };
 
 /** Writes an edited story: fields, tags and the domain/origin counter caches. `undelete` is true for the submitter (editing undeletes, as in Lobsters); a moderator's edit leaves the deleted state alone. */
@@ -147,10 +151,10 @@ export const updateStory = (user: { id: number }, shortId: string, input: Submis
   return { ok: true, shortId } as SubmitResult;
 });
 
-/** stories#destroy (delete = true) and #undelete. Same window as editing. */
+/** stories#destroy (delete = true) and #undelete. 28-day window (editing is 6 hours). */
 export const setStoryDeleted = (user: { id: number }, shortId: string, deleted: boolean): Promise<SubmitResult> => tx(async (c) => {
-  const u = await live(c, user.id), s = u && !u.banned_at && !u.deleted_at && await owned(c, shortId, user.id);
-  if (!s) return fail(["You cannot edit that story."]);
+  const u = await live(c, user.id), s = u && !u.banned_at && !u.deleted_at && await owned(c, shortId, user.id, deletable);
+  if (!s) return fail(["You cannot delete that story."]);
   if (s.is_deleted !== deleted) {
     await c.query("UPDATE feed.stories SET is_deleted = $2, updated_at = now() WHERE id = $1", [s.id, deleted]);
     await c.query("INSERT INTO feed.keystores (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = COALESCE(feed.keystores.value, 0) + $2", [`user:${user.id}:stories_deleted`, deleted ? 1 : -1]);

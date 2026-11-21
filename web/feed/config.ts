@@ -5,10 +5,8 @@ export type FeedConfig = {
   enabled: boolean;
   signup: "invite" | "open" | "closed";
   invites: { who: "staff" | "members" | "members+trusted" | "everyone"; requests: boolean; perUserLimit: number; expiryDays: number; tree: boolean };
-  approval: boolean;
   membersAutoCreate: boolean;
   membersTrusted: boolean;
-  readOnlyPublic: boolean;
   newUserDays: number; minKarmaToFlag: number; minKarmaToSuggest: number; minKarmaToSubmit: number; minKarmaForInviteRequests: number;
 };
 
@@ -16,7 +14,7 @@ export type FeedConfig = {
 export const DEFAULTS: FeedConfig = {
   enabled: false, signup: "invite",
   invites: { who: "members+trusted", requests: false, perUserLimit: 5, expiryDays: 14, tree: true },
-  approval: false, membersAutoCreate: true, membersTrusted: true, readOnlyPublic: true,
+  membersAutoCreate: true, membersTrusted: true,
   newUserDays: 14, minKarmaToFlag: 10, minKarmaToSuggest: 3, minKarmaToSubmit: -4, minKarmaForInviteRequests: 10,
 };
 
@@ -34,7 +32,7 @@ export function normalize(x: unknown): FeedConfig {
       who: pick(i.who, ["staff", "members", "members+trusted", "everyone"], D.invites.who), requests: bool(i.requests, D.invites.requests),
       perUserLimit: int(i.perUserLimit, D.invites.perUserLimit, 0, 100), expiryDays: int(i.expiryDays, D.invites.expiryDays, 1, 365), tree: bool(i.tree, D.invites.tree),
     },
-    approval: bool(o.approval, D.approval), membersAutoCreate: bool(o.membersAutoCreate, D.membersAutoCreate), membersTrusted: bool(o.membersTrusted, D.membersTrusted), readOnlyPublic: bool(o.readOnlyPublic, D.readOnlyPublic),
+    membersAutoCreate: bool(o.membersAutoCreate, D.membersAutoCreate), membersTrusted: bool(o.membersTrusted, D.membersTrusted),
     newUserDays: int(o.newUserDays, D.newUserDays, 0, 365), minKarmaToFlag: int(o.minKarmaToFlag, D.minKarmaToFlag, -100, 1000), minKarmaToSuggest: int(o.minKarmaToSuggest, D.minKarmaToSuggest, -100, 1000),
     minKarmaToSubmit: int(o.minKarmaToSubmit, D.minKarmaToSubmit, -100, 1000), minKarmaForInviteRequests: int(o.minKarmaForInviteRequests, D.minKarmaForInviteRequests, -100, 1000),
   };
