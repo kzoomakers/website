@@ -4,10 +4,11 @@ import { alertDialog } from "@/components/dialog";
 import { EVENTS, render, VARS } from "@/lib/training/copy";
 import type { TrainingCfg } from "@/lib/training/settings";
 import { training } from "../rpc";
+import Discord from "./discord";
 
 const SAMPLE = { name: "Sam", tool: "Table saw", deadline: "Dec 15", trainer: "Pat", reason: "the lockout steps changed", days: "3 days", link: "https://example.org/members/training" };
 
-export default function Settings({ cfg, canEdit }: { cfg: TrainingCfg; canEdit: boolean }) {
+export default function Settings({ cfg, canEdit, discord }: { cfg: TrainingCfg; canEdit: boolean; discord: React.ComponentProps<typeof Discord>["init"] | null }) {
   const [on, setOn] = useState(cfg.enabled), [events, setEvents] = useState(cfg.events), [copy, setCopy] = useState(cfg.copy), [reply, setReply] = useState(cfg.reply_to), [days, setDays] = useState(cfg.reminder_days.join(", ")), [open, setOpen] = useState("");
   const save = () => training("saveCfg", { cfg: { events, copy, reply_to: reply, reminder_days: days.split(/[ ,]+/).filter(Boolean).map(Number) } }).then(() => alertDialog("Saved."), (x) => alertDialog(x.message));
   return (
@@ -41,6 +42,7 @@ export default function Settings({ cfg, canEdit }: { cfg: TrainingCfg; canEdit: 
         <label>Re-pass reminders, days before the deadline <input disabled={!canEdit} value={days} onChange={(e) => setDays(e.target.value)} /></label>
         {canEdit && <div className="bar"><button className="pri" onClick={save}>Save</button></div>}
       </div>
+      {discord && canEdit && <Discord init={discord} />}
     </>
   );
 }
