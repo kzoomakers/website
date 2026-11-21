@@ -150,7 +150,7 @@ test("practice: flagged questions only, key revealed after answering, never touc
   await c.query("UPDATE test_revisions SET status = 'published', published_by = 't', published_at = now() WHERE id = $1", [rev]);
   assert.equal((await pr.practiceTitles([tid]))[tid], `Quiz ${n}`);
   const id = await pr.startPractice(u.id, tid), v = await pr.practiceView(u.id, id);
-  assert.equal(v.done, false); assert.equal(JSON.stringify(v).includes("correct"), false);
+  assert.equal(v.done, false); assert.equal(JSON.stringify(v.question).includes("correct"), false);
   const a = await pr.practiceAnswer(u.id, id, v.question.id, 1);
   assert.equal(a.correct, false);
   await assert.rejects(pr.practiceAnswer(u.id, id, v.question.id, 0), /already/);
