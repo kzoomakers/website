@@ -18,10 +18,10 @@ const DARK: Theme[] = [
 ];
 const PAPER: Theme[] = [
   { a: "#c2410c", bg: "#f6f0e4", fg: "#1f2a44", stub: "#1f2a44", stubfg: "#f6f0e4", edge: "#1f2a44" }, // cream + navy
-  { a: "#15803d", bg: "#eaf4ea", fg: "#14301c", stub: "#14301c", stubfg: "#eaf4ea", edge: "#14301c" }, // mint + forest
+  { a: "#166534", bg: "#eaf4ea", fg: "#14301c", stub: "#14301c", stubfg: "#eaf4ea", edge: "#14301c" }, // mint + forest
   { a: "#be185d", bg: "#fbeaf0", fg: "#3b1030", stub: "#3b1030", stubfg: "#fbeaf0", edge: "#3b1030" }, // blush + plum
   { a: "#0369a1", bg: "#e8f2fa", fg: "#222831", stub: "#222831", stubfg: "#e8f2fa", edge: "#222831" }, // sky + charcoal
-  { a: "#b45309", bg: "#fdf3d8", fg: "#3a2a10", stub: "#3a2a10", stubfg: "#fdf3d8", edge: "#3a2a10" }, // butter + brown
+  { a: "#92400e", bg: "#fdf3d8", fg: "#3a2a10", stub: "#3a2a10", stubfg: "#fdf3d8", edge: "#3a2a10" }, // butter + brown
 ];
 const pick = <T,>(a: T[]) => a[Math.floor(Math.random() * a.length)];
 
@@ -148,7 +148,7 @@ export default function TodayFlash() {
         .tdc-big{font-size:17px;font-weight:700;line-height:1.1}.tdc-cdl{font-size:8px;letter-spacing:.12em;opacity:.7}
         .tdc-mono{font-family:"Courier New",monospace}.tdc-dim{opacity:.7;font-size:9px}
         .tdc-body h3{margin:2px 0;font-size:16px;line-height:1.15;color:inherit;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
-        .tdc-body p{margin:1px 0;font-size:11px;opacity:.85;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+        .tdc-body p{margin:1px 0;font-size:11px;line-height:1.35;color:var(--fg);font-family:inherit;opacity:.85;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
         .tdc-stub small:not(.tdc-cdl){display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
         .tdc-kick{color:var(--a);font-weight:700;font-size:10px;letter-spacing:.16em;text-transform:uppercase}
         .tdc-datewrap{display:flex;gap:12px;align-items:center;height:100%}
@@ -168,8 +168,8 @@ export default function TodayFlash() {
         .tdc-modal{position:absolute;top:100%;left:0;right:0;z-index:2;max-height:55vh;overflow:auto;background:var(--bg);color:var(--fg);border-top:4px solid var(--a);border-radius:0 0 8px 8px;padding:12px 16px;font-family:system-ui,sans-serif;font-size:13px;box-shadow:0 8px 20px rgba(0,0,0,.35)}
         .tdc-modal section{margin:10px 0;padding-top:8px;border-top:1px solid var(--edge)}.tdc-modal h4{margin:0 0 2px;font-size:15px}
         .tdc-modal h4,.tdc-modal p,.tdc-where{overflow-wrap:anywhere}
-        .tdc-modal p{white-space:pre-line;margin:6px 0 0;line-height:1.4}.tdc-where{font-size:12px;opacity:.85}
-        .tdc-modal a{color:var(--a);font-weight:700}
+        .tdc-modal p{white-space:pre-line;margin:6px 0 0;line-height:1.4;font-size:13px;color:var(--fg);font-family:inherit}.tdc-where{font-size:12px;opacity:.85}
+        .tdc-modal a{color:var(--a);font-weight:700}.tdc-modal h4{color:var(--fg)}
         @keyframes tdc-in{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:none}}
         @media (max-width:420px){.tdc-stub{width:84px}.tdc-big{font-size:15px}}
         @media (prefers-reduced-motion:reduce){.tdc{animation:none}}
