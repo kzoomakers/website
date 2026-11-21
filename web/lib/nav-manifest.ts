@@ -65,6 +65,12 @@ export const NAV: Tab[] = [
   { href: "/admin/makerfavor", label: "MakerFavor", section: "makerfavor", zones: ["Work", "Records", "Settings"], items: [
     E("/admin/makerfavor", "🧹", "To do", "todo", { exact: true }), E("/admin/makerfavor/log", "⏱️", "Hours", "log"), E("/admin/makerfavor/stats", "📊", "Stats", "stats", { zone: "Records" }), E("/admin/makerfavor/achievements", "🏅", "Achievements", "achievements", { zone: "Settings" }),
   ] },
+  { href: "/admin/learning", label: "Courses", section: "learning", zones: ["Work", "Records", "Settings"], items: [
+    E("/admin/learning", "🎓", "Courses", "courses", { exact: true, hidden: true }), // P3 builds the editor; the permission page exists now so access can be granted ahead of launch
+  ] },
+  { href: "/admin/library", label: "Library", section: "library", zones: ["Work", "Records", "Settings"], items: [
+    E("/admin/library", "📚", "Documents", "documents", { exact: true }),
+  ] },
   { href: "/admin/system", label: "System", section: "system", zones: ["Access", "Connections", "Rules", "Logs", "Health"], items: [
     E("/admin/system/access", "🔑", "Access", "users", { zone: "Access", exact: true, full: true }), E("/admin/system/access/special", "⭐", "Special permissions", "special", { zone: "Access", full: true }),
     E("/admin/system", "🗄️", "Database & storage", "setup", { zone: "Connections", exact: true }), E("/admin/system/seal", "✒️", "Signing certificate", "seal", { zone: "Connections" }), E("/admin/system/maps", "🗺️", "Google Maps", "maps", { zone: "Connections" }), E("/admin/system/captcha", "🛑", "Spam protection", "captcha", { zone: "Connections" }),
@@ -80,6 +86,7 @@ export type Group = { label: string; sections: Section[]; href?: string };
 export const GROUPS: Group[] = [
   { label: "Home", sections: [], href: "/admin/landing" },
   { label: "Members", sections: ["people", "tours", "makerfavor", "training"] },
+  { label: "Learn", sections: ["learning", "library"] },
   { label: "Communications", sections: ["messages", "email", "blog"] },
   { label: "Website", sections: ["website"] },
   { label: "SignDocs", sections: ["signdocs"] },
@@ -87,7 +94,7 @@ export const GROUPS: Group[] = [
 ];
 
 /** Members side menu: [href, icon, label]. */
-export const MEMBER_MENU = [["/members", "🏠", "Home"], ["/members/waiver", "📝", "Membership agreement"], ["/members/handbook", "📖", "Handbook"], ["/members/directory", "🔎", "Member directory"], ["/members/classes", "🎓", "Classes"], ["/members/training", "🏅", "Tool authorizations"], ["/members/makerfavor", "🧹", "MakerFavor™"], ["/members/id", "🪪", "Gov ID"], ["/members/profile", "👤", "My profile"], ["/members/inbox", "✉️", "Messages"], ["/account", "⚙️", "My account"]] as const;
+export const MEMBER_MENU = [["/members", "🏠", "Home"], ["/members/waiver", "📝", "Membership agreement"], ["/members/handbook", "📖", "Handbook"], ["/members/directory", "🔎", "Member directory"], ["/members/classes", "🎓", "Classes"], ["/members/training", "🏅", "Tool authorizations"], ["/members/library", "📚", "Library"], ["/members/makerfavor", "🧹", "MakerFavor™"], ["/members/id", "🪪", "Gov ID"], ["/members/profile", "👤", "My profile"], ["/members/inbox", "✉️", "Messages"], ["/account", "⚙️", "My account"]] as const;
 
 /** Every link in an item list, groups flattened. */
 export const flat = (xs: Item[]): Entry[] => xs.flatMap((i) => ("items" in i ? flat(i.items) : [i]));
