@@ -52,3 +52,12 @@ export async function inboxFor(userId: number, unreadOnly: boolean, page = 1): P
   if (unread.length) await c.query("UPDATE feed.notifications SET read_at = now(), updated_at = now() WHERE id = ANY($1::bigint[]) AND user_id = $2", [unread, userId]);
   return { comments: rows, more: r.rows.length > INBOX_PER_PAGE };
 }
+
+/** comment.rb recent_threads: every comment of the user's 20 most recent threads (on stories that are not deleted), thread by thread, each in tree order. */
+export async function recentThreads(userId: number): Promise<ListedComment[]> {
+  return (await (await conn()).query(
+    `WITH RECURSIVE ids AS (SELECT thread_id FROM feed.comments WHERE user_id = $1 AND thread_id IS NOT NULL GROUP BY thread_id ORDER BY thread_id DESC LIMIT 20),
+     t AS (SELECT c.id, c.thread_id, ARRAY[c.confidence_order] AS path FROM feed.comments c WHERE c.thread_id IN (SELECT thread_id FROM ids) AND c.parent_comment_id IS NULL
+       UNION ALL SELECT c.id, c.thread_id, t.path || c.confidence_order FROM feed.comments c JOIN t ON c.parent_comment_id = t.id)
+     SELECT x.* FROM (${SELECT} WHERE c.id IN (SELECT id FROM t) AND NOT s.is_deleted) x JOIN t ON t.id = x.id ORDER BY t.thread_id DESC, t.path`, [userId])).rows;
+}
